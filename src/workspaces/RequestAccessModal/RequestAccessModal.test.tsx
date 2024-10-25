@@ -2,8 +2,9 @@ import { act, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { axe } from 'jest-axe';
 import React from 'react';
-import { Ajax } from 'src/libs/ajax';
-import { asMockedFn, renderWithAppContexts as render } from 'src/testing/test-utils';
+import { GroupContract, Groups, GroupsContract } from 'src/libs/ajax/Groups';
+import { SamResources, SamResourcesContract } from 'src/libs/ajax/SamResources';
+import { asMockedFn, MockedFn, partial, renderWithAppContexts as render } from 'src/testing/test-utils';
 import { DeleteWorkspaceModal } from 'src/workspaces/DeleteWorkspaceModal/DeleteWorkspaceModal';
 import { RequestAccessModal } from 'src/workspaces/RequestAccessModal/RequestAccessModal';
 import { azureControlledAccessRequestMessage, AzureWorkspace, GoogleWorkspace } from 'src/workspaces/utils';
@@ -17,8 +18,8 @@ jest.mock(
       DeleteWorkspaceModal: jest.fn(),
     } as DeleteWorkspaceModalExports)
 );
-jest.mock('src/libs/ajax');
-type AjaxContract = ReturnType<typeof Ajax>;
+jest.mock('src/libs/ajax/Groups');
+jest.mock('src/libs/ajax/SamResources');
 
 const azureWorkspace: AzureWorkspace = {
   accessLevel: 'PROJECT_OWNER',
@@ -111,16 +112,20 @@ describe('RequestAccessModal', () => {
 
   it('renders a message for GCP workspaces with no accessibility violations', async () => {
     // Arrange
-    const canDelete = jest.fn(() => Promise.resolve(false));
-    asMockedFn(Ajax).mockImplementation(
-      () =>
-        ({
-          Groups: {
-            list: jest.fn().mockReturnValue(Promise.resolve([])),
-          } as Partial<AjaxContract['Groups']>,
-          SamResources: { canDelete } as Partial<ReturnType<typeof Ajax>['SamResources']>,
-        } as Partial<AjaxContract> as AjaxContract)
+    const canDelete: MockedFn<SamResourcesContract['canDelete']> = jest.fn();
+    const list: MockedFn<GroupsContract['list']> = jest.fn();
+
+    asMockedFn(Groups).mockReturnValue(
+      partial<GroupsContract>({
+        list: list.mockResolvedValue([]),
+      })
     );
+    asMockedFn(SamResources).mockReturnValue(
+      partial<SamResourcesContract>({
+        canDelete: canDelete.mockResolvedValue(false),
+      })
+    );
+
     const props = { onDismiss: jest.fn(), workspace: googleWorkspace, refreshWorkspaces: jest.fn() };
     // Act
     await act(async () => {
@@ -139,15 +144,19 @@ describe('RequestAccessModal', () => {
     const user = userEvent.setup();
     const onDismiss = jest.fn();
     const props = { onDismiss, workspace: googleWorkspace, refreshWorkspaces: jest.fn() };
-    const canDelete = jest.fn(() => Promise.resolve(false));
-    asMockedFn(Ajax).mockImplementation(
-      () =>
-        ({
-          Groups: {
-            list: jest.fn().mockReturnValue(Promise.resolve([])),
-          } as Partial<AjaxContract['Groups']>,
-          SamResources: { canDelete } as Partial<ReturnType<typeof Ajax>['SamResources']>,
-        } as Partial<AjaxContract> as AjaxContract)
+
+    const canDelete: MockedFn<SamResourcesContract['canDelete']> = jest.fn();
+    const list: MockedFn<GroupsContract['list']> = jest.fn();
+
+    asMockedFn(Groups).mockReturnValue(
+      partial<GroupsContract>({
+        list: list.mockResolvedValue([]),
+      })
+    );
+    asMockedFn(SamResources).mockReturnValue(
+      partial<SamResourcesContract>({
+        canDelete: canDelete.mockResolvedValue(false),
+      })
     );
 
     // Act
@@ -164,31 +173,33 @@ describe('RequestAccessModal', () => {
   it('for a GCP workspace, it renders a request access button per group', async () => {
     // Arrange
     const user = userEvent.setup();
-    const requestAccessMock = jest.fn();
-    const canDelete = jest.fn(() => Promise.resolve(false));
-    const groupMock = jest.fn().mockReturnValue({
-      requestAccess: requestAccessMock,
-    } as Partial<ReturnType<AjaxContract['Groups']['group']>>);
-    const props = { onDismiss: jest.fn(), workspace: googleWorkspace, refreshWorkspaces: jest.fn() };
-    asMockedFn(Ajax).mockImplementation(
-      () =>
-        ({
-          Groups: {
-            list: jest.fn().mockReturnValue(
-              Promise.resolve([
-                // User is already a member of this group
-                {
-                  groupName: 'group-2',
-                  groupEmail: 'preview-group@test.firecloud.org',
-                  role: 'member',
-                },
-              ])
-            ),
-            group: groupMock,
-          } as Partial<AjaxContract['Groups']>,
-          SamResources: { canDelete } as Partial<ReturnType<typeof Ajax>['SamResources']>,
-        } as Partial<AjaxContract> as AjaxContract)
+
+    const canDelete: MockedFn<SamResourcesContract['canDelete']> = jest.fn();
+    const list: MockedFn<GroupsContract['list']> = jest.fn();
+    const group: MockedFn<GroupsContract['group']> = jest.fn();
+    const requestAccess: MockedFn<GroupContract['requestAccess']> = jest.fn();
+
+    asMockedFn(Groups).mockReturnValue(
+      partial<GroupsContract>({
+        list: list.mockResolvedValue([
+          // User is already a member of this group
+          {
+            groupName: 'group-2',
+            groupEmail: 'preview-group@test.firecloud.org',
+            role: 'member',
+          },
+        ]),
+        group: group.mockReturnValue(partial<GroupContract>({ requestAccess })),
+      })
     );
+    asMockedFn(SamResources).mockReturnValue(
+      partial<SamResourcesContract>({
+        // Return true (workspace owner) for canDelete.
+        canDelete: canDelete.mockResolvedValue(false),
+      })
+    );
+
+    const props = { onDismiss: jest.fn(), workspace: googleWorkspace, refreshWorkspaces: jest.fn() };
 
     // Act
     await act(async () => {
@@ -198,8 +209,8 @@ describe('RequestAccessModal', () => {
     await user.click(group3Button);
 
     // Assert
-    expect(groupMock).toHaveBeenCalledWith('group-3');
-    expect(requestAccessMock).toHaveBeenCalled();
+    expect(group).toHaveBeenCalledWith('group-3');
+    expect(requestAccess).toHaveBeenCalled();
     const group3ButtonAfterRequest = await screen.findByText('Request Sent');
     expect(group3ButtonAfterRequest.getAttribute('aria-label')).toBe('Request access to group-3');
     expect(group3ButtonAfterRequest.getAttribute('aria-disabled')).toBe('true');
@@ -217,17 +228,22 @@ describe('RequestAccessModal', () => {
     const onDismiss = jest.fn();
     const onRefresh = jest.fn();
     const props = { onDismiss, workspace: googleWorkspace, refreshWorkspaces: onRefresh };
-    // Return true (workspace owner) for canDelete.
-    const canDelete = jest.fn(() => Promise.resolve(true));
-    asMockedFn(Ajax).mockImplementation(
-      () =>
-        ({
-          Groups: {
-            list: jest.fn().mockReturnValue(Promise.resolve([])),
-          } as Partial<AjaxContract['Groups']>,
-          SamResources: { canDelete } as Partial<ReturnType<typeof Ajax>['SamResources']>,
-        } as Partial<AjaxContract> as AjaxContract)
+
+    const canDelete: MockedFn<SamResourcesContract['canDelete']> = jest.fn();
+    const list: MockedFn<GroupsContract['list']> = jest.fn();
+
+    asMockedFn(Groups).mockReturnValue(
+      partial<GroupsContract>({
+        list: list.mockResolvedValue([]),
+      })
     );
+    asMockedFn(SamResources).mockReturnValue(
+      partial<SamResourcesContract>({
+        // Return true (workspace owner) for canDelete.
+        canDelete: canDelete.mockResolvedValue(true),
+      })
+    );
+
     const mockModal = asMockedFn(DeleteWorkspaceModal);
 
     // Act

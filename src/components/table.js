@@ -1,7 +1,7 @@
 import { Interactive, Modal, TooltipTrigger } from '@terra-ui-packages/components';
 import _ from 'lodash/fp';
 import PropTypes from 'prop-types';
-import { Fragment, useImperativeHandle, useRef, useState } from 'react';
+import { forwardRef, Fragment, useImperativeHandle, useRef, useState } from 'react';
 import Draggable from 'react-draggable';
 import { button, div, h, label, option, select } from 'react-hyperscript-helpers';
 import Pagination from 'react-paginating';
@@ -1026,11 +1026,15 @@ export const Resizable = ({ onWidthChange, width, minWidth = 100, children }) =>
   );
 };
 
-export const ColumnSettings = ({ columnSettings, onChange }) => {
+export const ColumnSettings = forwardRef(({ columnSettings, onChange }, ref) => {
   const indexedColumnSettings = _.map.convert({ cap: false })((value, index) => {
     return _.merge(value, { id: index.toString() }); // Don't use integer because 0 is falsey.
   })(columnSettings);
   const [items, setItems] = useState(indexedColumnSettings);
+
+  useImperativeHandle(ref, () => ({
+    updateItems,
+  }));
 
   const updateItems = (modifiedItems) => {
     setItems(modifiedItems);
@@ -1063,7 +1067,7 @@ export const ColumnSettings = ({ columnSettings, onChange }) => {
     ]),
     h(ColumnSettingsList, { items, onChange: updateItems, toggleVisibility }),
   ]);
-};
+});
 
 /**
  * @param {Object} obj

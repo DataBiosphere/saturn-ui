@@ -1,14 +1,20 @@
 import { DeepPartial } from '@terra-ui-packages/core-utils';
+import { AuditInfo, CloudContext } from '@terra-ui-packages/leonardo-data-client';
 import { fireEvent, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import _ from 'lodash';
 import { h } from 'react-hyperscript-helpers';
-import { Ajax } from 'src/libs/ajax';
-import { Apps } from 'src/libs/ajax/leonardo/Apps';
+import { Billing, BillingContract } from 'src/libs/ajax/billing/Billing';
+import { BillingProject } from 'src/libs/ajax/billing/billing-models';
+import { GroupContract, Groups, GroupsContract } from 'src/libs/ajax/Groups';
+import { Apps, AppsAjaxContract } from 'src/libs/ajax/leonardo/Apps';
+import { ListAppItem } from 'src/libs/ajax/leonardo/models/app-models';
+import { Metrics, MetricsContract } from 'src/libs/ajax/Metrics';
+import { Cbas, CbasAjaxContract, CbasMethodsContract } from 'src/libs/ajax/workflows-app/Cbas';
 import { errorWatcher } from 'src/libs/error.mock';
 import * as Nav from 'src/libs/nav';
 import { getTerraUser } from 'src/libs/state';
-import { asMockedFn, renderWithAppContexts as render, SelectHelper } from 'src/testing/test-utils';
+import { asMockedFn, partial, renderWithAppContexts as render, SelectHelper } from 'src/testing/test-utils';
 import { useWorkspaces } from 'src/workspaces/common/state/useWorkspaces';
 import { WorkspaceWrapper } from 'src/workspaces/utils';
 
@@ -16,11 +22,12 @@ import { importDockstoreWorkflow } from './importDockstoreWorkflow';
 import { ImportWorkflow } from './ImportWorkflow';
 import { useDockstoreWdl } from './useDockstoreWdl';
 
-type AjaxContract = ReturnType<typeof Ajax>;
-type AppsContract = ReturnType<typeof Apps>;
-
 jest.mock('src/libs/ajax');
 jest.mock('src/libs/ajax/leonardo/Apps');
+jest.mock('src/libs/ajax/billing/Billing');
+jest.mock('src/libs/ajax/workflows-app/Cbas');
+jest.mock('src/libs/ajax/Groups');
+jest.mock('src/libs/ajax/Metrics');
 
 type UseWorkspacesExports = typeof import('src/workspaces/common/state/useWorkspaces');
 jest.mock('src/workspaces/common/state/useWorkspaces', (): UseWorkspacesExports => {
@@ -106,12 +113,12 @@ jest.mock('react-notifications-component', (): DeepPartial<ReactNotificationsCom
 });
 
 describe('ImportWorkflow', () => {
-  const mockAppResponse = [
-    {
+  const mockAppResponse: ListAppItem[] = [
+    partial<ListAppItem>({
       workspaceId: '79201ea6-519a-4077-a9a4-75b2a7c4cdeb',
-      cloudContext: {
+      cloudContext: partial<CloudContext>({
         cloudProvider: 'AZURE',
-      },
+      }),
       status: 'RUNNING',
       proxyUrls: {
         cbas: 'https://abc.servicebus.windows.net/terra-app-3b8d9c55-7eee-49e9-a998-e8c6db05e374-79201ea6-519a-4077-a9a4-75b2a7c4cdeb/cbas',
@@ -122,66 +129,26 @@ describe('ImportWorkflow', () => {
       },
       appName: 'terra-app-3b8d9c55-7eee-49e9-a998-e8c6db05e374',
       appType: 'CROMWELL',
-      auditInfo: {
+      auditInfo: partial<AuditInfo>({
         creator: 'abc@gmail.com',
-      },
-    },
-    {
+      }),
+    }),
+    partial<ListAppItem>({
       workspaceId: '79201ea6-519a-4077-a9a4-75b2a7c4cdeb',
-      cloudContext: {
+      cloudContext: partial<CloudContext>({
         cloudProvider: 'AZURE',
-      },
+      }),
       status: 'RUNNING',
       proxyUrls: {
         wds: 'https://abc.servicebus.windows.net/wds-79201ea6-519a-4077-a9a4-75b2a7c4cdeb-79201ea6-519a-4077-a9a4-75b2a7c4cdeb/',
       },
       appName: 'wds-79201ea6-519a-4077-a9a4-75b2a7c4cdeb',
       appType: 'WDS',
-      auditInfo: {
+      auditInfo: partial<AuditInfo>({
         creator: 'abc@gmail.com',
-      },
-    },
+      }),
+    }),
   ];
-
-  const mockAjax = {
-    Billing: {
-      listProjects: async () => [
-        {
-          billingAccount: 'billingAccounts/FOO-BAR-BAZ',
-          cloudPlatform: 'GCP',
-          invalidBillingAccount: false,
-          projectName: 'Google Billing Project',
-          roles: ['Owner'],
-          status: 'Ready',
-        },
-        {
-          billingAccount: 'billingAccounts/BAA-RAM-EWE',
-          cloudPlatform: 'AZURE',
-          invalidBillingAccount: false,
-          projectName: 'Azure Billing Project',
-          roles: ['Owner'],
-          status: 'Ready',
-        },
-      ],
-    } as Partial<AjaxContract['Billing']>,
-    Groups: {
-      list: async () => {
-        return [];
-      },
-      group: (_groupName) => {
-        return {
-          isMember: async () => {
-            return true;
-          },
-        } as Partial<ReturnType<AjaxContract['Groups']['group']>>;
-      },
-    } as Partial<AjaxContract['Groups']>,
-    Metrics: {
-      captureEvent: async (_name, _details) => {
-        // Do nothing
-      },
-    } as Partial<AjaxContract['Metrics']>,
-  };
 
   beforeAll(() => {
     // Arrange
@@ -235,7 +202,48 @@ describe('ImportWorkflow', () => {
       email: 'abc@gmail.com',
     });
 
-    asMockedFn(Ajax).mockImplementation(() => mockAjax as Partial<AjaxContract> as AjaxContract);
+    asMockedFn(Billing).mockReturnValue(
+      partial<BillingContract>({
+        listProjects: async () => [
+          partial<BillingProject>({
+            billingAccount: 'billingAccounts/FOO-BAR-BAZ',
+            cloudPlatform: 'GCP',
+            invalidBillingAccount: false,
+            projectName: 'Google Billing Project',
+            roles: ['Owner'],
+            status: 'Ready',
+          }),
+          partial<BillingProject>({
+            // billingAccount: 'billingAccounts/BAA-RAM-EWE',
+            cloudPlatform: 'AZURE',
+            invalidBillingAccount: false,
+            projectName: 'Azure Billing Project',
+            roles: ['Owner'],
+            status: 'Ready',
+          }),
+        ],
+      })
+    );
+
+    asMockedFn(Groups).mockReturnValue(
+      partial<GroupsContract>({
+        list: async () => {
+          return [];
+        },
+        group: (_groupName) =>
+          partial<GroupContract>({
+            isMember: async () => {
+              return true;
+            },
+          }),
+      })
+    );
+
+    asMockedFn(Metrics).mockReturnValue(
+      partial<MetricsContract>({
+        captureEvent: async () => {}, // do nothing
+      })
+    );
   });
 
   it('fetches and renders WDL', () => {
@@ -351,23 +359,16 @@ describe('ImportWorkflow', () => {
     const mockListAppsFn = jest.fn(() => Promise.resolve(mockAppResponse));
     const mockPostMethodAppsFn = jest.fn(() => Promise.resolve(mockPostMethodResponse));
 
-    asMockedFn(Ajax).mockImplementation(
-      () =>
-        ({
-          Cbas: {
-            methods: {
-              post: mockPostMethodAppsFn,
-            },
-          } as DeepPartial<AjaxContract['Cbas']>,
-          ...mockAjax,
-        } as Partial<AjaxContract> as AjaxContract)
+    asMockedFn(Cbas).mockReturnValue(
+      partial<CbasAjaxContract>({
+        methods: partial<CbasMethodsContract>({ post: mockPostMethodAppsFn }),
+      })
     );
 
-    asMockedFn(Apps).mockImplementation(
-      () =>
-        ({
-          listAppsV2: mockListAppsFn as Partial<AjaxContract['Apps']>,
-        } as Partial<AppsContract> as AppsContract)
+    asMockedFn(Apps).mockReturnValue(
+      partial<AppsAjaxContract>({
+        listAppsV2: mockListAppsFn,
+      })
     );
 
     const testWorkflow = {
@@ -411,14 +412,10 @@ describe('ImportWorkflow', () => {
   it("it should not import workflow into workspace where workspace wasn't created by current user", async () => {
     // Arrange
     const user = userEvent.setup();
-    const mockListAppsFn = jest.fn(() => Promise.resolve(mockAppResponse));
+    const mockListAppsFn: jest.MockedFunction<AppsAjaxContract['listAppsV2']> = jest.fn();
+    mockListAppsFn.mockResolvedValue(mockAppResponse);
 
-    asMockedFn(Apps).mockImplementation(
-      () =>
-        ({
-          listAppsV2: mockListAppsFn as Partial<AjaxContract['Apps']>,
-        } as Partial<AppsContract> as AppsContract)
-    );
+    asMockedFn(Apps).mockReturnValue(partial<AppsAjaxContract>({ listAppsV2: mockListAppsFn }));
 
     const testWorkflow = {
       path: 'github.com/DataBiosphere/test-workflows/test-workflow',

@@ -1,7 +1,7 @@
 import { Modal } from '@terra-ui-packages/components';
 import React, { useState } from 'react';
 import { ButtonPrimary, spinnerOverlay } from 'src/components/common';
-import { Ajax } from 'src/libs/ajax';
+import { Workspaces } from 'src/libs/ajax/workspaces/Workspaces';
 import { reportError } from 'src/libs/error';
 import { withBusyState } from 'src/libs/utils';
 import { WorkspaceWrapper as Workspace } from 'src/workspaces/utils';
@@ -27,8 +27,8 @@ const LockWorkspaceModal = (props: LockWorkspaceModalProps) => {
   const toggleWorkspaceLock = withBusyState(setTogglingLock)(async () => {
     try {
       isLocked
-        ? await Ajax().Workspaces.workspace(namespace, name).unlock()
-        : await Ajax().Workspaces.workspace(namespace, name).lock();
+        ? await Workspaces().workspace(namespace, name).unlock()
+        : await Workspaces().workspace(namespace, name).lock();
       onDismiss();
       onSuccess();
     } catch (error) {

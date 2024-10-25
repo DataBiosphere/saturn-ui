@@ -333,9 +333,19 @@ const SavedColumnSettings = ({ workspace, snapshotName, entityType, entityMetada
 };
 
 export const ColumnSettingsWithSavedColumnSettings = ({ columnSettings, onChange, ...otherProps }) => {
+  const columnSettingsRef = useRef();
+
+  // This will update the state of the ColumnSettings component currently in use
+  const updateColumnSettings = (newColumnSettings) => {
+    if (columnSettingsRef.current) {
+      columnSettingsRef.current.updateItems(newColumnSettings);
+    }
+  };
+
   return div({ style: { display: 'flex', justifyContent: 'space-between' } }, [
     div({ style: { flex: '1 1 0' } }, [
       h(ColumnSettings, {
+        ref: columnSettingsRef,
         columnSettings,
         onChange,
       }),
@@ -354,7 +364,10 @@ export const ColumnSettingsWithSavedColumnSettings = ({ columnSettings, onChange
         h(SavedColumnSettings, {
           ...otherProps,
           columnSettings,
-          onLoad: onChange,
+          onLoad: (updatedColumnSettings) => {
+            onChange(updatedColumnSettings);
+            updateColumnSettings(updatedColumnSettings);
+          },
         }),
       ]
     ),

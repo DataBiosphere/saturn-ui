@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { Ajax } from 'src/libs/ajax';
+import { Metrics } from 'src/libs/ajax/Metrics';
 import { MetricsEventName } from 'src/libs/events';
 
 export type CaptureEventFn = (event: MetricsEventName, details?: Record<string, any>, refreshAppcues?: boolean) => void;
@@ -9,7 +9,7 @@ export interface MetricsProvider {
 }
 
 export const useMetricsEvent = (): MetricsProvider => {
-  const sendEvent = useMemo(() => Ajax().Metrics.captureEvent, []);
+  const sendEvent = useMemo(() => Metrics().captureEvent, []);
   // By returning a wrapper function, we can handle the fire-and-forget promise mechanics properly here
   // instead of burdening the consumer side with silencing the Typescript/lint complaints, which can be
   // quite awkward in some nested functional uses.

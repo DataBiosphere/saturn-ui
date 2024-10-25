@@ -2,7 +2,7 @@ import { Spinner } from '@terra-ui-packages/components';
 import _ from 'lodash/fp';
 import { ReactNode, useEffect, useRef, useState } from 'react';
 import { div, h, h2, span } from 'react-hyperscript-helpers';
-import { Ajax } from 'src/libs/ajax';
+import { Workspaces } from 'src/libs/ajax/workspaces/Workspaces';
 import colors from 'src/libs/colors';
 import { reportErrorAndRethrow, withErrorIgnoring } from 'src/libs/error';
 import { useCancellation, useGetter } from 'src/libs/react-utils';
@@ -38,7 +38,7 @@ export const BillingProjectList = (): ReactNode => {
       }
       if (workspacesWithNamespaces.length > 0) {
         const updatedWorkspaceInfo = parseServerResponse(
-          await Ajax(signal).Workspaces.bucketMigrationProgress(workspacesWithNamespaces)
+          await Workspaces(signal).bucketMigrationProgress(workspacesWithNamespaces)
         );
         const merged = mergeBillingProjectMigrationInfo(getBillingProjectWorkspaces(), updatedWorkspaceInfo);
         setBillingProjectWorkspaces(merged);
@@ -52,7 +52,7 @@ export const BillingProjectList = (): ReactNode => {
         reportErrorAndRethrow('Error loading workspace migration information'),
         Utils.withBusyState(setLoadingMigrationInformation)
       )(async () => {
-        const migrationResponse = await Ajax(signal).Workspaces.bucketMigrationInfo();
+        const migrationResponse = await Workspaces(signal).bucketMigrationInfo();
         const billingProjectsWithWorkspaces = parseServerResponse(migrationResponse);
         setBillingProjectWorkspaces(billingProjectsWithWorkspaces);
 

@@ -1,9 +1,11 @@
 import _ from 'lodash/fp';
 import { useRef, useState } from 'react';
 import { isResourceDeletable } from 'src/analysis/utils/resource-utils';
-import { Ajax } from 'src/libs/ajax';
+import { Apps } from 'src/libs/ajax/leonardo/Apps';
 import { App } from 'src/libs/ajax/leonardo/models/app-models';
 import { Runtime } from 'src/libs/ajax/leonardo/models/runtime-models';
+import { Runtimes } from 'src/libs/ajax/leonardo/Runtimes';
+import { Workspaces } from 'src/libs/ajax/workspaces/Workspaces';
 import { reportError, withErrorReportingInModal } from 'src/libs/error';
 import { useCancellation, useOnMount } from 'src/libs/react-utils';
 import { getTerraUser, workspaceStore } from 'src/libs/state';
@@ -50,15 +52,15 @@ export const useDeleteWorkspaceState = (hookArgs: DeleteWorkspaceHookArgs): Dele
 
   const fetchWorkspaceResources = async (workspace: BaseWorkspace): Promise<WorkspaceResources> => {
     const apps = isGoogleWorkspace(workspace)
-      ? await Ajax(signal).Apps.listWithoutProject({
+      ? await Apps(signal).listWithoutProject({
           role: 'creator',
           saturnWorkspaceName: workspaceInfo.name,
         })
-      : await Ajax(signal).Apps.listAppsV2(workspaceInfo.workspaceId);
+      : await Apps(signal).listAppsV2(workspaceInfo.workspaceId);
 
     // only v2 runtimes supported right now for azure
     const currentRuntimesList = isAzureWorkspace(workspace)
-      ? await Ajax(signal).Runtimes.listV2WithWorkspace(workspaceInfo.workspaceId)
+      ? await Runtimes(signal).listV2WithWorkspace(workspaceInfo.workspaceId)
       : [];
 
     const [deletableApps, nonDeletableApps] = _.partition((app) => isResourceDeletable(app), apps);
@@ -86,9 +88,9 @@ export const useDeleteWorkspaceState = (hookArgs: DeleteWorkspaceHookArgs): Dele
 
       if (isGoogleWorkspace(hookArgs.workspace)) {
         const [{ acl }, bucketUsage] = await Promise.all([
-          Ajax(signal).Workspaces.workspace(workspaceInfo.namespace, workspaceInfo.name).getAcl(),
-          Ajax(signal)
-            .Workspaces.workspace(workspaceInfo.namespace, workspaceInfo.name)
+          Workspaces(signal).workspace(workspaceInfo.namespace, workspaceInfo.name).getAcl(),
+          Workspaces(signal)
+            .workspace(workspaceInfo.namespace, workspaceInfo.name)
             .bucketUsage()
             .catch((_error) => undefined),
         ]);
@@ -124,13 +126,13 @@ export const useDeleteWorkspaceState = (hookArgs: DeleteWorkspaceHookArgs): Dele
       if (isGoogleWorkspace(hookArgs.workspace) && workspaceResources) {
         await Promise.all(
           _.map(
-            async (app) => await Ajax(signal).Apps.app(app.cloudContext.cloudResource, app.appName).delete(),
+            async (app) => await Apps(signal).app(app.cloudContext.cloudResource, app.appName).delete(),
             workspaceResources.deleteableApps
           )
         );
       }
 
-      await Ajax(signal).Workspaces.workspaceV2(workspaceInfo.namespace, workspaceInfo.name).delete();
+      await Workspaces(signal).workspaceV2(workspaceInfo.namespace, workspaceInfo.name).delete();
       hookArgs.onDismiss();
       hookArgs.onSuccess();
       workspaceStore.reset();

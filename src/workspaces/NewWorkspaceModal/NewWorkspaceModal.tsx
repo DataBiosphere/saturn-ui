@@ -18,11 +18,17 @@ import {
 import { InfoBox } from 'src/components/InfoBox';
 import { TextArea, ValidatedInput } from 'src/components/input';
 import { allRegions, availableBucketRegions, isSupportedBucketLocation } from 'src/components/region-common';
-import { Ajax } from 'src/libs/ajax';
 import { AzureStorage } from 'src/libs/ajax/AzureStorage';
+import { Billing } from 'src/libs/ajax/billing/Billing';
 import { resolveWdsApp } from 'src/libs/ajax/data-table-providers/WdsDataTableProvider';
+import { FirecloudBucket } from 'src/libs/ajax/firecloud/FirecloudBucket';
+import { Groups } from 'src/libs/ajax/Groups';
 import { CurrentUserGroupMembership } from 'src/libs/ajax/Groups';
+import { Apps } from 'src/libs/ajax/leonardo/Apps';
 import { ListAppItem } from 'src/libs/ajax/leonardo/models/app-models';
+import { Metrics } from 'src/libs/ajax/Metrics';
+import { WorkspaceData } from 'src/libs/ajax/WorkspaceDataService';
+import { Workspaces } from 'src/libs/ajax/workspaces/Workspaces';
 import { getRegionLabel } from 'src/libs/azure-utils';
 import colors from 'src/libs/colors';
 import { getConfig } from 'src/libs/config';
@@ -133,7 +139,7 @@ export const NewWorkspaceModal = withDisplayName(
       ]);
 
     const loadAlphaRegionalityUser = reportErrorAndRethrow('Error loading regionality group membership')(async () => {
-      setIsAlphaRegionalityUser(await Ajax(signal).Groups.group(getConfig().alphaRegionalityGroup).isMember());
+      setIsAlphaRegionalityUser(await Groups(signal).group(getConfig().alphaRegionalityGroup).isMember());
     });
 
     const create = async (): Promise<void> => {
@@ -156,10 +162,10 @@ export const NewWorkspaceModal = withDisplayName(
           [
             !!cloneWorkspace,
             async () => {
-              const workspace: WorkspaceInfo = await Ajax()
-                .Workspaces.workspaceV2(cloneWorkspace!.workspace.namespace, cloneWorkspace!.workspace.name)
+              const workspace: WorkspaceInfo = await Workspaces()
+                .workspaceV2(cloneWorkspace!.workspace.namespace, cloneWorkspace!.workspace.name)
                 .clone(body);
-              const featuredList = await Ajax().FirecloudBucket.getFeaturedWorkspaces();
+              const featuredList = await FirecloudBucket().getFeaturedWorkspaces();
               const metricsData = {
                 featured: _.some(
                   { namespace: cloneWorkspace!.workspace.namespace, name: cloneWorkspace!.workspace.name },
@@ -173,17 +179,17 @@ export const NewWorkspaceModal = withDisplayName(
                   ? selectedBillingProject.region
                   : bucketLocation,
               };
-              Ajax().Metrics.captureEvent(Events.workspaceClone, metricsData);
+              void Metrics().captureEvent(Events.workspaceClone, metricsData);
               return workspace;
             },
           ],
           async () => {
-            const workspace = await Ajax().Workspaces.create(body);
+            const workspace = await Workspaces().create(body);
             const metricsData = {
               ...extractWorkspaceDetails(workspace),
               region: isAzureBillingProject(selectedBillingProject) ? selectedBillingProject.region : bucketLocation,
             };
-            Ajax().Metrics.captureEvent(Events.workspaceCreate, metricsData);
+            void Metrics().captureEvent(Events.workspaceCreate, metricsData);
             return workspace;
           }
         );
@@ -195,7 +201,7 @@ export const NewWorkspaceModal = withDisplayName(
           // Wait for the WDS app to be running.
           const wds = await Utils.poll(
             async () => {
-              const workspaceApps: ListAppItem[] = await Ajax().Apps.listAppsV2(createdWorkspace.workspaceId);
+              const workspaceApps: ListAppItem[] = await Apps().listAppsV2(createdWorkspace.workspaceId);
               const wdsApp = resolveWdsApp(workspaceApps);
               if (wdsApp?.status === 'RUNNING') {
                 return { shouldContinue: false, result: wdsApp };
@@ -213,7 +219,7 @@ export const NewWorkspaceModal = withDisplayName(
           const proxyUrl = wds!.proxyUrls.wds;
           await Utils.poll(
             async () => {
-              const collections: string[] = await Ajax().WorkspaceData.listCollections(
+              const collections: string[] = await WorkspaceData().listCollections(
                 proxyUrl,
                 createdWorkspace.workspaceId
               );
@@ -257,8 +263,8 @@ export const NewWorkspaceModal = withDisplayName(
       Utils.withBusyState(setLoading)
     )(() =>
       Promise.all([
-        Ajax(signal)
-          .Billing.listProjects()
+        Billing(signal)
+          .listProjects()
           .then(_.filter({ status: 'Ready' }))
           .then(
             _.forEach((project: BillingProject) => {
@@ -272,18 +278,18 @@ export const NewWorkspaceModal = withDisplayName(
             setBillingProjects(projects);
             setNamespace(_.some({ projectName: namespace }, projects) ? namespace : undefined);
           }),
-        Ajax(signal).Groups.list().then(setAllGroups),
+        Groups(signal).list().then(setAllGroups),
         !!cloneWorkspace &&
-          Ajax(signal)
-            .Workspaces.workspace(namespace!, cloneWorkspace.workspace.name)
+          Workspaces(signal)
+            .workspace(namespace!, cloneWorkspace.workspace.name)
             .details(['workspace.attributes.description'])
             .then((workspace) => {
               setDescription(workspace.workspace.attributes?.description || '');
             }),
         !!cloneWorkspace &&
           isGoogleWorkspace(cloneWorkspace) &&
-          Ajax(signal)
-            .Workspaces.workspace(namespace!, cloneWorkspace.workspace.name)
+          Workspaces(signal)
+            .workspace(namespace!, cloneWorkspace.workspace.name)
             .checkBucketLocation(cloneWorkspace.workspace.googleProject, cloneWorkspace.workspace.bucketName)
             .then(({ location }) => {
               // For current phased regionality release, we only allow US or NORTHAMERICA-NORTHEAST1 (Montreal) workspace buckets.

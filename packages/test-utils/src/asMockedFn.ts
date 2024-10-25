@@ -1,5 +1,7 @@
 export type AnyFn = (...args: any[]) => any;
 
+export type MockedFn<F extends AnyFn> = jest.MockedFunction<F>;
+
 /**
  * Use when working with a function mocked with jest.mock to tell TypeScript that
  * the function has been mocked and allow accessing mock methods/properties.

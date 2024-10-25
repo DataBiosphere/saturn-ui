@@ -1,9 +1,16 @@
-import { DeepPartial } from '@terra-ui-packages/core-utils';
 import { act } from '@testing-library/react';
 import { generateTestApp } from 'src/analysis/_testData/testData';
-import { Ajax } from 'src/libs/ajax';
+import { Apps, AppsAjaxContract } from 'src/libs/ajax/leonardo/Apps';
+import { Runtimes, RuntimesAjaxContract } from 'src/libs/ajax/leonardo/Runtimes';
+import { BucketUsageResponse, RawAccessEntry } from 'src/libs/ajax/workspaces/workspace-models';
+import {
+  WorkspaceContract,
+  Workspaces,
+  WorkspacesAjaxContract,
+  WorkspaceV2Contract,
+} from 'src/libs/ajax/workspaces/Workspaces';
 import { reportError } from 'src/libs/error';
-import { asMockedFn, renderHookInAct } from 'src/testing/test-utils';
+import { asMockedFn, partial, renderHookInAct } from 'src/testing/test-utils';
 import { useDeleteWorkspaceState } from 'src/workspaces/DeleteWorkspaceModal/state/useDeleteWorkspaceState';
 import { AzureWorkspaceInfo, BaseWorkspace, GoogleWorkspaceInfo } from 'src/workspaces/utils';
 
@@ -14,6 +21,9 @@ jest.mock('src/libs/ajax', (): AjaxExports => {
     Ajax: jest.fn(),
   };
 });
+jest.mock('src/libs/ajax/leonardo/Apps');
+jest.mock('src/libs/ajax/leonardo/Runtimes');
+jest.mock('src/libs/ajax/workspaces/Workspaces');
 
 type ErrorExports = typeof import('src/libs/error');
 jest.mock(
@@ -23,11 +33,6 @@ jest.mock(
     reportError: jest.fn(),
   })
 );
-
-type AjaxContract = ReturnType<typeof Ajax>;
-type AjaxAppsContract = AjaxContract['Apps'];
-type AjaxRuntimesContract = AjaxContract['Runtimes'];
-type AjaxWorkspacesContract = AjaxContract['Workspaces'];
 
 describe('useDeleteWorkspaceState', () => {
   const googleWorkspace = {
@@ -65,30 +70,25 @@ describe('useDeleteWorkspaceState', () => {
 
   it('can initialize state for a google workspace with running apps', async () => {
     // Arrange
-    const mockApps: Partial<AjaxAppsContract> = {
-      listWithoutProject: jest.fn(),
-    };
-    asMockedFn((mockApps as AjaxAppsContract).listWithoutProject).mockResolvedValue([
+    const listWithoutProject: AppsAjaxContract['listWithoutProject'] = jest.fn();
+    asMockedFn(listWithoutProject).mockResolvedValue([
       generateTestApp({
         appName: 'app1',
         status: 'RUNNING',
       }),
     ]);
 
-    const mockGetAcl = jest.fn().mockResolvedValue({ acl: { 'example1@example.com': {} } });
-    const mockGetBucketUsage = jest.fn().mockResolvedValue({ usageInBytes: 1234 });
-    const mockWorkspaces: DeepPartial<AjaxWorkspacesContract> = {
-      workspace: () => ({
-        getAcl: mockGetAcl,
-        bucketUsage: mockGetBucketUsage,
-      }),
-    };
+    const getAcl: WorkspaceContract['getAcl'] = jest.fn();
+    asMockedFn(getAcl).mockResolvedValue({ acl: { 'example1@example.com': partial<RawAccessEntry>({}) } });
+    const bucketUsage: WorkspaceContract['bucketUsage'] = jest.fn();
+    asMockedFn(bucketUsage).mockResolvedValue({ usageInBytes: 1234 });
 
-    const mockAjax: Partial<AjaxContract> = {
-      Apps: mockApps as AjaxAppsContract,
-      Workspaces: mockWorkspaces as AjaxWorkspacesContract,
-    };
-    asMockedFn(Ajax).mockImplementation(() => mockAjax as AjaxContract);
+    asMockedFn(Workspaces).mockReturnValue(
+      partial<WorkspacesAjaxContract>({
+        workspace: () => partial<WorkspaceContract>({ getAcl, bucketUsage }),
+      })
+    );
+    asMockedFn(Apps).mockReturnValue(partial<AppsAjaxContract>({ listWithoutProject }));
 
     // Act
     const { result } = await renderHookInAct(() =>
@@ -100,43 +100,39 @@ describe('useDeleteWorkspaceState', () => {
     expect(result.current.isDeleteDisabledFromResources).toBe(false);
     expect(result.current.collaboratorEmails).toEqual(['example1@example.com']);
     expect(result.current.workspaceBucketUsageInBytes).toBe(1234);
-    expect(mockApps.listWithoutProject).toHaveBeenCalledTimes(1);
-    expect(mockApps.listWithoutProject).toHaveBeenCalledWith({
+    expect(listWithoutProject).toHaveBeenCalledTimes(1);
+    expect(listWithoutProject).toHaveBeenCalledWith({
       role: 'creator',
       saturnWorkspaceName: googleWorkspace.workspace.name,
     });
-    expect(mockGetAcl).toHaveBeenCalledTimes(1);
-    expect(mockGetBucketUsage).toHaveBeenCalledTimes(1);
+    expect(getAcl).toHaveBeenCalledTimes(1);
+    expect(bucketUsage).toHaveBeenCalledTimes(1);
   });
 
   it('can initialize state for an azure workspace', async () => {
     // Arrange
-    const mockListAppsV2: Partial<AjaxAppsContract> = {
-      listAppsV2: jest.fn(),
-    };
-    asMockedFn((mockListAppsV2 as AjaxAppsContract).listAppsV2).mockResolvedValue([
+    const listAppsV2: AppsAjaxContract['listAppsV2'] = jest.fn();
+    asMockedFn(listAppsV2).mockResolvedValue([
       generateTestApp({
         appName: 'example',
         status: 'PROVISIONING',
       }),
     ]);
-    const mockListRuntimesV2: Partial<AjaxRuntimesContract> = {
-      listV2WithWorkspace: jest.fn(),
-    };
-    asMockedFn((mockListRuntimesV2 as AjaxRuntimesContract).listV2WithWorkspace).mockResolvedValue([]);
+    asMockedFn(Apps).mockReturnValue(partial<AppsAjaxContract>({ listAppsV2 }));
 
-    const mockGetAcl = jest.fn().mockResolvedValue({ acl: { 'example1@example.com': {} } });
-    const mockWorkspaces: DeepPartial<AjaxWorkspacesContract> = {
-      workspace: () => ({
-        getAcl: mockGetAcl,
-      }),
-    };
-    const mockAjax: Partial<AjaxContract> = {
-      Apps: mockListAppsV2 as AjaxAppsContract,
-      Runtimes: mockListRuntimesV2 as AjaxRuntimesContract,
-      Workspaces: mockWorkspaces as AjaxWorkspacesContract,
-    };
-    asMockedFn(Ajax).mockImplementation(() => mockAjax as AjaxContract);
+    asMockedFn(Workspaces).mockReturnValue(
+      partial<WorkspacesAjaxContract>({
+        workspace: () =>
+          partial<WorkspaceContract>({
+            getAcl: async () => ({ acl: {} }),
+          }),
+      })
+    );
+    asMockedFn(Runtimes).mockReturnValue(
+      partial<RuntimesAjaxContract>({
+        listV2WithWorkspace: async () => [],
+      })
+    );
 
     // Act
     const { result } = await renderHookInAct(() =>
@@ -147,38 +143,35 @@ describe('useDeleteWorkspaceState', () => {
     expect(result.current.hasApps()).toBe(true);
     expect(result.current.hasRuntimes()).toBe(false);
     expect(result.current.isDeleteDisabledFromResources).toBe(true);
-    expect(mockListAppsV2.listAppsV2).toHaveBeenCalledTimes(1);
-    expect(mockListAppsV2.listAppsV2).toHaveBeenCalledWith(azureWorkspace.workspace.workspaceId);
+    expect(listAppsV2).toHaveBeenCalledTimes(1);
+    expect(listAppsV2).toHaveBeenCalledWith(azureWorkspace.workspace.workspaceId);
   });
 
   it('can delete an azure workspace', async () => {
     // Arrange
-    const mockDelete = jest.fn().mockResolvedValue([]);
-    const mockGetAcl = jest.fn().mockResolvedValue({ acl: { 'example1@example.com': {} } });
-    const mockWorkspaces: DeepPartial<AjaxWorkspacesContract> = {
-      workspace: () => ({
-        getAcl: mockGetAcl,
-      }),
-      workspaceV2: () => ({
-        delete: mockDelete,
-      }),
-    };
-    const mockListAppsV2: Partial<AjaxAppsContract> = {
-      listAppsV2: jest.fn(),
-    };
-    asMockedFn((mockListAppsV2 as AjaxAppsContract).listAppsV2).mockResolvedValue([]);
+    const mockDelete: WorkspaceV2Contract['delete'] = jest.fn();
+    asMockedFn(mockDelete).mockResolvedValue(partial<Response>({}));
 
-    const mockListRuntimesV2: Partial<AjaxRuntimesContract> = {
-      listV2WithWorkspace: jest.fn(),
-    };
-    asMockedFn((mockListRuntimesV2 as AjaxRuntimesContract).listV2WithWorkspace).mockResolvedValue([]);
+    asMockedFn(Workspaces).mockReturnValue(
+      partial<WorkspacesAjaxContract>({
+        workspace: () =>
+          partial<WorkspaceContract>({
+            getAcl: async () => ({ acl: { 'example1@example.com': partial<RawAccessEntry>({}) } }),
+          }),
+        workspaceV2: () => partial<WorkspaceV2Contract>({ delete: mockDelete }),
+      })
+    );
 
-    const mockAjax: Partial<AjaxContract> = {
-      Workspaces: mockWorkspaces as AjaxWorkspacesContract,
-      Apps: mockListAppsV2 as AjaxAppsContract,
-      Runtimes: mockListRuntimesV2 as AjaxRuntimesContract,
-    };
-    asMockedFn(Ajax).mockImplementation(() => mockAjax as AjaxContract);
+    asMockedFn(Apps).mockReturnValue(
+      partial<AppsAjaxContract>({
+        listAppsV2: async () => [],
+      })
+    );
+
+    const listV2WithWorkspace: RuntimesAjaxContract['listV2WithWorkspace'] = jest.fn();
+    asMockedFn(listV2WithWorkspace).mockResolvedValue([]);
+
+    asMockedFn(Runtimes).mockReturnValue(partial<RuntimesAjaxContract>({ listV2WithWorkspace }));
 
     // Act
     const { result } = await renderHookInAct(() =>
@@ -195,29 +188,24 @@ describe('useDeleteWorkspaceState', () => {
 
   it('can delete a google workspace', async () => {
     // Arrange
-    const mockDelete = jest.fn().mockResolvedValue([]);
-    const mockApps: Partial<AjaxAppsContract> = {
-      listWithoutProject: jest.fn(),
-    };
-    asMockedFn((mockApps as AjaxAppsContract).listWithoutProject).mockResolvedValue([]);
+    const mockDelete: WorkspaceV2Contract['delete'] = jest.fn();
+    asMockedFn(mockDelete).mockResolvedValue(partial<Response>({}));
 
-    const mockGetAcl = jest.fn().mockResolvedValue([]);
-    const mockGetBucketUsage = jest.fn().mockResolvedValue([]);
-    const mockWorkspaces: DeepPartial<AjaxWorkspacesContract> = {
-      workspace: () => ({
-        getAcl: mockGetAcl,
-        bucketUsage: mockGetBucketUsage,
-      }),
-      workspaceV2: () => ({
-        delete: mockDelete,
-      }),
-    };
+    asMockedFn(Apps).mockReturnValue(partial<AppsAjaxContract>({ listWithoutProject: async () => [] }));
 
-    const mockAjax: Partial<AjaxContract> = {
-      Apps: mockApps as AjaxAppsContract,
-      Workspaces: mockWorkspaces as AjaxWorkspacesContract,
-    };
-    asMockedFn(Ajax).mockImplementation(() => mockAjax as AjaxContract);
+    asMockedFn(Workspaces).mockReturnValue(
+      partial<WorkspacesAjaxContract>({
+        workspace: () =>
+          partial<WorkspaceContract>({
+            getAcl: async () => ({ acl: {} }),
+            bucketUsage: async () => partial<BucketUsageResponse>({}),
+          }),
+        workspaceV2: () =>
+          partial<WorkspaceV2Contract>({
+            delete: mockDelete,
+          }),
+      })
+    );
 
     // Act
     const { result } = await renderHookInAct(() =>
@@ -232,29 +220,28 @@ describe('useDeleteWorkspaceState', () => {
 
   it('can handle errors when deletion fails', async () => {
     // Arrange
-    const mockApps: Partial<AjaxAppsContract> = {
-      listWithoutProject: jest.fn(),
-    };
-    asMockedFn((mockApps as AjaxAppsContract).listWithoutProject).mockResolvedValue([]);
+    asMockedFn(Apps).mockReturnValue(
+      partial<AppsAjaxContract>({
+        listWithoutProject: async () => [],
+      })
+    );
 
-    const mockGetAcl = jest.fn().mockResolvedValue([]);
-    const mockGetBucketUsage = jest.fn().mockResolvedValue([]);
-    const mockDelete = jest.fn().mockRejectedValue(new Error('testing'));
-    const mockWorkspaces: DeepPartial<AjaxWorkspacesContract> = {
-      workspace: () => ({
-        getAcl: mockGetAcl,
-        bucketUsage: mockGetBucketUsage,
-      }),
-      workspaceV2: () => ({
-        delete: mockDelete,
-      }),
-    };
+    const mockDelete: WorkspaceV2Contract['delete'] = jest.fn();
+    asMockedFn(mockDelete).mockRejectedValue(new Error('testing'));
 
-    const mockAjax: Partial<AjaxContract> = {
-      Apps: mockApps as AjaxAppsContract,
-      Workspaces: mockWorkspaces as AjaxWorkspacesContract,
-    };
-    asMockedFn(Ajax).mockImplementation(() => mockAjax as AjaxContract);
+    asMockedFn(Workspaces).mockReturnValue(
+      partial<WorkspacesAjaxContract>({
+        workspace: () =>
+          partial<WorkspaceContract>({
+            getAcl: async () => ({ acl: {} }),
+            bucketUsage: async () => partial<BucketUsageResponse>({}),
+          }),
+        workspaceV2: () =>
+          partial<WorkspaceV2Contract>({
+            delete: mockDelete,
+          }),
+      })
+    );
 
     // Act
     const { result } = await renderHookInAct(() =>
@@ -271,29 +258,28 @@ describe('useDeleteWorkspaceState', () => {
 
   it('can delete a google workspace with no google project', async () => {
     // Arrange
-    const mockApps: Partial<AjaxAppsContract> = {
-      listWithoutProject: jest.fn(),
-    };
-    asMockedFn((mockApps as AjaxAppsContract).listWithoutProject).mockResolvedValue([]);
+    asMockedFn(Apps).mockReturnValue(
+      partial<AppsAjaxContract>({
+        listWithoutProject: async () => [],
+      })
+    );
 
-    const mockGetAcl = jest.fn().mockResolvedValue([]);
-    const mockGetBucketUsage = jest.fn().mockRejectedValue(new Error('no project!'));
     const mockDelete = jest.fn().mockResolvedValue([]);
-    const mockWorkspaces: DeepPartial<AjaxWorkspacesContract> = {
-      workspace: () => ({
-        getAcl: mockGetAcl,
-        bucketUsage: mockGetBucketUsage,
-      }),
-      workspaceV2: () => ({
-        delete: mockDelete,
-      }),
-    };
-
-    const mockAjax: Partial<AjaxContract> = {
-      Apps: mockApps as AjaxAppsContract,
-      Workspaces: mockWorkspaces as AjaxWorkspacesContract,
-    };
-    asMockedFn(Ajax).mockImplementation(() => mockAjax as AjaxContract);
+    asMockedFn(Workspaces).mockReturnValue(
+      partial<WorkspacesAjaxContract>({
+        workspace: () =>
+          partial<WorkspaceContract>({
+            getAcl: async () => ({ acl: {} }),
+            bucketUsage: async () => {
+              throw new Error('no project!');
+            },
+          }),
+        workspaceV2: () =>
+          partial<WorkspaceV2Contract>({
+            delete: mockDelete,
+          }),
+      })
+    );
 
     // Act
     const { result } = await renderHookInAct(() =>

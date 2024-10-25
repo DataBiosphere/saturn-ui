@@ -1,4 +1,4 @@
-import { CenteredSpinner } from '@terra-ui-packages/components';
+import { SpinnerOverlay } from '@terra-ui-packages/components';
 import _ from 'lodash/fp';
 import * as qs from 'qs';
 import React, { useState } from 'react';
@@ -10,11 +10,13 @@ import { TabBar } from 'src/components/tabBars';
 import { FlexTable, HeaderCell, Paginator, Sortable, TooltipCell } from 'src/components/table';
 import { TopBar } from 'src/components/TopBar';
 import { Ajax } from 'src/libs/ajax';
+import { createMethodProvider } from 'src/libs/ajax/methods/providers/CreateMethodProvider';
 import * as Nav from 'src/libs/nav';
 import { notify } from 'src/libs/notifications';
 import { useCancellation, useOnMount } from 'src/libs/react-utils';
 import { getTerraUser } from 'src/libs/state';
 import * as Utils from 'src/libs/utils';
+import { withBusyState } from 'src/libs/utils';
 import { WorkflowModal } from 'src/pages/workflows/workflow/common/WorkflowModal';
 import { MethodDefinition } from 'src/pages/workflows/workflow-utils';
 
@@ -81,6 +83,7 @@ export const WorkflowList = (props: WorkflowListProps) => {
   const { tab = 'mine', filter = '', ...query } = queryParams;
 
   const signal: AbortSignal = useCancellation();
+  const [busy, setBusy] = useState<boolean>(false);
 
   // workflows is undefined while the method definitions are still loading;
   // it is null if there is an error while loading
@@ -90,10 +93,8 @@ export const WorkflowList = (props: WorkflowListProps) => {
   // function signatures from the Sortable component used in this
   // component and from Lodash/fp's orderBy function)
   const [sort, setSort] = useState<SortProperties>({ field: 'name', direction: 'asc' });
+
   const [createWorkflowModalOpen, setCreateWorkflowModalOpen] = useState<boolean>(false);
-  const [workflowNamespace, setWorkflowNamespace] = useState<string>('');
-  const [workflowName, setWorkflowName] = useState<string>('');
-  const [workflowSynopsis, setWorkflowSynopsis] = useState<string>('');
 
   const [pageNumber, setPageNumber] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(25);
@@ -149,7 +150,7 @@ export const WorkflowList = (props: WorkflowListProps) => {
     const isMine = ({ public: isPublic, managers }: MethodDefinition): boolean =>
       !isPublic || _.includes(getTerraUser().email, managers);
 
-    const loadWorkflows = async () => {
+    const loadWorkflows = withBusyState(setBusy, async () => {
       try {
         const allWorkflows: MethodDefinition[] = await Ajax(signal).Methods.definitions();
 
@@ -161,10 +162,17 @@ export const WorkflowList = (props: WorkflowListProps) => {
         setWorkflows(null);
         notify('error', 'Error loading methods', { detail: error instanceof Response ? await error.text() : error });
       }
-    };
+    });
 
     loadWorkflows();
   });
+
+  const navigateToWorkflow = (namespace: string, name: string, snapshotId: number) =>
+    Nav.goToPath('workflow-dashboard', {
+      namespace,
+      name,
+      snapshotId,
+    });
 
   // Gets the sort key of a method definition based on the currently
   // selected sort field such that numeric fields are sorted numerically
@@ -242,7 +250,6 @@ export const WorkflowList = (props: WorkflowListProps) => {
               />
             )}
           </AutoSizer>
-          {workflows === undefined && <CenteredSpinner />}
         </div>
         {!_.isEmpty(sortedWorkflows) && (
           <div style={{ marginBottom: '0.5rem' }}>
@@ -264,18 +271,15 @@ export const WorkflowList = (props: WorkflowListProps) => {
         )}
         {createWorkflowModalOpen && (
           <WorkflowModal
-            setCreateWorkflowModalOpen={setCreateWorkflowModalOpen}
             title='Create New Method'
-            namespace={workflowNamespace}
-            name={workflowName}
-            buttonAction='Upload'
-            synopsis={workflowSynopsis}
-            setWorkflowNamespace={setWorkflowNamespace}
-            setWorkflowName={setWorkflowName}
-            setWorkflowSynopsis={setWorkflowSynopsis}
+            buttonActionName='Upload'
+            createMethodProvider={createMethodProvider}
+            onSuccess={navigateToWorkflow}
+            onDismiss={() => setCreateWorkflowModalOpen(false)}
           />
         )}
       </main>
+      {busy && <SpinnerOverlay />}
     </FooterWrapper>
   );
 };

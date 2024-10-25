@@ -1,14 +1,12 @@
 import { abandonedPromise } from '@terra-ui-packages/core-utils';
 import { act, screen, within } from '@testing-library/react';
 import { h } from 'react-hyperscript-helpers';
-import { Ajax } from 'src/libs/ajax';
-import { asMockedFn, renderWithAppContexts as render } from 'src/testing/test-utils';
+import { Workspaces, WorkspacesAjaxContract } from 'src/libs/ajax/workspaces/Workspaces';
+import { asMockedFn, MockedFn, partial, renderWithAppContexts as render } from 'src/testing/test-utils';
 import { BillingProjectList, inProgressRefreshRate } from 'src/workspaces/migration/BillingProjectList';
 import { mockServerData } from 'src/workspaces/migration/migration-utils.test';
 
-type AjaxContract = ReturnType<typeof Ajax>;
-type AjaxWorkspacesContract = AjaxContract['Workspaces'];
-jest.mock('src/libs/ajax');
+jest.mock('src/libs/ajax/workspaces/Workspaces');
 
 describe('BillingProjectList', () => {
   beforeAll(() => {
@@ -21,13 +19,11 @@ describe('BillingProjectList', () => {
 
   it('shows a loading indicator', async () => {
     // Arrange
-    const mockWorkspaces: Partial<AjaxWorkspacesContract> = {
-      bucketMigrationInfo: jest.fn().mockReturnValue(abandonedPromise()),
-    };
-    const mockAjax: Partial<AjaxContract> = {
-      Workspaces: mockWorkspaces as AjaxWorkspacesContract,
-    };
-    asMockedFn(Ajax).mockImplementation(() => mockAjax as AjaxContract);
+    asMockedFn(Workspaces).mockImplementation(() =>
+      partial<WorkspacesAjaxContract>({
+        bucketMigrationInfo: () => abandonedPromise(),
+      })
+    );
 
     // Act
     render(h(BillingProjectList, []));
@@ -38,13 +34,11 @@ describe('BillingProjectList', () => {
 
   it('shows a message if there are no workspaces to migrate', async () => {
     // Arrange
-    const mockWorkspaces: Partial<AjaxWorkspacesContract> = {
-      bucketMigrationInfo: jest.fn().mockResolvedValue({}),
-    };
-    const mockAjax: Partial<AjaxContract> = {
-      Workspaces: mockWorkspaces as AjaxWorkspacesContract,
-    };
-    asMockedFn(Ajax).mockImplementation(() => mockAjax as AjaxContract);
+    asMockedFn(Workspaces).mockImplementation(() =>
+      partial<WorkspacesAjaxContract>({
+        bucketMigrationInfo: async () => ({}),
+      })
+    );
 
     // Act
     render(h(BillingProjectList, []));
@@ -56,13 +50,11 @@ describe('BillingProjectList', () => {
 
   it('shows the list of billing projects with workspaces', async () => {
     // Arrange
-    const mockWorkspaces: Partial<AjaxWorkspacesContract> = {
-      bucketMigrationInfo: jest.fn().mockResolvedValue(mockServerData),
-    };
-    const mockAjax: Partial<AjaxContract> = {
-      Workspaces: mockWorkspaces as AjaxWorkspacesContract,
-    };
-    asMockedFn(Ajax).mockImplementation(() => mockAjax as AjaxContract);
+    asMockedFn(Workspaces).mockImplementation(() =>
+      partial<WorkspacesAjaxContract>({
+        bucketMigrationInfo: async () => mockServerData,
+      })
+    );
 
     // Act
     render(h(BillingProjectList, []));
@@ -102,15 +94,17 @@ describe('BillingProjectList', () => {
         },
       },
     };
-    const mockBatchProgress = jest.fn().mockResolvedValue(mockUpdateData);
-    const mockWorkspaces: Partial<AjaxWorkspacesContract> = {
-      bucketMigrationInfo: jest.fn().mockResolvedValue(mockServerData),
-      bucketMigrationProgress: mockBatchProgress,
-    };
-    const mockAjax: Partial<AjaxContract> = {
-      Workspaces: mockWorkspaces as AjaxWorkspacesContract,
-    };
-    asMockedFn(Ajax).mockImplementation(() => mockAjax as AjaxContract);
+    const bucketMigrationInfo: MockedFn<WorkspacesAjaxContract['bucketMigrationInfo']> = jest.fn();
+    bucketMigrationInfo.mockResolvedValue(mockServerData);
+
+    const bucketMigrationProgress: MockedFn<WorkspacesAjaxContract['bucketMigrationProgress']> = jest.fn();
+    bucketMigrationProgress.mockResolvedValue(mockUpdateData);
+
+    // Mocks here need to use jest.fn() to play nice with jest fake timers advanceTimersByTime.
+    // Shorthand "async () => returnValue" creates react act() console.error warnings which fail the test.
+    asMockedFn(Workspaces).mockImplementation(() =>
+      partial<WorkspacesAjaxContract>({ bucketMigrationInfo, bucketMigrationProgress })
+    );
 
     await act(() => render(h(BillingProjectList, [])));
 
@@ -122,7 +116,7 @@ describe('BillingProjectList', () => {
       jest.advanceTimersByTime(inProgressRefreshRate);
     });
 
-    expect(mockBatchProgress).toHaveBeenCalledWith([
+    expect(bucketMigrationProgress).toHaveBeenCalledWith([
       { name: 'Christina test', namespace: 'general-dev-billing-account' },
     ]);
 

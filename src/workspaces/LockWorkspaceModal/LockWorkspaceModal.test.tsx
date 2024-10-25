@@ -1,22 +1,14 @@
-import { DeepPartial } from '@terra-ui-packages/core-utils';
-import { asMockedFn } from '@terra-ui-packages/test-utils';
+import { asMockedFn, partial } from '@terra-ui-packages/test-utils';
 import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import React from 'react';
-import { Ajax } from 'src/libs/ajax';
+import { WorkspaceContract, Workspaces, WorkspacesAjaxContract } from 'src/libs/ajax/workspaces/Workspaces';
 import { renderWithAppContexts as render } from 'src/testing/test-utils';
 import { defaultGoogleWorkspace } from 'src/testing/workspace-fixtures';
 import LockWorkspaceModal from 'src/workspaces/LockWorkspaceModal/LockWorkspaceModal';
 import { WorkspaceWrapper as Workspace } from 'src/workspaces/utils';
 
-type AjaxContract = ReturnType<typeof Ajax>;
-type AjaxExports = typeof import('src/libs/ajax');
-jest.mock('src/libs/ajax', (): AjaxExports => {
-  return {
-    ...jest.requireActual('src/libs/ajax'),
-    Ajax: jest.fn(),
-  };
-});
+jest.mock('src/libs/ajax/workspaces/Workspaces');
 
 const mockReportError = jest.fn();
 type ErrorExports = typeof import('src/libs/error');
@@ -71,19 +63,17 @@ describe('LockWorkspaceModal', () => {
     const user = userEvent.setup();
     const onDismiss = jest.fn();
     const onSuccess = jest.fn();
-    const mockLock = jest.fn();
+    const lock = jest.fn();
     const workspace: Workspace = {
       ...defaultGoogleWorkspace,
       workspace: { ...defaultGoogleWorkspace.workspace, isLocked: false },
     };
     const props = { workspace, onDismiss, onSuccess };
-    asMockedFn(Ajax).mockReturnValue({
-      Workspaces: {
-        workspace: jest.fn().mockReturnValue({
-          lock: mockLock,
-        }),
-      },
-    } as DeepPartial<AjaxContract> as AjaxContract);
+    asMockedFn(Workspaces).mockReturnValue(
+      partial<WorkspacesAjaxContract>({
+        workspace: () => partial<WorkspaceContract>({ lock }),
+      })
+    );
 
     // Act
     render(<LockWorkspaceModal {...props} />);
@@ -93,7 +83,7 @@ describe('LockWorkspaceModal', () => {
     // Assert
     expect(onDismiss).toHaveBeenCalled();
     expect(onSuccess).toHaveBeenCalled();
-    expect(mockLock).toHaveBeenCalled();
+    expect(lock).toHaveBeenCalled();
   });
 
   it('calls onDismiss, onSuccess, and unlocks locked workspace if the lock is toggled', async () => {
@@ -101,19 +91,17 @@ describe('LockWorkspaceModal', () => {
     const user = userEvent.setup();
     const onDismiss = jest.fn();
     const onSuccess = jest.fn();
-    const mockUnlock = jest.fn();
+    const unlock = jest.fn();
     const workspace: Workspace = {
       ...defaultGoogleWorkspace,
       workspace: { ...defaultGoogleWorkspace.workspace, isLocked: true },
     };
     const props = { workspace, onDismiss, onSuccess };
-    asMockedFn(Ajax).mockReturnValue({
-      Workspaces: {
-        workspace: jest.fn().mockReturnValue({
-          unlock: mockUnlock,
-        }),
-      },
-    } as DeepPartial<AjaxContract> as AjaxContract);
+    asMockedFn(Workspaces).mockReturnValue(
+      partial<WorkspacesAjaxContract>({
+        workspace: () => partial<WorkspaceContract>({ unlock }),
+      })
+    );
 
     // Act
     render(<LockWorkspaceModal {...props} />);
@@ -123,7 +111,7 @@ describe('LockWorkspaceModal', () => {
     // Assert
     expect(onDismiss).toHaveBeenCalled();
     expect(onSuccess).toHaveBeenCalled();
-    expect(mockUnlock).toHaveBeenCalled();
+    expect(unlock).toHaveBeenCalled();
   });
 
   it('calls only onDismiss if the lock toggle is canceled', async () => {
@@ -131,19 +119,17 @@ describe('LockWorkspaceModal', () => {
     const user = userEvent.setup();
     const onDismiss = jest.fn();
     const onSuccess = jest.fn();
-    const mockLock = jest.fn();
+    const lock = jest.fn();
     const workspace: Workspace = {
       ...defaultGoogleWorkspace,
       workspace: { ...defaultGoogleWorkspace.workspace, isLocked: false },
     };
     const props = { workspace, onDismiss, onSuccess };
-    asMockedFn(Ajax).mockReturnValue({
-      Workspaces: {
-        workspace: jest.fn().mockReturnValue({
-          lock: mockLock,
-        }),
-      },
-    } as DeepPartial<AjaxContract> as AjaxContract);
+    asMockedFn(Workspaces).mockReturnValue(
+      partial<WorkspacesAjaxContract>({
+        workspace: () => partial<WorkspaceContract>({ lock }),
+      })
+    );
 
     // Act
     render(<LockWorkspaceModal {...props} />);
@@ -153,7 +139,7 @@ describe('LockWorkspaceModal', () => {
     // Assert
     expect(onDismiss).toHaveBeenCalled();
     expect(onSuccess).not.toHaveBeenCalled();
-    expect(mockLock).not.toHaveBeenCalled();
+    expect(lock).not.toHaveBeenCalled();
   });
 
   it('calls only onDismiss if the lock toggle causes an error', async () => {
@@ -166,13 +152,13 @@ describe('LockWorkspaceModal', () => {
       workspace: { ...defaultGoogleWorkspace.workspace, isLocked: true },
     };
     const props = { workspace, onDismiss, onSuccess };
-    asMockedFn(Ajax).mockReturnValue({
-      Workspaces: {
+    asMockedFn(Workspaces).mockReturnValue(
+      partial<WorkspacesAjaxContract>({
         workspace: () => {
           throw new Error();
         },
-      },
-    } as DeepPartial<AjaxContract> as AjaxContract);
+      })
+    );
 
     // Act
     render(<LockWorkspaceModal {...props} />);

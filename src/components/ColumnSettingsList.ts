@@ -182,7 +182,7 @@ export const ColumnSettingsList = ({ items, onChange, toggleVisibility }: Column
   );
 
   const renderItem = (item, index) => {
-    return h(SortableItem, { id: item.id, name: item.name, index: getPosition(item.id) }, [
+    return h(SortableItem, { id: item.name, name: item.name, index: getPosition(item.id) }, [
       h(DragHandle),
       h(Fragment, [
         h(

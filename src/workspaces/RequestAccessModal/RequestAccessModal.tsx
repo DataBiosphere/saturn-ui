@@ -3,8 +3,8 @@ import _ from 'lodash/fp';
 import React from 'react';
 import { ReactNode, useState } from 'react';
 import { ButtonPrimary } from 'src/components/common';
-import { Ajax } from 'src/libs/ajax';
-import { CurrentUserGroupMembership } from 'src/libs/ajax/Groups';
+import { CurrentUserGroupMembership, Groups } from 'src/libs/ajax/Groups';
+import { SamResources } from 'src/libs/ajax/SamResources';
 import { withErrorReporting } from 'src/libs/error';
 import { useCancellation, useOnMount } from 'src/libs/react-utils';
 import { getTerraUser } from 'src/libs/state';
@@ -64,8 +64,8 @@ const GcpRequestAccessModal = (props: GcpRequestAccessModalProps): ReactNode => 
 
   const fetchGroups = async () => {
     const [groups, canDelete] = await Promise.all([
-      Ajax(signal).Groups.list(),
-      Ajax(signal).SamResources.canDelete({ resourceTypeName: 'workspace', resourceId: workspace.workspaceId }),
+      Groups(signal).list(),
+      SamResources(signal).canDelete({ resourceTypeName: 'workspace', resourceId: workspace.workspaceId }),
     ]);
     setGroups(groups);
     setCanDelete(canDelete);
@@ -153,13 +153,11 @@ const RequestAccessButton = (props: RequestAccessButtonProps): ReactNode => {
   const [requested, setRequested] = useState(false);
   const signal = useCancellation();
 
-  const { Groups } = Ajax(signal);
-
   const requestAccess = _.flow(
     withBusyState(setRequesting),
     withErrorReporting('Error requesting group access')
   )(async () => {
-    await Groups.group(props.groupName).requestAccess();
+    await Groups(signal).group(props.groupName).requestAccess();
     setRequested(true);
   });
 

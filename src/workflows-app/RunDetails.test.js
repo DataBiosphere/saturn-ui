@@ -3,10 +3,11 @@ import userEvent from '@testing-library/user-event';
 import _ from 'lodash/fp';
 import { h } from 'react-hyperscript-helpers';
 import { Ajax } from 'src/libs/ajax';
+import { Metrics } from 'src/libs/ajax/Metrics';
 import * as configStore from 'src/libs/config';
 import Events from 'src/libs/events';
 import { makeCompleteDate } from 'src/libs/utils';
-import { renderWithAppContexts as render, SelectHelper } from 'src/testing/test-utils';
+import { asMockedFn, renderWithAppContexts as render, SelectHelper } from 'src/testing/test-utils';
 import { appendSASTokenIfNecessary, getFilenameFromAzureBlobPath } from 'src/workflows-app/components/InputOutputModal';
 import { collapseCromwellStatus } from 'src/workflows-app/components/job-common';
 import { failedTasks as failedTasksMetadata } from 'src/workflows-app/fixtures/failed-tasks';
@@ -22,6 +23,7 @@ import { isAzureUri } from 'src/workspace-data/data-table/uri-viewer/uri-viewer-
 import { parseFullFilepathToContainerDirectory } from './utils/task-log-utils';
 
 jest.mock('src/libs/ajax');
+jest.mock('src/libs/ajax/Metrics');
 
 const wdsUrlRoot = 'https://lz-abc/wds-abc-c07807929cd1/';
 const cbasUrlRoot = 'https://lz-abc/terra-app-abc/cbas';
@@ -149,6 +151,7 @@ beforeEach(() => {
   Ajax.mockImplementation(() => {
     return mockObj;
   });
+  asMockedFn(Metrics).mockReturnValue(mockObj.Metrics);
 });
 
 describe('BaseRunDetails - render smoke test', () => {

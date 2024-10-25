@@ -8,9 +8,10 @@ import { ValidatedInput } from 'src/components/input';
 import { TopBar } from 'src/components/TopBar';
 import WDLViewer from 'src/components/WDLViewer';
 import importBackground from 'src/images/hex-import-background.svg';
-import { Ajax } from 'src/libs/ajax';
 import { Apps } from 'src/libs/ajax/leonardo/Apps';
+import { Metrics } from 'src/libs/ajax/Metrics';
 import { useMetricsEvent } from 'src/libs/ajax/metrics/useMetrics';
+import { Cbas } from 'src/libs/ajax/workflows-app/Cbas';
 import colors from 'src/libs/colors';
 import { withErrorReporting } from 'src/libs/error';
 import Events, { extractWorkspaceDetails } from 'src/libs/events';
@@ -96,7 +97,7 @@ export const ImportWorkflow = ({ path, version, source }) => {
         importPage: 'ImportWorkflow',
       });
 
-      const res = await Ajax(signal).Cbas.methods.post(appUrls.cbasUrl, postRequestBody);
+      const res = await Cbas(signal).methods.post(appUrls.cbasUrl, postRequestBody);
       const methodId = res.method_id;
 
       Nav.goToPath('workspace-workflows-app', { name, namespace, methodId });
@@ -125,7 +126,7 @@ export const ImportWorkflow = ({ path, version, source }) => {
           },
           options
         );
-        Ajax(signal).Metrics.captureEvent(Events.workflowImport, { ...eventData, success: true });
+        void Metrics(signal).captureEvent(Events.workflowImport, { ...eventData, success: true });
         Nav.goToPath('workflow', { namespace, name, workflowNamespace: namespace, workflowName });
       } else {
         if (workspace.createdBy !== getTerraUser()?.email) {
@@ -138,7 +139,7 @@ export const ImportWorkflow = ({ path, version, source }) => {
       if (error.status === 409) {
         setConfirmOverwriteInWorkspace(workspace);
       } else {
-        Ajax().Metrics.captureEvent(Events.workflowImport, { ...eventData, success: false });
+        void Metrics().captureEvent(Events.workflowImport, { ...eventData, success: false });
         throw error;
       }
     }

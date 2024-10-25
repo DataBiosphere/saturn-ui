@@ -6,7 +6,7 @@ import { ReactNode, useState } from 'react';
 import { b, div, h, span } from 'react-hyperscript-helpers';
 import Collapse from 'src/components/Collapse';
 import { ButtonOutline, ButtonPrimary } from 'src/components/common';
-import { Ajax } from 'src/libs/ajax';
+import { Workspaces } from 'src/libs/ajax/workspaces/Workspaces';
 import colors from 'src/libs/colors';
 import { reportErrorAndRethrow } from 'src/libs/error';
 import {
@@ -81,7 +81,7 @@ export const BillingProjectParent = (props: BillingProjectParentProps): ReactNod
       }
     });
     if (workspacesToMigrate.length > 0) {
-      await Ajax().Workspaces.startBatchBucketMigration(workspacesToMigrate);
+      await Workspaces().startBatchBucketMigration(workspacesToMigrate);
       props.migrationStartedCallback(workspacesToMigrate);
     }
   });

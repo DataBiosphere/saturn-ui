@@ -4,7 +4,7 @@ import { b, div, h, span } from 'react-hyperscript-helpers';
 import { ButtonOutline, ButtonPrimary } from 'src/components/common';
 import { icon } from 'src/components/icons';
 import { InfoBox } from 'src/components/InfoBox';
-import { Ajax } from 'src/libs/ajax';
+import { Workspaces } from 'src/libs/ajax/workspaces/Workspaces';
 import colors from 'src/libs/colors';
 import { reportErrorAndRethrow } from 'src/libs/error';
 import { useCancellation } from 'src/libs/react-utils';
@@ -70,7 +70,7 @@ export const WorkspaceItem = (props: WorkspaceItemProps): ReactNode => {
     // Dismiss confirmation
     setConfirmMigration(false);
 
-    await Ajax().Workspaces.workspaceV2(workspaceInfo.namespace, workspaceInfo.name).migrateWorkspace();
+    await Workspaces().workspaceV2(workspaceInfo.namespace, workspaceInfo.name).migrateWorkspace();
     props.migrationStartedCallback([{ name: workspaceInfo.name, namespace: workspaceInfo.namespace }]);
     setMigrateStarted(true);
   });
@@ -80,8 +80,8 @@ export const WorkspaceItem = (props: WorkspaceItemProps): ReactNode => {
       // Set to an empty string as a flag that we have sent an Ajax request.
       setUnmigratedBucketSize('');
       try {
-        const { usageInBytes } = await Ajax(signal)
-          .Workspaces.workspace(workspaceInfo.namespace, workspaceInfo.name)
+        const { usageInBytes } = await Workspaces(signal)
+          .workspace(workspaceInfo.namespace, workspaceInfo.name)
           .bucketUsage();
         setUnmigratedBucketSize(`Bucket Size: ${Utils.formatBytes(usageInBytes)}`);
       } catch (error) {

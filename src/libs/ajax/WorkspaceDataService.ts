@@ -73,7 +73,7 @@ export type Capabilities = {
   [key in Capability]: boolean;
 };
 
-export const WorkspaceData = (signal) => ({
+export const WorkspaceData = (signal?: AbortSignal) => ({
   getSchema: async (root: string, instanceId: string): Promise<RecordTypeSchema[]> => {
     const res = await fetchWDS(root)(`${instanceId}/types/v0.2`, _.merge(authOpts(), { signal }));
     return res.json();
@@ -227,3 +227,5 @@ export const WorkspaceData = (signal) => ({
     return res.json();
   },
 });
+
+export type WorkspaceDataAjaxContract = ReturnType<typeof WorkspaceData>;

@@ -3,6 +3,7 @@ import _ from 'lodash/fp';
 import * as qs from 'qs';
 import { authOpts } from 'src/auth/auth-session';
 import { fetchAgora, fetchOrchestration, fetchRawls } from 'src/libs/ajax/ajax-common';
+import { MethodQuery, MethodResponse } from 'src/libs/ajax/methods/methods-models';
 import { Snapshot } from 'src/snapshots/Snapshot';
 
 export const Methods = (signal?: AbortSignal) => ({
@@ -28,6 +29,14 @@ export const Methods = (signal?: AbortSignal) => ({
     const res = await fetchRawls(
       'methodconfigs/template',
       _.mergeAll([authOpts(), jsonBody(modifiedConfigMethod), { signal, method: 'POST' }])
+    );
+    return res.json();
+  },
+
+  postMethod: async (method: MethodQuery): Promise<MethodResponse> => {
+    const res = await fetchOrchestration(
+      'api/methods',
+      _.mergeAll([authOpts(), jsonBody(method), { signal, method: 'POST' }])
     );
     return res.json();
   },

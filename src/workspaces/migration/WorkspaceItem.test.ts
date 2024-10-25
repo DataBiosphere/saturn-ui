@@ -1,16 +1,18 @@
-import { DeepPartial } from '@terra-ui-packages/core-utils';
 import { screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { axe } from 'jest-axe';
 import { h } from 'react-hyperscript-helpers';
-import { Ajax } from 'src/libs/ajax';
-import { asMockedFn, renderWithAppContexts as render } from 'src/testing/test-utils';
+import {
+  WorkspaceContract,
+  Workspaces,
+  WorkspacesAjaxContract,
+  WorkspaceV2Contract,
+} from 'src/libs/ajax/workspaces/Workspaces';
+import { asMockedFn, partial, renderWithAppContexts as render } from 'src/testing/test-utils';
 import { MigrationStep, WorkspaceMigrationInfo } from 'src/workspaces/migration/migration-utils';
 import { WorkspaceItem } from 'src/workspaces/migration/WorkspaceItem';
 
-type AjaxContract = ReturnType<typeof Ajax>;
-type AjaxWorkspacesContract = AjaxContract['Workspaces'];
-jest.mock('src/libs/ajax');
+jest.mock('src/libs/ajax/workspaces/Workspaces');
 
 describe('WorkspaceItem', () => {
   const unscheduledWorkspace: WorkspaceMigrationInfo = {
@@ -20,19 +22,18 @@ describe('WorkspaceItem', () => {
   };
   const migrateButtonText = `Migrate ${unscheduledWorkspace.name}`;
   const migrationScheduledTooltipText = 'Migration has been scheduled';
-  const mockGetBucketUsage = jest.fn();
+  const mockGetBucketUsage: WorkspaceContract['bucketUsage'] = jest.fn();
   const mockMigrationStartedCallback = jest.fn();
 
   beforeEach(() => {
-    const mockWorkspaces: DeepPartial<AjaxWorkspacesContract> = {
-      workspace: () => ({
-        bucketUsage: mockGetBucketUsage,
-      }),
-    };
-    const mockAjax: Partial<AjaxContract> = {
-      Workspaces: mockWorkspaces as AjaxWorkspacesContract,
-    };
-    asMockedFn(Ajax).mockImplementation(() => mockAjax as AjaxContract);
+    asMockedFn(Workspaces).mockReturnValue(
+      partial<WorkspacesAjaxContract>({
+        workspace: () =>
+          partial<WorkspaceContract>({
+            bucketUsage: mockGetBucketUsage,
+          }),
+      })
+    );
   });
 
   afterEach(() => {
@@ -41,16 +42,14 @@ describe('WorkspaceItem', () => {
 
   it('shows the workspace name and bucket size for an unscheduled workspace', async () => {
     // Arrange
-    const mockActualGetBucketUsage = jest.fn().mockResolvedValue({ usageInBytes: 1234 });
-    const mockWorkspaces: DeepPartial<AjaxWorkspacesContract> = {
-      workspace: () => ({
-        bucketUsage: mockActualGetBucketUsage,
-      }),
-    };
-    const mockAjax: Partial<AjaxContract> = {
-      Workspaces: mockWorkspaces as AjaxWorkspacesContract,
-    };
-    asMockedFn(Ajax).mockImplementation(() => mockAjax as AjaxContract);
+    asMockedFn(Workspaces).mockReturnValue(
+      partial<WorkspacesAjaxContract>({
+        workspace: () =>
+          partial<WorkspaceContract>({
+            bucketUsage: async () => ({ usageInBytes: 1234 }),
+          }),
+      })
+    );
 
     // Act
     render(
@@ -68,19 +67,19 @@ describe('WorkspaceItem', () => {
   it('can shows a cancelable confirmation dialog when migrate is selected', async () => {
     // Arrange
     const user = userEvent.setup();
-    const mockMigrateWorkspace = jest.fn();
-    const mockWorkspaces: DeepPartial<AjaxWorkspacesContract> = {
-      workspace: () => ({
-        bucketUsage: jest.fn().mockResolvedValue({ usageInBytes: 1234 }),
-      }),
-      workspaceV2: () => ({
-        migrateWorkspace: mockMigrateWorkspace,
-      }),
-    };
-    const mockAjax: Partial<AjaxContract> = {
-      Workspaces: mockWorkspaces as AjaxWorkspacesContract,
-    };
-    asMockedFn(Ajax).mockImplementation(() => mockAjax as AjaxContract);
+    const mockMigrateWorkspace: WorkspaceV2Contract['migrateWorkspace'] = jest.fn();
+    asMockedFn(Workspaces).mockReturnValue(
+      partial<WorkspacesAjaxContract>({
+        workspace: () =>
+          partial<WorkspaceContract>({
+            bucketUsage: async () => ({ usageInBytes: 1234 }),
+          }),
+        workspaceV2: () =>
+          partial<WorkspaceV2Contract>({
+            migrateWorkspace: mockMigrateWorkspace,
+          }),
+      })
+    );
 
     // Act
     render(
@@ -109,18 +108,18 @@ describe('WorkspaceItem', () => {
     // Arrange
     const user = userEvent.setup();
     const mockMigrateWorkspace = jest.fn();
-    const mockWorkspaces: DeepPartial<AjaxWorkspacesContract> = {
-      workspace: () => ({
-        bucketUsage: jest.fn().mockResolvedValue({ usageInBytes: 1234 }),
-      }),
-      workspaceV2: () => ({
-        migrateWorkspace: mockMigrateWorkspace,
-      }),
-    };
-    const mockAjax: Partial<AjaxContract> = {
-      Workspaces: mockWorkspaces as AjaxWorkspacesContract,
-    };
-    asMockedFn(Ajax).mockImplementation(() => mockAjax as AjaxContract);
+    asMockedFn(Workspaces).mockReturnValue(
+      partial<WorkspacesAjaxContract>({
+        workspace: () =>
+          partial<WorkspaceContract>({
+            bucketUsage: async () => ({ usageInBytes: 1234 }),
+          }),
+        workspaceV2: () =>
+          partial<WorkspaceV2Contract>({
+            migrateWorkspace: mockMigrateWorkspace,
+          }),
+      })
+    );
 
     // Act
     render(
@@ -149,16 +148,16 @@ describe('WorkspaceItem', () => {
 
   it('shows if the bucket size cannot be fetched for an unscheduled workspace, and shows migrate button', async () => {
     // Arrange
-    const mockErrorGetBucketUsage = jest.fn().mockRejectedValue(new Error('testing'));
-    const mockWorkspaces: DeepPartial<AjaxWorkspacesContract> = {
-      workspace: () => ({
-        bucketUsage: mockErrorGetBucketUsage,
-      }),
-    };
-    const mockAjax: Partial<AjaxContract> = {
-      Workspaces: mockWorkspaces as AjaxWorkspacesContract,
-    };
-    asMockedFn(Ajax).mockImplementation(() => mockAjax as AjaxContract);
+    asMockedFn(Workspaces).mockReturnValue(
+      partial<WorkspacesAjaxContract>({
+        workspace: () =>
+          partial<WorkspaceContract>({
+            bucketUsage: async () => {
+              throw new Error('testing');
+            },
+          }),
+      })
+    );
 
     // Act
     render(

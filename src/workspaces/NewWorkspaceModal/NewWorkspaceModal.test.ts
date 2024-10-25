@@ -1,14 +1,24 @@
-import { abandonedPromise, DeepPartial } from '@terra-ui-packages/core-utils';
-import { asMockedFn, withFakeTimers } from '@terra-ui-packages/test-utils';
+import { abandonedPromise } from '@terra-ui-packages/core-utils';
+import { asMockedFn, partial, withFakeTimers } from '@terra-ui-packages/test-utils';
 import { act, fireEvent, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import _ from 'lodash/fp';
 import { h } from 'react-hyperscript-helpers';
 import { BillingProject, CloudPlatform } from 'src/billing-core/models';
-import { Ajax, AjaxContract } from 'src/libs/ajax';
 import { AzureStorage, AzureStorageContract } from 'src/libs/ajax/AzureStorage';
+import { Billing, BillingContract } from 'src/libs/ajax/billing/Billing';
+import { FirecloudBucket, FirecloudBucketAjaxContract } from 'src/libs/ajax/firecloud/FirecloudBucket';
+import { CurrentUserGroupMembership, GroupContract, Groups, GroupsContract } from 'src/libs/ajax/Groups';
+import { Apps, AppsAjaxContract } from 'src/libs/ajax/leonardo/Apps';
 import { ListAppItem } from 'src/libs/ajax/leonardo/models/app-models';
-import { WorkspacesAjaxContract } from 'src/libs/ajax/workspaces/Workspaces';
+import { Metrics, MetricsContract } from 'src/libs/ajax/Metrics';
+import { WorkspaceData, WorkspaceDataAjaxContract } from 'src/libs/ajax/WorkspaceDataService';
+import {
+  WorkspaceContract,
+  Workspaces,
+  WorkspacesAjaxContract,
+  WorkspaceV2Contract,
+} from 'src/libs/ajax/workspaces/Workspaces';
 import { getRegionLabel } from 'src/libs/azure-utils';
 import Events from 'src/libs/events';
 import { goToPath } from 'src/libs/nav';
@@ -27,12 +37,24 @@ import {
   protectedAzureWorkspace,
   protectedPhiTrackingAzureWorkspace,
 } from 'src/testing/workspace-fixtures';
-import { AzureWorkspaceInfo, phiTrackingLabel, phiTrackingPolicy, WorkspaceInfo } from 'src/workspaces/utils';
+import {
+  AzureWorkspaceInfo,
+  phiTrackingLabel,
+  phiTrackingPolicy,
+  WorkspaceInfo,
+  WorkspaceWrapper,
+} from 'src/workspaces/utils';
 
 import NewWorkspaceModal from './NewWorkspaceModal';
 
-jest.mock('src/libs/ajax');
 jest.mock('src/libs/ajax/AzureStorage');
+jest.mock('src/libs/ajax/billing/Billing');
+jest.mock('src/libs/ajax/firecloud/FirecloudBucket');
+jest.mock('src/libs/ajax/Groups');
+jest.mock('src/libs/ajax/leonardo/Apps');
+jest.mock('src/libs/ajax/Metrics');
+jest.mock('src/libs/ajax/WorkspaceDataService');
+jest.mock('src/libs/ajax/workspaces/Workspaces');
 
 type NavExports = typeof import('src/libs/nav');
 jest.mock(
@@ -50,78 +72,101 @@ interface SetupOptions {
 }
 
 interface SetupResult {
-  captureEvent: jest.MockedFunction<AjaxContract['Metrics']['captureEvent']>;
-  checkBucketLocation: jest.MockedFunction<ReturnType<WorkspacesAjaxContract['workspace']>['checkBucketLocation']>;
+  captureEvent: jest.MockedFunction<MetricsContract['captureEvent']>;
+  checkBucketLocation: jest.MockedFunction<WorkspaceContract['checkBucketLocation']>;
   containerInfo: jest.MockedFunction<AzureStorageContract['containerInfo']>;
-  cloneWorkspace: jest.MockedFunction<ReturnType<WorkspacesAjaxContract['workspaceV2']>['clone']>;
+  cloneWorkspace: jest.MockedFunction<WorkspaceV2Contract['clone']>;
   createWorkspace: jest.MockedFunction<WorkspacesAjaxContract['create']>;
-  getWorkspaceDetails: jest.MockedFunction<ReturnType<WorkspacesAjaxContract['workspace']>['details']>;
-  listApps: jest.MockedFunction<AjaxContract['Apps']['listAppsV2']>;
-  listWdsCollections: jest.MockedFunction<AjaxContract['WorkspaceData']['listCollections']>;
+  getWorkspaceDetails: jest.MockedFunction<WorkspaceContract['details']>;
+  listApps: jest.MockedFunction<AppsAjaxContract['listAppsV2']>;
+  listWdsCollections: jest.MockedFunction<WorkspaceDataAjaxContract['listCollections']>;
 }
 
 const setup = (opts: SetupOptions = {}): SetupResult => {
   const { billingProjects = [gcpBillingProject, azureBillingProject], groups = [] } = opts;
 
-  const listBillingProjects = jest.fn().mockResolvedValue(billingProjects);
-  const checkBucketLocation = jest.fn().mockResolvedValue({
+  const listBillingProjects: jest.MockedFunction<BillingContract['listProjects']> = jest.fn();
+  listBillingProjects.mockResolvedValue(billingProjects);
+  const checkBucketLocation: jest.MockedFunction<WorkspaceContract['checkBucketLocation']> = jest.fn();
+  checkBucketLocation.mockResolvedValue({
     location: 'US-CENTRAL1',
     locationType: 'location-type',
   });
-  const cloneWorkspace = jest.fn().mockReturnValue(abandonedPromise());
-  const createWorkspace = jest.fn().mockReturnValue(abandonedPromise());
-  const getWorkspaceDetails = jest.fn().mockResolvedValue({ workspace: { attributes: { description: '' } } });
-  const captureEvent = jest.fn();
-  const listApps = jest.fn().mockResolvedValue([]);
-  const listWdsCollections = jest.fn().mockResolvedValue([]);
+  const cloneWorkspace: jest.MockedFunction<WorkspaceV2Contract['clone']> = jest.fn();
+  cloneWorkspace.mockReturnValue(abandonedPromise());
+  const createWorkspace: jest.MockedFunction<WorkspacesAjaxContract['create']> = jest.fn();
+  createWorkspace.mockReturnValue(abandonedPromise());
+  const getWorkspaceDetails: jest.MockedFunction<WorkspaceContract['details']> = jest.fn();
+  getWorkspaceDetails.mockResolvedValue(
+    partial<WorkspaceWrapper>({
+      workspace: partial<WorkspaceInfo>({
+        attributes: { description: '' },
+      }),
+    })
+  );
+  const captureEvent: jest.MockedFunction<MetricsContract['captureEvent']> = jest.fn();
+  const listApps: jest.MockedFunction<AppsAjaxContract['listAppsV2']> = jest.fn();
+  listApps.mockResolvedValue([]);
+  const listWdsCollections: jest.MockedFunction<WorkspaceDataAjaxContract['listCollections']> = jest.fn();
+  listWdsCollections.mockResolvedValue([]);
 
-  asMockedFn(Ajax).mockImplementation(
-    () =>
-      ({
-        Apps: { listAppsV2: listApps },
-        Billing: { listProjects: listBillingProjects },
-        FirecloudBucket: { getFeaturedWorkspaces: jest.fn().mockResolvedValue([]) },
-        Groups: {
-          list: () => {
-            const groupsResponse = groups.map((groupName) => ({
-              groupEmail: `${groupName}@test.firecloud.org`,
-              groupName,
-              role: 'member',
-            }));
-            return Promise.resolve(groupsResponse);
-          },
-          group: (groupName) => ({
-            isMember: () => Promise.resolve(groups.includes(groupName)),
-          }),
-        },
-        Metrics: { captureEvent },
-        Workspaces: {
-          create: createWorkspace,
-          workspace: () => ({
-            checkBucketLocation,
-            details: getWorkspaceDetails,
-          }),
-          workspaceV2: () => ({
-            clone: cloneWorkspace,
-          }),
-        },
-        WorkspaceData: {
-          listCollections: listWdsCollections,
-        },
-      } as DeepPartial<AjaxContract> as AjaxContract)
+  asMockedFn(Apps).mockReturnValue(partial<AppsAjaxContract>({ listAppsV2: listApps }));
+  asMockedFn(Billing).mockReturnValue(partial<BillingContract>({ listProjects: listBillingProjects }));
+  asMockedFn(FirecloudBucket).mockReturnValue(
+    partial<FirecloudBucketAjaxContract>({
+      getFeaturedWorkspaces: jest.fn().mockResolvedValue([]),
+    })
+  );
+  asMockedFn(Groups).mockReturnValue(
+    partial<GroupsContract>({
+      list: async () => {
+        const groupsResponse = groups.map((groupName) =>
+          partial<CurrentUserGroupMembership>({
+            groupEmail: `${groupName}@test.firecloud.org`,
+            groupName,
+            role: 'member',
+          })
+        );
+        return groupsResponse;
+      },
+      group: (groupName) =>
+        partial<GroupContract>({
+          isMember: async () => groups.includes(groupName),
+        }),
+    })
+  );
+  asMockedFn(Metrics).mockReturnValue(partial<MetricsContract>({ captureEvent }));
+  asMockedFn(Workspaces).mockReturnValue(
+    partial<WorkspacesAjaxContract>({
+      create: createWorkspace,
+      workspace: () =>
+        partial<WorkspaceContract>({
+          checkBucketLocation,
+          details: getWorkspaceDetails,
+        }),
+      workspaceV2: () =>
+        partial<WorkspaceV2Contract>({
+          clone: cloneWorkspace,
+        }),
+    })
+  );
+  asMockedFn(WorkspaceData).mockReturnValue(
+    partial<WorkspaceDataAjaxContract>({
+      listCollections: listWdsCollections,
+    })
   );
 
-  const containerInfo = jest.fn().mockResolvedValue({
+  const containerInfo: jest.MockedFunction<AzureStorageContract['containerInfo']> = jest.fn();
+  asMockedFn(containerInfo).mockResolvedValue({
     storageContainerName: 'sc-e18cfbc3-7115-4a37-add7-1d95d3ecfa14',
     resourceId: '4da46849-7f06-44e2-ba62-80fa2348ff35',
     region: 'japaneast',
   });
 
-  asMockedFn(AzureStorage).mockImplementation(
-    () =>
-      ({
-        containerInfo,
-      } as Partial<AzureStorageContract> as AzureStorageContract)
+  asMockedFn(AzureStorage).mockReturnValue(
+    partial<AzureStorageContract>({
+      containerInfo,
+    })
   );
 
   return {
@@ -885,8 +930,8 @@ describe('NewWorkspaceModal', () => {
 
   describe('while creating a workspace', () => {
     const workspaceFromCreateResponse = defaultGoogleWorkspace.workspace;
-    let createWorkspace: jest.MockedFunction<AjaxContract['Workspaces']['create']>;
-    let captureEvent: jest.MockedFunction<AjaxContract['Metrics']['captureEvent']>;
+    let createWorkspace: jest.MockedFunction<WorkspacesAjaxContract['create']>;
+    let captureEvent: jest.MockedFunction<MetricsContract['captureEvent']>;
 
     beforeEach(async () => {
       // Arrange

@@ -2,8 +2,8 @@ import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { axe } from 'jest-axe';
 import { div, h } from 'react-hyperscript-helpers';
-import { Ajax } from 'src/libs/ajax';
-import { asMockedFn, renderWithAppContexts as render } from 'src/testing/test-utils';
+import { Workspaces, WorkspacesAjaxContract } from 'src/libs/ajax/workspaces/Workspaces';
+import { asMockedFn, partial, renderWithAppContexts as render } from 'src/testing/test-utils';
 import { BillingProjectParent } from 'src/workspaces/migration/BillingProjectParent';
 import { WorkspaceMigrationInfo } from 'src/workspaces/migration/migration-utils';
 import {
@@ -12,9 +12,7 @@ import {
   bpWithSucceededAndUnscheduled,
 } from 'src/workspaces/migration/migration-utils.test';
 
-type AjaxContract = ReturnType<typeof Ajax>;
-type AjaxWorkspacesContract = AjaxContract['Workspaces'];
-jest.mock('src/libs/ajax');
+jest.mock('src/libs/ajax/workspaces/Workspaces');
 
 describe('BillingProjectParent', () => {
   const mockMigrationStartedCallback = jest.fn();
@@ -30,14 +28,9 @@ describe('BillingProjectParent', () => {
       { migrationStep: 'Unscheduled', name: 'notmigrated1', namespace: 'CARBilling-2' },
       { migrationStep: 'Unscheduled', name: 'notmigrated2', namespace: 'CARBilling-2' },
     ];
-    const mockStartBatchBucketMigration = jest.fn().mockResolvedValue({});
-    const mockWorkspaces: Partial<AjaxWorkspacesContract> = {
-      startBatchBucketMigration: mockStartBatchBucketMigration,
-    };
-    const mockAjax: Partial<AjaxContract> = {
-      Workspaces: mockWorkspaces as AjaxWorkspacesContract,
-    };
-    asMockedFn(Ajax).mockImplementation(() => mockAjax as AjaxContract);
+    const startBatchBucketMigration = jest.fn();
+    asMockedFn(startBatchBucketMigration).mockResolvedValue({});
+    asMockedFn(Workspaces).mockReturnValue(partial<WorkspacesAjaxContract>({ startBatchBucketMigration }));
 
     // Act
     render(
@@ -59,7 +52,7 @@ describe('BillingProjectParent', () => {
 
     // Assert
     expect(screen.queryByText(/Are you sure you want to migrate all workspaces/i)).toBeFalsy();
-    expect(mockStartBatchBucketMigration).not.toHaveBeenCalled();
+    expect(startBatchBucketMigration).not.toHaveBeenCalled();
     expect(mockMigrationStartedCallback).not.toHaveBeenCalled();
   });
 
@@ -70,14 +63,9 @@ describe('BillingProjectParent', () => {
       { migrationStep: 'Unscheduled', name: 'notmigrated1', namespace: 'CARBilling-2' },
       { migrationStep: 'Unscheduled', name: 'notmigrated2', namespace: 'CARBilling-2' },
     ];
-    const mockStartBatchBucketMigration = jest.fn().mockResolvedValue({});
-    const mockWorkspaces: Partial<AjaxWorkspacesContract> = {
-      startBatchBucketMigration: mockStartBatchBucketMigration,
-    };
-    const mockAjax: Partial<AjaxContract> = {
-      Workspaces: mockWorkspaces as AjaxWorkspacesContract,
-    };
-    asMockedFn(Ajax).mockImplementation(() => mockAjax as AjaxContract);
+    const startBatchBucketMigration = jest.fn();
+    asMockedFn(startBatchBucketMigration).mockResolvedValue({});
+    asMockedFn(Workspaces).mockReturnValue(partial<WorkspacesAjaxContract>({ startBatchBucketMigration }));
 
     // Act
     const { container } = render(
@@ -97,7 +85,7 @@ describe('BillingProjectParent', () => {
     await user.click(screen.getByText('Migrate All'));
 
     // Assert
-    expect(mockStartBatchBucketMigration).toHaveBeenCalledWith([
+    expect(startBatchBucketMigration).toHaveBeenCalledWith([
       { name: 'notmigrated1', namespace: 'CARBilling-2' },
       { name: 'notmigrated2', namespace: 'CARBilling-2' },
     ]);
@@ -111,14 +99,9 @@ describe('BillingProjectParent', () => {
     // Arrange
     const user = userEvent.setup();
 
-    const mockStartBatchBucketMigration = jest.fn().mockResolvedValue({});
-    const mockWorkspaces: Partial<AjaxWorkspacesContract> = {
-      startBatchBucketMigration: mockStartBatchBucketMigration,
-    };
-    const mockAjax: Partial<AjaxContract> = {
-      Workspaces: mockWorkspaces as AjaxWorkspacesContract,
-    };
-    asMockedFn(Ajax).mockImplementation(() => mockAjax as AjaxContract);
+    const startBatchBucketMigration = jest.fn();
+    asMockedFn(startBatchBucketMigration).mockResolvedValue({});
+    asMockedFn(Workspaces).mockReturnValue(partial<WorkspacesAjaxContract>({ startBatchBucketMigration }));
 
     // Act
     render(
@@ -134,7 +117,7 @@ describe('BillingProjectParent', () => {
 
     // Assert
     expect(screen.queryByText(/Are you sure you want to migrate all remaining workspaces/i)).toBeFalsy();
-    expect(mockStartBatchBucketMigration).toHaveBeenCalledWith([{ name: 'notmigrated', namespace: 'CARBilling-2' }]);
+    expect(startBatchBucketMigration).toHaveBeenCalledWith([{ name: 'notmigrated', namespace: 'CARBilling-2' }]);
     await screen.findByText('1 Workspace Migrated');
     expect(mockMigrationStartedCallback).toHaveBeenCalledWith([{ name: 'notmigrated', namespace: 'CARBilling-2' }]);
   });
