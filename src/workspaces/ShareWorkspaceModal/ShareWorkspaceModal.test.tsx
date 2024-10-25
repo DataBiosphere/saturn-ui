@@ -1,10 +1,11 @@
-import { DeepPartial } from '@terra-ui-packages/core-utils';
 import { act, fireEvent, screen } from '@testing-library/react';
 import _ from 'lodash/fp';
 import React from 'react';
-import { Ajax } from 'src/libs/ajax';
+import { CurrentUserGroupMembership, Groups, GroupsContract } from 'src/libs/ajax/Groups';
+import { Metrics, MetricsContract } from 'src/libs/ajax/Metrics';
+import { WorkspaceContract, Workspaces, WorkspacesAjaxContract } from 'src/libs/ajax/workspaces/Workspaces';
 import { getTerraUser } from 'src/libs/state';
-import { asMockedFn, renderWithAppContexts as render } from 'src/testing/test-utils';
+import { asMockedFn, partial, renderWithAppContexts as render } from 'src/testing/test-utils';
 import {
   defaultAzureWorkspace,
   defaultGoogleWorkspace,
@@ -20,10 +21,9 @@ jest.mock('src/libs/state', () => ({
   getTerraUser: jest.fn(),
 }));
 
-jest.mock('src/libs/ajax');
-
-type AjaxExports = typeof import('src/libs/ajax');
-type AjaxContract = ReturnType<AjaxExports['Ajax']>;
+jest.mock('src/libs/ajax/Groups');
+jest.mock('src/libs/ajax/Metrics');
+jest.mock('src/libs/ajax/workspaces/Workspaces');
 
 describe('the share workspace modal', () => {
   beforeEach(() => {
@@ -37,26 +37,32 @@ describe('the share workspace modal', () => {
   const mockAjax = (
     acl: RawWorkspaceAcl,
     shareLog: string[],
-    groups: string[],
+    groups: CurrentUserGroupMembership[],
     updateAcl?: (aclUpdates: Partial<AccessEntry>[]) => Promise<any>
   ) => {
     const updateFn: (aclUpdates: Partial<AccessEntry>[]) => Promise<any> =
       updateAcl ?? jest.fn(() => Promise.resolve({ success: true }));
-    const mockWorkspaceAjax: DeepPartial<ReturnType<AjaxContract['Workspaces']['workspace']>> = {
-      getAcl: jest.fn(() => Promise.resolve({ acl })),
-      updateAcl: updateFn,
-    };
 
-    const workspaceAjax = jest.fn().mockReturnValue(mockWorkspaceAjax);
-    const mockAjax: DeepPartial<AjaxContract> = {
-      Workspaces: {
-        workspace: workspaceAjax,
+    asMockedFn(Workspaces).mockReturnValue(
+      partial<WorkspacesAjaxContract>({
+        workspace: () =>
+          partial<WorkspaceContract>({
+            getAcl: jest.fn(() => Promise.resolve({ acl })),
+            updateAcl: updateFn,
+          }),
         getShareLog: jest.fn(() => Promise.resolve(shareLog)),
-      },
-      Groups: { list: jest.fn(() => Promise.resolve(groups)) },
-      Metrics: { captureEvent: jest.fn(() => Promise.resolve({ success: true })) },
-    };
-    asMockedFn(Ajax).mockImplementation(() => mockAjax as AjaxContract);
+      })
+    );
+    asMockedFn(Groups).mockReturnValue(
+      partial<GroupsContract>({
+        list: jest.fn(() => Promise.resolve(groups)),
+      })
+    );
+    asMockedFn(Metrics).mockReturnValue(
+      partial<MetricsContract>({
+        captureEvent: jest.fn(async () => {}),
+      })
+    );
   };
 
   it('shows a list of all users with access', async () => {

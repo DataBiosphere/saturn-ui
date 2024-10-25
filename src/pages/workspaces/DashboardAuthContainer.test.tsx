@@ -1,16 +1,13 @@
-import { DeepPartial } from '@terra-ui-packages/core-utils';
 import { screen } from '@testing-library/react';
 import React from 'react';
 import { act } from 'react-dom/test-utils';
-import { Ajax, AjaxContract } from 'src/libs/ajax';
+import { FirecloudBucket, FirecloudBucketAjaxContract } from 'src/libs/ajax/firecloud/FirecloudBucket';
 import { AuthState, authStore } from 'src/libs/state';
 import { DashboardAuthContainer } from 'src/pages/workspaces/DashboardAuthContainer';
-import { asMockedFn, renderWithAppContexts as render } from 'src/testing/test-utils';
+import { asMockedFn, MockedFn, partial, renderWithAppContexts as render } from 'src/testing/test-utils';
 import { WorkspaceDashboardPage, WorkspaceDashboardPageProps } from 'src/workspaces/dashboard/WorkspaceDashboardPage';
 
-jest.mock('src/libs/ajax', () => ({
-  Ajax: jest.fn(),
-}));
+jest.mock('src/libs/ajax/firecloud/FirecloudBucket');
 
 jest.mock('src/libs/notifications', (): typeof import('src/libs/notifications') => {
   return {
@@ -47,11 +44,10 @@ describe('DashboardAuthContainer', () => {
     // Arrange
     authStore.update((state: AuthState) => ({ ...state, signInStatus: 'uninitialized' }));
 
-    asMockedFn(Ajax).mockReturnValue({
-      FirecloudBucket: {
-        getFeaturedWorkspaces: jest.fn().mockResolvedValue([{ name: 'test-name', namespace: 'test-namespace' }]),
-      },
-    } as DeepPartial<AjaxContract> as AjaxContract);
+    const getFeaturedWorkspaces: MockedFn<FirecloudBucketAjaxContract['getFeaturedWorkspaces']> = jest.fn();
+    getFeaturedWorkspaces.mockResolvedValue([{ name: 'test-name', namespace: 'test-namespace' }]);
+
+    asMockedFn(FirecloudBucket).mockReturnValue(partial<FirecloudBucketAjaxContract>({ getFeaturedWorkspaces }));
 
     // Act
     render(<DashboardAuthContainer namespace='test-namespace' name='test-name' />);
@@ -64,14 +60,15 @@ describe('DashboardAuthContainer', () => {
     // Arrange
     authStore.update((state: AuthState) => ({ ...state, signInStatus: 'signedOut' }));
     const description = 'test workspace description';
-    asMockedFn(Ajax).mockReturnValue({
-      FirecloudBucket: {
-        getFeaturedWorkspaces: jest.fn().mockResolvedValue([{ name: 'test-name', namespace: 'test-namespace' }]),
-        getShowcaseWorkspaces: jest
-          .fn()
-          .mockResolvedValue([{ name: 'test-name', namespace: 'test-namespace', description }]),
-      },
-    } as DeepPartial<AjaxContract> as AjaxContract);
+
+    const getFeaturedWorkspaces: MockedFn<FirecloudBucketAjaxContract['getFeaturedWorkspaces']> = jest.fn();
+    getFeaturedWorkspaces.mockResolvedValue([{ name: 'test-name', namespace: 'test-namespace' }]);
+    const getShowcaseWorkspaces: MockedFn<FirecloudBucketAjaxContract['getShowcaseWorkspaces']> = jest.fn();
+    getShowcaseWorkspaces.mockResolvedValue([{ name: 'test-name', namespace: 'test-namespace', description }]);
+
+    asMockedFn(FirecloudBucket).mockReturnValue(
+      partial<FirecloudBucketAjaxContract>({ getFeaturedWorkspaces, getShowcaseWorkspaces })
+    );
 
     // Act
     await act(async () => {
@@ -85,11 +82,11 @@ describe('DashboardAuthContainer', () => {
   it('renders SignIn when signed out and is not a featured workspace', async () => {
     // Arrange
     authStore.update((state: AuthState) => ({ ...state, signInStatus: 'signedOut' }));
-    asMockedFn(Ajax).mockReturnValue({
-      FirecloudBucket: {
-        getFeaturedWorkspaces: jest.fn().mockResolvedValue([]),
-      },
-    } as DeepPartial<AjaxContract> as AjaxContract);
+
+    const getFeaturedWorkspaces: MockedFn<FirecloudBucketAjaxContract['getFeaturedWorkspaces']> = jest.fn();
+    getFeaturedWorkspaces.mockResolvedValue([]);
+
+    asMockedFn(FirecloudBucket).mockReturnValue(partial<FirecloudBucketAjaxContract>({ getFeaturedWorkspaces }));
 
     // Act
     await act(async () => {
@@ -110,12 +107,15 @@ describe('DashboardAuthContainer', () => {
       <div>{`${props.namespace} ${props.name}`}</div>
     ));
 
-    asMockedFn(Ajax).mockReturnValue({
-      FirecloudBucket: {
-        getFeaturedWorkspaces: jest.fn().mockResolvedValue([]),
-        getShowcaseWorkspaces: jest.fn().mockResolvedValue([]),
-      },
-    } as DeepPartial<AjaxContract> as AjaxContract);
+    const getFeaturedWorkspaces: MockedFn<FirecloudBucketAjaxContract['getFeaturedWorkspaces']> = jest.fn();
+    getFeaturedWorkspaces.mockResolvedValue([]);
+    const getShowcaseWorkspaces: MockedFn<FirecloudBucketAjaxContract['getShowcaseWorkspaces']> = jest.fn();
+    getShowcaseWorkspaces.mockResolvedValue([]);
+
+    asMockedFn(FirecloudBucket).mockReturnValue(
+      partial<FirecloudBucketAjaxContract>({ getFeaturedWorkspaces, getShowcaseWorkspaces })
+    );
+
     // Act
     await act(async () => {
       render(<DashboardAuthContainer namespace='test-namespace' name='test-name' />);
