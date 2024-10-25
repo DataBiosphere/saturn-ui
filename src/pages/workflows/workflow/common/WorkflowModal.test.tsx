@@ -255,7 +255,7 @@ describe('WorkflowModal', () => {
     await act(async () => {
       render(
         <WorkflowModal
-          title='Create New Workflow'
+          title='Create New Method'
           buttonActionName='Upload'
           defaultNamespace='namespace'
           defaultName='name'
@@ -291,7 +291,7 @@ describe('WorkflowModal', () => {
     await act(async () => {
       render(
         <WorkflowModal
-          title='Create New Workflow'
+          title='Create New Method'
           buttonActionName='Upload'
           defaultNamespace='testnamespace'
           defaultName='testname'
@@ -342,7 +342,7 @@ describe('WorkflowModal', () => {
     await act(async () => {
       render(
         <WorkflowModal
-          title='Create New Workflow'
+          title='Create New Method'
           buttonActionName='Upload'
           defaultNamespace='testnamespace'
           defaultName='testname'
@@ -393,7 +393,7 @@ describe('WorkflowModal', () => {
     await act(async () => {
       render(
         <WorkflowModal
-          title='Create New Workflow'
+          title='Create New Method'
           buttonActionName='Upload'
           defaultNamespace='namespace'
           defaultName='name'
@@ -426,7 +426,7 @@ describe('WorkflowModal', () => {
     await act(async () => {
       render(
         <WorkflowModal
-          title='Create New Workflow'
+          title='Create New Method'
           buttonActionName='Upload'
           defaultNamespace='namespace'
           defaultName='name'
@@ -459,7 +459,7 @@ describe('WorkflowModal', () => {
     await act(async () => {
       render(
         <WorkflowModal
-          title='Create New Workflow'
+          title='Create New Method'
           buttonActionName='Upload'
           defaultNamespace='namespace'
           defaultName='name'

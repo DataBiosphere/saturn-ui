@@ -422,7 +422,7 @@ describe('workflows table', () => {
     // Arrange
     asMockedFn(Ajax).mockImplementation(() => mockAjax([darukMethod, revaliMethod]) as AjaxContract);
 
-    // set the user's email to ensure there are no my workflows
+    // set the user's email to ensure there are no my methods
     jest.spyOn(userStore, 'get').mockImplementation(jest.fn().mockReturnValue(mockUserState('test@test.com')));
 
     // should be called to switch tabs
