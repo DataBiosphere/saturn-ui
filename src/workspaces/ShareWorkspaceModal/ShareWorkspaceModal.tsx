@@ -4,9 +4,11 @@ import React, { useLayoutEffect, useRef, useState } from 'react';
 import { ButtonPrimary, ButtonSecondary, spinnerOverlay } from 'src/components/common';
 import { centeredSpinner } from 'src/components/icons';
 import { AutocompleteTextInput } from 'src/components/input';
-import { Ajax } from 'src/libs/ajax';
+import { Groups } from 'src/libs/ajax/Groups';
 import { CurrentUserGroupMembership } from 'src/libs/ajax/Groups';
+import { Metrics } from 'src/libs/ajax/Metrics';
 import { WorkspaceAclUpdate } from 'src/libs/ajax/workspaces/workspace-models';
+import { Workspaces } from 'src/libs/ajax/workspaces/Workspaces';
 import { reportError } from 'src/libs/error';
 import Events, { extractWorkspaceDetails } from 'src/libs/events';
 import { FormLabel } from 'src/libs/forms';
@@ -54,9 +56,9 @@ const ShareWorkspaceModal: React.FC<ShareWorkspaceModalProps> = (props: ShareWor
     const load = async () => {
       try {
         const [{ acl }, shareSuggestions, groups] = await Promise.all([
-          Ajax(signal).Workspaces.workspace(namespace, name).getAcl(),
-          Ajax(signal).Workspaces.getShareLog(),
-          Ajax(signal).Groups.list(),
+          Workspaces(signal).workspace(namespace, name).getAcl(),
+          Workspaces(signal).getShareLog(),
+          Groups(signal).list(),
         ]);
 
         const fixedAcl: WorkspaceAcl = transformAcl(acl);
@@ -122,14 +124,14 @@ const ShareWorkspaceModal: React.FC<ShareWorkspaceModalProps> = (props: ShareWor
     ];
 
     try {
-      await Ajax().Workspaces.workspace(namespace, name).updateAcl(aclUpdates);
-      !!numAdditions && Ajax().Metrics.captureEvent(Events.workspaceShare, { ...eventData, success: true });
+      await Workspaces().workspace(namespace, name).updateAcl(aclUpdates);
+      !!numAdditions && void Metrics().captureEvent(Events.workspaceShare, { ...eventData, success: true });
       if (!currentTerraSupportAccessLevel && newTerraSupportAccessLevel) {
-        Ajax().Metrics.captureEvent(Events.workspaceShareWithSupport, extractWorkspaceDetails(workspace.workspace));
+        void Metrics().captureEvent(Events.workspaceShareWithSupport, extractWorkspaceDetails(workspace.workspace));
       }
       onDismiss();
     } catch (error: any) {
-      !!numAdditions && Ajax().Metrics.captureEvent(Events.workspaceShare, { ...eventData, success: false });
+      !!numAdditions && void Metrics().captureEvent(Events.workspaceShare, { ...eventData, success: false });
       setUpdateError(await error.text());
     }
   });

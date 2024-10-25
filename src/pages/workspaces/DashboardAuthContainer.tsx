@@ -2,7 +2,7 @@ import { cond, DEFAULT } from '@terra-ui-packages/core-utils';
 import _ from 'lodash/fp';
 import React, { ReactNode, useEffect, useState } from 'react';
 import { centeredSpinner } from 'src/components/icons';
-import { Ajax } from 'src/libs/ajax';
+import { FirecloudBucket } from 'src/libs/ajax/firecloud/FirecloudBucket';
 import { useStore } from 'src/libs/react-utils';
 import { authStore } from 'src/libs/state';
 import SignIn from 'src/pages/SignIn';
@@ -23,7 +23,7 @@ export const DashboardAuthContainer = (props: DashboardAuthContainerProps): Reac
 
   useEffect(() => {
     const fetchData = async () => {
-      setFeaturedWorkspaces(await Ajax().FirecloudBucket.getFeaturedWorkspaces());
+      setFeaturedWorkspaces(await FirecloudBucket().getFeaturedWorkspaces());
     };
     if (signInStatus === 'signedOut') {
       fetchData();
