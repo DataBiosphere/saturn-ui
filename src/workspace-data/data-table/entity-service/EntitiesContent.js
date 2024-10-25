@@ -23,8 +23,9 @@ import dataExplorerLogo from 'src/images/data-explorer-logo.svg';
 import igvLogo from 'src/images/igv-logo.png';
 import jupyterLogo from 'src/images/jupyter-logo.svg';
 import wdlLogo from 'src/images/wdl-logo.png';
-import { Ajax } from 'src/libs/ajax';
 import { EntityServiceDataTableProvider } from 'src/libs/ajax/data-table-providers/EntityServiceDataTableProvider';
+import { GoogleStorage } from 'src/libs/ajax/GoogleStorage';
+import { Metrics } from 'src/libs/ajax/Metrics';
 import colors from 'src/libs/colors';
 import { withErrorReporting } from 'src/libs/error';
 import Events, { extractWorkspaceDetails } from 'src/libs/events';
@@ -85,7 +86,7 @@ const ToolDrawer = _.flow(
     const [notebookNames, setNotebookNames] = useState();
     const signal = useCancellation();
 
-    const { Buckets } = Ajax(signal);
+    const Buckets = GoogleStorage(signal);
 
     useOnMount(() => {
       const loadNotebookNames = _.flow(
@@ -147,7 +148,7 @@ const ToolDrawer = _.flow(
               const cohortName = _.values(selectedEntities)[0].name;
               const contents = notebookKernel === 'r' ? cohortRNotebook(cohortName) : cohortNotebook(cohortName);
               await Buckets.notebook(googleProject, bucketName, `${notebookName}.${tools.Jupyter.defaultExt}`).create(JSON.parse(contents));
-              Ajax().Metrics.captureEvent(Events.workspaceDataOpenWithNotebook, extractWorkspaceDetails(workspace.workspace));
+              void Metrics().captureEvent(Events.workspaceDataOpenWithNotebook, extractWorkspaceDetails(workspace.workspace));
               Nav.goToPath('workspace-notebook-launch', { namespace, name: wsName, notebookName: `${notebookName}.ipynb` });
             },
             onDismiss: () => setToolMode(undefined),
@@ -178,7 +179,7 @@ const ToolDrawer = _.flow(
                 }),
                 h(ModalToolButton, {
                   onClick: () => {
-                    Ajax().Metrics.captureEvent(Events.workspaceDataOpenWithDataExplorer, extractWorkspaceDetails(workspace.workspace));
+                    void Metrics().captureEvent(Events.workspaceDataOpenWithDataExplorer, extractWorkspaceDetails(workspace.workspace));
                     !openDataExplorerInSameTab && onDismiss();
                   },
                   href: openDataExplorerInSameTab ? dataExplorerPath : dataExplorerUrl,
@@ -318,7 +319,7 @@ const EntitiesContent = ({
     isSet
       ? FileSaver.saveAs(await tsv, `${entityKey}.zip`)
       : FileSaver.saveAs(new Blob([tsv], { type: 'text/tab-separated-values' }), `${entityKey}.tsv`);
-    Ajax().Metrics.captureEvent(Events.workspaceDataDownloadPartial, {
+    void Metrics().captureEvent(Events.workspaceDataDownloadPartial, {
       ...extractWorkspaceDetails(workspace.workspace),
       downloadFrom: 'table data',
       fileType: '.tsv',
@@ -434,7 +435,7 @@ const EntitiesContent = ({
                 const str = buildTSV(columnSettings, _.values(selectedEntities), false);
                 await clipboard.writeText(str);
                 notify('success', 'Successfully copied to clipboard.', { timeout: 3000 });
-                Ajax().Metrics.captureEvent(Events.workspaceDataCopyToClipboard, extractWorkspaceDetails(workspace.workspace));
+                void Metrics().captureEvent(Events.workspaceDataCopyToClipboard, extractWorkspaceDetails(workspace.workspace));
               }),
             },
             'Copy to clipboard'
@@ -547,7 +548,7 @@ const EntitiesContent = ({
             workspaceId: { namespace, name },
             onDismiss: () => setAddingEntity(false),
             onSuccess: () => {
-              Ajax().Metrics.captureEvent(Events.workspaceDataAddRow, extractWorkspaceDetails(workspace.workspace));
+              void Metrics().captureEvent(Events.workspaceDataAddRow, extractWorkspaceDetails(workspace.workspace));
               setRefreshKey(_.add(1));
               setEntityMetadata(_.update(`${entityKey}.count`, _.add(1)));
             },
@@ -560,7 +561,7 @@ const EntitiesContent = ({
             onDismiss: () => setAddingColumn(false),
             onSuccess: () => {
               setAddingColumn(false);
-              Ajax().Metrics.captureEvent(Events.workspaceDataAddColumn, extractWorkspaceDetails(workspace.workspace));
+              void Metrics().captureEvent(Events.workspaceDataAddColumn, extractWorkspaceDetails(workspace.workspace));
               setRefreshKey(_.add(1));
             },
           }),
@@ -574,7 +575,7 @@ const EntitiesContent = ({
             onDismiss: () => setEditingEntities(false),
             onSuccess: () => {
               setEditingEntities(false);
-              Ajax().Metrics.captureEvent(Events.workspaceDataEditMultiple, extractWorkspaceDetails(workspace.workspace));
+              void Metrics().captureEvent(Events.workspaceDataEditMultiple, extractWorkspaceDetails(workspace.workspace));
               setRefreshKey(_.add(1));
             },
           }),
@@ -586,7 +587,7 @@ const EntitiesContent = ({
             onDismiss: () => setCreatingSet(false),
             onSuccess: () => {
               setCreatingSet(false);
-              Ajax().Metrics.captureEvent(Events.workspaceDataCreateSet, extractWorkspaceDetails(workspace.workspace));
+              void Metrics().captureEvent(Events.workspaceDataCreateSet, extractWorkspaceDetails(workspace.workspace));
               loadMetadata();
             },
           }),
@@ -597,7 +598,7 @@ const EntitiesContent = ({
               setDeletingEntities(false);
               setSelectedEntities({});
               setRefreshKey(_.add(1));
-              Ajax().Metrics.captureEvent(Events.workspaceDataDelete, extractWorkspaceDetails(workspace.workspace));
+              void Metrics().captureEvent(Events.workspaceDataDelete, extractWorkspaceDetails(workspace.workspace));
               loadMetadata();
             },
             namespace,
@@ -627,7 +628,7 @@ const EntitiesContent = ({
                 [
                   columnProvenanceError,
                   () => {
-                    Ajax().Metrics.captureEvent(Events.provenanceColumn, {
+                    void Metrics().captureEvent(Events.provenanceColumn, {
                       workspaceNamespace: workspace?.workspace?.namespace,
                       workspaceName: workspace?.workspace?.name,
                       entityType: entityKey,
@@ -638,7 +639,7 @@ const EntitiesContent = ({
                   },
                 ],
                 () => {
-                  Ajax().Metrics.captureEvent(Events.provenanceColumn, {
+                  void Metrics().captureEvent(Events.provenanceColumn, {
                     workspaceNamespace: workspace?.workspace?.namespace,
                     workspaceName: workspace?.workspace?.name,
                     entityType: entityKey,
@@ -663,7 +664,7 @@ const EntitiesContent = ({
             setShowToolSelector(false);
             setIgvFiles(selectedFiles);
             setIgvRefGenome(refGenome);
-            Ajax().Metrics.captureEvent(Events.workspaceDataOpenWithIGV, extractWorkspaceDetails(workspace.workspace));
+            void Metrics().captureEvent(Events.workspaceDataOpenWithIGV, extractWorkspaceDetails(workspace.workspace));
           },
           entityMetadata,
           entityKey,

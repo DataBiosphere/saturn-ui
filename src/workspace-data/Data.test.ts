@@ -1,10 +1,12 @@
-import { DeepPartial } from '@terra-ui-packages/core-utils';
 import { act, screen } from '@testing-library/react';
 import { h } from 'react-hyperscript-helpers';
-import { Ajax } from 'src/libs/ajax';
+import { Apps, AppsAjaxContract } from 'src/libs/ajax/leonardo/Apps';
 import { LeoAppStatus, ListAppItem } from 'src/libs/ajax/leonardo/models/app-models';
+import { Metrics, MetricsContract } from 'src/libs/ajax/Metrics';
+import { WorkspaceData as WorkspaceDataAjax, WorkspaceDataAjaxContract } from 'src/libs/ajax/WorkspaceDataService';
+import { WorkspaceContract, Workspaces, WorkspacesAjaxContract } from 'src/libs/ajax/workspaces/Workspaces';
 import { reportError } from 'src/libs/error';
-import { asMockedFn, renderWithAppContexts as render } from 'src/testing/test-utils';
+import { asMockedFn, MockedFn, partial, renderWithAppContexts as render } from 'src/testing/test-utils';
 import { defaultAzureWorkspace, defaultGoogleBucketOptions } from 'src/testing/workspace-fixtures';
 import { StorageDetails } from 'src/workspaces/common/state/useWorkspace';
 import { WorkspaceWrapper } from 'src/workspaces/utils';
@@ -19,13 +21,10 @@ jest.mock('src/workspaces/container/WorkspaceContainer', (): WorkspaceContainerE
   };
 });
 
-type AjaxExports = typeof import('src/libs/ajax');
-jest.mock('src/libs/ajax', (): AjaxExports => {
-  return {
-    ...jest.requireActual<AjaxExports>('src/libs/ajax'),
-    Ajax: jest.fn(),
-  };
-});
+jest.mock('src/libs/ajax/leonardo/Apps');
+jest.mock('src/libs/ajax/Metrics');
+jest.mock('src/libs/ajax/workspaces/Workspaces');
+jest.mock('src/libs/ajax/WorkspaceDataService');
 
 jest.mock('src/libs/error', () => ({
   ...jest.requireActual('src/libs/error'),
@@ -61,7 +60,6 @@ interface WorkspaceDataProps {
   refreshWorkspace: () => void;
   storageDetails: StorageDetails;
 }
-type AjaxContract = ReturnType<typeof Ajax>;
 
 beforeAll(() => {
   jest.useFakeTimers();
@@ -83,11 +81,11 @@ describe('WorkspaceData', () => {
   };
   type SetupResult = {
     workspaceDataProps: WorkspaceDataProps;
-    listAppResponse: DeepPartial<ListAppItem>;
-    mockGetSchema: jest.Mock;
-    mockListAppsV2: jest.Mock;
-    mockEntityMetadata: jest.Mock;
-    mockListSnapshots: jest.Mock;
+    listAppResponse: Partial<ListAppItem>;
+    mockGetSchema: MockedFn<WorkspaceDataAjaxContract['getSchema']>;
+    mockListAppsV2: MockedFn<AppsAjaxContract['listAppsV2']>;
+    mockEntityMetadata: MockedFn<WorkspaceContract['entityMetadata']>;
+    mockListSnapshots: MockedFn<WorkspaceContract['listSnapshots']>;
   };
 
   // Used for parameterized tests that check the waiting message for a given app status
@@ -112,37 +110,43 @@ describe('WorkspaceData', () => {
     status = 'RUNNING',
     wdsUrl = 'http://fake.wds.url',
   }: SetupOptions): SetupResult {
-    const listAppResponse: DeepPartial<ListAppItem> = {
+    const listAppResponse = partial<ListAppItem>({
       proxyUrls: {
         wds: wdsUrl,
       },
       appType: 'WDS',
       status,
-    };
+    });
 
-    const mockGetCapabilities = jest.fn().mockResolvedValue({});
-    const mockGetSchema = jest.fn().mockResolvedValue([]);
-    const mockListAppsV2 = jest.fn().mockResolvedValue([listAppResponse]);
-    const mockEntityMetadata = jest.fn().mockRejectedValue([]);
-    const mockListSnapshots = jest.fn().mockRejectedValue({});
-    const mockAjax: DeepPartial<AjaxContract> = {
-      Workspaces: {
-        workspace: (_namespace, _name) => ({
-          details: jest.fn().mockResolvedValue(workspace),
-          listSnapshots: mockListSnapshots,
-          entityMetadata: mockEntityMetadata,
-        }),
-      },
-      WorkspaceData: {
-        getCapabilities: mockGetCapabilities,
-        getSchema: mockGetSchema,
-      },
-      Apps: {
-        listAppsV2: mockListAppsV2,
-      },
-    };
+    const mockGetCapabilities: MockedFn<WorkspaceDataAjaxContract['getCapabilities']> = jest.fn();
+    const mockGetSchema: MockedFn<WorkspaceDataAjaxContract['getSchema']> = jest.fn();
+    const mockListAppsV2: MockedFn<AppsAjaxContract['listAppsV2']> = jest.fn();
+    const mockDetails: MockedFn<WorkspaceContract['details']> = jest.fn();
+    const mockEntityMetadata: MockedFn<WorkspaceContract['entityMetadata']> = jest.fn();
+    const mockListSnapshots: MockedFn<WorkspaceContract['listSnapshots']> = jest.fn();
 
-    asMockedFn(Ajax).mockImplementation(() => mockAjax as AjaxContract);
+    asMockedFn(Workspaces).mockReturnValue(
+      partial<WorkspacesAjaxContract>({
+        workspace: (_namespace, _name) =>
+          partial<WorkspaceContract>({
+            details: mockDetails.mockResolvedValue(workspace),
+            listSnapshots: mockListSnapshots.mockRejectedValue({}),
+            entityMetadata: mockEntityMetadata.mockRejectedValue([]),
+          }),
+      })
+    );
+    asMockedFn(WorkspaceDataAjax).mockReturnValue(
+      partial<WorkspaceDataAjaxContract>({
+        getCapabilities: mockGetCapabilities.mockResolvedValue({}),
+        getSchema: mockGetSchema.mockResolvedValue([]),
+      })
+    );
+    asMockedFn(Apps).mockReturnValue(
+      partial<AppsAjaxContract>({
+        listAppsV2: mockListAppsV2.mockResolvedValue([listAppResponse]),
+      })
+    );
+    asMockedFn(Metrics).mockReturnValue(partial<MetricsContract>({ captureEvent: jest.fn() }));
 
     const workspaceDataProps: WorkspaceDataProps = {
       namespace,
@@ -293,8 +297,8 @@ describe('WorkspaceData', () => {
     });
 
     mockListAppsV2
-      .mockResolvedValueOnce([{ ...listAppResponse, status: 'PROVISIONING' }])
-      .mockResolvedValueOnce([{ ...listAppResponse, status: 'ERROR' }]);
+      .mockResolvedValueOnce([partial<ListAppItem>({ ...listAppResponse, status: 'PROVISIONING' })])
+      .mockResolvedValueOnce([partial<ListAppItem>({ ...listAppResponse, status: 'ERROR' })]);
 
     // Act
     await act(async () => {
@@ -371,9 +375,15 @@ describe('WorkspaceData', () => {
     });
 
     mockListAppsV2
-      .mockResolvedValueOnce([{ ...listAppResponse, status, proxyUrls: {} }])
-      .mockResolvedValueOnce([{ ...listAppResponse, status, proxyUrls: {} }])
-      .mockResolvedValueOnce([{ ...listAppResponse, status: 'RUNNING', proxyUrls: { wds: 'http://test.wds.url' } }]);
+      .mockResolvedValueOnce([partial<ListAppItem>({ ...listAppResponse, status, proxyUrls: {} })])
+      .mockResolvedValueOnce([partial<ListAppItem>({ ...listAppResponse, status, proxyUrls: {} })])
+      .mockResolvedValueOnce([
+        partial<ListAppItem>({
+          ...listAppResponse,
+          status: 'RUNNING',
+          proxyUrls: { wds: 'http://test.wds.url' },
+        }),
+      ]);
 
     // Act
     await act(async () => {

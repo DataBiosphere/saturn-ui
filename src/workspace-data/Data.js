@@ -14,10 +14,11 @@ import { icon } from 'src/components/icons';
 import { ConfirmedSearchInput } from 'src/components/input';
 import { MenuButton } from 'src/components/MenuButton';
 import { MenuDivider, MenuTrigger } from 'src/components/PopupTrigger';
-import { Ajax } from 'src/libs/ajax';
 import { EntityServiceDataTableProvider } from 'src/libs/ajax/data-table-providers/EntityServiceDataTableProvider';
 import { wdsProviderName } from 'src/libs/ajax/data-table-providers/WdsDataTableProvider';
 import { appStatuses } from 'src/libs/ajax/leonardo/models/app-models';
+import { Metrics } from 'src/libs/ajax/Metrics';
+import { Workspaces } from 'src/libs/ajax/workspaces/Workspaces';
 import colors from 'src/libs/colors';
 import { getConfig } from 'src/libs/config';
 import { reportError, reportErrorAndRethrow, withErrorReporting } from 'src/libs/error';
@@ -359,7 +360,7 @@ const DataTableActions = ({
                       FileSaver.saveAs(blob, `${tableName}.tsv`)
                     );
                   }
-                  Ajax().Metrics.captureEvent(Events.workspaceDataDownload, {
+                  void Metrics().captureEvent(Events.workspaceDataDownload, {
                     ...extractWorkspaceDetails(workspace.workspace),
                     providerName: dataProvider.providerName,
                     cloudPlatform: dataProvider.providerName === wdsProviderName ? cloudProviders.azure.label : cloudProviders.gcp.label,
@@ -378,9 +379,7 @@ const DataTableActions = ({
                   Utils.withBusyState(setLoading),
                   withErrorReporting('Error loading entities.')
                 )(async () => {
-                  const queryResults = await Ajax(signal)
-                    .Workspaces.workspace(namespace, name)
-                    .paginatedEntitiesOfType(tableName, { pageSize: rowCount });
+                  const queryResults = await Workspaces(signal).workspace(namespace, name).paginatedEntitiesOfType(tableName, { pageSize: rowCount });
                   setEntities(_.map(_.get('name'), queryResults.results));
                   setExporting(true);
                 }),
@@ -416,7 +415,7 @@ const DataTableActions = ({
                 onClick: () => {
                   onToggleVersionHistory(!isShowingVersionHistory);
                   if (!isShowingVersionHistory) {
-                    Ajax().Metrics.captureEvent(Events.dataTableVersioningViewVersionHistory, {
+                    void Metrics().captureEvent(Events.dataTableVersioningViewVersionHistory, {
                       ...extractWorkspaceDetails(workspace.workspace),
                       tableName,
                     });
@@ -482,7 +481,7 @@ const DataTableActions = ({
         onConfirm: Utils.withBusyState(setLoading)(async () => {
           try {
             await dataProvider.deleteTable(tableName);
-            Ajax().Metrics.captureEvent(Events.workspaceDataDeleteTable, {
+            void Metrics().captureEvent(Events.workspaceDataDeleteTable, {
               ...extractWorkspaceDetails(workspace.workspace),
               providerName: dataProvider.providerName,
               cloudPlatform: dataProvider.providerName === wdsProviderName ? cloudProviders.azure.label : cloudProviders.gcp.label,
@@ -563,7 +562,7 @@ export const WorkspaceData = _.flow(
       try {
         setEntityMetadata(undefined);
         setEntityMetadataError(false);
-        const entityMetadata = await Ajax(signal).Workspaces.workspace(namespace, name).entityMetadata();
+        const entityMetadata = await Workspaces(signal).workspace(namespace, name).entityMetadata();
 
         if (selectedData?.type === workspaceDataTypes.entities && !entityMetadata[selectedData.entityType]) {
           setSelectedData(undefined);
@@ -580,7 +579,7 @@ export const WorkspaceData = _.flow(
     const loadSnapshotMetadata = async () => {
       try {
         setSnapshotMetadataError(false);
-        const { gcpDataRepoSnapshots: snapshotBody } = await Ajax(signal).Workspaces.workspace(namespace, name).listSnapshots(1000, 0);
+        const { gcpDataRepoSnapshots: snapshotBody } = await Workspaces(signal).workspace(namespace, name).listSnapshots(1000, 0);
 
         const snapshots = _.reduce(
           (acc, { metadata: { name, ...metadata }, attributes }) => {
@@ -611,7 +610,7 @@ export const WorkspaceData = _.flow(
     const loadSnapshotEntities = async (snapshotName) => {
       try {
         setSnapshotDetails(_.set([snapshotName, 'error'], false));
-        const entities = await Ajax(signal).Workspaces.workspace(namespace, name).snapshotEntityMetadata(googleProject, snapshotName);
+        const entities = await Workspaces(signal).workspace(namespace, name).snapshotEntityMetadata(googleProject, snapshotName);
         // Prevent duplicate id columns
         const entitiesWithoutIds = _.mapValues((entity) => _.update(['attributeNames'], _.without([entity.idName]), entity), entities);
         setSnapshotDetails(_.set([snapshotName, 'entityMetadata'], entitiesWithoutIds));
@@ -630,14 +629,14 @@ export const WorkspaceData = _.flow(
           _.map(async (typeName) => {
             const {
               resultMetadata: { filteredCount },
-            } = await Ajax(signal)
-              .Workspaces.workspace(namespace, name)
+            } = await Workspaces(signal)
+              .workspace(namespace, name)
               .paginatedEntitiesOfType(typeName, { pageSize: 1, filterTerms: activeCrossTableTextFilter });
             return { typeName, filteredCount };
           }, typeNames)
         );
         setCrossTableResultCounts(results);
-        Ajax().Metrics.captureEvent(Events.workspaceDataCrossTableSearch, {
+        void Metrics().captureEvent(Events.workspaceDataCrossTableSearch, {
           ...extractWorkspaceDetails(workspace.workspace),
           numTables: _.size(typeNames),
         });
@@ -735,7 +734,7 @@ export const WorkspaceData = _.flow(
                               {
                                 href: `${Nav.getLink('upload')}?${qs.stringify({ workspace: workspaceId })}`,
                                 onClick: () =>
-                                  Ajax().Metrics.captureEvent(Events.dataTableOpenUploader, {
+                                  void Metrics().captureEvent(Events.dataTableOpenUploader, {
                                     workspaceNamespace: namespace,
                                     workspaceName: name,
                                   }),
@@ -1043,7 +1042,7 @@ export const WorkspaceData = _.flow(
                                             onClick: () => {
                                               if (canCompute) {
                                                 setSelectedData({ type: workspaceDataTypes.snapshot, snapshotName, tableName });
-                                                Ajax().Metrics.captureEvent(Events.workspaceSnapshotContentsView, {
+                                                void Metrics().captureEvent(Events.workspaceSnapshotContentsView, {
                                                   ...extractWorkspaceDetails(workspace.workspace),
                                                   resourceId,
                                                   snapshotId,
@@ -1116,7 +1115,7 @@ export const WorkspaceData = _.flow(
                       onSuccess: (reference) => {
                         setImportingReference(false);
                         refreshWorkspace();
-                        Ajax().Metrics.captureEvent(Events.workspaceDataAddReferenceData, {
+                        void Metrics().captureEvent(Events.workspaceDataAddReferenceData, {
                           ...extractWorkspaceDetails(workspace.workspace),
                           reference,
                         });
@@ -1133,7 +1132,7 @@ export const WorkspaceData = _.flow(
                           setSelectedData(undefined);
                         }
                         refreshWorkspace();
-                        Ajax().Metrics.captureEvent(Events.workspaceDataRemoveReference, {
+                        void Metrics().captureEvent(Events.workspaceDataRemoveReference, {
                           ...extractWorkspaceDetails(workspace.workspace),
                           reference,
                         });
