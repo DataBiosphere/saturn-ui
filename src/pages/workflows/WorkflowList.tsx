@@ -187,7 +187,12 @@ export const WorkflowList = (props: WorkflowListProps) => {
     return _.lowerCase(sortValue.toString());
   };
 
-  const sortedWorkflows: MethodDefinition[] = _.flow<MethodDefinition[], MethodDefinition[], MethodDefinition[]>(
+  const sortedWorkflows: MethodDefinition[] = _.flow<
+    // filter input type: MethodDefinition[] | undefined (extra [] are because the inputs are viewed as a rest parameter)
+    (MethodDefinition[] | undefined)[],
+    MethodDefinition[], // filter output type / orderBy input type
+    MethodDefinition[] // final result type
+  >(
     _.filter(({ namespace, name }: MethodDefinition) => Utils.textMatch(filter, `${namespace}/${name}`)),
     _.orderBy([getSortKey], [sort.direction])
   )(workflows?.[tabName]);
