@@ -1,7 +1,8 @@
 import { ButtonPrimary, Modal, SpinnerOverlay } from '@terra-ui-packages/components';
 import _ from 'lodash/fp';
 import React, { ReactNode, useEffect, useState } from 'react';
-import { Ajax } from 'src/libs/ajax';
+import { Metrics } from 'src/libs/ajax/Metrics';
+import { Workspaces } from 'src/libs/ajax/workspaces/Workspaces';
 import colors from 'src/libs/colors';
 import { withErrorReporting } from 'src/libs/error';
 import Events, { extractWorkspaceDetails } from 'src/libs/events';
@@ -118,8 +119,8 @@ const SettingsModal = (props: SettingsModalProps): ReactNode => {
       Utils.withBusyState(setBusy),
       withErrorReporting('Error loading workspace settings')
     )(async () => {
-      const settings = (await Ajax(signal)
-        .Workspaces.workspaceV2(namespace, name)
+      const settings = (await Workspaces(signal)
+        .workspaceV2(namespace, name)
         .getSettings()) satisfies WorkspaceSetting[];
       setWorkspaceSettings(settings);
       const bucketLifecycleSetting = getFirstBucketLifecycleSetting(settings, true);
@@ -169,7 +170,7 @@ const SettingsModal = (props: SettingsModalProps): ReactNode => {
     newSettings = modifyFirstSoftDeleteSetting(newSettings, softDeleteInDays);
     newSettings = modifyRequesterPaysSetting(newSettings, requesterPaysEnabled);
 
-    await Ajax().Workspaces.workspaceV2(namespace, name).updateSettings(newSettings);
+    await Workspaces().workspaceV2(namespace, name).updateSettings(newSettings);
     props.onDismiss();
 
     // Event about bucket lifecycle setting only if something actually changed.
@@ -194,7 +195,7 @@ const SettingsModal = (props: SettingsModalProps): ReactNode => {
           }
         }
       }
-      Ajax().Metrics.captureEvent(Events.workspaceSettingsBucketLifecycle, {
+      void Metrics().captureEvent(Events.workspaceSettingsBucketLifecycle, {
         enabled: lifecycleRulesEnabled,
         prefix: prefixesChoice,
         age: lifecycleAge, // will be null if lifecycleRulesEnabled is false
@@ -212,7 +213,7 @@ const SettingsModal = (props: SettingsModalProps): ReactNode => {
       // If the bucket had no soft delete setting before, and the current one is the default retention, don't event.
     } else if (!_.isEqual(originalSoftDeleteSetting, newSoftDeleteSetting)) {
       // Event if the setting changed.
-      Ajax().Metrics.captureEvent(Events.workspaceSettingsSoftDelete, {
+      void Metrics().captureEvent(Events.workspaceSettingsSoftDelete, {
         enabled: softDeleteEnabled,
         retention: softDeleteRetention, // will be null if soft delete is disabled
         ...extractWorkspaceDetails(props.workspace),
@@ -226,7 +227,7 @@ const SettingsModal = (props: SettingsModalProps): ReactNode => {
       // If the bucket had no requester pays setting before, and the current one is disabled, don't event.
     } else if (!_.isEqual(originalRequesterPaysSetting, newRequesterPaysSetting)) {
       // Event if the setting changed.
-      Ajax().Metrics.captureEvent(Events.workspaceSettingsRequesterPays, {
+      void Metrics().captureEvent(Events.workspaceSettingsRequesterPays, {
         enabled: requesterPaysEnabled,
         ...extractWorkspaceDetails(props.workspace),
       });

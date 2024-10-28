@@ -5,7 +5,7 @@ import FooterWrapper from 'src/components/FooterWrapper';
 import { MarkdownViewer } from 'src/components/markdown';
 import SignInButton from 'src/components/SignInButton';
 import { TopBar } from 'src/components/TopBar';
-import { Ajax } from 'src/libs/ajax';
+import { FirecloudBucket } from 'src/libs/ajax/firecloud/FirecloudBucket';
 import { useOnMount } from 'src/libs/react-utils';
 import * as StateHistory from 'src/libs/state-history';
 import * as Style from 'src/libs/style';
@@ -29,7 +29,7 @@ const DashboardPublic = ({ namespace, name }) => {
 
   useOnMount(() => {
     const loadData = async () => {
-      const showcaseList = await Ajax().FirecloudBucket.getShowcaseWorkspaces();
+      const showcaseList = await FirecloudBucket().getShowcaseWorkspaces();
       setShowcaseList(showcaseList);
       StateHistory.update({ showcaseList });
     };

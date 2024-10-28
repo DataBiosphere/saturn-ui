@@ -1,15 +1,15 @@
-import { DeepPartial } from '@terra-ui-packages/core-utils';
 import { act, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { axe } from 'jest-axe';
 import _ from 'lodash/fp';
 import React from 'react';
-import { Ajax } from 'src/libs/ajax';
+import { Metrics, MetricsContract } from 'src/libs/ajax/Metrics';
 import { SeparateSubmissionFinalOutputsSetting } from 'src/libs/ajax/workspaces/workspace-models';
+import { Workspaces, WorkspacesAjaxContract, WorkspaceV2Contract } from 'src/libs/ajax/workspaces/Workspaces';
 import Events, { extractWorkspaceDetails } from 'src/libs/events';
 import { isFeaturePreviewEnabled } from 'src/libs/feature-previews';
 import { GCP_BUCKET_LIFECYCLE_RULES } from 'src/libs/feature-previews-config';
-import { asMockedFn, renderWithAppContexts as render, SelectHelper } from 'src/testing/test-utils';
+import { asMockedFn, partial, renderWithAppContexts as render, SelectHelper } from 'src/testing/test-utils';
 import { defaultGoogleWorkspace, makeGoogleWorkspace } from 'src/testing/workspace-fixtures';
 import SettingsModal from 'src/workspaces/SettingsModal/SettingsModal';
 import {
@@ -22,10 +22,8 @@ import {
   WorkspaceSetting,
 } from 'src/workspaces/SettingsModal/utils';
 
-jest.mock('src/libs/ajax');
-
-type AjaxContract = ReturnType<typeof Ajax>;
-type AjaxWorkspacesContract = AjaxContract['Workspaces'];
+jest.mock('src/libs/ajax/Metrics');
+jest.mock('src/libs/ajax/workspaces/Workspaces');
 
 type FeaturePreviewsExports = typeof import('src/libs/feature-previews');
 jest.mock('src/libs/feature-previews', (): FeaturePreviewsExports => {
@@ -127,18 +125,15 @@ describe('SettingsModal', () => {
   const setup = (currentSetting: WorkspaceSetting[], updateSettingsMock: jest.Mock<any, any>) => {
     jest.resetAllMocks();
     jest.spyOn(console, 'log').mockImplementation(() => {});
-    asMockedFn(Ajax).mockImplementation(
-      () =>
-        ({
-          Metrics: { captureEvent },
-          Workspaces: {
-            workspaceV2: () =>
-              ({
-                getSettings: jest.fn().mockResolvedValue(currentSetting),
-                updateSettings: updateSettingsMock,
-              } as DeepPartial<AjaxWorkspacesContract>),
-          },
-        } as DeepPartial<AjaxContract> as AjaxContract)
+    asMockedFn(Metrics).mockReturnValue(partial<MetricsContract>({ captureEvent }));
+    asMockedFn(Workspaces).mockReturnValue(
+      partial<WorkspacesAjaxContract>({
+        workspaceV2: () =>
+          partial<WorkspaceV2Contract>({
+            getSettings: jest.fn().mockResolvedValue(currentSetting),
+            updateSettings: updateSettingsMock,
+          }),
+      })
     );
     asMockedFn(isFeaturePreviewEnabled).mockImplementation((id) => id === GCP_BUCKET_LIFECYCLE_RULES);
   };
