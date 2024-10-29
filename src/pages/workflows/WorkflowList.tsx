@@ -20,15 +20,23 @@ import { withBusyState } from 'src/libs/utils';
 import { WorkflowModal } from 'src/pages/workflows/workflow/common/WorkflowModal';
 import { MethodDefinition } from 'src/pages/workflows/workflow-utils';
 
+// Note: The first tab key in this array will determine the default tab selected
+// if the tab query parameter is not present or has an invalid value (and when
+// clicking on that tab, the tab query parameter will not be used in the URL)
+const tabKeys = ['mine', 'public'] as const;
+type TabKey = (typeof tabKeys)[number]; // 'mine' | 'public'
+
+// Custom type guard
+const isTabKey = (val: any): val is TabKey => _.includes(val, tabKeys);
+
+const defaultTabKey: TabKey = tabKeys[0];
+
 /**
  * Represents a list of method definitions grouped into two
  * categories — My Methods and Public Methods — corresponding
  * to the tabs above the workflows table.
  */
-interface GroupedWorkflows {
-  mine: MethodDefinition[];
-  public: MethodDefinition[];
-}
+type GroupedWorkflows = Record<TabKey, MethodDefinition[]>;
 
 // This is based on the sort type from the FlexTable component
 // When that component is converted to TypeScript, we should use its sort type
@@ -39,7 +47,7 @@ interface SortProperties {
 }
 
 interface NewQueryParams {
-  newTab?: string;
+  newTab?: TabKey;
   newFilter?: string;
 }
 
@@ -80,14 +88,16 @@ interface WorkflowListProps {
 // TODO: consider wrapping query updates in useEffect
 export const WorkflowList = (props: WorkflowListProps) => {
   const { queryParams = {} } = props;
-  const { tab = 'mine', filter = '', ...query } = queryParams;
+  const { tab: queryTab, filter = '', ...query } = queryParams;
+
+  const selectedTab: TabKey = isTabKey(queryTab) ? queryTab : defaultTabKey;
 
   const signal: AbortSignal = useCancellation();
   const [busy, setBusy] = useState<boolean>(false);
 
   // workflows is undefined while the method definitions are still loading;
   // it is null if there is an error while loading
-  const [workflows, setWorkflows] = useState<GroupedWorkflows | null>();
+  const [workflows, setWorkflows] = useState<GroupedWorkflows | null | undefined>();
 
   // Valid direction values are 'asc' and 'desc' (based on expected
   // function signatures from the Sortable component used in this
@@ -99,9 +109,9 @@ export const WorkflowList = (props: WorkflowListProps) => {
   const [pageNumber, setPageNumber] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(25);
 
-  const getTabQueryName = (newTab: string | undefined): string | undefined => (newTab === 'mine' ? undefined : newTab);
+  const getTabQueryName = (newTab: TabKey): TabKey | undefined => (newTab === defaultTabKey ? undefined : newTab);
 
-  const getUpdatedQuery = ({ newTab = tab, newFilter = filter }: NewQueryParams): string => {
+  const getUpdatedQuery = ({ newTab = selectedTab, newFilter = filter }: NewQueryParams): string => {
     // Note: setting undefined so that falsy values don't show up at all
     return qs.stringify(
       { ...query, tab: getTabQueryName(newTab), filter: newFilter || undefined },
@@ -123,21 +133,23 @@ export const WorkflowList = (props: WorkflowListProps) => {
     setSort(newSort);
   };
 
-  const tabName: string = tab || 'mine';
-  const tabs = { mine: 'My Methods', public: 'Public Methods' };
+  const tabs: Record<TabKey, string> = { mine: 'My Methods', public: 'Public Methods' };
 
-  const getTabDisplayNames = (workflows: GroupedWorkflows | null | undefined, currentTabName: string) => {
-    const getCountString = (tabName: keyof GroupedWorkflows): string => {
+  const getTabDisplayNames = (
+    workflows: GroupedWorkflows | null | undefined,
+    selectedTab: TabKey
+  ): Record<TabKey, string> => {
+    const getCountString = (tab: TabKey): string => {
       if (workflows == null) {
         return '';
       }
 
-      // Only the current tab's workflow count reflects the search
+      // Only the currently selected tab's workflow count reflects the search
       // filter (since the filter is cleared when switching tabs)
-      if (tabName === currentTabName) {
+      if (tab === selectedTab) {
         return ` (${sortedWorkflows.length})`;
       }
-      return ` (${workflows[tabName].length})`;
+      return ` (${workflows[tab].length})`;
     };
 
     return {
@@ -174,7 +186,7 @@ export const WorkflowList = (props: WorkflowListProps) => {
       snapshotId,
     });
 
-  // Gets the sort key of a method definition based on the currently
+  // Get the sort key of a method definition based on the currently
   // selected sort field such that numeric fields are sorted numerically
   // and other fields are sorted as case-insensitive strings
   const getSortKey = ({ [sort.field]: sortValue }: MethodDefinition): number | string => {
@@ -195,7 +207,7 @@ export const WorkflowList = (props: WorkflowListProps) => {
   >(
     _.filter(({ namespace, name }: MethodDefinition) => Utils.textMatch(filter, `${namespace}/${name}`)),
     _.orderBy([getSortKey], [sort.direction])
-  )(workflows?.[tabName]);
+  )(workflows?.[selectedTab]);
 
   const firstPageIndex: number = (pageNumber - 1) * itemsPerPage;
   const lastPageIndex: number = firstPageIndex + itemsPerPage;
@@ -208,9 +220,9 @@ export const WorkflowList = (props: WorkflowListProps) => {
       </TopBar>
       <TabBar
         aria-label='methods list menu'
-        activeTab={tabName}
-        tabNames={Object.keys(tabs)}
-        displayNames={getTabDisplayNames(workflows, tabName)}
+        activeTab={selectedTab}
+        tabNames={tabKeys}
+        displayNames={getTabDisplayNames(workflows, selectedTab)}
         getHref={(currentTab) => `${Nav.getLink('workflows')}${getUpdatedQuery({ newTab: currentTab })}`}
         getOnClick={(currentTab) => (e) => {
           e.preventDefault();
@@ -243,7 +255,7 @@ export const WorkflowList = (props: WorkflowListProps) => {
           <AutoSizer>
             {({ width, height }) => (
               <FlexTable
-                aria-label={tabs[tabName]}
+                aria-label={tabs[selectedTab]}
                 width={width}
                 height={height}
                 sort={sort as any /* necessary until FlexTable is converted to TS */}
@@ -262,7 +274,7 @@ export const WorkflowList = (props: WorkflowListProps) => {
               // @ts-expect-error
               <Paginator
                 filteredDataLength={sortedWorkflows.length}
-                unfilteredDataLength={workflows![tabName].length}
+                unfilteredDataLength={workflows![selectedTab].length}
                 pageNumber={pageNumber}
                 setPageNumber={setPageNumber}
                 itemsPerPage={itemsPerPage}
