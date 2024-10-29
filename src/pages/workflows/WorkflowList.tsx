@@ -133,7 +133,7 @@ export const WorkflowList = (props: WorkflowListProps) => {
     setSort(newSort);
   };
 
-  const tabs: Record<TabKey, string> = { mine: 'My Methods', public: 'Public Methods' };
+  const tabNames: Record<TabKey, string> = { mine: 'My Methods', public: 'Public Methods' };
 
   const getTabDisplayNames = (
     workflows: GroupedWorkflows | null | undefined,
@@ -152,10 +152,11 @@ export const WorkflowList = (props: WorkflowListProps) => {
       return ` (${workflows[tab].length})`;
     };
 
-    return {
-      mine: `My Methods${getCountString('mine')}`,
-      public: `Public Methods${getCountString('public')}`,
-    };
+    const tabDisplayNames: Record<TabKey, string> = { ...tabNames }; // (shallow) copy
+    for (const tabKey of tabKeys) {
+      tabDisplayNames[tabKey] += getCountString(tabKey);
+    }
+    return tabDisplayNames;
   };
 
   useOnMount(() => {
@@ -255,7 +256,7 @@ export const WorkflowList = (props: WorkflowListProps) => {
           <AutoSizer>
             {({ width, height }) => (
               <FlexTable
-                aria-label={tabs[selectedTab]}
+                aria-label={tabNames[selectedTab]}
                 width={width}
                 height={height}
                 sort={sort as any /* necessary until FlexTable is converted to TS */}
