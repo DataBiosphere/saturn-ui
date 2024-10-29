@@ -164,7 +164,6 @@ const MockWrappedWorkflowComponent = _.flow(
   forwardRefWithName('MockWrappedWorkflowComponent'),
   wrapWorkflows({
     breadcrumbs: () => breadcrumbs.commonPaths.workflowList(),
-    title: 'Methods',
     activeTab: 'dashboard',
   })
 )(() => {
