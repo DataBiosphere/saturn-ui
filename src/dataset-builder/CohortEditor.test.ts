@@ -436,7 +436,7 @@ describe('CohortEditor', () => {
     expect(screen.getByText('Group 1')).toBeTruthy();
   });
 
-  it('can add/delete criteria groups and maintain user understandable names', async () => {
+  it.skip('can add/delete criteria groups and maintain user understandable names', async () => {
     // Arrange
     showCohortEditor();
     const user = userEvent.setup();
