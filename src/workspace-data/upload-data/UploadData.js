@@ -11,7 +11,9 @@ import { icon } from 'src/components/icons';
 import { DelayedSearchInput } from 'src/components/input';
 import { NameModal } from 'src/components/NameModal';
 import { TopBar } from 'src/components/TopBar';
-import { Ajax } from 'src/libs/ajax';
+import { GoogleStorage } from 'src/libs/ajax/GoogleStorage';
+import { Metrics } from 'src/libs/ajax/Metrics';
+import { Workspaces } from 'src/libs/ajax/workspaces/Workspaces';
 import colors from 'src/libs/colors';
 import { reportError, withErrorReporting } from 'src/libs/error';
 import Events from 'src/libs/events';
@@ -416,7 +418,7 @@ const CollectionSelectorPanel = ({
     withErrorReporting('Error loading bucket data'),
     Utils.withBusyState(setLoading)
   )(async () => {
-    const { prefixes } = await Ajax(signal).Buckets.list(googleProject, bucketName, rootPrefix);
+    const { prefixes } = await GoogleStorage(signal).list(googleProject, bucketName, rootPrefix);
     setCollections(
       _.flow(
         // Slice off the root and the trailing slash
@@ -497,7 +499,7 @@ const CollectionSelectorPanel = ({
         validationMessage: 'Collection name may not contain spaces, forward slashes, or any of the following characters: # * ? [ ]',
         onDismiss: () => setCreating(false),
         onSuccess: ({ name }) => {
-          Ajax().Metrics.captureEvent(Events.uploaderCreateCollection, { collectionName: name, workspaceNamespace, workspaceName });
+          void Metrics().captureEvent(Events.uploaderCreateCollection, { collectionName: name, workspaceNamespace, workspaceName });
           setCollection(name);
         },
       }),
@@ -519,7 +521,7 @@ const DataUploadPanel = ({ workspace, collection, setNumFiles, children }) => {
 
   const signal = useCancellation();
   const countFiles = async () => {
-    const { items } = await Ajax(signal).Buckets.listAll(googleProject, bucketName, { prefix: basePrefix });
+    const { items } = await GoogleStorage(signal).listAll(googleProject, bucketName, { prefix: basePrefix });
     setNumFiles(items.length);
   };
 
@@ -590,7 +592,7 @@ const MetadataUploadPanel = ({
     )(async () => {
       // Fetch every object in the entire bucket so we don't have to do it recursively, but
       // filter out any that aren't in our base prefix
-      const { items } = await Ajax(signal).Buckets.listAll(googleProject, bucketName, { prefix: basePrefix });
+      const { items } = await GoogleStorage(signal).listAll(googleProject, bucketName, { prefix: basePrefix });
 
       // Hash the filenames without any prefixes for easy lookup
       setFilenames(
@@ -631,7 +633,7 @@ const MetadataUploadPanel = ({
       if (!idColumn || _.indexOf('', headerRow) > -1) {
         errors.push(['This does not look like a valid .tsv file.']);
         // Return right away
-        Ajax().Metrics.captureEvent(Events.uploaderUploadMetadata, {
+        void Metrics().captureEvent(Events.uploaderUploadMetadata, {
           workspaceNamespace: namespace,
           workspaceName: name,
           success: false,
@@ -696,7 +698,7 @@ const MetadataUploadPanel = ({
           otherRows
         );
 
-        Ajax().Metrics.captureEvent(Events.uploaderUploadMetadata, {
+        void Metrics().captureEvent(Events.uploaderUploadMetadata, {
           workspaceNamespace: namespace,
           workspaceName: name,
           success: true,
@@ -707,7 +709,7 @@ const MetadataUploadPanel = ({
     } catch (e) {
       console.error('Failed to parse metadata file', e);
 
-      Ajax().Metrics.captureEvent(Events.uploaderUploadMetadata, {
+      void Metrics().captureEvent(Events.uploaderUploadMetadata, {
         workspaceNamespace: namespace,
         workspaceName: name,
         success: false,
@@ -742,16 +744,16 @@ const MetadataUploadPanel = ({
     try {
       // Convert the table data structure back into a TSV, in case the user made changes
       const file = Utils.makeTSV([metadata.table.columns, ...metadata.table.rows]);
-      const workspace = Ajax().Workspaces.workspace(namespace, name);
+      const workspace = Workspaces().workspace(namespace, name);
       await workspace.importFlexibleEntitiesFileSynchronous(file);
-      Ajax().Metrics.captureEvent(metadata?.isUpdate ? Events.uploaderUpdateTable : Events.uploaderCreateTable, {
+      void Metrics().captureEvent(metadata?.isUpdate ? Events.uploaderUpdateTable : Events.uploaderCreateTable, {
         workspaceNamespace: namespace,
         workspaceName: name,
         success: true,
       });
       onSuccess && onSuccess({ file, metadata });
     } catch (error) {
-      Ajax().Metrics.captureEvent(metadata?.isUpdate ? Events.uploaderUpdateTable : Events.uploaderCreateTable, {
+      void Metrics().captureEvent(metadata?.isUpdate ? Events.uploaderUpdateTable : Events.uploaderCreateTable, {
         workspaceNamespace: namespace,
         workspaceName: name,
         success: false,

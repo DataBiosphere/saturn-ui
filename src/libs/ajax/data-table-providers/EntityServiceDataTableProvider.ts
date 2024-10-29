@@ -1,5 +1,4 @@
 import _ from 'lodash/fp';
-import { Ajax } from 'src/libs/ajax';
 import {
   DataTableFeatures,
   DataTableProvider,
@@ -13,6 +12,7 @@ import {
   UpdateAttributeParameters,
   UploadParameters,
 } from 'src/libs/ajax/data-table-providers/DataTableProvider';
+import { Workspaces } from 'src/libs/ajax/workspaces/Workspaces';
 import { asyncImportJobStore } from 'src/libs/state';
 import * as Utils from 'src/libs/utils';
 import { notifyDataImportProgress } from 'src/workspace-data/import-jobs';
@@ -72,8 +72,8 @@ export class EntityServiceDataTableProvider implements DataTableProvider {
     queryOptions: EntityQueryOptions,
     _metadata: EntityMetadata
   ): Promise<EntityQueryResponse> => {
-    return Ajax(signal)
-      .Workspaces.workspace(this.namespace, this.name)
+    return Workspaces(signal)
+      .workspace(this.namespace, this.name)
       .paginatedEntitiesOfType(
         entityType,
         _.pickBy((v) => _.trim(v?.toString()), {
@@ -93,19 +93,19 @@ export class EntityServiceDataTableProvider implements DataTableProvider {
   };
 
   deleteTable = (entityType: string): Promise<Response> => {
-    return Ajax().Workspaces.workspace(this.namespace, this.name).deleteEntitiesOfType(entityType);
+    return Workspaces().workspace(this.namespace, this.name).deleteEntitiesOfType(entityType);
   };
 
   deleteColumn = (signal: AbortSignal, entityType: string, attributeName: string): Promise<Response> => {
-    return Ajax(signal).Workspaces.workspace(this.namespace, this.name).deleteEntityColumn(entityType, attributeName);
+    return Workspaces(signal).workspace(this.namespace, this.name).deleteEntityColumn(entityType, attributeName);
   };
 
   downloadTsv = (signal: AbortSignal, entityType: string): Promise<Blob> => {
-    return Ajax(signal).Workspaces.workspace(this.namespace, this.name).getEntitiesTsv(entityType);
+    return Workspaces(signal).workspace(this.namespace, this.name).getEntitiesTsv(entityType);
   };
 
   uploadTsv = async (uploadParams: UploadParameters): Promise<any> => {
-    const workspace = Ajax().Workspaces.workspace(uploadParams.namespace, uploadParams.name);
+    const workspace = Workspaces().workspace(uploadParams.namespace, uploadParams.name);
     if (uploadParams.useFireCloudDataModel) {
       return workspace.importEntitiesFile(uploadParams.file, { deleteEmptyValues: uploadParams.deleteEmptyValues });
     }
@@ -126,8 +126,8 @@ export class EntityServiceDataTableProvider implements DataTableProvider {
   };
 
   updateAttribute = async (updateAttrParams: UpdateAttributeParameters): Promise<any> => {
-    return Ajax()
-      .Workspaces.workspace(this.namespace, this.name)
+    return Workspaces()
+      .workspace(this.namespace, this.name)
       .renameEntityColumn(
         updateAttrParams.entityType,
         updateAttrParams.oldAttributeName,
