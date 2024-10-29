@@ -27,7 +27,7 @@ jest.mock(
   (): NavExports => ({
     ...jest.requireActual('src/libs/nav'),
     getLink: jest.fn((name, pathParams?) =>
-      name === 'workflow-dashboard' ? `#workflows/${pathParams!.namespace}/${pathParams!.name}` : `#${name}`
+      name === 'workflow-dashboard' ? `#methods/${pathParams!.namespace}/${pathParams!.name}` : `#${name}`
     ),
     goToPath: jest.fn(),
   })
@@ -306,6 +306,8 @@ describe('workflow wrapper', () => {
 
     const returnToMethodsListButton = screen.getByRole('link', { name: 'Return to Methods List' });
     expect(returnToMethodsListButton).toBeInTheDocument();
+
+    // mock link path based on internal nav path name
     expect(returnToMethodsListButton).toHaveAttribute('href', '#workflows');
   });
 
@@ -396,7 +398,7 @@ describe('workflows container', () => {
       Ajax().Methods.method(mockDeleteSnapshot.namespace, mockDeleteSnapshot.name, mockDeleteSnapshot.snapshotId).delete
     ).toHaveBeenCalled();
 
-    expect(window.history.replaceState).toHaveBeenCalledWith({}, '', '#workflows/methodnamespace/testname');
+    expect(window.history.replaceState).toHaveBeenCalledWith({}, '', '#methods/methodnamespace/testname');
 
     expect(snapshotStore.get()).toEqual(snapshotStoreInitialValue);
 
