@@ -175,9 +175,9 @@ export const WorkflowsContainer = (props: WorkflowContainerProps) => {
     await Ajax(signal).Methods.method(namespace, name, selectedSnapshot).delete();
 
     // Replace the current history entry linking to the method details page of a
-    // specific snapshot, like /#workflows/sschu/echo-strings-test/29, with an
+    // specific snapshot, like /#methods/sschu/echo-strings-test/29, with an
     // entry with the corresponding link without the snapshot ID, like
-    // /#workflows/sschu/echo-strings-test
+    // /#methods/sschu/echo-strings-test
     // This way, if the user presses the back button after deleting a
     // method snapshot, they will be automatically redirected to the most recent
     // snapshot that still exists of the same method
