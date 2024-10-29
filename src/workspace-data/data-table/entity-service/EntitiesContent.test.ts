@@ -4,15 +4,17 @@ import userEvent from '@testing-library/user-event';
 import * as clipboard from 'clipboard-polyfill/text';
 import FileSaver from 'file-saver';
 import { h } from 'react-hyperscript-helpers';
-import { Ajax } from 'src/libs/ajax';
-import { asMockedFn, renderWithAppContexts as render } from 'src/testing/test-utils';
+import { EntityQueryResponse, EntityQueryResultMetadata } from 'src/libs/ajax/data-table-providers/DataTableProvider';
+import { Metrics, MetricsContract } from 'src/libs/ajax/Metrics';
+import { WorkspaceContract, Workspaces, WorkspacesAjaxContract } from 'src/libs/ajax/workspaces/Workspaces';
+import { asMockedFn, MockedFn, partial, renderWithAppContexts as render } from 'src/testing/test-utils';
 import { defaultGoogleWorkspace } from 'src/testing/workspace-fixtures';
 
 import EntitiesContent from './EntitiesContent';
 
-type AjaxContract = ReturnType<typeof Ajax>;
-
-jest.mock('src/libs/ajax');
+jest.mock('src/libs/ajax/GoogleStorage');
+jest.mock('src/libs/ajax/Metrics');
+jest.mock('src/libs/ajax/workspaces/Workspaces');
 
 type ReactNotificationsComponentExports = typeof import('react-notifications-component');
 jest.mock('react-notifications-component', (): DeepPartial<ReactNotificationsComponentExports> => {
@@ -67,29 +69,32 @@ describe('EntitiesContent', () => {
     // Arrange
     const user = userEvent.setup();
 
-    const paginatedEntitiesOfType = jest.fn().mockResolvedValue({
-      results: [
-        {
-          entityType: 'sample',
-          name: 'sample_1',
-          attributes: {},
-        },
-      ],
-      resultMetadata: { filteredCount: 1, unfilteredCount: 1 },
-    });
-    const mockAjax: DeepPartial<AjaxContract> = {
-      Workspaces: {
-        workspace: () => {
-          return {
+    const paginatedEntitiesOfType: MockedFn<WorkspaceContract['paginatedEntitiesOfType']> = jest.fn();
+    paginatedEntitiesOfType.mockResolvedValue(
+      partial<EntityQueryResponse>({
+        results: [
+          {
+            entityType: 'sample',
+            name: 'sample_1',
+            attributes: {},
+          },
+        ],
+        resultMetadata: partial<EntityQueryResultMetadata>({ filteredCount: 1, unfilteredCount: 1 }),
+      })
+    );
+    asMockedFn(Workspaces).mockReturnValue(
+      partial<WorkspacesAjaxContract>({
+        workspace: () =>
+          partial<WorkspaceContract>({
             paginatedEntitiesOfType,
-          };
-        },
-      },
-      Metrics: {
-        captureEvent: () => {},
-      },
-    };
-    asMockedFn(Ajax).mockImplementation(() => mockAjax as AjaxContract);
+          }),
+      })
+    );
+    asMockedFn(Metrics).mockReturnValue(
+      partial<MetricsContract>({
+        captureEvent: async () => {},
+      })
+    );
 
     await act(async () => {
       render(
@@ -143,43 +148,47 @@ describe('EntitiesContent', () => {
     // Arrange
     const user = userEvent.setup();
 
-    const paginatedEntitiesOfType = jest.fn().mockResolvedValue({
-      results: [
-        {
-          entityType: 'sample_set',
-          name: 'sample_set_1',
-          attributes: {
-            samples: {
-              itemsType: 'EntityReference',
-              items: [
-                {
-                  entityType: 'sample',
-                  entityName: 'sample_1',
-                },
-                {
-                  entityType: 'sample',
-                  entityName: 'sample_2',
-                },
-              ],
+    const paginatedEntitiesOfType: MockedFn<WorkspaceContract['paginatedEntitiesOfType']> = jest.fn();
+    paginatedEntitiesOfType.mockResolvedValue(
+      partial<EntityQueryResponse>({
+        results: [
+          {
+            entityType: 'sample_set',
+            name: 'sample_set_1',
+            attributes: {
+              samples: {
+                itemsType: 'EntityReference',
+                items: [
+                  {
+                    entityType: 'sample',
+                    entityName: 'sample_1',
+                  },
+                  {
+                    entityType: 'sample',
+                    entityName: 'sample_2',
+                  },
+                ],
+              },
             },
           },
-        },
-      ],
-      resultMetadata: { filteredCount: 1, unfilteredCount: 1 },
-    });
-    const mockAjax: DeepPartial<AjaxContract> = {
-      Workspaces: {
-        workspace: () => {
-          return {
+        ],
+        resultMetadata: partial<EntityQueryResultMetadata>({ filteredCount: 1, unfilteredCount: 1 }),
+      })
+    );
+
+    asMockedFn(Workspaces).mockReturnValue(
+      partial<WorkspacesAjaxContract>({
+        workspace: () =>
+          partial<WorkspaceContract>({
             paginatedEntitiesOfType,
-          };
-        },
-      },
-      Metrics: {
-        captureEvent: () => {},
-      },
-    };
-    asMockedFn(Ajax).mockImplementation(() => mockAjax as AjaxContract);
+          }),
+      })
+    );
+    asMockedFn(Metrics).mockReturnValue(
+      partial<MetricsContract>({
+        captureEvent: async () => {},
+      })
+    );
 
     await act(async () => {
       render(
@@ -233,29 +242,32 @@ describe('EntitiesContent', () => {
     // Arrange
     const user = userEvent.setup();
 
-    const paginatedEntitiesOfType = jest.fn().mockResolvedValue({
-      results: [
-        {
-          entityType: 'sample',
-          name: 'sample_1',
-          attributes: {},
-        },
-      ],
-      resultMetadata: { filteredCount: 1, unfilteredCount: 2 },
-    });
-    const mockAjax: DeepPartial<AjaxContract> = {
-      Workspaces: {
-        workspace: () => {
-          return {
+    const paginatedEntitiesOfType: MockedFn<WorkspaceContract['paginatedEntitiesOfType']> = jest.fn();
+    paginatedEntitiesOfType.mockResolvedValue(
+      partial<EntityQueryResponse>({
+        results: [
+          {
+            entityType: 'sample',
+            name: 'sample_1',
+            attributes: {},
+          },
+        ],
+        resultMetadata: partial<EntityQueryResultMetadata>({ filteredCount: 1, unfilteredCount: 2 }),
+      })
+    );
+    asMockedFn(Workspaces).mockReturnValue(
+      partial<WorkspacesAjaxContract>({
+        workspace: () =>
+          partial<WorkspaceContract>({
             paginatedEntitiesOfType,
-          };
-        },
-      },
-      Metrics: {
-        captureEvent: () => {},
-      },
-    };
-    asMockedFn(Ajax).mockImplementation(() => mockAjax as AjaxContract);
+          }),
+      })
+    );
+    asMockedFn(Metrics).mockReturnValue(
+      partial<MetricsContract>({
+        captureEvent: async () => {},
+      })
+    );
 
     await act(async () => {
       render(
@@ -321,29 +333,32 @@ describe('EntitiesContent', () => {
     // Arrange
     const user = userEvent.setup();
 
-    const paginatedEntitiesOfType = jest.fn().mockResolvedValue({
-      results: [
-        {
-          entityType: 'sample',
-          name: 'sample_1',
-          attributes: {},
-        },
-      ],
-      resultMetadata: { filteredCount: 1, unfilteredCount: 1 },
-    });
-    const mockAjax: DeepPartial<AjaxContract> = {
-      Workspaces: {
-        workspace: () => {
-          return {
+    const paginatedEntitiesOfType: MockedFn<WorkspaceContract['paginatedEntitiesOfType']> = jest.fn();
+    paginatedEntitiesOfType.mockResolvedValue(
+      partial<EntityQueryResponse>({
+        results: [
+          {
+            entityType: 'sample',
+            name: 'sample_1',
+            attributes: {},
+          },
+        ],
+        resultMetadata: partial<EntityQueryResultMetadata>({ filteredCount: 1, unfilteredCount: 1 }),
+      })
+    );
+    asMockedFn(Workspaces).mockReturnValue(
+      partial<WorkspacesAjaxContract>({
+        workspace: () =>
+          partial<WorkspaceContract>({
             paginatedEntitiesOfType,
-          };
-        },
-      },
-      Metrics: {
-        captureEvent: () => {},
-      },
-    };
-    asMockedFn(Ajax).mockImplementation(() => mockAjax as AjaxContract);
+          }),
+      })
+    );
+    asMockedFn(Metrics).mockReturnValue(
+      partial<MetricsContract>({
+        captureEvent: async () => {},
+      })
+    );
 
     await act(async () => {
       render(
@@ -397,43 +412,46 @@ describe('EntitiesContent', () => {
     // Arrange
     const user = userEvent.setup();
 
-    const paginatedEntitiesOfType = jest.fn().mockResolvedValue({
-      results: [
-        {
-          entityType: 'sample_set',
-          name: 'sample_set_1',
-          attributes: {
-            samples: {
-              itemsType: 'EntityReference',
-              items: [
-                {
-                  entityType: 'sample',
-                  entityName: 'sample_1',
-                },
-                {
-                  entityType: 'sample',
-                  entityName: 'sample_2',
-                },
-              ],
+    const paginatedEntitiesOfType: MockedFn<WorkspaceContract['paginatedEntitiesOfType']> = jest.fn();
+    paginatedEntitiesOfType.mockResolvedValue(
+      partial<EntityQueryResponse>({
+        results: [
+          {
+            entityType: 'sample_set',
+            name: 'sample_set_1',
+            attributes: {
+              samples: {
+                itemsType: 'EntityReference',
+                items: [
+                  {
+                    entityType: 'sample',
+                    entityName: 'sample_1',
+                  },
+                  {
+                    entityType: 'sample',
+                    entityName: 'sample_2',
+                  },
+                ],
+              },
             },
           },
-        },
-      ],
-      resultMetadata: { filteredCount: 1, unfilteredCount: 1 },
-    });
-    const mockAjax: DeepPartial<AjaxContract> = {
-      Workspaces: {
-        workspace: () => {
-          return {
+        ],
+        resultMetadata: partial<EntityQueryResultMetadata>({ filteredCount: 1, unfilteredCount: 1 }),
+      })
+    );
+    asMockedFn(Workspaces).mockReturnValue(
+      partial<WorkspacesAjaxContract>({
+        workspace: () =>
+          partial<WorkspaceContract>({
             paginatedEntitiesOfType,
-          };
-        },
-      },
-      Metrics: {
-        captureEvent: () => {},
-      },
-    };
-    asMockedFn(Ajax).mockImplementation(() => mockAjax as AjaxContract);
+          }),
+      })
+    );
+    asMockedFn(Metrics).mockReturnValue(
+      partial<MetricsContract>({
+        captureEvent: async () => {},
+      })
+    );
 
     await act(async () => {
       render(

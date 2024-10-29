@@ -4,7 +4,8 @@ import { Fragment, useRef, useState } from 'react';
 import { b, div, h } from 'react-hyperscript-helpers';
 import { ButtonPrimary, spinnerOverlay } from 'src/components/common';
 import { icon } from 'src/components/icons';
-import { Ajax } from 'src/libs/ajax';
+import { Metrics } from 'src/libs/ajax/Metrics';
+import { Workspaces } from 'src/libs/ajax/workspaces/Workspaces';
 import colors from 'src/libs/colors';
 import { reportError } from 'src/libs/error';
 import Events, { extractWorkspaceDetails } from 'src/libs/events';
@@ -66,7 +67,7 @@ export const ExportDataModal = ({ onDismiss, selectedDataType, selectedEntities,
     setCopying(true);
     if (hardConflicts.length) {
       try {
-        await Ajax().Workspaces.workspace(selectedWorkspace.namespace, selectedWorkspace.name).deleteEntities(entitiesToDelete);
+        await Workspaces().workspace(selectedWorkspace.namespace, selectedWorkspace.name).deleteEntities(entitiesToDelete);
         setHardConflicts([]);
         setAdditionalDeletions([]);
       } catch (error) {
@@ -82,11 +83,11 @@ export const ExportDataModal = ({ onDismiss, selectedDataType, selectedEntities,
       }
     }
     try {
-      await Ajax()
-        .Workspaces.workspace(workspace.workspace.namespace, workspace.workspace.name)
+      await Workspaces()
+        .workspace(workspace.workspace.namespace, workspace.workspace.name)
         .copyEntities(selectedWorkspace.namespace, selectedWorkspace.name, selectedDataType, selectedEntities, !!softConflicts.length);
       setCopied(true);
-      Ajax().Metrics.captureEvent(Events.workspaceDataCopy, extractWorkspaceDetails(workspace.workspace));
+      void Metrics().captureEvent(Events.workspaceDataCopy, extractWorkspaceDetails(workspace.workspace));
     } catch (error) {
       switch (error.status) {
         case 409:
