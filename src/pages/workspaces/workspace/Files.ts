@@ -56,11 +56,10 @@ export const Files = _.flow(
             href: `https://seqr.broadinstitute.org/workspace/${workspaceInfo.namespace}/${workspaceInfo.name}`,
             style: { padding: '0.5rem' },
             target: '_blank',
-            onClick: async () => {
-              await Ajax().Metrics.captureEvent(Events.workspaceFilesSeqr, {
+            onClick: () => {
+              Ajax().Metrics.captureEvent(Events.workspaceFilesSeqr, {
                 workspaceNamespace: workspaceInfo.namespace,
                 workspaceName: workspaceInfo.name,
-                success: true,
               });
             },
           },
