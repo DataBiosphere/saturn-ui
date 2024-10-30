@@ -11,7 +11,7 @@ import { icon } from 'src/components/icons';
 import { NameModal } from 'src/components/NameModal';
 import { UploadProgressModal } from 'src/components/ProgressBar';
 import { FlexTable, HeaderCell, TextCell } from 'src/components/table';
-import { Ajax } from 'src/libs/ajax';
+import { GoogleStorage } from 'src/libs/ajax/GoogleStorage';
 import colors from 'src/libs/colors';
 import { reportError, withErrorReporting } from 'src/libs/error';
 import { useCancelable } from 'src/libs/react-utils';
@@ -50,7 +50,7 @@ const useBucketContents = ({ googleProject, bucketName, prefix, pageSize = 1000 
         items: pageObjects,
         prefixes: pagePrefixes,
         nextPageToken: pageNextPageToken,
-      } = await Ajax(signal).Buckets.list(googleProject, bucketName, prefix, requestOptions);
+      } = await GoogleStorage(signal).list(googleProject, bucketName, prefix, requestOptions);
 
       // _.remove({ name: prefix }) filters out folder placeholder objects.
       // See https://cloud.google.com/storage/docs/folders for more information.
@@ -347,7 +347,7 @@ const BucketBrowser = ({
   const [viewingObject, setViewingObject] = useState(null);
 
   const { uploadState, uploadFiles, cancelUpload } = useUploader((file, { signal }) => {
-    return Ajax(signal).Buckets.upload(googleProject, bucketName, prefix, file);
+    return GoogleStorage(signal).upload(googleProject, bucketName, prefix, file);
   });
   const [creatingNewFolder, setCreatingNewFolder] = useState(false);
   const [deletingSelectedObjects, setDeletingSelectedObjects] = useState(false);
@@ -505,7 +505,7 @@ const BucketBrowser = ({
                               // A placeholder object may not exist for the prefix being viewed, so do not an report error for 404 responses.
                               // See https://cloud.google.com/storage/docs/folders for more information on placeholder objects.
                               try {
-                                await Ajax().Buckets.delete(googleProject, bucketName, prefix);
+                                await GoogleStorage().delete(googleProject, bucketName, prefix);
                               } catch (error) {
                                 if (error.status !== 404) {
                                   reportError('Error deleting folder', error);
@@ -579,7 +579,7 @@ const BucketBrowser = ({
                   // Create a placeholder object for the new folder.
                   // See https://cloud.google.com/storage/docs/folders for more information.
                   const placeholderObject = new File([''], `${name}/`, { type: 'text/plain' });
-                  await Ajax().Buckets.upload(googleProject, bucketName, prefix, placeholderObject);
+                  await GoogleStorage().upload(googleProject, bucketName, prefix, placeholderObject);
 
                   setPrefix(`${prefix}${name}/`);
                 }),
@@ -592,7 +592,7 @@ const BucketBrowser = ({
                   setDeletingSelectedObjects(false);
                   setBusy(true);
                   try {
-                    await Promise.all(_.map((object) => Ajax().Buckets.delete(googleProject, bucketName, object.name), _.values(selectedObjects)));
+                    await Promise.all(_.map((object) => GoogleStorage().delete(googleProject, bucketName, object.name), _.values(selectedObjects)));
                   } catch (error) {
                     reportError('Error deleting objects', error);
                   } finally {

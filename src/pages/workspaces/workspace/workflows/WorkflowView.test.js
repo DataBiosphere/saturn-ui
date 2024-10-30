@@ -1,7 +1,6 @@
 import { act, fireEvent, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { h } from 'react-hyperscript-helpers';
-import { Ajax } from 'src/libs/ajax';
 import { Apps } from 'src/libs/ajax/leonardo/Apps';
 import { leoDiskProvider } from 'src/libs/ajax/leonardo/providers/LeoDiskProvider';
 import { Runtimes } from 'src/libs/ajax/leonardo/Runtimes';
@@ -13,8 +12,6 @@ import { chooseRootType } from 'src/pages/workspaces/workspace/workflows/EntityS
 import LaunchAnalysisModal from 'src/pages/workspaces/workspace/workflows/LaunchAnalysisModal';
 import { WorkflowView } from 'src/pages/workspaces/workspace/workflows/WorkflowView';
 import { asMockedFn, renderWithAppContexts as render, SelectHelper } from 'src/testing/test-utils';
-
-jest.mock('src/libs/ajax');
 
 jest.mock('src/libs/ajax/Dockstore');
 jest.mock('src/libs/ajax/GoogleStorage');
@@ -355,13 +352,11 @@ describe('Workflow View (GCP)', () => {
 
     const ws = jest.fn().mockReturnValue(Promise.resolve(initializedGoogleWorkspace.workspace));
 
-    Ajax.mockImplementation(() => ({
-      Workspaces: {
-        workspace: (_namespace, _name) => ({
-          ws,
-          paginatedEntitiesOfType,
-        }),
-      },
+    Workspaces.mockImplementation(() => ({
+      workspace: (_namespace, _name) => ({
+        ws,
+        paginatedEntitiesOfType,
+      }),
     }));
 
     const entitySelectionModel = {
@@ -590,17 +585,15 @@ describe('Workflow View (GCP)', () => {
       },
     };
 
-    Ajax.mockImplementation(() => ({
-      Workspaces: {
-        workspace: (_namespace, _name) => ({
-          checkBucketAccess: jest.fn().mockResolvedValue({}),
-          checkBucketLocation: jest.fn().mockResolvedValue(mockStorageDetails),
-          createEntity: jest.fn().mockResolvedValue(mockCreateEntity),
-          methodConfig: () => ({
-            launch: jest.fn(mockLaunchResponse),
-          }),
+    Workspaces.mockImplementation(() => ({
+      workspace: (_namespace, _name) => ({
+        checkBucketAccess: jest.fn().mockResolvedValue({}),
+        checkBucketLocation: jest.fn().mockResolvedValue(mockStorageDetails),
+        createEntity: jest.fn().mockResolvedValue(mockCreateEntity),
+        methodConfig: () => ({
+          launch: jest.fn(mockLaunchResponse),
         }),
-      },
+      }),
     }));
 
     // Act

@@ -19,8 +19,9 @@ import { ConfirmedSearchInput } from 'src/components/input';
 import { MenuButton } from 'src/components/MenuButton';
 import { MenuTrigger } from 'src/components/PopupTrigger';
 import { GridTable, HeaderCell, Paginator, Resizable, TooltipCell } from 'src/components/table';
-import { Ajax } from 'src/libs/ajax';
 import { wdsProviderName } from 'src/libs/ajax/data-table-providers/WdsDataTableProvider';
+import { Metrics } from 'src/libs/ajax/Metrics';
+import { Workspaces } from 'src/libs/ajax/workspaces/Workspaces';
 import colors from 'src/libs/colors';
 import { withErrorReporting } from 'src/libs/error';
 import Events, { extractWorkspaceDetails } from 'src/libs/events';
@@ -239,7 +240,7 @@ const DataTable = (props) => {
       filterOperator,
       columnFilter: columnFilterQueryString,
     });
-    const queryResults = await Ajax(signal).Workspaces.workspace(namespace, name).paginatedEntitiesOfType(entityType, params);
+    const queryResults = await Workspaces(signal).workspace(namespace, name).paginatedEntitiesOfType(entityType, params);
     return queryResults.results;
   };
 
@@ -275,7 +276,7 @@ const DataTable = (props) => {
       }),
       allEntities
     );
-    await Ajax(signal).Workspaces.workspace(namespace, name).upsertEntities(entityUpdates);
+    await Workspaces(signal).workspace(namespace, name).upsertEntities(entityUpdates);
 
     const updatedEntities = _.map(_.update('attributes', _.set(attributeName, '')), entities);
     setEntities(updatedEntities);
@@ -316,7 +317,7 @@ const DataTable = (props) => {
     setActiveTextFilter('');
     setColumnFilter({ filterColAttr: field, filterColTerm: v.toString().trim() });
     setPageNumber(1);
-    Ajax().Metrics.captureEvent(Events.workspaceDataColumnTableSearch, {
+    void Metrics().captureEvent(Events.workspaceDataColumnTableSearch, {
       ...extractWorkspaceDetails(workspace.workspace),
       searchType: field === entityMetadata[entityType].idName ? 'filter-by-name' : 'filter-by-column',
       providerName: dataProvider.providerName,
@@ -417,7 +418,7 @@ const DataTable = (props) => {
                     setColumnFilter({ filterColAttr: '', filterColTerm: '' });
                     setActiveTextFilter(v.toString().trim());
                     setPageNumber(1);
-                    Ajax().Metrics.captureEvent(Events.workspaceDataColumnTableSearch, {
+                    void Metrics().captureEvent(Events.workspaceDataColumnTableSearch, {
                       ...extractWorkspaceDetails(workspace.workspace),
                       searchType: 'full-table-search',
                       providerName: dataProvider.providerName,
@@ -762,7 +763,7 @@ const DataTable = (props) => {
         workspaceId,
         onSuccess: () => {
           setRenamingEntity(undefined);
-          Ajax().Metrics.captureEvent(Events.workspaceDataRenameEntity, extractWorkspaceDetails(workspace.workspace));
+          void Metrics().captureEvent(Events.workspaceDataRenameEntity, extractWorkspaceDetails(workspace.workspace));
           loadData();
         },
         onDismiss: () => setRenamingEntity(undefined),
@@ -776,7 +777,7 @@ const DataTable = (props) => {
         workspaceId,
         onSuccess: () => {
           setUpdatingEntity(undefined);
-          Ajax().Metrics.captureEvent(Events.workspaceDataEditOne, extractWorkspaceDetails(workspace.workspace));
+          void Metrics().captureEvent(Events.workspaceDataEditOne, extractWorkspaceDetails(workspace.workspace));
           loadData();
         },
         onDismiss: () => setUpdatingEntity(undefined),
@@ -792,7 +793,7 @@ const DataTable = (props) => {
         recordTypeAttributes: entityMetadata[entityType].attributes,
         onSuccess: () => {
           setUpdatingEntity(undefined);
-          Ajax().Metrics.captureEvent(Events.workspaceDataEditOne, extractWorkspaceDetails(workspace.workspace));
+          void Metrics().captureEvent(Events.workspaceDataEditOne, extractWorkspaceDetails(workspace.workspace));
           loadData();
         },
         onDismiss: () => setUpdatingEntity(undefined),
@@ -805,7 +806,7 @@ const DataTable = (props) => {
         dataProvider,
         onSuccess: () => {
           setRenamingColumn(undefined);
-          Ajax().Metrics.captureEvent(Events.workspaceDataRenameColumn, extractWorkspaceDetails(workspace.workspace));
+          void Metrics().captureEvent(Events.workspaceDataRenameColumn, extractWorkspaceDetails(workspace.workspace));
           loadMetadata();
         },
         onDismiss: () => setRenamingColumn(undefined),
@@ -816,7 +817,7 @@ const DataTable = (props) => {
         objectName: deletingColumn,
         onConfirm: () => {
           setDeletingColumn(undefined);
-          Ajax().Metrics.captureEvent(Events.workspaceDataDeleteColumn, extractWorkspaceDetails(workspace.workspace));
+          void Metrics().captureEvent(Events.workspaceDataDeleteColumn, extractWorkspaceDetails(workspace.workspace));
           deleteColumn(deletingColumn);
         },
         onDismiss: () => setDeletingColumn(undefined),
@@ -829,7 +830,7 @@ const DataTable = (props) => {
           buttonText: 'Clear column',
           onConfirm: () => {
             setClearingColumn(undefined);
-            Ajax().Metrics.captureEvent(Events.workspaceDataClearColumn, extractWorkspaceDetails(workspace.workspace));
+            void Metrics().captureEvent(Events.workspaceDataClearColumn, extractWorkspaceDetails(workspace.workspace));
             clearColumn(clearingColumn);
           },
           onDismiss: () => setClearingColumn(undefined),

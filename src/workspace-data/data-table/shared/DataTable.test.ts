@@ -4,16 +4,17 @@ import userEvent from '@testing-library/user-event';
 import _ from 'lodash/fp';
 import { useState } from 'react';
 import { h } from 'react-hyperscript-helpers';
-import { Ajax } from 'src/libs/ajax';
+import { EntityQueryResponse } from 'src/libs/ajax/data-table-providers/DataTableProvider';
 import { EntityServiceDataTableProvider } from 'src/libs/ajax/data-table-providers/EntityServiceDataTableProvider';
-import { asMockedFn, renderWithAppContexts as render } from 'src/testing/test-utils';
+import { Metrics, MetricsContract } from 'src/libs/ajax/Metrics';
+import { WorkspaceContract, Workspaces, WorkspacesAjaxContract } from 'src/libs/ajax/workspaces/Workspaces';
+import { asMockedFn, MockedFn, partial, renderWithAppContexts as render } from 'src/testing/test-utils';
 import { defaultGoogleWorkspace } from 'src/testing/workspace-fixtures';
 
 import DataTable from './DataTable';
 
-type AjaxContract = ReturnType<typeof Ajax>;
-
-jest.mock('src/libs/ajax');
+jest.mock('src/libs/ajax/Metrics');
+jest.mock('src/libs/ajax/workspaces/Workspaces');
 
 type ReactNotificationsComponentExports = typeof import('react-notifications-component');
 jest.mock('react-notifications-component', (): DeepPartial<ReactNotificationsComponentExports> => {
@@ -74,47 +75,52 @@ const TestHarness = (props) => {
   });
 };
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const paginatedEntitiesOfType = jest.fn().mockImplementation((entityType, params) => {
-  const { columnFilter, page = 1, pageSize } = params;
-
-  let results = entities;
-  let filteredCount = entities.length;
-
-  if (columnFilter) {
-    results = results.filter((e) => e.attributes.attr === 'even');
-    filteredCount = results.length;
-  }
-
-  const offset = (page - 1) * pageSize;
-  const limit = pageSize;
-  results = results.slice(offset, offset + limit);
-
-  return Promise.resolve({
-    results,
-    resultMetadata: {
-      filteredCount,
-      unfilteredCount: entities.length,
-      filteredPageCount: Math.ceil(filteredCount / pageSize),
-    },
-  });
-});
-
-const mockAjax: DeepPartial<AjaxContract> = {
-  Workspaces: {
-    workspace: () => {
-      return {
-        paginatedEntitiesOfType,
-      };
-    },
-  },
-  Metrics: {
-    captureEvent: () => {},
-  },
-};
-asMockedFn(Ajax).mockImplementation(() => mockAjax as AjaxContract);
-
 describe('DataTable', () => {
+  const paginatedEntitiesOfType: MockedFn<WorkspaceContract['paginatedEntitiesOfType']> = jest.fn();
+
+  beforeAll(() => {
+    paginatedEntitiesOfType.mockImplementation((_entityType, params) => {
+      const { columnFilter, page = 1, pageSize } = params;
+
+      let results = entities;
+      let filteredCount = entities.length;
+
+      if (columnFilter) {
+        results = results.filter((e) => e.attributes.attr === 'even');
+        filteredCount = results.length;
+      }
+
+      const offset = (page - 1) * pageSize;
+      const limit = pageSize;
+      results = results.slice(offset, offset + limit);
+
+      return Promise.resolve(
+        partial<EntityQueryResponse>({
+          results,
+          resultMetadata: {
+            filteredCount,
+            unfilteredCount: entities.length,
+            filteredPageCount: Math.ceil(filteredCount / pageSize),
+          },
+        })
+      );
+    });
+
+    asMockedFn(Workspaces).mockReturnValue(
+      partial<WorkspacesAjaxContract>({
+        workspace: () =>
+          partial<WorkspaceContract>({
+            paginatedEntitiesOfType,
+          }),
+      })
+    );
+    asMockedFn(Metrics).mockReturnValue(
+      partial<MetricsContract>({
+        captureEvent: async () => {},
+      })
+    );
+  });
+
   it('selects all', async () => {
     // Arrange
     const user = userEvent.setup();
