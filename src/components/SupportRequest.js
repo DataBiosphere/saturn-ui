@@ -5,7 +5,7 @@ import { absoluteSpinnerOverlay, ButtonPrimary, ButtonSecondary, Clickable, IdCo
 import Dropzone from 'src/components/Dropzone';
 import { icon } from 'src/components/icons';
 import { TextArea, TextInput } from 'src/components/input';
-import { Ajax } from 'src/libs/ajax';
+import { Support } from 'src/libs/ajax/Support';
 import colors from 'src/libs/colors';
 import { reportError, withErrorReporting } from 'src/libs/error';
 import { FormLabel } from 'src/libs/forms';
@@ -57,7 +57,7 @@ const SupportRequest = () => {
     const {
       token,
       attachment: { file_name: fileName },
-    } = await Ajax().Support.uploadAttachment(files[0]);
+    } = await Support().uploadAttachment(files[0]);
     setAttachmentToken(token);
     setAttachmentName(fileName);
   });
@@ -75,7 +75,7 @@ const SupportRequest = () => {
   const submit = Utils.withBusyState(setSubmitting, async () => {
     const currUrl = window.location.href;
     try {
-      await Ajax().Support.createSupportRequest({ ...requestObject, currUrl });
+      await Support().createSupportRequest({ ...requestObject, currUrl });
       notify('success', 'Message sent successfully', { timeout: 3000 });
     } catch (error) {
       notify(

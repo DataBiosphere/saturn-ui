@@ -3,7 +3,8 @@ import { useState } from 'react';
 import { div, h, span } from 'react-hyperscript-helpers';
 import { ButtonPrimary, spinnerOverlay } from 'src/components/common';
 import { icon } from 'src/components/icons';
-import { Ajax } from 'src/libs/ajax';
+import { Metrics } from 'src/libs/ajax/Metrics';
+import { SamResources } from 'src/libs/ajax/SamResources';
 import colors from 'src/libs/colors';
 import { reportError } from 'src/libs/error';
 import Events from 'src/libs/events';
@@ -15,14 +16,14 @@ const LeaveResourceModal = ({ displayName, samResourceType, samResourceId, onDis
   const leaveResource = async () => {
     try {
       setLeaving(true);
-      await Ajax().SamResources.leave(samResourceType, samResourceId);
-      Ajax().Metrics.captureEvent(Events.resourceLeave, { samResourceType, samResourceId });
+      await SamResources().leave(samResourceType, samResourceId);
+      void Metrics().captureEvent(Events.resourceLeave, { samResourceType, samResourceId });
       setLeaving(false);
       onDismiss();
       onSuccess();
     } catch (error) {
       const { message } = await error.json();
-      Ajax().Metrics.captureEvent(Events.resourceLeave, { samResourceType, samResourceId, errorMessage: message });
+      void Metrics().captureEvent(Events.resourceLeave, { samResourceType, samResourceId, errorMessage: message });
       reportError(message);
       setLeaving(false);
       onDismiss();
