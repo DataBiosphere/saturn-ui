@@ -25,10 +25,11 @@ interface FileBrowserProps {
   title: string;
   workspace: any; // TODO: Type for workspace
   onChangePath?: (newPath: string) => void;
+  extraMenuItems?: any;
 }
 
 const FileBrowser = (props: FileBrowserProps) => {
-  const { initialPath = '', provider, rootLabel, title, workspace, onChangePath } = props;
+  const { initialPath = '', provider, rootLabel, title, workspace, onChangePath, extraMenuItems } = props;
 
   const [path, _setPath] = useState(initialPath);
   const setPath = useCallback(
@@ -172,6 +173,7 @@ const FileBrowser = (props: FileBrowserProps) => {
               reloadRequests.next(parentPath);
             },
             onError,
+            extraMenuItems,
           }),
         ]
       ),
