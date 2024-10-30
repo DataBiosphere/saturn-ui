@@ -4,8 +4,10 @@ import { div, h } from 'react-hyperscript-helpers';
 import * as breadcrumbs from 'src/components/breadcrumbs';
 import FileBrowser from 'src/components/file-browser/FileBrowser';
 import { icon } from 'src/components/icons';
+import { Ajax } from 'src/libs/ajax';
 import AzureBlobStorageFileBrowserProvider from 'src/libs/ajax/file-browser-providers/AzureBlobStorageFileBrowserProvider';
 import GCSFileBrowserProvider from 'src/libs/ajax/file-browser-providers/GCSFileBrowserProvider';
+import Events from 'src/libs/events';
 import { useQueryParameter } from 'src/libs/nav';
 import { forwardRefWithName } from 'src/libs/react-utils';
 import { wrapWorkspace } from 'src/workspaces/container/WorkspaceContainer';
@@ -54,6 +56,13 @@ export const Files = _.flow(
             href: `https://seqr.broadinstitute.org/workspace/${workspaceInfo.namespace}/${workspaceInfo.name}`,
             style: { padding: '0.5rem' },
             target: '_blank',
+            onClick: async () => {
+              await Ajax().Metrics.captureEvent(Events.workspaceFilesSeqr, {
+                workspaceNamespace: workspaceInfo.namespace,
+                workspaceName: workspaceInfo.name,
+                success: true,
+              });
+            },
           },
           [icon('pop-out'), ' Analyze in Seqr']
         ),
