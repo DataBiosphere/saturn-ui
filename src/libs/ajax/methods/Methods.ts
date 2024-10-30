@@ -3,7 +3,7 @@ import _ from 'lodash/fp';
 import * as qs from 'qs';
 import { authOpts } from 'src/auth/auth-session';
 import { fetchAgora, fetchOrchestration, fetchRawls } from 'src/libs/ajax/ajax-common';
-import { MethodQuery, MethodResponse } from 'src/libs/ajax/methods/methods-models';
+import { MethodDefinition, MethodQuery, MethodResponse } from 'src/libs/ajax/methods/methods-models';
 import { Snapshot } from 'src/snapshots/Snapshot';
 
 export const Methods = (signal?: AbortSignal) => ({
@@ -12,7 +12,7 @@ export const Methods = (signal?: AbortSignal) => ({
     return res.json();
   },
 
-  definitions: async () => {
+  definitions: async (): Promise<MethodDefinition[]> => {
     const res = await fetchAgora('methods/definitions', _.merge(authOpts(), { signal }));
     return res.json();
   },
