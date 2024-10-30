@@ -10,6 +10,7 @@ import { TabBar } from 'src/components/tabBars';
 import { FlexTable, HeaderCell, Paginator, Sortable, TooltipCell } from 'src/components/table';
 import { TopBar } from 'src/components/TopBar';
 import { Ajax } from 'src/libs/ajax';
+import { MethodDefinition } from 'src/libs/ajax/methods/methods-models';
 import { createMethodProvider } from 'src/libs/ajax/methods/providers/CreateMethodProvider';
 import * as Nav from 'src/libs/nav';
 import { notify } from 'src/libs/notifications';
@@ -17,7 +18,6 @@ import { useCancellation, useOnMount } from 'src/libs/react-utils';
 import { getTerraUser } from 'src/libs/state';
 import * as Utils from 'src/libs/utils';
 import { withBusyState } from 'src/libs/utils';
-import { MethodDefinition } from 'src/pages/workflows/workflow-utils';
 import { WorkflowModal } from 'src/workflows/methods-repo/modals/WorkflowModal';
 
 // Note: The first tab key in this array will determine the default tab selected

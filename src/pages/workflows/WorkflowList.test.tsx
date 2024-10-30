@@ -6,12 +6,12 @@ import React from 'react';
 import { Ajax, AjaxContract } from 'src/libs/ajax';
 import { MethodsAjaxContract } from 'src/libs/ajax/methods/Methods';
 import { MethodResponse } from 'src/libs/ajax/methods/methods-models';
+import { MethodDefinition } from 'src/libs/ajax/methods/methods-models';
 import { createMethodProvider } from 'src/libs/ajax/methods/providers/CreateMethodProvider';
 import * as Nav from 'src/libs/nav';
 import { getLink } from 'src/libs/nav';
 import { notify } from 'src/libs/notifications';
 import { TerraUser, TerraUserState, userStore } from 'src/libs/state';
-import { MethodDefinition } from 'src/pages/workflows/workflow-utils';
 import { WorkflowList } from 'src/pages/workflows/WorkflowList';
 import { asMockedFn, renderWithAppContexts as render } from 'src/testing/test-utils';
 

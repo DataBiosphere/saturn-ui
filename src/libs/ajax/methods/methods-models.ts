@@ -1,4 +1,18 @@
 /**
+ * Type for Agora's MethodDefinition schema.
+ */
+export interface MethodDefinition {
+  namespace: string;
+  name: string;
+  synopsis: string;
+  managers: string[];
+  public: boolean;
+  numConfigurations: number;
+  numSnapshots: number;
+  entityType: string;
+}
+
+/**
  * Type for Orchestration's MethodQuery schema.
  *
  * Note: Some properties that are required here are marked as optional in the
