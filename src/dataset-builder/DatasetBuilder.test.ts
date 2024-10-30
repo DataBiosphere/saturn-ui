@@ -371,7 +371,7 @@ describe('DatasetBuilder', () => {
     expect(await screen.findByText('Request this data snapshot')).toBeTruthy();
   });
 
-  it('opens the modal when requesting access to the dataset', async () => {
+  it('Handles request snapshot operation', async () => {
     const mockDataRepoContract: Partial<DataRepoContract> = {
       snapshot: (_snapshotId) =>
         ({
@@ -391,30 +391,8 @@ describe('DatasetBuilder', () => {
     initializeValidDatasetRequest();
     await user.click(await screen.findByText('Request this data snapshot'));
     // Assert
-    expect(await screen.findByText('Access request created in Terra')).toBeTruthy();
-  });
-
-  it('Calls createSnapshotAccessRequest with the correct body', async () => {
-    const createSnapshotAccessRequest = jest.fn().mockResolvedValue(mockCreateSnapshotAccessRequest);
-    const mockDataRepoContract: Partial<DataRepoContract> = {
-      snapshot: (_snapshotId) =>
-        ({
-          getSnapshotBuilderCount: () => Promise.resolve({ result: { total: 19 }, sql: '' }),
-        } as Partial<DataRepoContract['snapshot']>),
-      snapshotAccessRequest: () =>
-        ({
-          createSnapshotAccessRequest,
-        } as Partial<DataRepoContract['snapshotAccessRequest']>),
-    } as Partial<DataRepoContract> as DataRepoContract;
-
-    asMockedFn(DataRepo).mockImplementation(() => mockDataRepoContract as DataRepoContract);
-
-    // Arrange
-    const user = userEvent.setup();
-    initializeValidDatasetRequest();
-    await user.click(await screen.findByText('Request this data snapshot'));
-    // Assert
-    expect(createSnapshotAccessRequest).toBeCalledWith({
+    // createSnapshotAccessRequest is called with the correct parameters
+    expect(mockCreateSnapshotAccessRequest).toBeCalledWith({
       name: validDatasetRequestSnapshotRequestName,
       researchPurposeStatement: '',
       sourceSnapshotId: testSnapshotId,
@@ -423,10 +401,11 @@ describe('DatasetBuilder', () => {
         outputTables: [],
       },
     });
+    // opens the modal when requesting access to the dataset
+    expect(await screen.findByText('Access request created in Terra')).toBeTruthy();
   });
 
   it('Fetches detail information when snapshot request is created', async () => {
-    const getSnapshotAccessRequestDetails = jest.fn().mockResolvedValue(mockGetSnapshotAccessRequestDetails);
     const mockDataRepoContract: Partial<DataRepoContract> = {
       snapshot: (_snapshotId) =>
         ({
@@ -435,7 +414,7 @@ describe('DatasetBuilder', () => {
       snapshotAccessRequest: () =>
         ({
           createSnapshotAccessRequest: mockCreateSnapshotAccessRequest,
-          getSnapshotAccessRequestDetails,
+          getSnapshotAccessRequestDetails: mockCreateSnapshotAccessRequest,
         } as Partial<DataRepoContract['snapshotAccessRequest']>),
     } as Partial<DataRepoContract> as DataRepoContract;
 
@@ -448,7 +427,7 @@ describe('DatasetBuilder', () => {
     // Wait for the modal to open so we can verify all calls are finished
     await screen.findByText('Access request created in Terra');
     // Assert
-    expect(getSnapshotAccessRequestDetails).toBeCalledWith('');
+    expect(mockCreateSnapshotAccessRequest).toBeCalledWith('');
   });
 
   it('enables editing cohorts', async () => {

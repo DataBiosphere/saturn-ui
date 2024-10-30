@@ -351,14 +351,19 @@ export const WorkspaceAttributes = ({
                             h(Fragment, [
                               h(Select, {
                                 'aria-label': 'data type',
-                                styles: { container: (base) => ({ ...base, marginLeft: '1rem', width: 150 }) },
+                                styles: {
+                                  container: (base) => ({ ...base, marginLeft: '1rem', display: 'inline-block', width: 150 }),
+                                  menuPortal: (base) => ({ ...base, zIndex: 9999 }),
+                                },
                                 isSearchable: false,
                                 isClearable: false,
-                                menuPortalTarget: document.getElementById('root'),
                                 getOptionLabel: ({ value }) => _.startCase(value),
                                 value: editType,
                                 onChange: ({ value }) => setEditType(value),
                                 options: ['string', 'number', 'boolean', 'string list', 'number list', 'boolean list'],
+                                menuPortalTarget: document.body,
+                                menuPosition: 'fixed',
+                                menuPlacement: 'top',
                               }),
                             ]),
                         ]);

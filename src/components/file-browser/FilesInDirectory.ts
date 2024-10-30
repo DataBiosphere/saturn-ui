@@ -33,6 +33,7 @@ interface FilesInDirectoryProps {
   onCreateDirectory: (directory: FileBrowserDirectory) => void;
   onDeleteDirectory: () => void;
   onError: (error: Error) => void;
+  extraMenuItems?: any;
 }
 
 const FilesInDirectory = (props: FilesInDirectoryProps) => {
@@ -48,6 +49,7 @@ const FilesInDirectory = (props: FilesInDirectoryProps) => {
     onCreateDirectory,
     onDeleteDirectory,
     onError,
+    extraMenuItems,
   } = props;
 
   const directoryLabel = path === '' ? rootLabel : basename(path);
@@ -128,6 +130,7 @@ const FilesInDirectory = (props: FilesInDirectoryProps) => {
                   reload();
                 },
                 onRefresh: reload,
+                extraMenuItems,
               }),
 
               h(NoticeForPath, {
