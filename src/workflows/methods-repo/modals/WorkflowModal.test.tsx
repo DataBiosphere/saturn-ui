@@ -4,12 +4,12 @@ import _ from 'lodash/fp';
 import React from 'react';
 import { MethodResponse } from 'src/libs/ajax/methods/methods-models';
 import { CreateMethodProvider } from 'src/libs/ajax/methods/providers/CreateMethodProvider';
-import { WorkflowModal } from 'src/pages/workflows/workflow/common/WorkflowModal';
 import { renderWithAppContexts as render } from 'src/testing/test-utils';
+import { WorkflowModal } from 'src/workflows/methods-repo/modals/WorkflowModal';
 
-type WDLEditorExports = typeof import('src/pages/workflows/common/WDLEditor');
-jest.mock('src/pages/workflows/common/WDLEditor', (): WDLEditorExports => {
-  const mockWDLEditorModule = jest.requireActual('src/pages/workflows/common/WDLEditor.mock');
+type WDLEditorExports = typeof import('src/workflows/methods-repo/WDLEditor');
+jest.mock('src/workflows/methods-repo/WDLEditor', (): WDLEditorExports => {
+  const mockWDLEditorModule = jest.requireActual('src/workflows/methods-repo/WDLEditor.mock');
   return {
     WDLEditor: mockWDLEditorModule.MockWDLEditor,
   };

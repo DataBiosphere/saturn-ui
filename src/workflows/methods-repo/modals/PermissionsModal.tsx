@@ -27,7 +27,7 @@ import {
   WorkflowAccessLevel,
   WorkflowsPermissions,
   WorkflowUserPermissions,
-} from 'src/pages/workflows/workflow/workflows-acl-utils';
+} from 'src/workflows/methods-repo/workflows-acl-utils';
 import validate from 'validate.js';
 
 type WorkflowPermissionsModalProps = {

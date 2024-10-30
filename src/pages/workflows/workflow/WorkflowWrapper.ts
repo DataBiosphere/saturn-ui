@@ -16,11 +16,11 @@ import { getTerraUser, snapshotsListStore, snapshotStore } from 'src/libs/state'
 import * as Style from 'src/libs/style';
 import * as Utils from 'src/libs/utils';
 import { withBusyState } from 'src/libs/utils';
-import { PermissionsModal } from 'src/pages/workflows/workflow/common/PermissionsModal';
 import { Snapshot } from 'src/snapshots/Snapshot';
-import DeleteSnapshotModal from 'src/workflows/modals/DeleteSnapshotModal';
+import DeleteSnapshotModal from 'src/workflows/methods-repo/modals/DeleteSnapshotModal';
+import { PermissionsModal } from 'src/workflows/methods-repo/modals/PermissionsModal';
+import SnapshotActionMenu from 'src/workflows/methods-repo/SnapshotActionMenu';
 import ExportWorkflowModal from 'src/workflows/modals/ExportWorkflowModal';
-import SnapshotActionMenu from 'src/workflows/SnapshotActionMenu';
 import { isGoogleWorkspace, WorkspaceInfo, WorkspaceWrapper } from 'src/workspaces/utils';
 import * as WorkspaceUtils from 'src/workspaces/utils';
 

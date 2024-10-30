@@ -17,8 +17,8 @@ import { useCancellation, useOnMount } from 'src/libs/react-utils';
 import { getTerraUser } from 'src/libs/state';
 import * as Utils from 'src/libs/utils';
 import { withBusyState } from 'src/libs/utils';
-import { WorkflowModal } from 'src/pages/workflows/workflow/common/WorkflowModal';
 import { MethodDefinition } from 'src/pages/workflows/workflow-utils';
+import { WorkflowModal } from 'src/workflows/methods-repo/modals/WorkflowModal';
 
 // Note: The first tab key in this array will determine the default tab selected
 // if the tab query parameter is not present or has an invalid value (and when

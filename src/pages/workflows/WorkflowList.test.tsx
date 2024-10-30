@@ -23,9 +23,9 @@ jest.mock('src/libs/nav', () => ({
   goToPath: jest.fn(),
 }));
 
-type WDLEditorExports = typeof import('src/pages/workflows/common/WDLEditor');
-jest.mock('src/pages/workflows/common/WDLEditor', (): WDLEditorExports => {
-  const mockWDLEditorModule = jest.requireActual('src/pages/workflows/common/WDLEditor.mock');
+type WDLEditorExports = typeof import('src/workflows/methods-repo/WDLEditor');
+jest.mock('src/workflows/methods-repo/WDLEditor', (): WDLEditorExports => {
+  const mockWDLEditorModule = jest.requireActual('src/workflows/methods-repo/WDLEditor.mock');
   return {
     WDLEditor: mockWDLEditorModule.MockWDLEditor,
   };
