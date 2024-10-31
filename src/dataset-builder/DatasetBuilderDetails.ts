@@ -1,7 +1,7 @@
 import { useLoadedData } from '@terra-ui-packages/components';
 import _ from 'lodash/fp';
 import { div, h, h1, h3 } from 'react-hyperscript-helpers';
-import Chart from 'src/components/Chart';
+import { Chart } from 'src/components/Chart';
 import { ButtonOutline, spinnerOverlay } from 'src/components/common';
 import FooterWrapper from 'src/components/FooterWrapper';
 import { MarkdownViewer } from 'src/components/markdown';

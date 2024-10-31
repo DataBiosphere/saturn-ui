@@ -42,6 +42,14 @@ jest.mock('lodash/fp', (): LodashFpExports => {
   };
 });
 
+type ChartExports = typeof import('src/components/Chart');
+jest.mock('src/components/Chart', (): ChartExports => {
+  return {
+    ...jest.requireActual('src/components/Chart'),
+    Chart: jest.fn().mockReturnValue('Chart'),
+  };
+});
+
 describe('CohortEditor', () => {
   type CriteriaViewPropsOverrides = {
     criteria: AnyCriteria;

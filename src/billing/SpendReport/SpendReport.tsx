@@ -1,8 +1,9 @@
 import { SpinnerOverlay, useUniqueId } from '@terra-ui-packages/components';
 import { subDays } from 'date-fns/fp';
 import _ from 'lodash/fp';
-import { lazy, Suspense, useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import React from 'react';
+import lazy from 'react-lazy-named';
 import { ErrorAlert } from 'src/alerts/ErrorAlert';
 import { ExternalLink } from 'src/billing/NewBillingProjectWizard/StepWizard/ExternalLink';
 import { CostCard } from 'src/billing/SpendReport/CostCard';
@@ -21,7 +22,7 @@ import { FormLabel } from 'src/libs/forms';
 import * as Nav from 'src/libs/nav';
 import { useCancellation } from 'src/libs/react-utils';
 
-const LazyChart = lazy(() => import('src/components/Chart'));
+const LazyChart = lazy(() => import('src/components/Chart'), 'Chart');
 const maxWorkspacesInChart = 10;
 
 const OtherMessaging = ({ cost, cloudPlatform }) => {
