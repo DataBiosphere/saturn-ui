@@ -5,7 +5,7 @@ import { Link } from 'src/components/common';
 import DataExplorerFrame from 'src/components/DataExplorerFrame';
 import { centeredSpinner } from 'src/components/icons';
 import datasets from 'src/constants/datasets';
-import { Ajax } from 'src/libs/ajax';
+import { Groups } from 'src/libs/ajax/Groups';
 import { useCancellation, useOnMount } from 'src/libs/react-utils';
 import { contactUsActive } from 'src/libs/state';
 import * as Utils from 'src/libs/utils';
@@ -38,7 +38,7 @@ const PrivateDataExplorer = ({ dataset }) => {
       const { origin } = _.find({ name: dataset }, datasets);
 
       const [groupObjs] = await Promise.all([
-        Ajax(signal).Groups.list(),
+        Groups(signal).list(),
         fetch(`${origin}/favicon.ico`, {
           // The whole point of reading this file is to test IAP. Prevent future
           // fetches from getting this file from disk cache.

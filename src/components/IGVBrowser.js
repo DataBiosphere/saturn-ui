@@ -5,7 +5,7 @@ import { ButtonOutline, Link } from 'src/components/common';
 import { getUserProjectForWorkspace, parseGsUri } from 'src/components/data/data-utils';
 import { centeredSpinner, icon } from 'src/components/icons';
 import IGVAddTrackModal from 'src/components/IGVAddTrackModal';
-import { Ajax } from 'src/libs/ajax';
+import { GoogleStorage } from 'src/libs/ajax/GoogleStorage';
 import { saToken } from 'src/libs/ajax/GoogleStorage';
 import colors from 'src/libs/colors';
 import { reportError, withErrorReporting } from 'src/libs/error';
@@ -42,7 +42,7 @@ const IGVBrowser = ({ selectedFiles, refGenome: { genome, reference }, workspace
 
         if (knownBucketRequesterPaysStatuses.get()[bucket] === undefined) {
           try {
-            await Ajax(signal).Buckets.getObject(workspace.workspace.googleProject, bucket, file, { fields: 'kind' });
+            await GoogleStorage(signal).getObject(workspace.workspace.googleProject, bucket, file, { fields: 'kind' });
           } catch (e) {
             if (!e.requesterPaysError) {
               throw e;

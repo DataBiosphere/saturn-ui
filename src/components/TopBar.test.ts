@@ -4,14 +4,10 @@ import { TopBar } from 'src/components/TopBar';
 import { authStore, SignInStatus } from 'src/libs/state';
 import { renderWithAppContexts as render } from 'src/testing/test-utils';
 
-type AjaxExports = typeof import('src/libs/ajax');
-jest.mock('src/libs/ajax', (): Partial<AjaxExports> => {
-  return {
-    Ajax: jest.fn(),
-  };
-});
-
 jest.mock('src/auth/auth');
+
+jest.mock('src/libs/ajax/Support');
+jest.mock('src/libs/ajax/User');
 
 jest.mock('react-notifications-component', () => {
   return {
