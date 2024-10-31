@@ -13,7 +13,8 @@ import ProfilePicture from 'src/components/ProfilePicture';
 import { SkipNavLink, SkipNavTarget } from 'src/components/skipNavLink';
 import fcIconWhite from 'src/images/brands/firecloud/FireCloud-icon-white.svg';
 import headerRightHexes from 'src/images/brands/terra/header-right-hexes.svg';
-import { Ajax } from 'src/libs/ajax';
+import { Support } from 'src/libs/ajax/Support';
+import { User } from 'src/libs/ajax/User';
 import { isBaseline, isBioDataCatalyst, isDatastage, isFirecloud, isTerra } from 'src/libs/brand-utils';
 import colors from 'src/libs/colors';
 import { getConfig } from 'src/libs/config';
@@ -485,9 +486,9 @@ const PreferFirecloudModal = ({ onDismiss }) => {
     withErrorReporting('Error opting out of Terra'),
     Utils.withBusyState(setSubmitting)
   )(async () => {
-    await Ajax().User.profile.preferLegacyFirecloud();
+    await User().profile.preferLegacyFirecloud();
     if (emailAgreed === true || reason.length !== 0) {
-      await Ajax().Support.createSupportRequest({
+      await Support().createSupportRequest({
         name: `${firstName} ${lastName}`,
         email,
         description: reason,

@@ -1,24 +1,18 @@
 import { act, fireEvent, screen } from '@testing-library/react';
 import React from 'react';
-import { Ajax } from 'src/libs/ajax';
-import { asMockedFn, renderWithAppContexts as render } from 'src/testing/test-utils';
+import { Metrics, MetricsContract } from 'src/libs/ajax/Metrics';
+import { asMockedFn, MockedFn, partial, renderWithAppContexts as render } from 'src/testing/test-utils';
 
 import { RightBoxSection } from './RightBoxSection';
 
-type AjaxContract = ReturnType<typeof Ajax>;
-jest.mock('src/libs/ajax');
+jest.mock('src/libs/ajax/Metrics');
 
 describe('RightBoxSection', () => {
-  const captureEvent = jest.fn();
+  const captureEvent: MockedFn<MetricsContract['captureEvent']> = jest.fn();
 
   beforeEach(() => {
     jest.resetAllMocks();
-    asMockedFn(Ajax).mockImplementation(
-      () =>
-        ({
-          Metrics: { captureEvent } as Partial<AjaxContract['Metrics']>,
-        } as Partial<AjaxContract> as AjaxContract)
-    );
+    asMockedFn(Metrics).mockReturnValue(partial<MetricsContract>({ captureEvent }));
   });
 
   it('displays the title', async () => {

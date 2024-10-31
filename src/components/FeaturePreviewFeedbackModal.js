@@ -4,7 +4,7 @@ import { Fragment, useState } from 'react';
 import { div, h } from 'react-hyperscript-helpers';
 import { ButtonPrimary, IdContainer, spinnerOverlay } from 'src/components/common';
 import { TextArea, TextInput } from 'src/components/input';
-import { Ajax } from 'src/libs/ajax';
+import { Surveys } from 'src/libs/ajax/surveys/Surveys';
 import { withErrorIgnoring } from 'src/libs/error';
 import { FormLabel } from 'src/libs/forms';
 import * as Utils from 'src/libs/utils';
@@ -30,7 +30,7 @@ export const FeaturePreviewFeedbackModal = ({
     withErrorIgnoring,
     Utils.withBusyState(setSubmitting)
   )(async () => {
-    await Ajax().Surveys.submitForm(formId, { [feedbackId]: feedback, [contactEmailId]: contactEmail, [sourcePageId]: sourcePage });
+    await Surveys().submitForm(formId, { [feedbackId]: feedback, [contactEmailId]: contactEmail, [sourcePageId]: sourcePage });
     setThanksShowing(true);
   });
 

@@ -5,7 +5,7 @@ import { Fragment, useRef } from 'react';
 import { div, h, span } from 'react-hyperscript-helpers';
 import { Clickable } from 'src/components/common';
 import { HorizontalNavigation } from 'src/components/keyboard-nav';
-import { Ajax } from 'src/libs/ajax';
+import { Metrics } from 'src/libs/ajax/Metrics';
 import { terraSpecial } from 'src/libs/colors';
 import { useOnMount } from 'src/libs/react-utils';
 import * as Style from 'src/libs/style';
@@ -173,7 +173,7 @@ export function SimpleTabBar({
   const tabIds = _.map((i) => `${baseId}-tab-${i}`, _.range(0, tabs.length));
   const panelRef = useRef();
   const maybeEmitViewMetric = (key) => {
-    !!metricsPrefix && Ajax().Metrics.captureEvent(`${metricsPrefix}:view:${_.replace(/\s/g, '-', key)}`, metricsData);
+    !!metricsPrefix && void Metrics().captureEvent(`${metricsPrefix}:view:${_.replace(/\s/g, '-', key)}`, metricsData);
   };
 
   // Determine the index of the selected tab, or choose the first one
