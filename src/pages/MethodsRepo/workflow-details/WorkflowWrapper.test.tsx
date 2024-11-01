@@ -11,7 +11,7 @@ import { errorWatcher } from 'src/libs/error.mock';
 import { goToPath } from 'src/libs/nav';
 import { forwardRefWithName } from 'src/libs/react-utils';
 import { snapshotsListStore, snapshotStore, TerraUser, TerraUserState, userStore } from 'src/libs/state';
-import { WorkflowsContainer, wrapWorkflows } from 'src/pages/workflows/workflow/WorkflowWrapper';
+import { WorkflowsContainer, wrapWorkflows } from 'src/pages/MethodsRepo/workflow-details/WorkflowWrapper';
 import { Snapshot } from 'src/snapshots/Snapshot';
 import { asMockedFn, partial, renderWithAppContexts as render, SelectHelper } from 'src/testing/test-utils';
 import { useWorkspaces } from 'src/workspaces/common/state/useWorkspaces';

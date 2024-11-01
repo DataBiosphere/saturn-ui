@@ -12,7 +12,7 @@ import * as Nav from 'src/libs/nav';
 import { getLink } from 'src/libs/nav';
 import { notify } from 'src/libs/notifications';
 import { TerraUser, TerraUserState, userStore } from 'src/libs/state';
-import { WorkflowList } from 'src/pages/workflows/WorkflowList';
+import { WorkflowList } from 'src/pages/MethodsRepo/WorkflowList';
 import { asMockedFn, renderWithAppContexts as render } from 'src/testing/test-utils';
 
 jest.mock('src/libs/ajax');
