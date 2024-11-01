@@ -11,7 +11,7 @@ import Events from 'src/libs/events';
 import { useQueryParameter } from 'src/libs/nav';
 import { forwardRefWithName } from 'src/libs/react-utils';
 import { wrapWorkspace } from 'src/workspaces/container/WorkspaceContainer';
-import { isAzureWorkspace, WorkspaceWrapper } from 'src/workspaces/utils';
+import { WorkspaceWrapper } from 'src/workspaces/utils';
 import { useMemo } from 'use-memo-one';
 
 export const Files = _.flow(
@@ -31,7 +31,7 @@ export const Files = _.flow(
     return GCSFileBrowserProvider({ bucket: bucketName, project: googleProject });
   }, [workspaceInfo]);
 
-  const rootLabel = isAzureWorkspace(workspace) ? 'Workspace cloud storage' : 'Workspace bucket';
+  const rootLabel = workspaceInfo.name;
 
   const [path, setPath] = useQueryParameter('path');
 
