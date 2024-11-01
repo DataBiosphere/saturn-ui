@@ -3,8 +3,13 @@ import _ from 'lodash/fp';
 import * as qs from 'qs';
 import { authOpts } from 'src/auth/auth-session';
 import { fetchAgora, fetchOrchestration, fetchRawls } from 'src/libs/ajax/ajax-common';
-import { MethodConfigACL, MethodDefinition, MethodQuery, MethodResponse } from 'src/libs/ajax/methods/methods-models';
-import { Snapshot } from 'src/libs/ajax/methods/methods-models';
+import {
+  MethodConfigACL,
+  MethodDefinition,
+  MethodQuery,
+  MethodResponse,
+  Snapshot,
+} from 'src/libs/ajax/methods/methods-models';
 
 export const Methods = (signal?: AbortSignal) => ({
   list: async (params): Promise<Snapshot[]> => {
