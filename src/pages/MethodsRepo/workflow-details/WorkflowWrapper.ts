@@ -8,6 +8,7 @@ import FooterWrapper from 'src/components/FooterWrapper';
 import { TabBar } from 'src/components/tabBars';
 import { TopBar } from 'src/components/TopBar';
 import { Ajax } from 'src/libs/ajax';
+import { Snapshot } from 'src/libs/ajax/methods/methods-models';
 import { makeExportWorkflowFromMethodsRepoProvider } from 'src/libs/ajax/workspaces/providers/ExportWorkflowToWorkspaceProvider';
 import { ErrorCallback, withErrorReporting } from 'src/libs/error';
 import * as Nav from 'src/libs/nav';
@@ -16,7 +17,6 @@ import { getTerraUser, snapshotsListStore, snapshotStore } from 'src/libs/state'
 import * as Style from 'src/libs/style';
 import * as Utils from 'src/libs/utils';
 import { withBusyState } from 'src/libs/utils';
-import { Snapshot } from 'src/snapshots/Snapshot';
 import DeleteSnapshotModal from 'src/workflows/methods-repo/modals/DeleteSnapshotModal';
 import { PermissionsModal } from 'src/workflows/methods-repo/modals/PermissionsModal';
 import SnapshotActionMenu from 'src/workflows/methods-repo/SnapshotActionMenu';

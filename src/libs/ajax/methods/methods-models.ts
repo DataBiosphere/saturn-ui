@@ -13,6 +13,25 @@ export interface MethodDefinition {
 }
 
 /**
+ * Corresponds to Agora's MethodResponse schema. Represents information about
+ * a method snapshot in the Broad Methods Repository.
+ */
+export interface Snapshot {
+  managers: string[];
+  name: string;
+  createDate: string;
+  documentation?: string;
+  entityType: string;
+  snapshotComment: string;
+  snapshotId: number;
+  namespace: string;
+  payload: string;
+  url: string;
+  public: boolean | undefined;
+  synopsis: string;
+}
+
+/**
  * Type for Orchestration's MethodQuery schema.
  *
  * Note: Some properties that are required here are marked as optional in the
