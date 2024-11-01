@@ -22,7 +22,7 @@ interface FileBrowserProps {
   initialPath?: string;
   provider: FileBrowserProvider;
   rootLabel: string;
-  title: string;
+  title: any;
   workspace: any; // TODO: Type for workspace
   onChangePath?: (newPath: string) => void;
   extraMenuItems?: any;
