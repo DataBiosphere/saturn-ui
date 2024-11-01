@@ -28,7 +28,7 @@ export const BaseWorkflowSummary = () => {
     public: isPublic,
     snapshotComment,
   } = useStore(snapshotStore);
-  const persistenceId = `workflows/${namespace}/${name}/dashboard`;
+  const persistenceId = `methods/${namespace}/${name}/dashboard`;
   const [importUrlCopied, setImportUrlCopied] = useState<boolean>();
   const importUrl = `${
     getConfig().orchestrationUrlRoot
@@ -116,7 +116,6 @@ const WorkflowSummary = _.flow(
   forwardRefWithName('WorkflowSummary'),
   wrapWorkflows({
     breadcrumbs: () => breadcrumbs.commonPaths.workflowList(),
-    title: 'Workflows',
     activeTab: 'dashboard',
   })
 )(() => {
@@ -126,7 +125,7 @@ const WorkflowSummary = _.flow(
 export const navPaths = [
   {
     name: 'workflow-dashboard',
-    path: '/workflows/:namespace/:name/:snapshotId?',
+    path: '/methods/:namespace/:name/:snapshotId?',
     component: (props) => h(WorkflowSummary, { ...props, tabName: 'dashboard' }),
     title: ({ name }) => `${name} - Dashboard`,
   },
