@@ -27,7 +27,6 @@ import * as WorkspaceUtils from 'src/workspaces/utils';
 export interface WrapWorkflowOptions {
   breadcrumbs: (props: { name: string; namespace: string }) => ReactNode[];
   activeTab?: string;
-  title: string | ((props: { name: string; namespace: string }) => string);
 }
 
 interface WorkflowWrapperProps extends PropsWithChildren {
@@ -89,7 +88,7 @@ export const wrapWorkflows = (opts: WrapWorkflowOptions) => {
       });
 
       return h(FooterWrapper, [
-        h(TopBar, { title: 'Workflows', href: Nav.getLink('workflows') }, [
+        h(TopBar, { title: 'Broad Methods Repository', href: Nav.getLink('workflows') }, [
           div({ style: Style.breadcrumb.breadcrumb }, [
             div(breadcrumbs(props)),
             div({ style: Style.breadcrumb.textUnderBreadcrumb }, [`${namespace}/${name}`]),
@@ -176,9 +175,9 @@ export const WorkflowsContainer = (props: WorkflowContainerProps) => {
     await Ajax(signal).Methods.method(namespace, name, selectedSnapshot).delete();
 
     // Replace the current history entry linking to the method details page of a
-    // specific snapshot, like /#workflows/sschu/echo-strings-test/29, with an
+    // specific snapshot, like /#methods/sschu/echo-strings-test/29, with an
     // entry with the corresponding link without the snapshot ID, like
-    // /#workflows/sschu/echo-strings-test
+    // /#methods/sschu/echo-strings-test
     // This way, if the user presses the back button after deleting a
     // method snapshot, they will be automatically redirected to the most recent
     // snapshot that still exists of the same method
@@ -202,7 +201,7 @@ export const WorkflowsContainer = (props: WorkflowContainerProps) => {
       h(
         TabBar,
         {
-          'aria-label': 'workflow menu',
+          'aria-label': 'method details menu',
           activeTab: tabName,
           tabNames: ['dashboard', 'wdl'],
           getHref: (currentTab) =>
