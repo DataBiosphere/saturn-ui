@@ -214,9 +214,13 @@ export const PermissionsModal = (props: WorkflowPermissionsModalProps) => {
   };
 
   const save = withBusyState(setWorking, async () => {
-    const toBeDeleted = _.remove((entry) => userEmails.includes(entry.user), originalPermissions);
+    const toBeDeleted: WorkflowsPermissions = _.remove((entry) => userEmails.includes(entry.user), originalPermissions);
+    const toBeDeletedPermissionUpdates: WorkflowsPermissions = _.map(
+      ({ user }) => ({ user, role: 'NO ACCESS' }),
+      toBeDeleted
+    );
 
-    const permissionUpdates = [...permissions, ..._.map(({ user }) => ({ user, role: 'NO ACCESS' }), toBeDeleted)];
+    const permissionUpdates: WorkflowsPermissions = [...permissions, ...toBeDeletedPermissionUpdates];
 
     try {
       await Ajax(signal).Methods.method(namespace, name, selectedSnapshot).setPermissions(permissionUpdates);
