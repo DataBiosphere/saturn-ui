@@ -1,17 +1,19 @@
 import { Link } from '@terra-ui-packages/components';
 import _ from 'lodash/fp';
 import { div, h } from 'react-hyperscript-helpers';
+import { bucketBrowserUrl } from 'src/auth/auth';
 import * as breadcrumbs from 'src/components/breadcrumbs';
 import FileBrowser from 'src/components/file-browser/FileBrowser';
 import { icon } from 'src/components/icons';
-import { Ajax } from 'src/libs/ajax';
 import AzureBlobStorageFileBrowserProvider from 'src/libs/ajax/file-browser-providers/AzureBlobStorageFileBrowserProvider';
 import GCSFileBrowserProvider from 'src/libs/ajax/file-browser-providers/GCSFileBrowserProvider';
-import Events from 'src/libs/events';
+import { Metrics } from 'src/libs/ajax/Metrics';
+import Events, { extractWorkspaceDetails } from 'src/libs/events';
 import { useQueryParameter } from 'src/libs/nav';
 import { forwardRefWithName } from 'src/libs/react-utils';
+import { newTabLinkProps } from 'src/libs/utils';
 import { wrapWorkspace } from 'src/workspaces/container/WorkspaceContainer';
-import { WorkspaceWrapper } from 'src/workspaces/utils';
+import { isAzureWorkspace, WorkspaceWrapper } from 'src/workspaces/utils';
 import { useMemo } from 'use-memo-one';
 
 export const Files = _.flow(
@@ -48,16 +50,31 @@ export const Files = _.flow(
         workspace,
         provider: fileBrowserProvider,
         rootLabel,
-        title: 'Files',
+        title: isAzureWorkspace(workspace)
+          ? 'Files'
+          : h(
+              Link,
+              {
+                href: bucketBrowserUrl(workspaceInfo.bucketName),
+                style: { margin: '1rem 0.5rem' },
+                ...newTabLinkProps,
+                onClick: () => {
+                  void Metrics().captureEvent(Events.workspaceOpenedBucketInBrowser, {
+                    ...extractWorkspaceDetails(workspace),
+                  });
+                },
+              },
+              ['Open bucket in browser ', icon('pop-out', { size: 12 })]
+            ),
         onChangePath: setPath,
         extraMenuItems: h(
           Link,
           {
             href: `https://seqr.broadinstitute.org/workspace/${workspaceInfo.namespace}/${workspaceInfo.name}`,
             style: { padding: '0.5rem' },
-            target: '_blank',
+            ...newTabLinkProps,
             onClick: () => {
-              Ajax().Metrics.captureEvent(Events.workspaceFilesSeqr, {
+              void Metrics().captureEvent(Events.workspaceFilesSeqr, {
                 workspaceNamespace: workspaceInfo.namespace,
                 workspaceName: workspaceInfo.name,
               });
