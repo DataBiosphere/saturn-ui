@@ -49,3 +49,14 @@ export interface MethodResponse {
   payload?: string;
   entityType?: string;
 }
+
+export type WorkflowAccessLevel = 'NO ACCESS' | 'READER' | 'OWNER';
+export interface WorkflowUserPermissions {
+  user: string;
+  role: WorkflowAccessLevel;
+}
+
+/**
+ * Type for Orchestration's MethodConfigACL schema.
+ */
+export type MethodConfigACL = WorkflowUserPermissions[];

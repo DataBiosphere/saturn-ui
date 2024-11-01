@@ -1,16 +1,9 @@
-export interface WorkflowUserPermissions {
-  user: string;
-  role: WorkflowAccessLevel;
-}
+import { WorkflowUserPermissions } from 'src/libs/ajax/methods/methods-models';
 
-export type WorkflowsPermissions = WorkflowUserPermissions[];
+export type {
+  WorkflowAccessLevel,
+  WorkflowUserPermissions,
+  MethodConfigACL as WorkflowsPermissions,
+} from 'src/libs/ajax/methods/methods-models';
 
-export const publicUser: (userPerms: WorkflowUserPermissions) => boolean = ({ user }) => {
-  return user === 'public';
-};
-
-export const workflowAccessLevels = ['NO ACCESS', 'READER', 'OWNER'] as const;
-
-export type WorkflowsAccessLevels = typeof workflowAccessLevels;
-
-export type WorkflowAccessLevel = WorkflowsAccessLevels[number];
+export const publicUser = ({ user }: WorkflowUserPermissions): boolean => user === 'public';
