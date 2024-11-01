@@ -31,6 +31,17 @@ const isTabKey = (val: any): val is TabKey => _.includes(val, tabKeys);
 
 const defaultTabKey: TabKey = tabKeys[0];
 
+// Note: The first tab key in this array will determine the default tab selected
+// if the tab query parameter is not present or has an invalid value (and when
+// clicking on that tab, the tab query parameter will not be used in the URL)
+const tabKeys = ['mine', 'public'] as const;
+type TabKey = (typeof tabKeys)[number]; // 'mine' | 'public'
+
+// Custom type guard
+const isTabKey = (val: any): val is TabKey => _.includes(val, tabKeys);
+
+const defaultTabKey: TabKey = tabKeys[0];
+
 /**
  * Represents a list of method definitions grouped into two
  * categories — My Methods and Public Methods — corresponding

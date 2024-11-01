@@ -13,7 +13,7 @@ import { Sort } from 'src/groups/Members/MemberTable';
 import { NewGroupCard } from 'src/groups/NewGroupCard';
 import { NewGroupModal } from 'src/groups/NewGroupModal';
 import { NoGroupsMessage } from 'src/groups/NoGroupsMessage';
-import { Ajax } from 'src/libs/ajax';
+import { Groups } from 'src/libs/ajax/Groups';
 import { CurrentUserGroupMembership } from 'src/libs/ajax/Groups';
 import { reportError } from 'src/libs/error';
 import { useCancellation } from 'src/libs/react-utils';
@@ -25,7 +25,7 @@ export const GroupList = (props: {}): React.ReactNode => {
   const signal = useCancellation();
 
   const fetchGroups = async (): Promise<CurrentUserGroupMembership[]> => {
-    const rawGroups = await Ajax(signal).Groups.list();
+    const rawGroups = await Groups(signal).list();
     const updatedGroups = _.flow(
       _.groupBy('groupName'),
       _.map((gs) => ({ ...gs[0], role: _.map('role', gs) })),
@@ -56,7 +56,7 @@ export const GroupList = (props: {}): React.ReactNode => {
     updateGroups(async () => {
       setDeletingGroup(undefined);
       try {
-        await Ajax().Groups.group(groupName).delete();
+        await Groups().group(groupName).delete();
       } catch (e) {
         // this is in a separate try/catch on its own, so that a failure in deleting won't error the entire page
         reportError('Error deleting group.', e);

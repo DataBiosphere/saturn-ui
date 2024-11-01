@@ -24,6 +24,7 @@ interface FilesMenuProps {
   onCreateDirectory: (directory: FileBrowserDirectory) => void;
   onDeleteFiles: () => void;
   onRefresh: () => Promise<void>;
+  extraMenuItems?: any;
 }
 
 export const FilesMenu = (props: FilesMenuProps) => {
@@ -37,6 +38,7 @@ export const FilesMenu = (props: FilesMenuProps) => {
     onCreateDirectory,
     onDeleteFiles,
     onRefresh,
+    extraMenuItems,
   } = props;
 
   const [refreshing, withRefreshing] = useBusyState();
@@ -104,6 +106,8 @@ export const FilesMenu = (props: FilesMenuProps) => {
       ),
 
       span({ style: { flex: 1 } }),
+
+      extraMenuItems,
 
       h(
         Link,
