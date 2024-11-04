@@ -10,7 +10,7 @@ import colors from 'src/libs/colors';
 import { FormLabel } from 'src/libs/forms';
 import * as Utils from 'src/libs/utils';
 import { withBusyState } from 'src/libs/utils';
-import { WDLEditor } from 'src/workflows/methods-repo/WDLEditor';
+import { WDLEditor } from 'src/workflows/methods/WDLEditor';
 import validate from 'validate.js';
 
 export interface WorkflowModalProps {

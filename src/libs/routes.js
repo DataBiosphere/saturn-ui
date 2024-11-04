@@ -22,9 +22,9 @@ import * as DatasetBuilder from 'src/pages/library/dataset-builder/DatasetBuilde
 import * as Datasets from 'src/pages/library/Datasets';
 import * as DataExplorer from 'src/pages/library/datasets/DataExplorer';
 import * as Showcase from 'src/pages/library/Showcase';
-import * as WorkflowDetails from 'src/pages/MethodsRepo/workflow-details/WorkflowSummary';
-import * as WorkflowWdl from 'src/pages/MethodsRepo/workflow-details/WorkflowWdl';
-import * as WorkflowList from 'src/pages/MethodsRepo/WorkflowList';
+import * as WorkflowDetails from 'src/pages/methods/workflow-details/WorkflowSummary';
+import * as WorkflowWdl from 'src/pages/methods/workflow-details/WorkflowWdl';
+import * as WorkflowList from 'src/pages/methods/WorkflowList';
 import * as NotFound from 'src/pages/NotFound';
 import * as Profile from 'src/pages/ProfilePage';
 import * as Support from 'src/pages/SupportPage';

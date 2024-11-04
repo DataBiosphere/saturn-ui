@@ -12,7 +12,7 @@ import * as Nav from 'src/libs/nav';
 import { getLink } from 'src/libs/nav';
 import { notify } from 'src/libs/notifications';
 import { TerraUser, TerraUserState, userStore } from 'src/libs/state';
-import { WorkflowList } from 'src/pages/MethodsRepo/WorkflowList';
+import { WorkflowList } from 'src/pages/methods/WorkflowList';
 import { asMockedFn, renderWithAppContexts as render } from 'src/testing/test-utils';
 
 jest.mock('src/libs/ajax');
@@ -23,9 +23,9 @@ jest.mock('src/libs/nav', () => ({
   goToPath: jest.fn(),
 }));
 
-type WDLEditorExports = typeof import('src/workflows/methods-repo/WDLEditor');
-jest.mock('src/workflows/methods-repo/WDLEditor', (): WDLEditorExports => {
-  const mockWDLEditorModule = jest.requireActual('src/workflows/methods-repo/WDLEditor.mock');
+type WDLEditorExports = typeof import('src/workflows/methods/WDLEditor');
+jest.mock('src/workflows/methods/WDLEditor', (): WDLEditorExports => {
+  const mockWDLEditorModule = jest.requireActual('src/workflows/methods/WDLEditor.mock');
   return {
     WDLEditor: mockWDLEditorModule.MockWDLEditor,
   };

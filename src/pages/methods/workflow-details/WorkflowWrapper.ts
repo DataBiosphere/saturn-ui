@@ -17,9 +17,9 @@ import { getTerraUser, snapshotsListStore, snapshotStore } from 'src/libs/state'
 import * as Style from 'src/libs/style';
 import * as Utils from 'src/libs/utils';
 import { withBusyState } from 'src/libs/utils';
-import DeleteSnapshotModal from 'src/workflows/methods-repo/modals/DeleteSnapshotModal';
-import { PermissionsModal } from 'src/workflows/methods-repo/modals/PermissionsModal';
-import SnapshotActionMenu from 'src/workflows/methods-repo/SnapshotActionMenu';
+import DeleteSnapshotModal from 'src/workflows/methods/modals/DeleteSnapshotModal';
+import { PermissionsModal } from 'src/workflows/methods/modals/PermissionsModal';
+import SnapshotActionMenu from 'src/workflows/methods/SnapshotActionMenu';
 import ExportWorkflowModal from 'src/workflows/modals/ExportWorkflowModal';
 import { isGoogleWorkspace, WorkspaceInfo, WorkspaceWrapper } from 'src/workspaces/utils';
 import * as WorkspaceUtils from 'src/workspaces/utils';

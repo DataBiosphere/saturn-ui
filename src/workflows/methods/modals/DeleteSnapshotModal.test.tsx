@@ -2,7 +2,7 @@ import { act, screen, within } from '@testing-library/react';
 import userEvent, { UserEvent } from '@testing-library/user-event';
 import React from 'react';
 import { renderWithAppContexts as render } from 'src/testing/test-utils';
-import DeleteSnapshotModal from 'src/workflows/methods-repo/modals/DeleteSnapshotModal';
+import DeleteSnapshotModal from 'src/workflows/methods/modals/DeleteSnapshotModal';
 
 const mockOnConfirm = jest.fn();
 const mockOnDismiss = jest.fn();

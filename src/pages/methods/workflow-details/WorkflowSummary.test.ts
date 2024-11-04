@@ -1,7 +1,7 @@
 import { fireEvent, screen } from '@testing-library/react';
 import { h } from 'react-hyperscript-helpers';
 import { snapshotStore } from 'src/libs/state';
-import { BaseWorkflowSummary } from 'src/pages/MethodsRepo/workflow-details/WorkflowSummary';
+import { BaseWorkflowSummary } from 'src/pages/methods/workflow-details/WorkflowSummary';
 import { renderWithAppContexts } from 'src/testing/test-utils';
 
 jest.mock('src/libs/notifications');
