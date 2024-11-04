@@ -460,6 +460,7 @@ describe('CohortEditor', () => {
     // Assert
     expect(screen.getByText('Group 1')).toBeTruthy();
     expect(screen.getByText('Group 2')).toBeTruthy();
+    expect(screen.queryByText('Group 3')).toBeFalsy();
   });
 
   function showCohortEditor(originalCohort = newCohort('my cohort name')) {
