@@ -1,6 +1,6 @@
-import { Modal } from '@terra-ui-packages/components';
+import { Link, Modal } from '@terra-ui-packages/components';
 import { subscribable } from '@terra-ui-packages/core-utils';
-import { Fragment, useCallback, useEffect, useState } from 'react';
+import React, { Fragment, useCallback, useEffect, useState } from 'react';
 import { div, h } from 'react-hyperscript-helpers';
 import DirectoryTree from 'src/components/file-browser/DirectoryTree';
 import { basename, dirname } from 'src/components/file-browser/file-browser-utils';
@@ -22,7 +22,7 @@ interface FileBrowserProps {
   initialPath?: string;
   provider: FileBrowserProvider;
   rootLabel: string;
-  title: string;
+  title: string | React.ReactElement<typeof Link>;
   workspace: any; // TODO: Type for workspace
   onChangePath?: (newPath: string) => void;
   extraMenuItems?: any;
