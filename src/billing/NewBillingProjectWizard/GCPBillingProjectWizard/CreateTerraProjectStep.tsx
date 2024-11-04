@@ -7,7 +7,8 @@ import { StepFieldLegend, StepFields } from 'src/billing/NewBillingProjectWizard
 import { StepHeader } from 'src/billing/NewBillingProjectWizard/StepWizard/StepHeader';
 import { GoogleBillingAccount } from 'src/billing-core/models';
 import SupportRequestWrapper from 'src/components/SupportRequest';
-import { Ajax } from 'src/libs/ajax';
+import { Billing } from 'src/libs/ajax/billing/Billing';
+import { Metrics } from 'src/libs/ajax/Metrics';
 import colors from 'src/libs/colors';
 import { reportErrorAndRethrow } from 'src/libs/error';
 import Events from 'src/libs/events';
@@ -39,7 +40,7 @@ export const CreateTerraProjectStep = ({
     Utils.withBusyState(setIsBusy)
   )(async () => {
     try {
-      await Ajax().Billing.createGCPProject(billingProjectName, chosenBillingAccount.accountName);
+      await Billing().createGCPProject(billingProjectName, chosenBillingAccount.accountName);
       onSuccess(billingProjectName);
     } catch (error: any) {
       if (error?.status === 409) {
@@ -135,7 +136,7 @@ const NoBillingAccounts = (props: {
           <Link
             style={{ textDecoration: 'underline', color: colors.accent() }}
             onClick={async () => {
-              Ajax().Metrics.captureEvent(Events.billingGCPCreationRefreshStep3);
+              void Metrics().captureEvent(Events.billingGCPCreationRefreshStep3);
               await props.authorizeAndLoadAccounts();
               props.setRefreshed(true);
             }}
@@ -153,7 +154,7 @@ const NoBillingAccounts = (props: {
           <Link
             style={{ textDecoration: 'underline', color: colors.accent() }}
             onClick={() => {
-              Ajax().Metrics.captureEvent(Events.billingCreationContactTerraSupport);
+              void Metrics().captureEvent(Events.billingCreationContactTerraSupport);
               contactUsActive.set(true);
             }}
           >

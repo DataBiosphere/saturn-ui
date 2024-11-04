@@ -8,7 +8,7 @@ import {
 import { Step } from 'src/billing/NewBillingProjectWizard/StepWizard/Step';
 import { StepFieldLegend, StepFields } from 'src/billing/NewBillingProjectWizard/StepWizard/StepFields';
 import { StepHeader } from 'src/billing/NewBillingProjectWizard/StepWizard/StepHeader';
-import { Ajax } from 'src/libs/ajax';
+import { Metrics } from 'src/libs/ajax/Metrics';
 import Events from 'src/libs/events';
 
 export interface AddTerraAsBillingAccountUserStepProps {
@@ -38,7 +38,7 @@ export const AddTerraAsBillingAccountUserStep = ({ isActive, ...props }: AddTerr
             checked={props.accessToAddBillingAccountUser === false}
             labelStyle={{ ...styles.radioButtonLabel }}
             onChange={() => {
-              Ajax().Metrics.captureEvent(Events.billingGCPCreationStep3BillingAccountNoAccess);
+              void Metrics().captureEvent(Events.billingGCPCreationStep3BillingAccountNoAccess);
               props.setAccessToAddBillingAccountUser(false);
             }}
           />
@@ -48,7 +48,7 @@ export const AddTerraAsBillingAccountUserStep = ({ isActive, ...props }: AddTerr
             name='permission'
             checked={props.accessToAddBillingAccountUser === true}
             onChange={() => {
-              Ajax().Metrics.captureEvent(Events.billingGCPCreationStep3AddedTerraBilling);
+              void Metrics().captureEvent(Events.billingGCPCreationStep3AddedTerraBilling);
               props.setAccessToAddBillingAccountUser(true);
             }}
           />

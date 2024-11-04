@@ -9,7 +9,7 @@ import {
   isGoogleBillingProject,
 } from 'src/billing-core/models';
 import { ariaSort, HeaderRenderer } from 'src/components/table';
-import { Ajax } from 'src/libs/ajax';
+import { Metrics } from 'src/libs/ajax/Metrics';
 import colors from 'src/libs/colors';
 import Events, { extractBillingDetails } from 'src/libs/events';
 import * as Nav from 'src/libs/nav';
@@ -147,7 +147,7 @@ const WorkspaceCard: React.FC<WorkspaceCardProps> = memoWithName('WorkspaceCard'
             style={Style.noWrapEllipsis}
             href={Nav.getLink('workspace-dashboard', { namespace, name })}
             onClick={() => {
-              Ajax().Metrics.captureEvent(Events.billingProjectGoToWorkspace, {
+              void Metrics().captureEvent(Events.billingProjectGoToWorkspace, {
                 workspaceName: name,
                 ...extractBillingDetails(billingProject),
               });
@@ -171,7 +171,7 @@ const WorkspaceCard: React.FC<WorkspaceCardProps> = memoWithName('WorkspaceCard'
             aria-owns={isExpanded ? billingDetailsId : undefined}
             style={{ display: 'flex', alignItems: 'center' }}
             onClick={() => {
-              Ajax().Metrics.captureEvent(Events.billingProjectExpandWorkspace, {
+              void Metrics().captureEvent(Events.billingProjectExpandWorkspace, {
                 workspaceName: name,
                 ...extractBillingDetails(billingProject),
               });
