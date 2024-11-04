@@ -10,7 +10,7 @@ import { TabBar } from 'src/components/tabBars';
 import { FlexTable, HeaderCell, Paginator, Sortable, TooltipCell } from 'src/components/table';
 import { TopBar } from 'src/components/TopBar';
 import { Ajax } from 'src/libs/ajax';
-import { createMethodProvider } from 'src/libs/ajax/methods/providers/CreateMethodProvider';
+import { postMethodProvider } from 'src/libs/ajax/methods/providers/PostMethodProvider';
 import * as Nav from 'src/libs/nav';
 import { notify } from 'src/libs/notifications';
 import { useCancellation, useOnMount } from 'src/libs/react-utils';
@@ -291,7 +291,7 @@ export const WorkflowList = (props: WorkflowListProps) => {
           <WorkflowModal
             title='Create New Method'
             buttonActionName='Upload'
-            createMethodProvider={createMethodProvider}
+            postMethodProvider={postMethodProvider}
             onSuccess={navigateToWorkflow}
             onDismiss={() => setCreateWorkflowModalOpen(false)}
           />

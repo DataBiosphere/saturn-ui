@@ -28,9 +28,11 @@ describe('Link', () => {
   it('has a light variant that is styled differently', () => {
     // Act
     render(<Link href='https://example.com' />);
+    // @ts-ignore
     const defaultStyle = (Clickable as jest.MockedFunction<typeof Clickable>).mock.lastCall[0].style;
 
     render(<Link href='https://example.com' variant='light' />);
+    // @ts-ignore
     const lightVariantStyle = (Clickable as jest.MockedFunction<typeof Clickable>).mock.lastCall[0].style;
 
     // Assert
@@ -40,9 +42,11 @@ describe('Link', () => {
   it('can be styled with a different base color', () => {
     // Act
     render(<Link href='https://example.com' />);
+    // @ts-ignore
     const defaultStyle = (Clickable as jest.MockedFunction<typeof Clickable>).mock.lastCall[0].style;
 
     render(<Link href='https://example.com' baseColor={() => 'blue'} />);
+    // @ts-ignore
     const baseColorStyle = (Clickable as jest.MockedFunction<typeof Clickable>).mock.lastCall[0].style;
 
     // Assert
@@ -53,9 +57,11 @@ describe('Link', () => {
     it('is styled differently', () => {
       // Act
       render(<Link href='https://example.com' />);
+      // @ts-ignore
       const enabledStyle = (Clickable as jest.MockedFunction<typeof Clickable>).mock.lastCall[0].style;
 
       render(<Link href='https://example.com' disabled />);
+      // @ts-ignore
       const disabledStyle = (Clickable as jest.MockedFunction<typeof Clickable>).mock.lastCall[0].style;
 
       // Assert
@@ -65,6 +71,7 @@ describe('Link', () => {
     it('has no hover style', () => {
       // Act
       render(<Link href='https://example.com' disabled />);
+      // @ts-ignore
       const disabledHoverStyle = (Clickable as jest.MockedFunction<typeof Clickable>).mock.lastCall[0].hover;
 
       // Assert

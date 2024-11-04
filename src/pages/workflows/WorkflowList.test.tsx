@@ -6,7 +6,7 @@ import React from 'react';
 import { Ajax, AjaxContract } from 'src/libs/ajax';
 import { MethodsAjaxContract } from 'src/libs/ajax/methods/Methods';
 import { MethodResponse } from 'src/libs/ajax/methods/methods-models';
-import { createMethodProvider } from 'src/libs/ajax/methods/providers/CreateMethodProvider';
+import { postMethodProvider } from 'src/libs/ajax/methods/providers/PostMethodProvider';
 import * as Nav from 'src/libs/nav';
 import { getLink } from 'src/libs/nav';
 import { notify } from 'src/libs/notifications';
@@ -950,7 +950,7 @@ describe('create workflow modal', () => {
     // Arrange
     asMockedFn(Ajax).mockImplementation(() => mockAjax([]) as AjaxContract);
 
-    jest.spyOn(createMethodProvider, 'create').mockResolvedValue(mockCreateMethodResponse);
+    jest.spyOn(postMethodProvider, 'create').mockResolvedValue(mockCreateMethodResponse);
 
     const user: UserEvent = userEvent.setup();
 
@@ -973,7 +973,7 @@ describe('create workflow modal', () => {
     await user.click(screen.getByRole('button', { name: 'Upload' }));
 
     // Assert
-    expect(createMethodProvider.create).toHaveBeenCalled();
+    expect(postMethodProvider.create).toHaveBeenCalled();
 
     expect(Nav.goToPath).toHaveBeenCalledWith('workflow-dashboard', {
       name: 'response-name',

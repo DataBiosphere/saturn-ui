@@ -2,8 +2,8 @@ import { AbortOption } from '@terra-ui-packages/data-client-core';
 import { Methods } from 'src/libs/ajax/methods/Methods';
 import { MethodResponse } from 'src/libs/ajax/methods/methods-models';
 
-export interface CreateMethodProvider {
-  create: (
+export interface PostMethodProvider {
+  postMethod: (
     namespace: string,
     name: string,
     wdl: string,
@@ -14,8 +14,8 @@ export interface CreateMethodProvider {
   ) => Promise<MethodResponse>;
 }
 
-export const createMethodProvider: CreateMethodProvider = {
-  create: async (
+export const postMethodProvider: PostMethodProvider = {
+  postMethod: async (
     namespace: string,
     name: string,
     wdl: string,

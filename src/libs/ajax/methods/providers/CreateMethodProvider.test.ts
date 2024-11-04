@@ -1,6 +1,6 @@
 import { Methods, MethodsAjaxContract } from 'src/libs/ajax/methods/Methods';
 import { MethodResponse } from 'src/libs/ajax/methods/methods-models';
-import { createMethodProvider } from 'src/libs/ajax/methods/providers/CreateMethodProvider';
+import { postMethodProvider } from 'src/libs/ajax/methods/providers/PostMethodProvider';
 import { asMockedFn, partial } from 'src/testing/test-utils';
 
 jest.mock('src/libs/ajax/methods/Methods');
@@ -37,7 +37,7 @@ describe('create method provider', () => {
     const signal = new window.AbortController().signal;
 
     // Act
-    const result = await createMethodProvider.create(
+    const result = await postMethodProvider.create(
       'input-namespace',
       'input-name',
       'workflow input {}',

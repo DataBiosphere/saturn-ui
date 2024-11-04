@@ -3,7 +3,7 @@ import userEvent, { UserEvent } from '@testing-library/user-event';
 import _ from 'lodash/fp';
 import React from 'react';
 import { MethodResponse } from 'src/libs/ajax/methods/methods-models';
-import { CreateMethodProvider } from 'src/libs/ajax/methods/providers/CreateMethodProvider';
+import { CreateMethodProvider } from 'src/libs/ajax/methods/providers/PostMethodProvider';
 import { WorkflowModal } from 'src/pages/workflows/workflow/common/WorkflowModal';
 import { renderWithAppContexts as render } from 'src/testing/test-utils';
 
@@ -52,7 +52,7 @@ describe('WorkflowModal', () => {
         <WorkflowModal
           title='Create New Method'
           buttonActionName='Upload'
-          createMethodProvider={successCreateMethodProvider}
+          postMethodProvider={successCreateMethodProvider}
           onSuccess={jest.fn()}
           onDismiss={jest.fn()}
         />
@@ -87,7 +87,7 @@ describe('WorkflowModal', () => {
           title='Create New Method'
           buttonActionName='Upload'
           defaultWdl='a'
-          createMethodProvider={successCreateMethodProvider}
+          postMethodProvider={successCreateMethodProvider}
           onSuccess={jest.fn()}
           onDismiss={jest.fn()}
         />
@@ -130,7 +130,7 @@ describe('WorkflowModal', () => {
           defaultNamespace=','
           defaultName=','
           defaultWdl='a'
-          createMethodProvider={successCreateMethodProvider}
+          postMethodProvider={successCreateMethodProvider}
           onSuccess={jest.fn()}
           onDismiss={jest.fn()}
         />
@@ -164,7 +164,7 @@ describe('WorkflowModal', () => {
           buttonActionName='Upload'
           defaultNamespace={longStringNamespace}
           defaultName={longStringName}
-          createMethodProvider={successCreateMethodProvider}
+          postMethodProvider={successCreateMethodProvider}
           onSuccess={jest.fn()}
           onDismiss={jest.fn()}
         />
@@ -193,7 +193,7 @@ describe('WorkflowModal', () => {
           buttonActionName='Upload'
           defaultNamespace='a'
           defaultName='a'
-          createMethodProvider={successCreateMethodProvider}
+          postMethodProvider={successCreateMethodProvider}
           onSuccess={jest.fn()}
           onDismiss={jest.fn()}
         />
@@ -225,7 +225,7 @@ describe('WorkflowModal', () => {
           defaultNamespace='a'
           defaultName='a'
           defaultSynopsis={longSynopsis}
-          createMethodProvider={successCreateMethodProvider}
+          postMethodProvider={successCreateMethodProvider}
           onSuccess={jest.fn()}
           onDismiss={jest.fn()}
         />
@@ -260,7 +260,7 @@ describe('WorkflowModal', () => {
           defaultNamespace='namespace'
           defaultName='name'
           defaultWdl='old wdl'
-          createMethodProvider={successCreateMethodProvider}
+          postMethodProvider={successCreateMethodProvider}
           onSuccess={jest.fn()}
           onDismiss={jest.fn()}
         />
@@ -299,7 +299,7 @@ describe('WorkflowModal', () => {
           defaultDocumentation='test docs'
           defaultSynopsis='test synopsis'
           defaultSnapshotComment='test comment'
-          createMethodProvider={successCreateMethodProvider}
+          postMethodProvider={successCreateMethodProvider}
           onSuccess={mockOnSuccess}
           onDismiss={mockOnDismiss}
         />
@@ -350,7 +350,7 @@ describe('WorkflowModal', () => {
           defaultDocumentation='test docs'
           defaultSynopsis='test synopsis'
           defaultSnapshotComment='test comment'
-          createMethodProvider={successCreateMethodProvider}
+          postMethodProvider={successCreateMethodProvider}
           onSuccess={mockOnSuccess}
           onDismiss={mockOnDismiss}
         />
@@ -398,7 +398,7 @@ describe('WorkflowModal', () => {
           defaultNamespace='namespace'
           defaultName='name'
           defaultWdl='a'
-          createMethodProvider={errorCreateMethodProvider}
+          postMethodProvider={errorCreateMethodProvider}
           onSuccess={mockOnSuccess}
           onDismiss={mockOnDismiss}
         />
@@ -431,7 +431,7 @@ describe('WorkflowModal', () => {
           defaultNamespace='namespace'
           defaultName='name'
           defaultWdl='a'
-          createMethodProvider={thrownResponseCreateMethodProvider}
+          postMethodProvider={thrownResponseCreateMethodProvider}
           onSuccess={mockOnSuccess}
           onDismiss={mockOnDismiss}
         />
@@ -464,7 +464,7 @@ describe('WorkflowModal', () => {
           defaultNamespace='namespace'
           defaultName='name'
           defaultWdl='a'
-          createMethodProvider={successCreateMethodProvider}
+          postMethodProvider={successCreateMethodProvider}
           onSuccess={mockOnSuccess}
           onDismiss={mockOnDismiss}
         />

@@ -31,9 +31,11 @@ describe.each([{ component: ButtonPrimary }, { component: ButtonSecondary }, { c
       it('is styled differently', () => {
         // Act
         render(<ButtonComponent />);
+        // @ts-ignore
         const enabledStyle = (Clickable as jest.MockedFunction<typeof Clickable>).mock.lastCall[0].style;
 
         render(<ButtonComponent disabled />);
+        // @ts-ignore
         const disabledStyle = (Clickable as jest.MockedFunction<typeof Clickable>).mock.lastCall[0].style;
 
         // Assert
@@ -43,6 +45,7 @@ describe.each([{ component: ButtonPrimary }, { component: ButtonSecondary }, { c
       it('has no hover style', () => {
         // Act
         render(<ButtonComponent disabled />);
+        // @ts-ignore
         const disabledHoverStyle = (Clickable as jest.MockedFunction<typeof Clickable>).mock.lastCall[0].hover;
 
         // Assert
@@ -56,9 +59,11 @@ describe('ButtonPrimary', () => {
   it('can be styled differently to indicate a dangerous action', () => {
     // Act
     render(<ButtonPrimary />);
+    // @ts-ignore
     const defaultStyle = (Clickable as jest.MockedFunction<typeof Clickable>).mock.lastCall[0].style;
 
     render(<ButtonPrimary danger />);
+    // @ts-ignore
     const dangerStyle = (Clickable as jest.MockedFunction<typeof Clickable>).mock.lastCall[0].style;
 
     // Assert
