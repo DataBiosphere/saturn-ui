@@ -1028,7 +1028,7 @@ export const Resizable = ({ onWidthChange, width, minWidth = 100, children }) =>
 
 export const ColumnSettings = forwardRef(({ columnSettings, onChange }, ref) => {
   const indexedColumnSettings = _.map.convert({ cap: false })((value) => {
-    return _.merge(value, { id: value.name }); // Don't use integer because 0 is falsey.
+    return _.merge(value, { id: value.name });
   })(columnSettings);
   const [items, setItems] = useState(indexedColumnSettings);
 
