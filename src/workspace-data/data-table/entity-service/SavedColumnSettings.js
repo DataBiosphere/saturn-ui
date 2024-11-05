@@ -340,7 +340,7 @@ export const ColumnSettingsWithSavedColumnSettings = ({ columnSettings, onChange
     if (columnSettingsRef.current) {
       // Need to update the indices and ids as well
       const indexedColumnSettings = _.map.convert({ cap: false })((value) => {
-        return _.merge(value, { id: value.name }); // Don't use integer because 0 is falsey.
+        return _.merge(value, { id: value.name });
       })(newColumnSettings);
       columnSettingsRef.current.updateItems(indexedColumnSettings);
     }
