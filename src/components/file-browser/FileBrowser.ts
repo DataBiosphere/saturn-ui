@@ -1,10 +1,9 @@
-import { Link, Modal } from '@terra-ui-packages/components';
+import { Link } from '@terra-ui-packages/components';
 import { subscribable } from '@terra-ui-packages/core-utils';
 import React, { Fragment, useCallback, useEffect, useState } from 'react';
 import { div, h } from 'react-hyperscript-helpers';
 import DirectoryTree from 'src/components/file-browser/DirectoryTree';
-import { basename, dirname } from 'src/components/file-browser/file-browser-utils';
-import { FileDetails } from 'src/components/file-browser/FileDetails';
+import { dirname } from 'src/components/file-browser/file-browser-utils';
 import FilesInDirectory from 'src/components/file-browser/FilesInDirectory';
 import PathBreadcrumbs from 'src/components/file-browser/PathBreadcrumbs';
 import FileBrowserProvider, {
@@ -14,6 +13,7 @@ import FileBrowserProvider, {
 import colors from 'src/libs/colors';
 import { requesterPaysProjectStore } from 'src/libs/state';
 import * as Utils from 'src/libs/utils';
+import { UriViewer } from 'src/workspace-data/data-table/uri-viewer/UriViewer';
 import { dataTableVersionsPathRoot } from 'src/workspace-data/data-table/versioning/data-table-versioning-utils';
 import { RequesterPaysModal } from 'src/workspaces/common/requester-pays/RequesterPaysModal';
 import * as WorkspaceUtils from 'src/workspaces/utils';
@@ -180,15 +180,11 @@ const FileBrowser = (props: FileBrowserProps) => {
     ]),
 
     focusedFile &&
-      h(
-        Modal,
-        {
-          showCancel: false,
-          title: basename(focusedFile.path),
-          onDismiss: () => setFocusedFile(null),
-        },
-        [h(FileDetails, { file: focusedFile, provider })]
-      ),
+      h(UriViewer, {
+        onDismiss: () => setFocusedFile(null),
+        uri: focusedFile.url,
+        workspace,
+      }),
 
     showRequesterPaysModal &&
       h(RequesterPaysModal, {
