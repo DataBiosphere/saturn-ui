@@ -31,13 +31,7 @@ export interface Snapshot {
   synopsis: string;
 }
 
-/**
- * Type for Orchestration's MethodQuery schema.
- *
- * Note: Some properties that are required here are marked as optional in the
- * schema, but the Orchestration endpoint that uses this schema for the request
- * body requires them to be included.
- */
+/** Type for Orchestration's MethodQuery schema. */
 export interface MethodQuery {
   namespace: string;
   name: string;
