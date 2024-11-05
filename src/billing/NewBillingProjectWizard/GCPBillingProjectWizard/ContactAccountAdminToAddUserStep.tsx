@@ -5,7 +5,7 @@ import { Step } from 'src/billing/NewBillingProjectWizard/StepWizard/Step';
 import { StepFieldLegend, StepFields } from 'src/billing/NewBillingProjectWizard/StepWizard/StepFields';
 import { StepHeader } from 'src/billing/NewBillingProjectWizard/StepWizard/StepHeader';
 import { LabeledCheckbox } from 'src/components/common';
-import { Ajax } from 'src/libs/ajax';
+import { Metrics } from 'src/libs/ajax/Metrics';
 import Events from 'src/libs/events';
 
 interface ContactAccountAdminToAddUserStepProps {
@@ -30,7 +30,7 @@ export const ContactAccountAdminToAddUserStep = ({ isActive, ...props }: Contact
           checked={props.verifiedUsersAdded === true}
           disabled={!isActive && !props.isFinished}
           onChange={() => {
-            Ajax().Metrics.captureEvent(Events.billingGCPCreationStep3VerifyUserAdded);
+            void Metrics().captureEvent(Events.billingGCPCreationStep3VerifyUserAdded);
             props.setVerifiedUsersAdded(!props.verifiedUsersAdded);
           }}
         >

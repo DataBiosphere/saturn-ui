@@ -4,15 +4,17 @@ import React, { ReactNode, useState } from 'react';
 import { hasBillingScope } from 'src/auth/auth';
 import { BillingAccountControls } from 'src/billing/BillingAccount/BillingAccountControls';
 import { GCPBillingProject, GoogleBillingAccount } from 'src/billing-core/models';
-import { Ajax } from 'src/libs/ajax';
+import { Billing, BillingContract } from 'src/libs/ajax/billing/Billing';
+import { Metrics, MetricsContract } from 'src/libs/ajax/Metrics';
 import Events, { extractBillingDetails } from 'src/libs/events';
 import { gcpBillingProject } from 'src/testing/billing-project-fixtures';
-import { asMockedFn, renderWithAppContexts, SelectHelper } from 'src/testing/test-utils';
+import { asMockedFn, MockedFn, partial, renderWithAppContexts, SelectHelper } from 'src/testing/test-utils';
 
 type AuthExports = typeof import('src/auth/auth');
 
-type AjaxContract = ReturnType<typeof Ajax>;
-jest.mock('src/libs/ajax');
+jest.mock('src/libs/ajax/billing/Billing');
+jest.mock('src/libs/ajax/Metrics');
+
 jest.mock('src/auth/auth', (): AuthExports => {
   const originalModule = jest.requireActual<AuthExports>('src/auth/auth');
   return {
@@ -179,15 +181,11 @@ describe('BillingAccountControls', () => {
         />
       );
     };
-    const captureEvent = jest.fn();
-    const changeBillingAccount = jest.fn();
-    asMockedFn(Ajax).mockImplementation(
-      () =>
-        ({
-          Billing: { changeBillingAccount } as Partial<AjaxContract['Billing']>,
-          Metrics: { captureEvent } as Partial<AjaxContract['Metrics']>,
-        } as Partial<AjaxContract> as AjaxContract)
-    );
+    const captureEvent: MockedFn<MetricsContract['captureEvent']> = jest.fn();
+    const changeBillingAccount: MockedFn<BillingContract['changeBillingAccount']> = jest.fn();
+    asMockedFn(Billing).mockReturnValue(partial<BillingContract>({ changeBillingAccount }));
+    asMockedFn(Metrics).mockReturnValue(partial<MetricsContract>({ captureEvent }));
+
     const reloadBillingProject = jest.fn();
 
     // Act
@@ -233,15 +231,12 @@ describe('BillingAccountControls', () => {
       displayName: 'Test Billing Account',
     };
     billingAccounts[`${gcpBillingProject.billingAccount}`] = testBillingAccount;
-    const captureEvent = jest.fn();
-    const removeBillingAccount = jest.fn();
-    asMockedFn(Ajax).mockImplementation(
-      () =>
-        ({
-          Billing: { removeBillingAccount } as Partial<AjaxContract['Billing']>,
-          Metrics: { captureEvent } as Partial<AjaxContract['Metrics']>,
-        } as Partial<AjaxContract> as AjaxContract)
-    );
+
+    const captureEvent: MockedFn<MetricsContract['captureEvent']> = jest.fn();
+    const removeBillingAccount: MockedFn<BillingContract['removeBillingAccount']> = jest.fn();
+    asMockedFn(Billing).mockReturnValue(partial<BillingContract>({ removeBillingAccount }));
+    asMockedFn(Metrics).mockReturnValue(partial<MetricsContract>({ captureEvent }));
+
     const reloadBillingProject = jest.fn();
     const setUpdating = jest.fn();
 
@@ -286,15 +281,11 @@ describe('BillingAccountControls', () => {
       displayName: 'Test Billing Account',
     };
     billingAccounts[`${gcpBillingProject.billingAccount}`] = testBillingAccount;
-    const captureEvent = jest.fn();
-    const updateSpendConfiguration = jest.fn();
-    asMockedFn(Ajax).mockImplementation(
-      () =>
-        ({
-          Billing: { updateSpendConfiguration } as Partial<AjaxContract['Billing']>,
-          Metrics: { captureEvent } as Partial<AjaxContract['Metrics']>,
-        } as Partial<AjaxContract> as AjaxContract)
-    );
+
+    const captureEvent: MockedFn<MetricsContract['captureEvent']> = jest.fn();
+    const updateSpendConfiguration: MockedFn<BillingContract['updateSpendConfiguration']> = jest.fn();
+    asMockedFn(Billing).mockReturnValue(partial<BillingContract>({ updateSpendConfiguration }));
+    asMockedFn(Metrics).mockReturnValue(partial<MetricsContract>({ captureEvent }));
     const setUpdating = jest.fn();
 
     // Act
