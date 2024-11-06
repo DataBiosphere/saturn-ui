@@ -12,6 +12,8 @@ import { ariaSort, HeaderRenderer } from 'src/components/table';
 import { Ajax } from 'src/libs/ajax';
 import colors from 'src/libs/colors';
 import Events, { extractBillingDetails } from 'src/libs/events';
+import { isFeaturePreviewEnabled } from 'src/libs/feature-previews';
+import { SPEND_REPORTING } from 'src/libs/feature-previews-config';
 import * as Nav from 'src/libs/nav';
 import { memoWithName } from 'src/libs/react-utils';
 import * as Style from 'src/libs/style';
@@ -52,8 +54,21 @@ const WorkspaceCardHeaders: React.FC<WorkspaceCardHeadersProps> = memoWithName(
           aria-sort={ariaSort(sort, 'name')}
           style={{ flex: 1, paddingLeft: needsStatusColumn ? '1rem' : '2rem' }}
         >
-          <HeaderRenderer sort={sort} onSort={onSort} name='name' />
+          <HeaderRenderer sort={sort} onSort={onSort} name='workspaceName' />
         </div>
+        {isFeaturePreviewEnabled(SPEND_REPORTING) && (
+          <>
+            <div role='columnheader' aria-sort={ariaSort(sort, 'totalSpend')} style={{ flex: 1 }}>
+              <HeaderRenderer sort={sort} onSort={onSort} name='totalSpend' />
+            </div>
+            <div role='columnheader' aria-sort={ariaSort(sort, 'totalCompute')} style={{ flex: 1 }}>
+              <HeaderRenderer sort={sort} onSort={onSort} name='totalCompute' />
+            </div>
+            <div role='columnheader' aria-sort={ariaSort(sort, 'totalStorage')} style={{ flex: 1 }}>
+              <HeaderRenderer sort={sort} onSort={onSort} name='totalStorage' />
+            </div>
+          </>
+        )}
         <div role='columnheader' aria-sort={ariaSort(sort, 'createdBy')} style={{ flex: 1 }}>
           <HeaderRenderer sort={sort} onSort={onSort} name='createdBy' />
         </div>
@@ -77,6 +92,7 @@ interface ExpandedInfoRowProps {
   details: string | undefined;
   errorMessage?: string;
 }
+
 const ExpandedInfoRow = (props: ExpandedInfoRowProps) => {
   const { title, details, errorMessage } = props;
   const expandedInfoStyles = {
@@ -156,6 +172,19 @@ const WorkspaceCard: React.FC<WorkspaceCardProps> = memoWithName('WorkspaceCard'
             {name}
           </Link>
         </div>
+        {isFeaturePreviewEnabled(SPEND_REPORTING) && (
+          <>
+            <div role='cell' style={workspaceCardStyles.field}>
+              N/A
+            </div>
+            <div role='cell' style={workspaceCardStyles.field}>
+              N/A
+            </div>
+            <div role='cell' style={workspaceCardStyles.field}>
+              N/A
+            </div>
+          </>
+        )}
         <div role='cell' style={workspaceCardStyles.field}>
           {createdBy}
         </div>
