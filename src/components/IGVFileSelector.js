@@ -34,7 +34,7 @@ const isTdrUrl = (fileUrl) => {
 };
 
 const findIndexForFile = (fileUrl, fileUrls) => {
-  if (!['.cram', '.bam', '.vcf'].some((extension) => fileUrl.endsWith(extension))) {
+  if (!['.cram', '.bam', '.vcf', '.gz'].some((extension) => fileUrl.endsWith(extension))) {
     return undefined;
   }
 
@@ -50,6 +50,7 @@ const findIndexForFile = (fileUrl, fileUrls) => {
       cram: [`${base}.crai`, `${base}.cram.crai`],
       bam: [`${base}.bai`, `${base}.bam.bai`],
       vcf: [`${base}.idx`, `${base}.vcf.idx`, `${base}.tbi`, `${base}.vcf.tbi`],
+      gz: [`${base}.gz.tbi`]
     }[extension].map((candidate) => new RegExp([`gs://${bucket}`, datasetId, UUID_PATTERN, ...otherPathSegments, candidate].join('/')));
     return fileUrls.find((url) => indexCandidates.some((candidate) => candidate.test(url)));
   }
@@ -58,6 +59,7 @@ const findIndexForFile = (fileUrl, fileUrls) => {
     cram: [`${base}.crai`, `${base}.cram.crai`],
     bam: [`${base}.bai`, `${base}.bam.bai`],
     vcf: [`${base}.idx`, `${base}.vcf.idx`, `${base}.tbi`, `${base}.vcf.tbi`],
+    gz: [`${base}.gz.tbi`],
   }[extension];
 
   return fileUrls.find((url) => indexCandidates.includes(url));
