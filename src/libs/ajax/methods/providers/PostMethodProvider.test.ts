@@ -29,8 +29,8 @@ const mockMethodResponse: MethodResponse = {
   url: 'http://agora.dsde-dev.broadinstitute.org/api/v1/methods/sschu/response-test/1',
 };
 
-describe('create method provider', () => {
-  it('handles create call', async () => {
+describe('post method provider', () => {
+  it('handles post call', async () => {
     // Arrange
     const methodsMock = mockMethodsNeeds();
     asMockedFn(methodsMock.postMethod).mockResolvedValue(mockMethodResponse);

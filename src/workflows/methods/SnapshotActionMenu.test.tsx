@@ -30,7 +30,7 @@ describe('snapshot action menu', () => {
     expect(snapshotActionMenu).toHaveAttribute('aria-disabled');
   });
 
-  it('renders and enables the menu buttons if you are the snapshot owner', async () => {
+  it('renders and enables correct menu buttons if you are the snapshot owner', async () => {
     // Arrange
     const user: UserEvent = userEvent.setup();
 
@@ -79,11 +79,12 @@ describe('snapshot action menu', () => {
     await user.pointer({ target: cloneSnapshotButton });
 
     // Assert
+    // clone option is always enabled irrespective of snapshot ownership
     expect(cloneSnapshotButton).toBeInTheDocument();
     expect(cloneSnapshotButton).toHaveAttribute('aria-disabled', 'false');
   });
 
-  it('renders the menu buttons based on snapshot ownership', async () => {
+  it('renders and enables correct menu buttons if you are NOT the snapshot owner', async () => {
     // Arrange
     const user: UserEvent = userEvent.setup();
 
@@ -132,6 +133,7 @@ describe('snapshot action menu', () => {
     await user.pointer({ target: cloneSnapshotButton });
 
     // Assert
+    // clone option is always enabled irrespective of snapshot ownership
     expect(cloneSnapshotButton).toBeInTheDocument();
     expect(cloneSnapshotButton).toHaveAttribute('aria-disabled', 'false');
   });

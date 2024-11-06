@@ -479,7 +479,7 @@ describe('WorkflowModal', () => {
     expect(mockOnDismiss).toHaveBeenCalled();
   });
 
-  it('clone method modal', async () => {
+  it('displays clone method modal and calls correct function on submit', async () => {
     // Arrange
     const mockOnSuccess = jest.fn();
     const mockOnDismiss = jest.fn();
@@ -505,11 +505,17 @@ describe('WorkflowModal', () => {
     });
 
     // Assert
+    expect(screen.getByRole('textbox', { name: 'Namespace *' })).toHaveDisplayValue('');
     expect(screen.getByRole('textbox', { name: 'Name *' })).toHaveDisplayValue('groot-scientific-workflow_copy');
     expect(screen.getByTestId('wdl editor')).toHaveDisplayValue('workflow do-great-stuff {}');
     expect(screen.getByRole('textbox', { name: 'Documentation' })).toHaveDisplayValue('I am Groot');
     expect(screen.getByRole('textbox', { name: 'Synopsis (80 characters max)' })).toHaveDisplayValue('I am Groot');
     expect(screen.getByRole('textbox', { name: 'Snapshot comment' })).toHaveDisplayValue('I am Groot');
+
+    const cloneMethodButton = screen.getByRole('button', { name: 'Clone method' });
+
+    // Assert
+    expect(cloneMethodButton).toHaveAttribute('aria-disabled', 'true');
 
     // user enters value for 'Namespace' text box
     fireEvent.change(screen.getByRole('textbox', { name: 'Namespace *' }), {
