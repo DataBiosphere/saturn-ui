@@ -263,7 +263,17 @@ export const Workspaces = (props: WorkspacesProps): ReactNode => {
     _.findKey((g) => g.has(workspace), groups);
 
   const [selectedDays, setSelectedDays] = useState<number>(30);
-  const [_searchValue, setSearchValue] = useState<string>('');
+  const [searchValue, setSearchValue] = useState<string>('');
+
+  // Apply filters to WorkspacesInProject
+  const searchValueLower = searchValue.toLowerCase();
+  const filteredWorkspacesInProject = _.filter(
+    (workspace: WorkspaceInfo) =>
+      workspace.name.toLowerCase().includes(searchValueLower) ||
+      workspace.googleProject?.toLowerCase().includes(searchValueLower) ||
+      workspace.bucketName?.toLowerCase().includes(searchValueLower),
+    workspacesInProject
+  );
 
   return _.isEmpty(workspacesInProject) ? (
     <div style={{ ...Style.cardList.longCardShadowless, width: 'fit-content' }}>
@@ -277,7 +287,7 @@ export const Workspaces = (props: WorkspacesProps): ReactNode => {
       </Link>
     </div>
   ) : (
-    !_.isEmpty(workspacesInProject) && (
+    !_.isEmpty(filteredWorkspacesInProject) && (
       <>
         {isFeaturePreviewEnabled(SPEND_REPORTING) && (
           <div
@@ -329,7 +339,7 @@ export const Workspaces = (props: WorkspacesProps): ReactNode => {
                   />
                 );
               })
-            )(workspacesInProject)}
+            )(filteredWorkspacesInProject)}
           </div>
         </div>
       </>
