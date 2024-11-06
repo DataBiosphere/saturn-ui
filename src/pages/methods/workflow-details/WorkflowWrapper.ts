@@ -20,6 +20,7 @@ import * as Utils from 'src/libs/utils';
 import { withBusyState } from 'src/libs/utils';
 import DeleteSnapshotModal from 'src/workflows/methods/modals/DeleteSnapshotModal';
 import { PermissionsModal } from 'src/workflows/methods/modals/PermissionsModal';
+import { WorkflowModal } from 'src/workflows/methods/modals/WorkflowModal';
 import SnapshotActionMenu from 'src/workflows/methods/SnapshotActionMenu';
 import ExportWorkflowModal from 'src/workflows/modals/ExportWorkflowModal';
 import { isGoogleWorkspace, WorkspaceInfo, WorkspaceWrapper } from 'src/workspaces/utils';

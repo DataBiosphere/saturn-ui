@@ -37,7 +37,7 @@ describe('create method provider', () => {
     const signal = new window.AbortController().signal;
 
     // Act
-    const result = await postMethodProvider.create(
+    const result = await postMethodProvider.postMethod(
       'input-namespace',
       'input-name',
       'workflow input {}',

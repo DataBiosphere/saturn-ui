@@ -950,7 +950,7 @@ describe('create workflow modal', () => {
     // Arrange
     asMockedFn(Ajax).mockImplementation(() => mockAjax([]) as AjaxContract);
 
-    jest.spyOn(postMethodProvider, 'create').mockResolvedValue(mockCreateMethodResponse);
+    jest.spyOn(postMethodProvider, 'postMethod').mockResolvedValue(mockCreateMethodResponse);
 
     const user: UserEvent = userEvent.setup();
 
@@ -973,7 +973,7 @@ describe('create workflow modal', () => {
     await user.click(screen.getByRole('button', { name: 'Upload' }));
 
     // Assert
-    expect(postMethodProvider.create).toHaveBeenCalled();
+    expect(postMethodProvider.postMethod).toHaveBeenCalled();
 
     expect(Nav.goToPath).toHaveBeenCalledWith('workflow-dashboard', {
       name: 'response-name',
