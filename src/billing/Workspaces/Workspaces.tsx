@@ -165,7 +165,7 @@ const WorkspaceCard: React.FC<WorkspaceCardProps> = memoWithName('WorkspaceCard'
             style={Style.noWrapEllipsis}
             href={Nav.getLink('workspace-dashboard', { namespace, name })}
             onClick={() => {
-              Ajax().Metrics.captureEvent(Events.billingProjectGoToWorkspace, {
+              void Ajax().Metrics.captureEvent(Events.billingProjectGoToWorkspace, {
                 workspaceName: name,
                 ...extractBillingDetails(billingProject),
               });
@@ -202,7 +202,7 @@ const WorkspaceCard: React.FC<WorkspaceCardProps> = memoWithName('WorkspaceCard'
             aria-owns={isExpanded ? billingDetailsId : undefined}
             style={{ display: 'flex', alignItems: 'center' }}
             onClick={() => {
-              Ajax().Metrics.captureEvent(Events.billingProjectExpandWorkspace, {
+              void Ajax().Metrics.captureEvent(Events.billingProjectExpandWorkspace, {
                 workspaceName: name,
                 ...extractBillingDetails(billingProject),
               });
