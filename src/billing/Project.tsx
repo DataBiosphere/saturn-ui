@@ -19,7 +19,7 @@ import { Link } from 'src/components/common';
 import { InfoBox } from 'src/components/InfoBox';
 import { SimpleTabBar } from 'src/components/tabBars';
 import { Member } from 'src/groups/Members/MemberTable';
-import { Ajax } from 'src/libs/ajax';
+import { Billing } from 'src/libs/ajax/billing/Billing';
 import colors from 'src/libs/colors';
 import { reportErrorAndRethrow } from 'src/libs/error';
 import Events, { extractBillingDetails } from 'src/libs/events';
@@ -112,14 +112,12 @@ const ProjectDetail = (props: ProjectDetailProps): ReactNode => {
   const reloadBillingProjectUsers = _.flow(
     reportErrorAndRethrow('Error loading billing project users list'),
     Utils.withBusyState(setUpdating)
-  )(() =>
-    Ajax(signal).Billing.listProjectUsers(billingProject.projectName).then(collectUserRoles).then(setProjectUsers)
-  );
+  )(() => Billing(signal).listProjectUsers(billingProject.projectName).then(collectUserRoles).then(setProjectUsers));
 
   const removeUserFromBillingProject = _.flow(
     reportErrorAndRethrow('Error removing member from billing project'),
     Utils.withBusyState(setUpdating)
-  )(_.partial(Ajax().Billing.removeProjectUser, [billingProject.projectName]));
+  )(_.partial(Billing().removeProjectUser, [billingProject.projectName]));
 
   const tabToTable = {
     workspaces: (

@@ -260,7 +260,7 @@ const cohortBuilder = () =>
           'aria-label': 'View Cohort Builder Demo',
           tooltip: 'View details about this dataset',
           href: Nav.getLink('dataset-builder-details', {
-            snapshotId: getConfig().terraDeploymentEnv === 'dev' ? 'c3eb4708-444f-4cbf-a32c-0d3bb93d4819' : '1f2c98d2-ccec-410e-8242-d995f9aa2ec6',
+            snapshotId: getConfig().terraDeploymentEnv === 'dev' ? '83c121aa-ce3f-4bf7-9084-28d1e5a0387f' : '52d133b0-100b-4b92-b7e1-c5d3c37171cf',
           }),
           onClick: () => captureBrowseDataEvent('Cohort Builder'),
         },

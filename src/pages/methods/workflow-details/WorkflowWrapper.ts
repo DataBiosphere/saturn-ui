@@ -8,6 +8,7 @@ import FooterWrapper from 'src/components/FooterWrapper';
 import { TabBar } from 'src/components/tabBars';
 import { TopBar } from 'src/components/TopBar';
 import { Ajax } from 'src/libs/ajax';
+import { Snapshot } from 'src/libs/ajax/methods/methods-models';
 import { postMethodProvider } from 'src/libs/ajax/methods/providers/PostMethodProvider';
 import { makeExportWorkflowFromMethodsRepoProvider } from 'src/libs/ajax/workspaces/providers/ExportWorkflowToWorkspaceProvider';
 import { ErrorCallback, withErrorReporting } from 'src/libs/error';
@@ -17,12 +18,10 @@ import { getTerraUser, snapshotsListStore, snapshotStore } from 'src/libs/state'
 import * as Style from 'src/libs/style';
 import * as Utils from 'src/libs/utils';
 import { withBusyState } from 'src/libs/utils';
-import { PermissionsModal } from 'src/pages/workflows/workflow/common/PermissionsModal';
-import { WorkflowModal } from 'src/pages/workflows/workflow/common/WorkflowModal';
-import { Snapshot } from 'src/snapshots/Snapshot';
-import DeleteSnapshotModal from 'src/workflows/modals/DeleteSnapshotModal';
+import DeleteSnapshotModal from 'src/workflows/methods/modals/DeleteSnapshotModal';
+import { PermissionsModal } from 'src/workflows/methods/modals/PermissionsModal';
+import SnapshotActionMenu from 'src/workflows/methods/SnapshotActionMenu';
 import ExportWorkflowModal from 'src/workflows/modals/ExportWorkflowModal';
-import SnapshotActionMenu from 'src/workflows/SnapshotActionMenu';
 import { isGoogleWorkspace, WorkspaceInfo, WorkspaceWrapper } from 'src/workspaces/utils';
 import * as WorkspaceUtils from 'src/workspaces/utils';
 

@@ -4,9 +4,9 @@ import userEvent, { UserEvent } from '@testing-library/user-event';
 import React from 'react';
 import { Ajax, AjaxContract } from 'src/libs/ajax';
 import { reportError } from 'src/libs/error';
-import { PermissionsModal } from 'src/pages/workflows/workflow/common/PermissionsModal';
-import { WorkflowsPermissions } from 'src/pages/workflows/workflow/workflows-acl-utils';
 import { asMockedFn, renderWithAppContexts, SelectHelper } from 'src/testing/test-utils';
+import { PermissionsModal } from 'src/workflows/methods/modals/PermissionsModal';
+import { WorkflowsPermissions } from 'src/workflows/methods/workflows-acl-utils';
 
 jest.mock('src/libs/ajax');
 

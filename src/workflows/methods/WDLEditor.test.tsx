@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import React from 'react';
-import { WDLEditor } from 'src/pages/workflows/common/WDLEditor';
+import { WDLEditor } from 'src/workflows/methods/WDLEditor';
 
 describe('WDLEditor', () => {
   it('renders the editor', () => {

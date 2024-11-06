@@ -3,8 +3,13 @@ import _ from 'lodash/fp';
 import * as qs from 'qs';
 import { authOpts } from 'src/auth/auth-session';
 import { fetchAgora, fetchOrchestration, fetchRawls } from 'src/libs/ajax/ajax-common';
-import { MethodQuery, MethodResponse } from 'src/libs/ajax/methods/methods-models';
-import { Snapshot } from 'src/snapshots/Snapshot';
+import {
+  MethodConfigACL,
+  MethodDefinition,
+  MethodQuery,
+  MethodResponse,
+  Snapshot,
+} from 'src/libs/ajax/methods/methods-models';
 
 export const Methods = (signal?: AbortSignal) => ({
   list: async (params): Promise<Snapshot[]> => {
@@ -12,7 +17,7 @@ export const Methods = (signal?: AbortSignal) => ({
     return res.json();
   },
 
-  definitions: async () => {
+  definitions: async (): Promise<MethodDefinition[]> => {
     const res = await fetchAgora('methods/definitions', _.merge(authOpts(), { signal }));
     return res.json();
   },
@@ -60,12 +65,12 @@ export const Methods = (signal?: AbortSignal) => ({
         return res.json();
       },
 
-      permissions: async () => {
+      permissions: async (): Promise<MethodConfigACL> => {
         const res = await fetchOrchestration(`api/${root}/permissions`, _.merge(authOpts(), { signal }));
         return res.json();
       },
 
-      setPermissions: async (payload) => {
+      setPermissions: async (payload: MethodConfigACL): Promise<MethodConfigACL> => {
         const res = await fetchOrchestration(
           `api/${root}/permissions`,
           _.mergeAll([authOpts(), jsonBody(payload), { signal, method: 'POST' }])

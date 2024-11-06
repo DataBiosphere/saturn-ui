@@ -6,13 +6,13 @@ import { ColumnData, ColumnSettingsList, dragEndNotifier } from 'src/components/
 import { renderWithAppContexts as render } from 'src/testing/test-utils';
 
 const visibleColumnA: ColumnData = {
-  id: 'Column A',
+  id: 'a',
   name: 'Column A',
   visible: true,
 };
 
 const nonVisibleColumnB: ColumnData = {
-  id: 'Column B',
+  id: 'b',
   name: 'Column B',
   visible: false,
 };

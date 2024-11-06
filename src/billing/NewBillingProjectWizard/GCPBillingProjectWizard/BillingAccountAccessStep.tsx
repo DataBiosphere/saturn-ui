@@ -10,7 +10,7 @@ import {
   StepFields,
 } from 'src/billing/NewBillingProjectWizard/StepWizard/StepFields';
 import { StepHeader } from 'src/billing/NewBillingProjectWizard/StepWizard/StepHeader';
-import { Ajax } from 'src/libs/ajax';
+import { Metrics } from 'src/libs/ajax/Metrics';
 import Events from 'src/libs/events';
 
 export interface BillingAccountAccessStepProps {
@@ -37,7 +37,7 @@ export const BillingAccountAccessStep = ({ isActive, ...props }: BillingAccountA
           checked={props.accessToBillingAccount === false}
           onChange={() => {
             props.setAccessToBillingAccount(false);
-            Ajax().Metrics.captureEvent(Events.billingGCPCreationStep2BillingAccountNoAccess);
+            void Metrics().captureEvent(Events.billingGCPCreationStep2BillingAccountNoAccess);
           }}
         />
         <LabeledRadioButton
@@ -46,7 +46,7 @@ export const BillingAccountAccessStep = ({ isActive, ...props }: BillingAccountA
           checked={props.accessToBillingAccount === true}
           onChange={() => {
             props.setAccessToBillingAccount(true);
-            Ajax().Metrics.captureEvent(Events.billingGCPCreationStep2HaveBillingAccount);
+            void Metrics().captureEvent(Events.billingGCPCreationStep2HaveBillingAccount);
           }}
         />
       </LabeledRadioGroup>
