@@ -64,7 +64,7 @@ const findIndexForFile = (fileUrl, fileUrls) => {
 };
 
 export const getValidIgvFiles = (values) => {
-  const relevantFileTypes = ['bam', 'bai', 'cram', 'crai', 'vcf', 'idx', 'tbi', 'bed'];
+  const relevantFileTypes = ['bam', 'bai', 'cram', 'crai', 'vcf', 'idx', 'tbi', 'bed', 'gz'];
   const fileUrls = values.filter((value) => {
     let url;
     try {
