@@ -106,11 +106,11 @@ const featurePreviewsConfig: readonly FeaturePreview[] = [
   },
   {
     id: SPEND_REPORTING,
-    title: 'Billing Project and Workspace Spend Reporting',
+    title: 'Improved Spend Reports',
     description:
-      'Enabling this feature will allow viewing of costs associated with all workspaces in billing projects with spend reporting enabled.',
+      'Enabling this feature will show billing project owners costs associated with all workspaces in billing projects with spend reporting enabled. Additional updates to spend reports coming soon!',
     feedbackUrl: `mailto:dsp-core-services@broadinstitute.org?subject=${encodeURIComponent(
-      'Feedback on Billing Project/Workspace Spend Reporting'
+      'Feedback on Improved Spend Reports'
     )}`,
   },
 ];
