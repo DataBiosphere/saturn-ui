@@ -6,6 +6,7 @@ import SnapshotActionMenu from 'src/workflows/SnapshotActionMenu';
 
 const mockOnDelete = jest.fn();
 const mockOnEditPermissions = jest.fn();
+const mockOnClone = jest.fn();
 
 describe('snapshot action menu', () => {
   it('honors the disabled prop', async () => {
@@ -17,6 +18,7 @@ describe('snapshot action menu', () => {
           isSnapshotOwner
           onEditPermissions={mockOnEditPermissions}
           onDelete={mockOnDelete}
+          onClone={mockOnClone}
         />
       );
     });
@@ -34,7 +36,14 @@ describe('snapshot action menu', () => {
 
     // Act
     await act(async () => {
-      render(<SnapshotActionMenu isSnapshotOwner onEditPermissions={mockOnEditPermissions} onDelete={mockOnDelete} />);
+      render(
+        <SnapshotActionMenu
+          isSnapshotOwner
+          onEditPermissions={mockOnEditPermissions}
+          onDelete={mockOnDelete}
+          onClone={mockOnClone}
+        />
+      );
     });
 
     // Assert
@@ -64,16 +73,29 @@ describe('snapshot action menu', () => {
     expect(deleteSnapshotButton).toBeInTheDocument();
     expect(deleteSnapshotButton).toHaveAttribute('aria-disabled', 'false');
     expect(screen.queryByRole('tooltip')).not.toBeInTheDocument();
+
+    // Act
+    const cloneSnapshotButton = screen.getByRole('button', { name: 'Clone snapshot' });
+    await user.pointer({ target: cloneSnapshotButton });
+
+    // Assert
+    expect(cloneSnapshotButton).toBeInTheDocument();
+    expect(cloneSnapshotButton).toHaveAttribute('aria-disabled', 'false');
   });
 
-  it('renders the menu buttons but disables the proper ones if you are not the snapshot owner', async () => {
+  it('renders the menu buttons based on snapshot ownership', async () => {
     // Arrange
     const user: UserEvent = userEvent.setup();
 
     // Act
     await act(async () => {
       render(
-        <SnapshotActionMenu isSnapshotOwner={false} onEditPermissions={mockOnEditPermissions} onDelete={mockOnDelete} />
+        <SnapshotActionMenu
+          isSnapshotOwner={false}
+          onEditPermissions={mockOnEditPermissions}
+          onDelete={mockOnDelete}
+          onClone={mockOnClone}
+        />
       );
     });
 
@@ -104,6 +126,14 @@ describe('snapshot action menu', () => {
     expect(deleteSnapshotButton).toBeInTheDocument();
     expect(deleteSnapshotButton).toHaveAttribute('aria-disabled', 'true');
     expect(screen.getByRole('tooltip')).toBeInTheDocument();
+
+    // Act
+    const cloneSnapshotButton = screen.getByRole('button', { name: 'Clone snapshot' });
+    await user.pointer({ target: cloneSnapshotButton });
+
+    // Assert
+    expect(cloneSnapshotButton).toBeInTheDocument();
+    expect(cloneSnapshotButton).toHaveAttribute('aria-disabled', 'false');
   });
 });
 
@@ -114,7 +144,14 @@ describe('snapshot action menu edit snapshot permissions button', () => {
 
     // Act
     await act(async () => {
-      render(<SnapshotActionMenu isSnapshotOwner onEditPermissions={mockOnEditPermissions} onDelete={mockOnDelete} />);
+      render(
+        <SnapshotActionMenu
+          isSnapshotOwner
+          onEditPermissions={mockOnEditPermissions}
+          onDelete={mockOnDelete}
+          onClone={mockOnClone}
+        />
+      );
     });
 
     await user.click(screen.getByRole('button', { name: 'Snapshot action menu' }));
@@ -133,7 +170,14 @@ describe('snapshot action menu delete snapshot button', () => {
 
     // Act
     await act(async () => {
-      render(<SnapshotActionMenu isSnapshotOwner onEditPermissions={mockOnEditPermissions} onDelete={mockOnDelete} />);
+      render(
+        <SnapshotActionMenu
+          isSnapshotOwner
+          onEditPermissions={mockOnEditPermissions}
+          onDelete={mockOnDelete}
+          onClone={mockOnClone}
+        />
+      );
     });
 
     await user.click(screen.getByRole('button', { name: 'Snapshot action menu' }));
@@ -143,5 +187,31 @@ describe('snapshot action menu delete snapshot button', () => {
     expect(screen.queryByRole('button', { name: 'Delete snapshot' })).not.toBeInTheDocument();
     expect(mockOnDelete).toHaveBeenCalled();
     expect(mockOnEditPermissions).not.toHaveBeenCalled();
+  });
+});
+
+describe('snapshot action menu clone snapshot button', () => {
+  it('closes and calls the onClone callback when clicked', async () => {
+    // Arrange
+    const user: UserEvent = userEvent.setup();
+
+    // Act
+    await act(async () => {
+      render(
+        <SnapshotActionMenu
+          isSnapshotOwner
+          onEditPermissions={mockOnEditPermissions}
+          onDelete={mockOnDelete}
+          onClone={mockOnClone}
+        />
+      );
+    });
+
+    await user.click(screen.getByRole('button', { name: 'Snapshot action menu' }));
+    await user.click(screen.getByRole('button', { name: 'Clone snapshot' }));
+
+    // Assert
+    expect(screen.queryByRole('button', { name: 'Clone snapshot' })).not.toBeInTheDocument();
+    expect(mockOnClone).toHaveBeenCalled();
   });
 });

@@ -3,7 +3,7 @@ import userEvent, { UserEvent } from '@testing-library/user-event';
 import _ from 'lodash/fp';
 import React from 'react';
 import { MethodResponse } from 'src/libs/ajax/methods/methods-models';
-import { CreateMethodProvider } from 'src/libs/ajax/methods/providers/PostMethodProvider';
+import { PostMethodProvider } from 'src/libs/ajax/methods/providers/PostMethodProvider';
 import { WorkflowModal } from 'src/pages/workflows/workflow/common/WorkflowModal';
 import { renderWithAppContexts as render } from 'src/testing/test-utils';
 
@@ -28,20 +28,20 @@ const mockCreateMethodResponse: MethodResponse = {
   url: 'http://agora.dsde-dev.broadinstitute.org/api/v1/methods/sschu/response-test/1',
 };
 
-const errorCreateMethodProvider: CreateMethodProvider = {
-  create: jest.fn(() => {
+const errorPostMethodProvider: PostMethodProvider = {
+  postMethod: jest.fn(() => {
     throw new Error('You have not yet risen to the status of Expert WDL Engineer.');
   }),
 };
 
-const thrownResponseCreateMethodProvider: CreateMethodProvider = {
-  create: jest.fn(() => {
+const thrownResponsePostMethodProvider: PostMethodProvider = {
+  postMethod: jest.fn(() => {
     throw new Response('You have not yet risen to the status of Expert WDL Engineer.');
   }),
 };
 
-const successCreateMethodProvider: CreateMethodProvider = {
-  create: jest.fn().mockResolvedValue(mockCreateMethodResponse),
+const successPostMethodProvider: PostMethodProvider = {
+  postMethod: jest.fn().mockResolvedValue(mockCreateMethodResponse),
 };
 
 describe('WorkflowModal', () => {
@@ -52,7 +52,7 @@ describe('WorkflowModal', () => {
         <WorkflowModal
           title='Create New Method'
           buttonActionName='Upload'
-          postMethodProvider={successCreateMethodProvider}
+          postMethodProvider={successPostMethodProvider}
           onSuccess={jest.fn()}
           onDismiss={jest.fn()}
         />
@@ -87,7 +87,7 @@ describe('WorkflowModal', () => {
           title='Create New Method'
           buttonActionName='Upload'
           defaultWdl='a'
-          postMethodProvider={successCreateMethodProvider}
+          postMethodProvider={successPostMethodProvider}
           onSuccess={jest.fn()}
           onDismiss={jest.fn()}
         />
@@ -130,7 +130,7 @@ describe('WorkflowModal', () => {
           defaultNamespace=','
           defaultName=','
           defaultWdl='a'
-          postMethodProvider={successCreateMethodProvider}
+          postMethodProvider={successPostMethodProvider}
           onSuccess={jest.fn()}
           onDismiss={jest.fn()}
         />
@@ -164,7 +164,7 @@ describe('WorkflowModal', () => {
           buttonActionName='Upload'
           defaultNamespace={longStringNamespace}
           defaultName={longStringName}
-          postMethodProvider={successCreateMethodProvider}
+          postMethodProvider={successPostMethodProvider}
           onSuccess={jest.fn()}
           onDismiss={jest.fn()}
         />
@@ -193,7 +193,7 @@ describe('WorkflowModal', () => {
           buttonActionName='Upload'
           defaultNamespace='a'
           defaultName='a'
-          postMethodProvider={successCreateMethodProvider}
+          postMethodProvider={successPostMethodProvider}
           onSuccess={jest.fn()}
           onDismiss={jest.fn()}
         />
@@ -225,7 +225,7 @@ describe('WorkflowModal', () => {
           defaultNamespace='a'
           defaultName='a'
           defaultSynopsis={longSynopsis}
-          postMethodProvider={successCreateMethodProvider}
+          postMethodProvider={successPostMethodProvider}
           onSuccess={jest.fn()}
           onDismiss={jest.fn()}
         />
@@ -260,7 +260,7 @@ describe('WorkflowModal', () => {
           defaultNamespace='namespace'
           defaultName='name'
           defaultWdl='old wdl'
-          postMethodProvider={successCreateMethodProvider}
+          postMethodProvider={successPostMethodProvider}
           onSuccess={jest.fn()}
           onDismiss={jest.fn()}
         />
@@ -299,7 +299,7 @@ describe('WorkflowModal', () => {
           defaultDocumentation='test docs'
           defaultSynopsis='test synopsis'
           defaultSnapshotComment='test comment'
-          postMethodProvider={successCreateMethodProvider}
+          postMethodProvider={successPostMethodProvider}
           onSuccess={mockOnSuccess}
           onDismiss={mockOnDismiss}
         />
@@ -318,8 +318,8 @@ describe('WorkflowModal', () => {
     await user.click(screen.getByRole('button', { name: 'Upload' }));
 
     // Assert
-    expect(successCreateMethodProvider.create).toHaveBeenCalledTimes(1);
-    expect(successCreateMethodProvider.create).toHaveBeenCalledWith(
+    expect(successPostMethodProvider.postMethod).toHaveBeenCalledTimes(1);
+    expect(successPostMethodProvider.postMethod).toHaveBeenCalledWith(
       'newnamespace',
       'newname',
       'workflow new {}',
@@ -350,7 +350,7 @@ describe('WorkflowModal', () => {
           defaultDocumentation='test docs'
           defaultSynopsis='test synopsis'
           defaultSnapshotComment='test comment'
-          postMethodProvider={successCreateMethodProvider}
+          postMethodProvider={successPostMethodProvider}
           onSuccess={mockOnSuccess}
           onDismiss={mockOnDismiss}
         />
@@ -369,8 +369,8 @@ describe('WorkflowModal', () => {
     await user.click(screen.getByRole('button', { name: 'Upload' }));
 
     // Assert
-    expect(successCreateMethodProvider.create).toHaveBeenCalledTimes(1);
-    expect(successCreateMethodProvider.create).toHaveBeenCalledWith(
+    expect(successPostMethodProvider.postMethod).toHaveBeenCalledTimes(1);
+    expect(successPostMethodProvider.postMethod).toHaveBeenCalledWith(
       'testnamespace',
       'testname',
       'workflow hi {}',
@@ -398,7 +398,7 @@ describe('WorkflowModal', () => {
           defaultNamespace='namespace'
           defaultName='name'
           defaultWdl='a'
-          postMethodProvider={errorCreateMethodProvider}
+          postMethodProvider={errorPostMethodProvider}
           onSuccess={mockOnSuccess}
           onDismiss={mockOnDismiss}
         />
@@ -408,8 +408,8 @@ describe('WorkflowModal', () => {
     await user.click(screen.getByRole('button', { name: 'Upload' }));
 
     // Assert
-    expect(errorCreateMethodProvider.create).toHaveBeenCalledTimes(1);
-    expect(errorCreateMethodProvider.create).toHaveBeenCalledWith('namespace', 'name', 'a', '', '', '');
+    expect(errorPostMethodProvider.postMethod).toHaveBeenCalledTimes(1);
+    expect(errorPostMethodProvider.postMethod).toHaveBeenCalledWith('namespace', 'name', 'a', '', '', '');
     expect(screen.getByText('You have not yet risen to the status of Expert WDL Engineer.')).toBeInTheDocument();
     expect(mockOnSuccess).not.toHaveBeenCalled();
     expect(mockOnDismiss).not.toHaveBeenCalled();
@@ -431,7 +431,7 @@ describe('WorkflowModal', () => {
           defaultNamespace='namespace'
           defaultName='name'
           defaultWdl='a'
-          postMethodProvider={thrownResponseCreateMethodProvider}
+          postMethodProvider={thrownResponsePostMethodProvider}
           onSuccess={mockOnSuccess}
           onDismiss={mockOnDismiss}
         />
@@ -441,8 +441,8 @@ describe('WorkflowModal', () => {
     await user.click(screen.getByRole('button', { name: 'Upload' }));
 
     // Assert
-    expect(thrownResponseCreateMethodProvider.create).toHaveBeenCalledTimes(1);
-    expect(thrownResponseCreateMethodProvider.create).toHaveBeenCalledWith('namespace', 'name', 'a', '', '', '');
+    expect(thrownResponsePostMethodProvider.postMethod).toHaveBeenCalledTimes(1);
+    expect(thrownResponsePostMethodProvider.postMethod).toHaveBeenCalledWith('namespace', 'name', 'a', '', '', '');
     expect(screen.getByText('You have not yet risen to the status of Expert WDL Engineer.')).toBeInTheDocument();
     expect(mockOnSuccess).not.toHaveBeenCalled();
     expect(mockOnDismiss).not.toHaveBeenCalled();
@@ -464,7 +464,7 @@ describe('WorkflowModal', () => {
           defaultNamespace='namespace'
           defaultName='name'
           defaultWdl='a'
-          postMethodProvider={successCreateMethodProvider}
+          postMethodProvider={successPostMethodProvider}
           onSuccess={mockOnSuccess}
           onDismiss={mockOnDismiss}
         />
@@ -474,8 +474,62 @@ describe('WorkflowModal', () => {
     await user.click(screen.getByRole('button', { name: 'Cancel' }));
 
     // Assert
-    expect(successCreateMethodProvider.create).not.toHaveBeenCalled();
+    expect(successPostMethodProvider.postMethod).not.toHaveBeenCalled();
     expect(mockOnSuccess).not.toHaveBeenCalled();
     expect(mockOnDismiss).toHaveBeenCalled();
+  });
+
+  it('clone method modal', async () => {
+    // Arrange
+    const mockOnSuccess = jest.fn();
+    const mockOnDismiss = jest.fn();
+
+    const user: UserEvent = userEvent.setup();
+
+    // Act
+    await act(async () => {
+      render(
+        <WorkflowModal
+          title='Clone method'
+          defaultName='groot-scientific-workflow_copy'
+          defaultWdl='workflow do-great-stuff {}'
+          defaultDocumentation='I am Groot'
+          defaultSynopsis='I am Groot'
+          defaultSnapshotComment='I am Groot'
+          buttonActionName='Clone method'
+          postMethodProvider={successPostMethodProvider}
+          onSuccess={mockOnSuccess}
+          onDismiss={mockOnDismiss}
+        />
+      );
+    });
+
+    // Assert
+    expect(screen.getByRole('textbox', { name: 'Name *' })).toHaveDisplayValue('groot-scientific-workflow_copy');
+    expect(screen.getByTestId('wdl editor')).toHaveDisplayValue('workflow do-great-stuff {}');
+    expect(screen.getByRole('textbox', { name: 'Documentation' })).toHaveDisplayValue('I am Groot');
+    expect(screen.getByRole('textbox', { name: 'Synopsis (80 characters max)' })).toHaveDisplayValue('I am Groot');
+    expect(screen.getByRole('textbox', { name: 'Snapshot comment' })).toHaveDisplayValue('I am Groot');
+
+    // user enters value for 'Namespace' text box
+    fireEvent.change(screen.getByRole('textbox', { name: 'Namespace *' }), {
+      target: { value: 'groot-test-namespace' },
+    });
+
+    // Act
+    await user.click(screen.getByRole('button', { name: 'Clone method' }));
+
+    // Assert
+    expect(successPostMethodProvider.postMethod).toHaveBeenCalledTimes(1);
+    expect(successPostMethodProvider.postMethod).toHaveBeenCalledWith(
+      'groot-test-namespace',
+      'groot-scientific-workflow_copy',
+      'workflow do-great-stuff {}',
+      'I am Groot',
+      'I am Groot',
+      'I am Groot'
+    );
+    expect(mockOnSuccess).toHaveBeenCalledWith('response-namespace', 'response-name', 1);
+    expect(mockOnDismiss).not.toHaveBeenCalled();
   });
 });
