@@ -8,6 +8,7 @@ import FooterWrapper from 'src/components/FooterWrapper';
 import { TabBar } from 'src/components/tabBars';
 import { TopBar } from 'src/components/TopBar';
 import { Ajax } from 'src/libs/ajax';
+import { postMethodProvider } from 'src/libs/ajax/methods/providers/PostMethodProvider';
 import { makeExportWorkflowFromMethodsRepoProvider } from 'src/libs/ajax/workspaces/providers/ExportWorkflowToWorkspaceProvider';
 import { ErrorCallback, withErrorReporting } from 'src/libs/error';
 import * as Nav from 'src/libs/nav';
@@ -17,6 +18,7 @@ import * as Style from 'src/libs/style';
 import * as Utils from 'src/libs/utils';
 import { withBusyState } from 'src/libs/utils';
 import { PermissionsModal } from 'src/pages/workflows/workflow/common/PermissionsModal';
+import { WorkflowModal } from 'src/pages/workflows/workflow/common/WorkflowModal';
 import { Snapshot } from 'src/snapshots/Snapshot';
 import DeleteSnapshotModal from 'src/workflows/modals/DeleteSnapshotModal';
 import ExportWorkflowModal from 'src/workflows/modals/ExportWorkflowModal';
@@ -122,6 +124,7 @@ export const WorkflowsContainer = (props: WorkflowContainerProps) => {
   const [snapshotNotFound, setSnapshotNotFound] = useState<boolean>(false);
   const [exportingWorkflow, setExportingWorkflow] = useState<boolean>(false);
   const [showDeleteModal, setShowDeleteModal] = useState<boolean>(false);
+  const [showCloneModal, setShowCloneModal] = useState<boolean>(false);
   const [busy, setBusy] = useState<boolean>(false);
   const [permissionsModalOpen, setPermissionsModalOpen] = useState<boolean>(false);
 
@@ -239,6 +242,7 @@ export const WorkflowsContainer = (props: WorkflowContainerProps) => {
               isSnapshotOwner,
               onEditPermissions: () => setPermissionsModalOpen(true),
               onDelete: () => setShowDeleteModal(true),
+              onClone: () => setShowCloneModal(true),
             }),
           ]),
         ]
@@ -288,6 +292,24 @@ export const WorkflowsContainer = (props: WorkflowContainerProps) => {
         selectedSnapshot,
         setPermissionsModalOpen,
         refresh: loadSnapshot,
+      }),
+    showCloneModal &&
+      h(WorkflowModal, {
+        title: 'Clone method',
+        defaultName: name.concat('_copy'),
+        defaultWdl: snapshot?.payload,
+        defaultDocumentation: snapshot?.documentation,
+        defaultSynopsis: snapshot?.synopsis,
+        defaultSnapshotComment: snapshot?.snapshotComment,
+        buttonActionName: 'Clone method',
+        postMethodProvider,
+        onSuccess: (namespace: string, name: string, snapshotId: number) =>
+          Nav.goToPath('workflow-dashboard', {
+            namespace,
+            name,
+            snapshotId,
+          }),
+        onDismiss: () => setShowCloneModal(false),
       }),
     busy && spinnerOverlay,
     snapshotNotFound && h(NotFoundMessage, { subject: 'snapshot' }),
