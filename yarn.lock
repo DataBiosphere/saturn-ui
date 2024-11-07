@@ -14500,6 +14500,18 @@ __metadata:
   languageName: node
   linkType: hard
 
+"react-lazy-named@npm:^1.2.2":
+  version: 1.2.2
+  resolution: "react-lazy-named@npm:1.2.2"
+  dependencies:
+    lodash.get: ^4.4.2
+  peerDependencies:
+    react: ^16.6.0 || ^17.0.0-alpha
+    react-dom: ^16.6.0 || ^17.0.0-alpha
+  checksum: 0ba297c460c7174791a626d9d68873ba1670071b288faae423a1da5417897c01db983dfaa30906b9a2fd3a571fa3b5fc11b738f12096c8b10292ac8a179a9e8d
+  languageName: node
+  linkType: hard
+
 "react-lifecycles-compat@npm:^3.0.0, react-lifecycles-compat@npm:^3.0.4, react-lifecycles-compat@npm:~3.0.4":
   version: 3.0.4
   resolution: "react-lifecycles-compat@npm:3.0.4"
@@ -16240,6 +16252,7 @@ __metadata:
     react-dropzone: ^11.4.0
     react-favicon: ^2.0.3
     react-hyperscript-helpers: ^2.0.0
+    react-lazy-named: ^1.2.2
     react-modal: ^3.16.1
     react-notifications-component: ^4.0.1
     react-oidc-context: ^2.1.0

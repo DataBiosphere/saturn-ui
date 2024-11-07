@@ -42,6 +42,14 @@ jest.mock('lodash/fp', (): LodashFpExports => {
   };
 });
 
+type ChartExports = typeof import('src/components/Chart');
+jest.mock('src/components/Chart', (): ChartExports => {
+  return {
+    ...jest.requireActual('src/components/Chart'),
+    Chart: jest.fn().mockReturnValue('Chart'),
+  };
+});
+
 describe('CohortEditor', () => {
   type CriteriaViewPropsOverrides = {
     criteria: AnyCriteria;
@@ -436,7 +444,7 @@ describe('CohortEditor', () => {
     expect(screen.getByText('Group 1')).toBeTruthy();
   });
 
-  it.skip('can add/delete criteria groups and maintain user understandable names', async () => {
+  it('can add/delete criteria groups and maintain user understandable names', async () => {
     // Arrange
     showCohortEditor();
     const user = userEvent.setup();
