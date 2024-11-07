@@ -33,8 +33,21 @@ const isTdrUrl = (fileUrl) => {
   return /datarepo(-(dev|alpha|perf|staging|tools))?-[a-f0-9]+-bucket/.test(bucket) && isUUID(datasetId) && isUUID(fileRefId);
 };
 
+const genomicFiles = ['bam', 'bed', 'cram', 'gz', 'vcf']
+const indexFiles = ['bai', 'crai', 'idx', 'tbi']
+const allFiles = genomicFiles.concat(indexFiles)
+
+function indexMap(base) {
+  return {
+    cram: [`${base}.crai`, `${base}.cram.crai`],
+    bam: [`${base}.bai`, `${base}.bam.bai`],
+    vcf: [`${base}.idx`, `${base}.vcf.idx`, `${base}.tbi`, `${base}.vcf.tbi`],
+    gz: [`${base}.gz.tbi`],
+  }
+}
+
 const findIndexForFile = (fileUrl, fileUrls) => {
-  if (!['.cram', '.bam', '.vcf', '.gz'].some((extension) => fileUrl.endsWith(extension))) {
+  if (!genomicFiles.some((extension) => fileUrl.endsWith(extension))) {
     return undefined;
   }
 
@@ -46,27 +59,17 @@ const findIndexForFile = (fileUrl, fileUrls) => {
     const otherPathSegments = parts.slice(3, -1);
     const filename = parts.at(-1);
     const [base, extension] = splitExtension(filename);
-    const indexCandidates = {
-      cram: [`${base}.crai`, `${base}.cram.crai`],
-      bam: [`${base}.bai`, `${base}.bam.bai`],
-      vcf: [`${base}.idx`, `${base}.vcf.idx`, `${base}.tbi`, `${base}.vcf.tbi`],
-      gz: [`${base}.gz.tbi`],
-    }[extension].map((candidate) => new RegExp([`gs://${bucket}`, datasetId, UUID_PATTERN, ...otherPathSegments, candidate].join('/')));
+    const indexCandidates = indexMap(base)[extension].map((candidate) =>
+      new RegExp([`gs://${bucket}`, datasetId, UUID_PATTERN, ...otherPathSegments, candidate].join('/')));
     return fileUrls.find((url) => indexCandidates.some((candidate) => candidate.test(url)));
   }
   const [base, extension] = splitExtension(fileUrl);
-  const indexCandidates = {
-    cram: [`${base}.crai`, `${base}.cram.crai`],
-    bam: [`${base}.bai`, `${base}.bam.bai`],
-    vcf: [`${base}.idx`, `${base}.vcf.idx`, `${base}.tbi`, `${base}.vcf.tbi`],
-    gz: [`${base}.gz.tbi`],
-  }[extension];
+  const indexCandidates = indexMap(base)[extension];
 
   return fileUrls.find((url) => indexCandidates.includes(url));
 };
 
 export const getValidIgvFiles = (values) => {
-  const relevantFileTypes = ['bam', 'bai', 'cram', 'crai', 'vcf', 'idx', 'tbi', 'bed', 'gz'];
   const fileUrls = values.filter((value) => {
     let url;
     try {
@@ -81,7 +84,7 @@ export const getValidIgvFiles = (values) => {
       // Filter to URLs that point to a file with one of the relevant extensions.
       const basename = url.pathname.split('/').at(-1);
       const [base, extension] = splitExtension(basename);
-      return !!base && relevantFileTypes.includes(extension);
+      return !!base && allFiles.includes(extension);
     } catch (err) {
       return false;
     }
