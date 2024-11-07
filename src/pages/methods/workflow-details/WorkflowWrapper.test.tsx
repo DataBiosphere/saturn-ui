@@ -22,6 +22,14 @@ jest.mock('src/libs/notifications');
 
 type NavExports = typeof import('src/libs/nav');
 
+type WDLEditorExports = typeof import('src/workflows/methods/WDLEditor');
+jest.mock('src/workflows/methods/WDLEditor', (): WDLEditorExports => {
+  const mockWDLEditorModule = jest.requireActual('src/workflows/methods/WDLEditor.mock');
+  return {
+    WDLEditor: mockWDLEditorModule.MockWDLEditor,
+  };
+});
+
 jest.mock(
   'src/libs/nav',
   (): NavExports => ({
@@ -37,9 +45,9 @@ const mockSnapshot: Snapshot = {
   managers: ['hello@world.org'],
   name: 'testname',
   createDate: '2024-09-04T15:37:57Z',
-  documentation: '',
+  documentation: 'mock documentation',
   entityType: 'Workflow',
-  snapshotComment: '',
+  snapshotComment: 'mock snapshot comment',
   snapshotId: 1,
   namespace: 'testnamespace',
   payload:
@@ -405,6 +413,77 @@ describe('workflows container', () => {
     expect(snapshotsListStore.get()).toBeUndefined();
 
     expect(goToPath).toHaveBeenCalledWith('workflows');
+  });
+
+  it('renders the clone snapshot modal when the corresponding button is pressed', async () => {
+    // Arrange
+    mockAjax();
+
+    // set the user's email
+    jest.spyOn(userStore, 'get').mockImplementation(jest.fn().mockReturnValue(mockUserState('hello@world.org')));
+
+    const user: UserEvent = userEvent.setup();
+
+    // Act
+    await act(async () => {
+      render(
+        <WorkflowsContainer
+          namespace={mockSnapshot.namespace}
+          name={mockSnapshot.name}
+          snapshotId={`${mockSnapshot.snapshotId}`}
+          tabName='dashboard'
+        />
+      );
+    });
+
+    await user.click(screen.getByRole('button', { name: 'Snapshot action menu' }));
+    await user.click(screen.getByRole('button', { name: 'Clone snapshot' }));
+
+    const dialog = screen.getByRole('dialog', { name: /clone snapshot/i });
+
+    screen.logTestingPlaygroundURL();
+
+    // Assert
+    expect(dialog).toBeInTheDocument();
+    expect(within(dialog).getByRole('textbox', { name: 'Namespace *' })).toHaveDisplayValue('');
+    expect(within(dialog).getByRole('textbox', { name: 'Name *' })).toHaveDisplayValue('testname_copy');
+    expect(within(dialog).getByRole('textbox', { name: 'Documentation' })).toHaveDisplayValue('mock documentation');
+    expect(within(dialog).getByRole('textbox', { name: 'Synopsis (80 characters max)' })).toHaveDisplayValue('');
+    expect(within(dialog).getByRole('textbox', { name: 'Snapshot comment' })).toHaveDisplayValue(
+      'mock snapshot comment'
+    );
+    expect(within(dialog).getByTestId('wdl editor')).toHaveDisplayValue(mockSnapshot.payload.toString());
+  });
+
+  it('hides the clone snapshot modal when it is dismissed', async () => {
+    // Arrange
+    mockAjax();
+
+    // set the user's email
+    jest.spyOn(userStore, 'get').mockImplementation(jest.fn().mockReturnValue(mockUserState('hello@world.org')));
+
+    const user: UserEvent = userEvent.setup();
+
+    // Act
+    await act(async () => {
+      render(
+        <WorkflowsContainer
+          namespace={mockSnapshot.namespace}
+          name={mockSnapshot.name}
+          snapshotId={`${mockSnapshot.snapshotId}`}
+          tabName='dashboard'
+        />
+      );
+    });
+
+    await user.click(screen.getByRole('button', { name: 'Snapshot action menu' }));
+    await user.click(screen.getByRole('button', { name: 'Clone snapshot' }));
+    await user.click(screen.getByRole('button', { name: 'Cancel' }));
+
+    // Assert
+    const dialog = screen.queryByRole('dialog', { name: /clone snapshot/i });
+
+    expect(dialog).not.toBeInTheDocument();
   });
 
   it('hides the delete snapshot modal and displays a loading spinner when the deletion is confirmed', async () => {
