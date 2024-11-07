@@ -128,4 +128,13 @@ export interface SpendReport {
     startTime: string;
   };
 }
+
+export interface WorkspaceCategorySpendReport {
+  namespace: string;
+  workspaceName: string;
+  projectName: string;
+  totalCost: string;
+  totalComputeCost: string;
+  totalStorageCost: string;
+}
 // End of interfaces for dealing with the server SpendReport JSON response
