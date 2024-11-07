@@ -17,7 +17,7 @@ export const breadcrumbElement = (child, href) => {
 export const commonPaths = {
   datasetList: () => [breadcrumbElement('Datasets', Nav.getLink('library-datasets'))],
 
-  workflowList: () => [breadcrumbElement('Workflows', Nav.getLink('workflows'))],
+  workflowList: () => [breadcrumbElement('Methods', Nav.getLink('workflows'))],
 
   workspaceList: () => [breadcrumbElement('Workspaces', Nav.getLink('workspaces'))],
 

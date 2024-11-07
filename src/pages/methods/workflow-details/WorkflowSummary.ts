@@ -12,8 +12,8 @@ import { withErrorReporting } from 'src/libs/error';
 import { forwardRefWithName, useStore } from 'src/libs/react-utils';
 import { snapshotStore } from 'src/libs/state';
 import * as Style from 'src/libs/style';
-import { WorkflowRightBoxSection } from 'src/pages/workflows/components/WorkflowRightBoxSection';
-import { wrapWorkflows } from 'src/pages/workflows/workflow/WorkflowWrapper';
+import { wrapWorkflows } from 'src/pages/methods/workflow-details/WorkflowWrapper';
+import { WorkflowRightBoxSection } from 'src/workflows/methods/WorkflowRightBoxSection';
 import { InfoRow } from 'src/workspaces/dashboard/InfoRow';
 
 export const BaseWorkflowSummary = () => {
@@ -28,7 +28,7 @@ export const BaseWorkflowSummary = () => {
     public: isPublic,
     snapshotComment,
   } = useStore(snapshotStore);
-  const persistenceId = `workflows/${namespace}/${name}/dashboard`;
+  const persistenceId = `methods/${namespace}/${name}/dashboard`;
   const [importUrlCopied, setImportUrlCopied] = useState<boolean>();
   const importUrl = `${
     getConfig().orchestrationUrlRoot
@@ -116,7 +116,6 @@ const WorkflowSummary = _.flow(
   forwardRefWithName('WorkflowSummary'),
   wrapWorkflows({
     breadcrumbs: () => breadcrumbs.commonPaths.workflowList(),
-    title: 'Workflows',
     activeTab: 'dashboard',
   })
 )(() => {
@@ -126,7 +125,7 @@ const WorkflowSummary = _.flow(
 export const navPaths = [
   {
     name: 'workflow-dashboard',
-    path: '/workflows/:namespace/:name/:snapshotId?',
+    path: '/methods/:namespace/:name/:snapshotId?',
     component: (props) => h(WorkflowSummary, { ...props, tabName: 'dashboard' }),
     title: ({ name }) => `${name} - Dashboard`,
   },

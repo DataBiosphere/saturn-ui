@@ -9,7 +9,8 @@ import { VirtualizedSelect } from 'src/components/common';
 import { TextInput } from 'src/components/input';
 import { MenuButton } from 'src/components/MenuButton';
 import { MenuTrigger } from 'src/components/PopupTrigger';
-import { Ajax } from 'src/libs/ajax';
+import { Billing } from 'src/libs/ajax/billing/Billing';
+import { Metrics } from 'src/libs/ajax/Metrics';
 import { reportErrorAndRethrow } from 'src/libs/error';
 import Events, { extractBillingDetails } from 'src/libs/events';
 import { FormLabel } from 'src/libs/forms';
@@ -50,12 +51,12 @@ export const BillingAccountControls = (props: BillingAccountControlsProps) => {
     reportErrorAndRethrow('Error updating billing account'),
     Utils.withBusyState(setUpdating)
   )((newAccountName) => {
-    Ajax().Metrics.captureEvent(Events.billingChangeAccount, {
+    void Metrics().captureEvent(Events.billingChangeAccount, {
       oldName: billingProject.billingAccount,
       newName: newAccountName,
       ...extractBillingDetails(billingProject),
     });
-    return Ajax(signal).Billing.changeBillingAccount({
+    return Billing(signal).changeBillingAccount({
       billingProjectName: billingProject.projectName,
       newBillingAccountName: newAccountName,
     });
@@ -65,8 +66,8 @@ export const BillingAccountControls = (props: BillingAccountControlsProps) => {
     reportErrorAndRethrow('Error removing billing account'),
     Utils.withBusyState(setUpdating)
   )(() => {
-    Ajax().Metrics.captureEvent(Events.billingRemoveAccount, extractBillingDetails(billingProject));
-    return Ajax(signal).Billing.removeBillingAccount({
+    void Metrics().captureEvent(Events.billingRemoveAccount, extractBillingDetails(billingProject));
+    return Billing(signal).removeBillingAccount({
       billingProjectName: billingProject.projectName,
     });
   });
@@ -75,13 +76,13 @@ export const BillingAccountControls = (props: BillingAccountControlsProps) => {
     reportErrorAndRethrow('Error updating spend report configuration'),
     Utils.withBusyState(setUpdating)
   )(() => {
-    Ajax().Metrics.captureEvent(Events.billingSpendConfigurationUpdated, {
+    void Metrics().captureEvent(Events.billingSpendConfigurationUpdated, {
       datasetGoogleProject: selectedDatasetProjectName,
       datasetName: selectedDatasetName,
       ...extractBillingDetails(billingProject),
     });
     // The option to update spend configuration is disabled if "!selectedDatasetProjectName || !selectedDatasetName".
-    return Ajax(signal).Billing.updateSpendConfiguration({
+    return Billing(signal).updateSpendConfiguration({
       billingProjectName: billingProject.projectName,
       datasetGoogleProject: selectedDatasetProjectName!,
       datasetName: selectedDatasetName!,

@@ -6,13 +6,13 @@ import React from 'react';
 import * as breadcrumbs from 'src/components/breadcrumbs';
 import { Ajax, AjaxContract } from 'src/libs/ajax';
 import { MethodsAjaxContract } from 'src/libs/ajax/methods/Methods';
+import { Snapshot } from 'src/libs/ajax/methods/methods-models';
 import * as ExportWorkflowToWorkspaceProvider from 'src/libs/ajax/workspaces/providers/ExportWorkflowToWorkspaceProvider';
 import { errorWatcher } from 'src/libs/error.mock';
 import { goToPath } from 'src/libs/nav';
 import { forwardRefWithName } from 'src/libs/react-utils';
 import { snapshotsListStore, snapshotStore, TerraUser, TerraUserState, userStore } from 'src/libs/state';
-import { WorkflowsContainer, wrapWorkflows } from 'src/pages/workflows/workflow/WorkflowWrapper';
-import { Snapshot } from 'src/snapshots/Snapshot';
+import { WorkflowsContainer, wrapWorkflows } from 'src/pages/methods/workflow-details/WorkflowWrapper';
 import { asMockedFn, partial, renderWithAppContexts as render, SelectHelper } from 'src/testing/test-utils';
 import { useWorkspaces } from 'src/workspaces/common/state/useWorkspaces';
 import { AzureContext, WorkspaceInfo, WorkspaceWrapper } from 'src/workspaces/utils';
@@ -27,7 +27,7 @@ jest.mock(
   (): NavExports => ({
     ...jest.requireActual('src/libs/nav'),
     getLink: jest.fn((name, pathParams?) =>
-      name === 'workflow-dashboard' ? `#workflows/${pathParams!.namespace}/${pathParams!.name}` : `#${name}`
+      name === 'workflow-dashboard' ? `#methods/${pathParams!.namespace}/${pathParams!.name}` : `#${name}`
     ),
     goToPath: jest.fn(),
   })
@@ -164,7 +164,6 @@ const MockWrappedWorkflowComponent = _.flow(
   forwardRefWithName('MockWrappedWorkflowComponent'),
   wrapWorkflows({
     breadcrumbs: () => breadcrumbs.commonPaths.workflowList(),
-    title: 'Methods',
     activeTab: 'dashboard',
   })
 )(() => {
@@ -307,6 +306,8 @@ describe('workflow wrapper', () => {
 
     const returnToMethodsListButton = screen.getByRole('link', { name: 'Return to Methods List' });
     expect(returnToMethodsListButton).toBeInTheDocument();
+
+    // mock link path based on internal nav path name
     expect(returnToMethodsListButton).toHaveAttribute('href', '#workflows');
   });
 
@@ -397,7 +398,7 @@ describe('workflows container', () => {
       Ajax().Methods.method(mockDeleteSnapshot.namespace, mockDeleteSnapshot.name, mockDeleteSnapshot.snapshotId).delete
     ).toHaveBeenCalled();
 
-    expect(window.history.replaceState).toHaveBeenCalledWith({}, '', '#workflows/methodnamespace/testname');
+    expect(window.history.replaceState).toHaveBeenCalledWith({}, '', '#methods/methodnamespace/testname');
 
     expect(snapshotStore.get()).toEqual(snapshotStoreInitialValue);
 

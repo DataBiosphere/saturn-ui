@@ -4,12 +4,12 @@ import _ from 'lodash/fp';
 import React from 'react';
 import { MethodResponse } from 'src/libs/ajax/methods/methods-models';
 import { CreateMethodProvider } from 'src/libs/ajax/methods/providers/CreateMethodProvider';
-import { WorkflowModal } from 'src/pages/workflows/workflow/common/WorkflowModal';
 import { renderWithAppContexts as render } from 'src/testing/test-utils';
+import { WorkflowModal } from 'src/workflows/methods/modals/WorkflowModal';
 
-type WDLEditorExports = typeof import('src/pages/workflows/common/WDLEditor');
-jest.mock('src/pages/workflows/common/WDLEditor', (): WDLEditorExports => {
-  const mockWDLEditorModule = jest.requireActual('src/pages/workflows/common/WDLEditor.mock');
+type WDLEditorExports = typeof import('src/workflows/methods/WDLEditor');
+jest.mock('src/workflows/methods/WDLEditor', (): WDLEditorExports => {
+  const mockWDLEditorModule = jest.requireActual('src/workflows/methods/WDLEditor.mock');
   return {
     WDLEditor: mockWDLEditorModule.MockWDLEditor,
   };
@@ -84,7 +84,7 @@ describe('WorkflowModal', () => {
     await act(async () => {
       render(
         <WorkflowModal
-          title='Create New Workflow'
+          title='Create New Method'
           buttonActionName='Upload'
           defaultWdl='a'
           createMethodProvider={successCreateMethodProvider}
@@ -125,7 +125,7 @@ describe('WorkflowModal', () => {
     await act(async () => {
       render(
         <WorkflowModal
-          title='Create New Workflow'
+          title='Create New Method'
           buttonActionName='Upload'
           defaultNamespace=','
           defaultName=','
@@ -160,7 +160,7 @@ describe('WorkflowModal', () => {
     await act(async () => {
       render(
         <WorkflowModal
-          title='Create New Workflow'
+          title='Create New Method'
           buttonActionName='Upload'
           defaultNamespace={longStringNamespace}
           defaultName={longStringName}
@@ -189,7 +189,7 @@ describe('WorkflowModal', () => {
     await act(async () => {
       render(
         <WorkflowModal
-          title='Create New Workflow'
+          title='Create New Method'
           buttonActionName='Upload'
           defaultNamespace='a'
           defaultName='a'
@@ -220,7 +220,7 @@ describe('WorkflowModal', () => {
     await act(async () => {
       render(
         <WorkflowModal
-          title='Create New Workflow'
+          title='Create New Method'
           buttonActionName='Upload'
           defaultNamespace='a'
           defaultName='a'
@@ -255,7 +255,7 @@ describe('WorkflowModal', () => {
     await act(async () => {
       render(
         <WorkflowModal
-          title='Create New Workflow'
+          title='Create New Method'
           buttonActionName='Upload'
           defaultNamespace='namespace'
           defaultName='name'
@@ -291,7 +291,7 @@ describe('WorkflowModal', () => {
     await act(async () => {
       render(
         <WorkflowModal
-          title='Create New Workflow'
+          title='Create New Method'
           buttonActionName='Upload'
           defaultNamespace='testnamespace'
           defaultName='testname'
@@ -342,7 +342,7 @@ describe('WorkflowModal', () => {
     await act(async () => {
       render(
         <WorkflowModal
-          title='Create New Workflow'
+          title='Create New Method'
           buttonActionName='Upload'
           defaultNamespace='testnamespace'
           defaultName='testname'
@@ -393,7 +393,7 @@ describe('WorkflowModal', () => {
     await act(async () => {
       render(
         <WorkflowModal
-          title='Create New Workflow'
+          title='Create New Method'
           buttonActionName='Upload'
           defaultNamespace='namespace'
           defaultName='name'
@@ -426,7 +426,7 @@ describe('WorkflowModal', () => {
     await act(async () => {
       render(
         <WorkflowModal
-          title='Create New Workflow'
+          title='Create New Method'
           buttonActionName='Upload'
           defaultNamespace='namespace'
           defaultName='name'
@@ -459,7 +459,7 @@ describe('WorkflowModal', () => {
     await act(async () => {
       render(
         <WorkflowModal
-          title='Create New Workflow'
+          title='Create New Method'
           buttonActionName='Upload'
           defaultNamespace='namespace'
           defaultName='name'

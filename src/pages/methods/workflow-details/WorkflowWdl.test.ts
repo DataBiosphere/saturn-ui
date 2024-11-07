@@ -1,7 +1,7 @@
 import { screen } from '@testing-library/react';
 import { h } from 'react-hyperscript-helpers';
 import { snapshotStore } from 'src/libs/state';
-import { BaseWorkflowWdl } from 'src/pages/workflows/workflow/WorkflowWdl';
+import { BaseWorkflowWdl } from 'src/pages/methods/workflow-details/WorkflowWdl';
 import { renderWithAppContexts } from 'src/testing/test-utils';
 
 jest.mock('src/libs/ajax');

@@ -4,14 +4,15 @@ import {
   AddTerraAsBillingAccountUserStep,
   AddTerraAsBillingAccountUserStepProps,
 } from 'src/billing/NewBillingProjectWizard/GCPBillingProjectWizard/AddTerraAsBillingAccountUserStep';
-import { Ajax } from 'src/libs/ajax';
+import { Billing, BillingContract } from 'src/libs/ajax/billing/Billing';
+import { Metrics, MetricsContract } from 'src/libs/ajax/Metrics';
 import * as Preferences from 'src/libs/prefs';
-import { asMockedFn, renderWithAppContexts as render } from 'src/testing/test-utils';
+import { asMockedFn, MockedFn, partial, renderWithAppContexts as render } from 'src/testing/test-utils';
 
-jest.mock('src/libs/ajax');
+jest.mock('src/libs/ajax/billing/Billing');
+jest.mock('src/libs/ajax/Metrics');
+
 jest.spyOn(Preferences, 'getLocalPref');
-
-type AjaxContract = ReturnType<typeof Ajax>;
 
 function expectNotNull<T>(value: T | null): T {
   expect(value).not.toBeNull();
@@ -32,19 +33,16 @@ const getUserAddedButton = () =>
     screen.queryByLabelText('I have added terra-billing as a billing account user (requires reauthentication)')
   );
 
-const createGCPProject = jest.fn(() => Promise.resolve(new Response('', { status: 201 })));
-const captureEvent = jest.fn();
+const createGCPProject: MockedFn<BillingContract['createGCPProject']> = jest.fn();
+createGCPProject.mockResolvedValue(new Response('', { status: 201 }));
+
+const captureEvent: MockedFn<MetricsContract['captureEvent']> = jest.fn();
 describe('AddTerraAsBillingAccountUserStep', () => {
   beforeEach(() => {
     jest.resetAllMocks();
 
-    asMockedFn(Ajax).mockImplementation(
-      () =>
-        ({
-          Billing: { createGCPProject } as Partial<AjaxContract['Billing']>,
-          Metrics: { captureEvent } as Partial<AjaxContract['Metrics']>,
-        } as Partial<AjaxContract> as AjaxContract)
-    );
+    asMockedFn(Billing).mockReturnValue(partial<BillingContract>({ createGCPProject }));
+    asMockedFn(Metrics).mockReturnValue(partial<MetricsContract>({ captureEvent }));
   });
 
   describe('The initial state when the step is active', () => {

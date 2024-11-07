@@ -1,7 +1,7 @@
 import { fireEvent, screen } from '@testing-library/react';
 import { h } from 'react-hyperscript-helpers';
 import { snapshotStore } from 'src/libs/state';
-import { BaseWorkflowSummary } from 'src/pages/workflows/workflow/WorkflowSummary';
+import { BaseWorkflowSummary } from 'src/pages/methods/workflow-details/WorkflowSummary';
 import { renderWithAppContexts } from 'src/testing/test-utils';
 
 jest.mock('src/libs/notifications');
@@ -81,7 +81,7 @@ describe('WorkflowSummary Component', () => {
     expect(screen.queryAllByText('a fake snapshot'));
   });
 
-  it('shows Private for private workflows', () => {
+  it('shows Private for private methods', () => {
     // ** ARRANGE **
     jest.spyOn(snapshotStore, 'get').mockImplementation(
       jest.fn().mockReturnValue({
@@ -128,7 +128,7 @@ describe('WorkflowSummary Component', () => {
     expect(screen.queryByText('Synopsis')).not.toBeInTheDocument();
   });
 
-  it('shows expected workflow information when collapsable is open', () => {
+  it('shows expected method information when collapsable is open', () => {
     // ** ARRANGE **
     jest.spyOn(snapshotStore, 'get').mockImplementation(
       jest.fn().mockReturnValue({

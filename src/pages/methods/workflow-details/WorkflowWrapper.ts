@@ -8,6 +8,7 @@ import FooterWrapper from 'src/components/FooterWrapper';
 import { TabBar } from 'src/components/tabBars';
 import { TopBar } from 'src/components/TopBar';
 import { Ajax } from 'src/libs/ajax';
+import { Snapshot } from 'src/libs/ajax/methods/methods-models';
 import { makeExportWorkflowFromMethodsRepoProvider } from 'src/libs/ajax/workspaces/providers/ExportWorkflowToWorkspaceProvider';
 import { ErrorCallback, withErrorReporting } from 'src/libs/error';
 import * as Nav from 'src/libs/nav';
@@ -16,18 +17,16 @@ import { getTerraUser, snapshotsListStore, snapshotStore } from 'src/libs/state'
 import * as Style from 'src/libs/style';
 import * as Utils from 'src/libs/utils';
 import { withBusyState } from 'src/libs/utils';
-import { PermissionsModal } from 'src/pages/workflows/workflow/common/PermissionsModal';
-import { Snapshot } from 'src/snapshots/Snapshot';
-import DeleteSnapshotModal from 'src/workflows/modals/DeleteSnapshotModal';
+import DeleteSnapshotModal from 'src/workflows/methods/modals/DeleteSnapshotModal';
+import { PermissionsModal } from 'src/workflows/methods/modals/PermissionsModal';
+import SnapshotActionMenu from 'src/workflows/methods/SnapshotActionMenu';
 import ExportWorkflowModal from 'src/workflows/modals/ExportWorkflowModal';
-import SnapshotActionMenu from 'src/workflows/SnapshotActionMenu';
 import { isGoogleWorkspace, WorkspaceInfo, WorkspaceWrapper } from 'src/workspaces/utils';
 import * as WorkspaceUtils from 'src/workspaces/utils';
 
 export interface WrapWorkflowOptions {
   breadcrumbs: (props: { name: string; namespace: string }) => ReactNode[];
   activeTab?: string;
-  title: string | ((props: { name: string; namespace: string }) => string);
 }
 
 interface WorkflowWrapperProps extends PropsWithChildren {
@@ -89,7 +88,7 @@ export const wrapWorkflows = (opts: WrapWorkflowOptions) => {
       });
 
       return h(FooterWrapper, [
-        h(TopBar, { title: 'Workflows', href: Nav.getLink('workflows') }, [
+        h(TopBar, { title: 'Broad Methods Repository', href: Nav.getLink('workflows') }, [
           div({ style: Style.breadcrumb.breadcrumb }, [
             div(breadcrumbs(props)),
             div({ style: Style.breadcrumb.textUnderBreadcrumb }, [`${namespace}/${name}`]),
@@ -176,9 +175,9 @@ export const WorkflowsContainer = (props: WorkflowContainerProps) => {
     await Ajax(signal).Methods.method(namespace, name, selectedSnapshot).delete();
 
     // Replace the current history entry linking to the method details page of a
-    // specific snapshot, like /#workflows/sschu/echo-strings-test/29, with an
+    // specific snapshot, like /#methods/sschu/echo-strings-test/29, with an
     // entry with the corresponding link without the snapshot ID, like
-    // /#workflows/sschu/echo-strings-test
+    // /#methods/sschu/echo-strings-test
     // This way, if the user presses the back button after deleting a
     // method snapshot, they will be automatically redirected to the most recent
     // snapshot that still exists of the same method
@@ -202,7 +201,7 @@ export const WorkflowsContainer = (props: WorkflowContainerProps) => {
       h(
         TabBar,
         {
-          'aria-label': 'workflow menu',
+          'aria-label': 'method details menu',
           activeTab: tabName,
           tabNames: ['dashboard', 'wdl'],
           getHref: (currentTab) =>

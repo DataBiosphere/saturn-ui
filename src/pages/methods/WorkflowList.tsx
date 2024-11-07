@@ -10,6 +10,7 @@ import { TabBar } from 'src/components/tabBars';
 import { FlexTable, HeaderCell, Paginator, Sortable, TooltipCell } from 'src/components/table';
 import { TopBar } from 'src/components/TopBar';
 import { Ajax } from 'src/libs/ajax';
+import { MethodDefinition } from 'src/libs/ajax/methods/methods-models';
 import { createMethodProvider } from 'src/libs/ajax/methods/providers/CreateMethodProvider';
 import * as Nav from 'src/libs/nav';
 import { notify } from 'src/libs/notifications';
@@ -17,18 +18,25 @@ import { useCancellation, useOnMount } from 'src/libs/react-utils';
 import { getTerraUser } from 'src/libs/state';
 import * as Utils from 'src/libs/utils';
 import { withBusyState } from 'src/libs/utils';
-import { WorkflowModal } from 'src/pages/workflows/workflow/common/WorkflowModal';
-import { MethodDefinition } from 'src/pages/workflows/workflow-utils';
+import { WorkflowModal } from 'src/workflows/methods/modals/WorkflowModal';
+
+// Note: The first tab key in this array will determine the default tab selected
+// if the tab query parameter is not present or has an invalid value (and when
+// clicking on that tab, the tab query parameter will not be used in the URL)
+const tabKeys = ['mine', 'public'] as const;
+type TabKey = (typeof tabKeys)[number]; // 'mine' | 'public'
+
+// Custom type guard
+const isTabKey = (val: any): val is TabKey => _.includes(val, tabKeys);
+
+const defaultTabKey: TabKey = tabKeys[0];
 
 /**
  * Represents a list of method definitions grouped into two
- * categories — My Workflows and Public Workflows — corresponding
+ * categories — My Methods and Public Methods — corresponding
  * to the tabs above the workflows table.
  */
-interface GroupedWorkflows {
-  mine: MethodDefinition[];
-  public: MethodDefinition[];
-}
+type GroupedWorkflows = Record<TabKey, MethodDefinition[]>;
 
 // This is based on the sort type from the FlexTable component
 // When that component is converted to TypeScript, we should use its sort type
@@ -39,7 +47,7 @@ interface SortProperties {
 }
 
 interface NewQueryParams {
-  newTab?: string;
+  newTab?: TabKey;
   newFilter?: string;
 }
 
@@ -80,14 +88,16 @@ interface WorkflowListProps {
 // TODO: consider wrapping query updates in useEffect
 export const WorkflowList = (props: WorkflowListProps) => {
   const { queryParams = {} } = props;
-  const { tab = 'mine', filter = '', ...query } = queryParams;
+  const { tab: queryTab, filter = '', ...query } = queryParams;
+
+  const selectedTab: TabKey = isTabKey(queryTab) ? queryTab : defaultTabKey;
 
   const signal: AbortSignal = useCancellation();
   const [busy, setBusy] = useState<boolean>(false);
 
   // workflows is undefined while the method definitions are still loading;
   // it is null if there is an error while loading
-  const [workflows, setWorkflows] = useState<GroupedWorkflows | null>();
+  const [workflows, setWorkflows] = useState<GroupedWorkflows | null | undefined>();
 
   // Valid direction values are 'asc' and 'desc' (based on expected
   // function signatures from the Sortable component used in this
@@ -99,9 +109,9 @@ export const WorkflowList = (props: WorkflowListProps) => {
   const [pageNumber, setPageNumber] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(25);
 
-  const getTabQueryName = (newTab: string | undefined): string | undefined => (newTab === 'mine' ? undefined : newTab);
+  const getTabQueryName = (newTab: TabKey): TabKey | undefined => (newTab === defaultTabKey ? undefined : newTab);
 
-  const getUpdatedQuery = ({ newTab = tab, newFilter = filter }: NewQueryParams): string => {
+  const getUpdatedQuery = ({ newTab = selectedTab, newFilter = filter }: NewQueryParams): string => {
     // Note: setting undefined so that falsy values don't show up at all
     return qs.stringify(
       { ...query, tab: getTabQueryName(newTab), filter: newFilter || undefined },
@@ -123,27 +133,30 @@ export const WorkflowList = (props: WorkflowListProps) => {
     setSort(newSort);
   };
 
-  const tabName: string = tab || 'mine';
-  const tabs = { mine: 'My Workflows', public: 'Public Workflows' };
+  const tabNames: Record<TabKey, string> = { mine: 'My Methods', public: 'Public Methods' };
 
-  const getTabDisplayNames = (workflows: GroupedWorkflows | null | undefined, currentTabName: string) => {
-    const getCountString = (tabName: keyof GroupedWorkflows): string => {
+  const getTabDisplayNames = (
+    workflows: GroupedWorkflows | null | undefined,
+    selectedTab: TabKey
+  ): Record<TabKey, string> => {
+    const getCountString = (tab: TabKey): string => {
       if (workflows == null) {
         return '';
       }
 
-      // Only the current tab's workflow count reflects the search
+      // Only the currently selected tab's workflow count reflects the search
       // filter (since the filter is cleared when switching tabs)
-      if (tabName === currentTabName) {
+      if (tab === selectedTab) {
         return ` (${sortedWorkflows.length})`;
       }
-      return ` (${workflows[tabName].length})`;
+      return ` (${workflows[tab].length})`;
     };
 
-    return {
-      mine: `My Workflows${getCountString('mine')}`,
-      public: `Public Workflows${getCountString('public')}`,
-    };
+    const tabDisplayNames: Record<TabKey, string> = { ...tabNames }; // (shallow) copy
+    for (const tabKey of tabKeys) {
+      tabDisplayNames[tabKey] += getCountString(tabKey);
+    }
+    return tabDisplayNames;
   };
 
   useOnMount(() => {
@@ -160,7 +173,7 @@ export const WorkflowList = (props: WorkflowListProps) => {
         });
       } catch (error) {
         setWorkflows(null);
-        notify('error', 'Error loading workflows', { detail: error instanceof Response ? await error.text() : error });
+        notify('error', 'Error loading methods', { detail: error instanceof Response ? await error.text() : error });
       }
     });
 
@@ -174,7 +187,7 @@ export const WorkflowList = (props: WorkflowListProps) => {
       snapshotId,
     });
 
-  // Gets the sort key of a method definition based on the currently
+  // Get the sort key of a method definition based on the currently
   // selected sort field such that numeric fields are sorted numerically
   // and other fields are sorted as case-insensitive strings
   const getSortKey = ({ [sort.field]: sortValue }: MethodDefinition): number | string => {
@@ -187,10 +200,15 @@ export const WorkflowList = (props: WorkflowListProps) => {
     return _.lowerCase(sortValue.toString());
   };
 
-  const sortedWorkflows: MethodDefinition[] = _.flow<MethodDefinition[], MethodDefinition[], MethodDefinition[]>(
+  const sortedWorkflows: MethodDefinition[] = _.flow<
+    // filter input type: MethodDefinition[] | undefined (extra [] are because the inputs are viewed as a rest parameter)
+    (MethodDefinition[] | undefined)[],
+    MethodDefinition[], // filter output type / orderBy input type
+    MethodDefinition[] // final result type
+  >(
     _.filter(({ namespace, name }: MethodDefinition) => Utils.textMatch(filter, `${namespace}/${name}`)),
     _.orderBy([getSortKey], [sort.direction])
-  )(workflows?.[tabName]);
+  )(workflows?.[selectedTab]);
 
   const firstPageIndex: number = (pageNumber - 1) * itemsPerPage;
   const lastPageIndex: number = firstPageIndex + itemsPerPage;
@@ -198,14 +216,14 @@ export const WorkflowList = (props: WorkflowListProps) => {
 
   return (
     <FooterWrapper>
-      <TopBar title='Workflows' href=''>
+      <TopBar title='Broad Methods Repository' href=''>
         {null /* no additional content to display in the top bar */}
       </TopBar>
       <TabBar
-        aria-label='workflows menu'
-        activeTab={tabName}
-        tabNames={Object.keys(tabs)}
-        displayNames={getTabDisplayNames(workflows, tabName)}
+        aria-label='methods list menu'
+        activeTab={selectedTab}
+        tabNames={tabKeys}
+        displayNames={getTabDisplayNames(workflows, selectedTab)}
         getHref={(currentTab) => `${Nav.getLink('workflows')}${getUpdatedQuery({ newTab: currentTab })}`}
         getOnClick={(currentTab) => (e) => {
           e.preventDefault();
@@ -218,8 +236,8 @@ export const WorkflowList = (props: WorkflowListProps) => {
         <div style={{ display: 'flex' }}>
           <DelayedSearchInput
             style={{ width: 500, display: 'flex', justifyContent: 'flex-start' }}
-            placeholder='SEARCH WORKFLOWS'
-            aria-label='Search workflows'
+            placeholder='SEARCH METHODS'
+            aria-label='Search methods'
             onChange={(val) => updateQuery({ newFilter: val })}
             value={filter}
           />
@@ -238,7 +256,7 @@ export const WorkflowList = (props: WorkflowListProps) => {
           <AutoSizer>
             {({ width, height }) => (
               <FlexTable
-                aria-label={tabs[tabName]}
+                aria-label={tabNames[selectedTab]}
                 width={width}
                 height={height}
                 sort={sort as any /* necessary until FlexTable is converted to TS */}
@@ -257,7 +275,7 @@ export const WorkflowList = (props: WorkflowListProps) => {
               // @ts-expect-error
               <Paginator
                 filteredDataLength={sortedWorkflows.length}
-                unfilteredDataLength={workflows![tabName].length}
+                unfilteredDataLength={workflows![selectedTab].length}
                 pageNumber={pageNumber}
                 setPageNumber={setPageNumber}
                 itemsPerPage={itemsPerPage}
@@ -295,7 +313,7 @@ const getColumns = (
     field: 'name',
     headerRenderer: () => (
       <WorkflowTableHeader sort={sort} field='name' onSort={onSort}>
-        Workflow
+        Method
       </WorkflowTableHeader>
     ),
     cellRenderer: ({ rowIndex }) => {
@@ -359,8 +377,8 @@ const getColumns = (
 export const navPaths = [
   {
     name: 'workflows',
-    path: '/workflows',
+    path: '/methods',
     component: WorkflowList,
-    title: 'Workflows',
+    title: 'Broad Methods Repository',
   },
 ];

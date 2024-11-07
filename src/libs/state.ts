@@ -5,11 +5,11 @@ import { AuthTokenState } from 'src/auth/auth';
 import { OidcUser } from 'src/auth/oidc-broker';
 import { Dataset } from 'src/libs/ajax/Catalog';
 import { EcmLinkAccountResponse } from 'src/libs/ajax/ExternalCredentials';
+import { Snapshot } from 'src/libs/ajax/methods/methods-models';
 import { OidcConfig } from 'src/libs/ajax/OAuth2';
 import { SamTermsOfServiceConfig } from 'src/libs/ajax/TermsOfService';
 import { NihDatasetPermission, SamUserAllowances, SamUserAttributes, SamUserResponse } from 'src/libs/ajax/User';
 import { getLocalStorage, getSessionStorage, staticStorageSlot } from 'src/libs/browser-storage';
-import { Snapshot } from 'src/snapshots/Snapshot';
 import type { WorkspaceInfo, WorkspaceWrapper } from 'src/workspaces/utils';
 
 export const routeHandlersStore = atom<unknown[]>([]);
