@@ -10,6 +10,4 @@ highchartsExporting(Highcharts);
 // this is needed to permit use of internally constructed links in a Highcharts formatter
 Highcharts.AST.bypassHTMLFiltering = true;
 
-const Chart = ({ options }) => h(HighchartsReact, { highcharts: Highcharts, options });
-
-export default Chart;
+export const Chart = ({ options }) => h(HighchartsReact, { highcharts: Highcharts, options });

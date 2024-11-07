@@ -2,7 +2,7 @@ import { Spinner, useLoadedData } from '@terra-ui-packages/components';
 import _ from 'lodash/fp';
 import React, { Fragment, useEffect, useRef, useState } from 'react';
 import { div, h, h2, h3, strong } from 'react-hyperscript-helpers';
-import Chart from 'src/components/Chart';
+import { Chart } from 'src/components/Chart';
 import { ButtonOutline, ButtonPrimary, GroupedSelect, Link, Select } from 'src/components/common';
 import Slider from 'src/components/common/Slider';
 import { icon } from 'src/components/icons';
