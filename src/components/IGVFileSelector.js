@@ -60,7 +60,8 @@ const findIndexForFile = (fileUrl, fileUrls) => {
     const filename = parts.at(-1);
     const [base, extension] = splitExtension(filename);
     const indexCandidates = indexMap(base)[extension].map(
-      (candidate) => new RegExp([`gs://${bucket}`, datasetId, UUID_PATTERN, ...otherPathSegments, candidate].join('/')));
+      (candidate) => new RegExp([`gs://${bucket}`, datasetId, UUID_PATTERN, ...otherPathSegments, candidate].join('/'))
+    );
     return fileUrls.find((url) => indexCandidates.some((candidate) => candidate.test(url)));
   }
   const [base, extension] = splitExtension(fileUrl);
