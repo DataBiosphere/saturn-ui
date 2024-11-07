@@ -284,7 +284,7 @@ export const Workspaces = (props: WorkspacesProps): ReactNode => {
   const [selectedDays, setSelectedDays] = useState<number>(30);
   const [searchValue, setSearchValue] = useState<string>('');
   const [WorkspaceCategorySpendReport, setWorkspaceCategorySpendReport] = useState<WorkspaceCategorySpendReport[]>([]);
-  const [errorMessage, setErrorMessage] = useState<string>();
+  const [spendErrorMessage, setSpendErrorMessage] = useState<string>();
 
   useEffect(() => {
     const getSpendReportByWorkspaceAndCategory = (selectedDays: number) => {
@@ -322,7 +322,7 @@ export const Workspaces = (props: WorkspacesProps): ReactNode => {
           setWorkspaceCategorySpendReport(WorkspaceCategorySpendReport);
         })
         .catch((error) => {
-          setErrorMessage(`Error fetching spend report: ${error.status}`);
+          setSpendErrorMessage(`Error fetching spend report: ${error.status}`);
         });
     };
 
@@ -376,7 +376,7 @@ export const Workspaces = (props: WorkspacesProps): ReactNode => {
             />
           </div>
         )}
-        {!!errorMessage && <ErrorAlert errorValue={errorMessage} />}
+        {!!spendErrorMessage && <ErrorAlert errorValue={spendErrorMessage} />}
         <div role='table' aria-label={`workspaces in billing project ${billingProject.projectName}`}>
           <WorkspaceCardHeaders
             needsStatusColumn={billingAccountsOutOfDate}
