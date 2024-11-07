@@ -1,7 +1,7 @@
 import { Icon, Link, useUniqueId } from '@terra-ui-packages/components';
 import { subDays } from 'date-fns/fp';
 import _ from 'lodash/fp';
-import React, { CSSProperties, ReactNode, useState } from 'react';
+import React, { CSSProperties, ReactNode, useEffect, useState } from 'react';
 import { ErrorAlert } from 'src/alerts/ErrorAlert';
 import { DateRangeFilter } from 'src/billing/Filter/DateRangeFilter';
 import { SearchFilter } from 'src/billing/Filter/SearchFilter';
@@ -286,46 +286,48 @@ export const Workspaces = (props: WorkspacesProps): ReactNode => {
   const [WorkspaceCategorySpendReport, setWorkspaceCategorySpendReport] = useState<WorkspaceCategorySpendReport[]>([]);
   const [errorMessage, setErrorMessage] = useState<string>();
 
-  const getSpendReportByWorkspaceAndCategory = (selectedDays: number) => {
-    const startDate = subDays(selectedDays, new Date()).toISOString().slice(0, 10);
-    const endDate = new Date().toISOString().slice(0, 10);
-    const aggregationKeys = ['Workspace~Category'];
+  useEffect(() => {
+    const getSpendReportByWorkspaceAndCategory = (selectedDays: number) => {
+      const startDate = subDays(selectedDays, new Date()).toISOString().slice(0, 10);
+      const endDate = new Date().toISOString().slice(0, 10);
+      const aggregationKeys = ['Workspace~Category'];
 
-    Ajax(signal)
-      .Billing.getSpendReport({
-        billingProjectName: billingProject.projectName,
-        startDate,
-        endDate,
-        aggregationKeys,
-      })
-      .then((spend: SpendReportServerResponse) => {
-        const WorkspaceCategorySpendReport = _.map((spendItem: WorkspaceSpendData) => {
-          const costFormatter = new Intl.NumberFormat(navigator.language, {
-            style: 'currency',
-            currency: spendItem.currency,
-          });
-          return {
-            namespace: spendItem.workspace.namespace,
-            workspaceName: spendItem.workspace.name,
-            projectName: spendItem.googleProjectId,
-            currencyFormatter: spendItem.currency,
-            totalCost: costFormatter.format(parseFloat(spendItem.cost ?? '0.00')),
-            totalComputeCost: costFormatter.format(
-              parseFloat(_.find({ category: 'Compute' }, spendItem.subAggregation.spendData)?.cost ?? '0.00')
-            ),
-            totalStorageCost: costFormatter.format(
-              parseFloat(_.find({ category: 'Storage' }, spendItem.subAggregation.spendData)?.cost ?? '0.00')
-            ),
-          };
-        }, (spend.spendDetails[0] as AggregatedWorkspaceSpendData).spendData);
-        setWorkspaceCategorySpendReport(WorkspaceCategorySpendReport);
-      })
-      .catch((error) => {
-        setErrorMessage(error instanceof Response ? error.text() : error);
-      });
-  };
+      Ajax(signal)
+        .Billing.getSpendReport({
+          billingProjectName: billingProject.projectName,
+          startDate,
+          endDate,
+          aggregationKeys,
+        })
+        .then((spend: SpendReportServerResponse) => {
+          const WorkspaceCategorySpendReport = _.map((spendItem: WorkspaceSpendData) => {
+            const costFormatter = new Intl.NumberFormat(navigator.language, {
+              style: 'currency',
+              currency: spendItem.currency,
+            });
+            return {
+              namespace: spendItem.workspace.namespace,
+              workspaceName: spendItem.workspace.name,
+              projectName: spendItem.googleProjectId,
+              currencyFormatter: spendItem.currency,
+              totalCost: costFormatter.format(parseFloat(spendItem.cost ?? '0.00')),
+              totalComputeCost: costFormatter.format(
+                parseFloat(_.find({ category: 'Compute' }, spendItem.subAggregation.spendData)?.cost ?? '0.00')
+              ),
+              totalStorageCost: costFormatter.format(
+                parseFloat(_.find({ category: 'Storage' }, spendItem.subAggregation.spendData)?.cost ?? '0.00')
+              ),
+            };
+          }, (spend.spendDetails[0] as AggregatedWorkspaceSpendData).spendData);
+          setWorkspaceCategorySpendReport(WorkspaceCategorySpendReport);
+        })
+        .catch((error) => {
+          setErrorMessage(`Error fetching spend report: ${error.status}`);
+        });
+    };
 
-  getSpendReportByWorkspaceAndCategory(selectedDays);
+    getSpendReportByWorkspaceAndCategory(selectedDays);
+  }, [billingProject.projectName, selectedDays, signal]);
 
   // Apply filters to WorkspacesInProject
   const searchValueLower = searchValue.toLowerCase();
