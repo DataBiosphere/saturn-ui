@@ -4,6 +4,7 @@ import React from 'react';
 import Project, { groupByBillingAccountStatus } from 'src/billing/Project';
 import { GCPBillingProject, GoogleBillingAccount } from 'src/billing-core/models';
 import { Ajax } from 'src/libs/ajax';
+import { SpendReport as SpendReportServerResponse } from 'src/libs/ajax/billing/billing-models';
 import { azureBillingProject, gcpBillingProject } from 'src/testing/billing-project-fixtures';
 import { renderWithAppContexts } from 'src/testing/test-utils';
 import { defaultAzureWorkspace, defaultGoogleWorkspace } from 'src/testing/workspace-fixtures';
@@ -130,6 +131,8 @@ describe('groupByBillingAccountStatus', () => {
 });
 
 describe('Project', () => {
+  const getSpendReport = jest.fn(() => Promise.resolve({} as SpendReportServerResponse));
+
   it('shows all tabs if the user is an owner', async () => {
     // Arrange
     const listProjectUsers = jest.fn().mockResolvedValue([
@@ -145,7 +148,9 @@ describe('Project', () => {
     asMockedFn(Ajax).mockImplementation(
       () =>
         ({
-          Billing: { listProjectUsers, removeProjectUser: jest.fn() } as Partial<AjaxContract['Billing']>,
+          Billing: { getSpendReport, listProjectUsers, removeProjectUser: jest.fn() } as Partial<
+            AjaxContract['Billing']
+          >,
           Metrics: { captureEvent: jest.fn() } as Partial<AjaxContract['Metrics']>,
         } as Partial<AjaxContract> as AjaxContract)
     );
@@ -190,7 +195,9 @@ describe('Project', () => {
     asMockedFn(Ajax).mockImplementation(
       () =>
         ({
-          Billing: { listProjectUsers, removeProjectUser: jest.fn() } as Partial<AjaxContract['Billing']>,
+          Billing: { getSpendReport, listProjectUsers, removeProjectUser: jest.fn() } as Partial<
+            AjaxContract['Billing']
+          >,
           Metrics: { captureEvent: jest.fn() } as Partial<AjaxContract['Metrics']>,
         } as Partial<AjaxContract> as AjaxContract)
     );
@@ -231,7 +238,9 @@ describe('Project', () => {
     asMockedFn(Ajax).mockImplementation(
       () =>
         ({
-          Billing: { listProjectUsers, removeProjectUser: jest.fn() } as Partial<AjaxContract['Billing']>,
+          Billing: { getSpendReport, listProjectUsers, removeProjectUser: jest.fn() } as Partial<
+            AjaxContract['Billing']
+          >,
           Metrics: { captureEvent: jest.fn() } as Partial<AjaxContract['Metrics']>,
         } as Partial<AjaxContract> as AjaxContract)
     );
@@ -270,7 +279,9 @@ describe('Project', () => {
     asMockedFn(Ajax).mockImplementation(
       () =>
         ({
-          Billing: { listProjectUsers, removeProjectUser: jest.fn() } as Partial<AjaxContract['Billing']>,
+          Billing: { getSpendReport, listProjectUsers, removeProjectUser: jest.fn() } as Partial<
+            AjaxContract['Billing']
+          >,
           Metrics: { captureEvent: jest.fn() } as Partial<AjaxContract['Metrics']>,
         } as Partial<AjaxContract> as AjaxContract)
     );
@@ -306,7 +317,9 @@ describe('Project', () => {
     asMockedFn(Ajax).mockImplementation(
       () =>
         ({
-          Billing: { listProjectUsers, removeProjectUser: jest.fn() } as Partial<AjaxContract['Billing']>,
+          Billing: { getSpendReport, listProjectUsers, removeProjectUser: jest.fn() } as Partial<
+            AjaxContract['Billing']
+          >,
           Metrics: { captureEvent: jest.fn() } as Partial<AjaxContract['Metrics']>,
         } as Partial<AjaxContract> as AjaxContract)
     );
@@ -341,7 +354,9 @@ describe('Project', () => {
     asMockedFn(Ajax).mockImplementation(
       () =>
         ({
-          Billing: { listProjectUsers, removeProjectUser: jest.fn() } as Partial<AjaxContract['Billing']>,
+          Billing: { getSpendReport, listProjectUsers, removeProjectUser: jest.fn() } as Partial<
+            AjaxContract['Billing']
+          >,
           Metrics: { captureEvent: jest.fn() } as Partial<AjaxContract['Metrics']>,
         } as Partial<AjaxContract> as AjaxContract)
     );
@@ -376,7 +391,9 @@ describe('Project', () => {
     asMockedFn(Ajax).mockImplementation(
       () =>
         ({
-          Billing: { listProjectUsers, removeProjectUser: jest.fn() } as Partial<AjaxContract['Billing']>,
+          Billing: { getSpendReport, listProjectUsers, removeProjectUser: jest.fn() } as Partial<
+            AjaxContract['Billing']
+          >,
           Metrics: { captureEvent: jest.fn() } as Partial<AjaxContract['Metrics']>,
         } as Partial<AjaxContract> as AjaxContract)
     );
