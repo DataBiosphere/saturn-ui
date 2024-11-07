@@ -61,6 +61,8 @@ describe('getValidIgvFiles', () => {
         'gs://bucket/test4.tbi',
         'gs://bucket/test5.vcf',
         'gs://bucket/test5.vcf.tbi',
+        'gs://bucket/test6.vcf.gz',
+        'gs://bucket/test6.vcf.gz.tbi',
       ])
     ).toEqual([
       {
@@ -78,6 +80,10 @@ describe('getValidIgvFiles', () => {
       {
         filePath: 'gs://bucket/test5.vcf',
         indexFilePath: 'gs://bucket/test5.vcf.tbi',
+      },
+      {
+        filePath: 'gs://bucket/test6.vcf.gz',
+        indexFilePath: 'gs://bucket/test6.vcf.gz.tbi',
       },
     ]);
   });
