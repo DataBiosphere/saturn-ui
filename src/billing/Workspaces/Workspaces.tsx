@@ -2,7 +2,6 @@ import { Icon, Link, useUniqueId } from '@terra-ui-packages/components';
 import { subDays } from 'date-fns/fp';
 import _ from 'lodash/fp';
 import React, { CSSProperties, ReactNode, useEffect, useState } from 'react';
-import { ErrorAlert } from 'src/alerts/ErrorAlert';
 import { DateRangeFilter } from 'src/billing/Filter/DateRangeFilter';
 import { SearchFilter } from 'src/billing/Filter/SearchFilter';
 import { billingAccountIconSize, BillingAccountStatus, getBillingAccountIconProps } from 'src/billing/utils';
@@ -284,7 +283,6 @@ export const Workspaces = (props: WorkspacesProps): ReactNode => {
   const [selectedDays, setSelectedDays] = useState<number>(30);
   const [searchValue, setSearchValue] = useState<string>('');
   const [WorkspaceCategorySpendReport, setWorkspaceCategorySpendReport] = useState<WorkspaceCategorySpendReport[]>([]);
-  const [spendErrorMessage, setSpendErrorMessage] = useState<string>();
 
   useEffect(() => {
     const getSpendReportByWorkspaceAndCategory = (selectedDays: number) => {
@@ -320,9 +318,6 @@ export const Workspaces = (props: WorkspacesProps): ReactNode => {
             };
           }, (spend.spendDetails[0] as AggregatedWorkspaceSpendData).spendData);
           setWorkspaceCategorySpendReport(WorkspaceCategorySpendReport);
-        })
-        .catch((error) => {
-          setSpendErrorMessage(`Error fetching spend report: ${error.status}`);
         });
     };
 
@@ -364,7 +359,6 @@ export const Workspaces = (props: WorkspacesProps): ReactNode => {
           />
         </div>
       )}
-      {isFeaturePreviewEnabled(SPEND_REPORTING) && !!spendErrorMessage && <ErrorAlert errorValue={spendErrorMessage} />}
       {_.isEmpty(workspacesInProject) ? (
         <div style={{ ...Style.cardList.longCardShadowless, width: 'fit-content' }}>
           <span aria-hidden='true'>Use this Terra billing project to create</span>
