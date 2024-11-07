@@ -490,13 +490,13 @@ describe('WorkflowModal', () => {
     await act(async () => {
       render(
         <WorkflowModal
-          title='Clone method'
+          title='Clone snapshot'
           defaultName='groot-scientific-workflow_copy'
           defaultWdl='workflow do-great-stuff {}'
           defaultDocumentation='I am Groot'
           defaultSynopsis='I am Groot'
           defaultSnapshotComment='I am Groot'
-          buttonActionName='Clone method'
+          buttonActionName='Clone snapshot'
           postMethodProvider={successPostMethodProvider}
           onSuccess={mockOnSuccess}
           onDismiss={mockOnDismiss}
@@ -512,7 +512,7 @@ describe('WorkflowModal', () => {
     expect(screen.getByRole('textbox', { name: 'Synopsis (80 characters max)' })).toHaveDisplayValue('I am Groot');
     expect(screen.getByRole('textbox', { name: 'Snapshot comment' })).toHaveDisplayValue('I am Groot');
 
-    const cloneMethodButton = screen.getByRole('button', { name: 'Clone method' });
+    const cloneMethodButton = screen.getByRole('button', { name: 'Clone snapshot' });
 
     // Assert
     expect(cloneMethodButton).toHaveAttribute('aria-disabled', 'true');
@@ -523,7 +523,7 @@ describe('WorkflowModal', () => {
     });
 
     // Act
-    await user.click(screen.getByRole('button', { name: 'Clone method' }));
+    await user.click(screen.getByRole('button', { name: 'Clone snapshot' }));
 
     // Assert
     expect(successPostMethodProvider.postMethod).toHaveBeenCalledTimes(1);

@@ -295,13 +295,13 @@ export const WorkflowsContainer = (props: WorkflowContainerProps) => {
       }),
     showCloneModal &&
       h(WorkflowModal, {
-        title: 'Clone method',
+        title: 'Clone snapshot',
         defaultName: name.concat('_copy'),
         defaultWdl: snapshot?.payload,
         defaultDocumentation: snapshot?.documentation,
         defaultSynopsis: snapshot?.synopsis,
         defaultSnapshotComment: snapshot?.snapshotComment,
-        buttonActionName: 'Clone method',
+        buttonActionName: 'Clone snapshot',
         postMethodProvider,
         onSuccess: (namespace: string, name: string, snapshotId: number) =>
           Nav.goToPath('workflow-dashboard', {
