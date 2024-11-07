@@ -2,6 +2,7 @@ import { screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { axe } from 'jest-axe';
 import React from 'react';
+import { act } from 'react-dom/test-utils';
 import { Workspaces } from 'src/billing/Workspaces/Workspaces';
 import { GoogleBillingAccount } from 'src/billing-core/models';
 import { azureBillingProject, gcpBillingProject } from 'src/testing/billing-project-fixtures';
@@ -25,34 +26,38 @@ jest.mock(
   })
 );
 describe('Workspaces', () => {
-  it('renders a message when there are no workspaces', () => {
+  it('renders a message when there are no workspaces', async () => {
     // Act
-    renderWithAppContexts(
-      <Workspaces
-        billingProject={azureBillingProject}
-        workspacesInProject={[]}
-        billingAccounts={{}}
-        billingAccountsOutOfDate={false}
-        groups={{}}
-      />
-    );
+    await act(async () => {
+      renderWithAppContexts(
+        <Workspaces
+          billingProject={azureBillingProject}
+          workspacesInProject={[]}
+          billingAccounts={{}}
+          billingAccountsOutOfDate={false}
+          groups={{}}
+        />
+      );
+    });
 
     // Assert
     // Will throw an exception if the text is not present.
     screen.getByText('Use this Terra billing project to create');
   });
 
-  it('does not renders a message about creating workspaces when there are workspaces', () => {
+  it('does not renders a message about creating workspaces when there are workspaces', async () => {
     // Act
-    renderWithAppContexts(
-      <Workspaces
-        billingProject={azureBillingProject}
-        workspacesInProject={[defaultAzureWorkspace.workspace]}
-        billingAccounts={{}}
-        billingAccountsOutOfDate={false}
-        groups={{ done: new Set([defaultAzureWorkspace.workspace]) }}
-      />
-    );
+    await act(async () => {
+      renderWithAppContexts(
+        <Workspaces
+          billingProject={azureBillingProject}
+          workspacesInProject={[defaultAzureWorkspace.workspace]}
+          billingAccounts={{}}
+          billingAccountsOutOfDate={false}
+          groups={{ done: new Set([defaultAzureWorkspace.workspace]) }}
+        />
+      );
+    });
 
     // Assert
     expect(screen.queryByText('Use this Terra billing project to create')).toBeNull();
@@ -64,15 +69,17 @@ describe('Workspaces', () => {
     const user = userEvent.setup();
 
     // Act
-    renderWithAppContexts(
-      <Workspaces
-        billingProject={azureBillingProject}
-        workspacesInProject={[defaultAzureWorkspace.workspace, secondWorkspace.workspace]}
-        billingAccounts={{}}
-        billingAccountsOutOfDate={false}
-        groups={{ done: new Set([defaultAzureWorkspace.workspace, secondWorkspace.workspace]) }}
-      />
-    );
+    await act(async () => {
+      renderWithAppContexts(
+        <Workspaces
+          billingProject={azureBillingProject}
+          workspacesInProject={[defaultAzureWorkspace.workspace, secondWorkspace.workspace]}
+          billingAccounts={{}}
+          billingAccountsOutOfDate={false}
+          groups={{ done: new Set([defaultAzureWorkspace.workspace, secondWorkspace.workspace]) }}
+        />
+      );
+    });
     // Expand the first workspace to render (alphabetically) so we can test its details
     await user.click(screen.getByLabelText('expand workspace secondWorkspace'));
 
@@ -109,15 +116,17 @@ describe('Workspaces', () => {
     const secondWorkspaceInfo = `secondWorkspacegroot@gmail.comMar 15, 2023Google Project${secondWorkspace.workspace.googleProject}Billing Account${testBillingAccount.displayName}${errorMessage}`;
 
     // Act
-    renderWithAppContexts(
-      <Workspaces
-        billingProject={gcpBillingProject}
-        workspacesInProject={[defaultGoogleWorkspace.workspace, secondWorkspace.workspace]}
-        billingAccounts={billingAccounts}
-        billingAccountsOutOfDate={false}
-        groups={{ done: new Set([defaultGoogleWorkspace.workspace, secondWorkspace.workspace]) }}
-      />
-    );
+    await act(async () => {
+      renderWithAppContexts(
+        <Workspaces
+          billingProject={gcpBillingProject}
+          workspacesInProject={[defaultGoogleWorkspace.workspace, secondWorkspace.workspace]}
+          billingAccounts={billingAccounts}
+          billingAccountsOutOfDate={false}
+          groups={{ done: new Set([defaultGoogleWorkspace.workspace, secondWorkspace.workspace]) }}
+        />
+      );
+    });
     // Expand the first workspace to render (alphabetically) so we can test its details
     await user.click(screen.getByLabelText('expand workspace secondWorkspace'));
 
@@ -139,15 +148,17 @@ describe('Workspaces', () => {
     const user = userEvent.setup();
 
     // Act
-    renderWithAppContexts(
-      <Workspaces
-        billingProject={azureBillingProject}
-        workspacesInProject={[defaultAzureWorkspace.workspace, secondWorkspace.workspace]}
-        billingAccounts={{}}
-        billingAccountsOutOfDate={false}
-        groups={{ done: new Set([defaultAzureWorkspace.workspace, secondWorkspace.workspace]) }}
-      />
-    );
+    await act(async () => {
+      renderWithAppContexts(
+        <Workspaces
+          billingProject={azureBillingProject}
+          workspacesInProject={[defaultAzureWorkspace.workspace, secondWorkspace.workspace]}
+          billingAccounts={{}}
+          billingAccountsOutOfDate={false}
+          groups={{ done: new Set([defaultAzureWorkspace.workspace, secondWorkspace.workspace]) }}
+        />
+      );
+    });
     // Expand the first workspace to render (alphabetically) so we can test its details
     await user.click(screen.getByText('Created By'));
 
@@ -165,19 +176,22 @@ describe('Workspaces', () => {
     const thirdWorkspace = makeGoogleWorkspace({ workspace: { name: 'thirdWorkspace', workspaceId: 'thirdId' } });
 
     // Act
-    const { container } = renderWithAppContexts(
-      <Workspaces
-        billingProject={gcpBillingProject}
-        workspacesInProject={[defaultGoogleWorkspace.workspace, secondWorkspace.workspace, thirdWorkspace.workspace]}
-        billingAccounts={{}}
-        billingAccountsOutOfDate
-        groups={{
-          updating: new Set([defaultGoogleWorkspace.workspace]),
-          error: new Set([secondWorkspace.workspace]),
-          done: new Set([thirdWorkspace.workspace]),
-        }}
-      />
-    );
+    let container;
+    await act(async () => {
+      container = renderWithAppContexts(
+        <Workspaces
+          billingProject={gcpBillingProject}
+          workspacesInProject={[defaultGoogleWorkspace.workspace, secondWorkspace.workspace, thirdWorkspace.workspace]}
+          billingAccounts={{}}
+          billingAccountsOutOfDate
+          groups={{
+            updating: new Set([defaultGoogleWorkspace.workspace]),
+            error: new Set([secondWorkspace.workspace]),
+            done: new Set([thirdWorkspace.workspace]),
+          }}
+        />
+      ).container;
+    });
 
     // Assert
     const userTable = screen.getByRole('table');
