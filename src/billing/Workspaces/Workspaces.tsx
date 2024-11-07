@@ -339,76 +339,79 @@ export const Workspaces = (props: WorkspacesProps): ReactNode => {
     workspacesInProject
   );
 
-  return _.isEmpty(workspacesInProject) ? (
-    <div style={{ ...Style.cardList.longCardShadowless, width: 'fit-content' }}>
-      <span aria-hidden='true'>Use this Terra billing project to create</span>
-      <Link
-        aria-label='Use this Terra billing project to create workspaces'
-        style={{ marginLeft: '0.3em', textDecoration: 'underline' }}
-        href={Nav.getLink('workspaces')}
-      >
-        Workspaces
-      </Link>
-    </div>
-  ) : (
-    !_.isEmpty(filteredWorkspacesInProject) && (
-      <>
-        {isFeaturePreviewEnabled(SPEND_REPORTING) && (
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(3, minmax(max-content, 1fr))',
-              rowGap: '1.66rem',
-              columnGap: '1.25rem',
-            }}
-          >
-            <DateRangeFilter
-              label='Date range'
-              rangeOptions={[7, 30, 90]}
-              defaultValue={selectedDays}
-              style={{ gridRowStart: 1, gridColumnStart: 1 }}
-              onChange={setSelectedDays}
-            />
-            <SearchFilter
-              placeholder='Search by name, project or bucket'
-              style={{ gridRowStart: 1, gridColumnStart: 2, margin: '1.35rem' }}
-              onChange={setSearchValue}
-            />
-          </div>
-        )}
-        {!!spendErrorMessage && <ErrorAlert errorValue={spendErrorMessage} />}
-        <div role='table' aria-label={`workspaces in billing project ${billingProject.projectName}`}>
-          <WorkspaceCardHeaders
-            needsStatusColumn={billingAccountsOutOfDate}
-            sort={workspaceSort}
-            onSort={setWorkspaceSort}
+  return (
+    <>
+      {isFeaturePreviewEnabled(SPEND_REPORTING) && (
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(3, minmax(max-content, 1fr))',
+            rowGap: '1.66rem',
+            columnGap: '1.25rem',
+          }}
+        >
+          <DateRangeFilter
+            label='Date range'
+            rangeOptions={[7, 30, 90]}
+            defaultValue={selectedDays}
+            style={{ gridRowStart: 1, gridColumnStart: 1 }}
+            onChange={setSelectedDays}
           />
-          <div>
-            {_.flow(
-              _.orderBy([workspaceSort.field], [workspaceSort.direction]),
-              _.map((workspace: WorkspaceInfo) => {
-                const isExpanded = expandedWorkspaceName === workspace.name;
-                return (
-                  <WorkspaceCard
-                    workspace={workspace}
-                    billingAccountDisplayName={
-                      isGoogleWorkspaceInfo(workspace)
-                        ? billingAccounts[workspace.billingAccount]?.displayName
-                        : undefined
-                    }
-                    billingProject={billingProject}
-                    billingAccountStatus={billingAccountsOutOfDate && getBillingAccountStatus(workspace)}
-                    key={workspace.workspaceId}
-                    isExpanded={isExpanded}
-                    onExpand={() => setExpandedWorkspaceName(isExpanded ? undefined : workspace.name)}
-                    workspaceCategorySpendReport={WorkspaceCategorySpendReport}
-                  />
-                );
-              })
-            )(filteredWorkspacesInProject)}
-          </div>
+          <SearchFilter
+            placeholder='Search by name, project or bucket'
+            style={{ gridRowStart: 1, gridColumnStart: 2, margin: '1.35rem' }}
+            onChange={setSearchValue}
+          />
         </div>
-      </>
-    )
+      )}
+      {isFeaturePreviewEnabled(SPEND_REPORTING) && !!spendErrorMessage && <ErrorAlert errorValue={spendErrorMessage} />}
+      {_.isEmpty(workspacesInProject) ? (
+        <div style={{ ...Style.cardList.longCardShadowless, width: 'fit-content' }}>
+          <span aria-hidden='true'>Use this Terra billing project to create</span>
+          <Link
+            aria-label='Use this Terra billing project to create workspaces'
+            style={{ marginLeft: '0.3em', textDecoration: 'underline' }}
+            href={Nav.getLink('workspaces')}
+          >
+            Workspaces
+          </Link>
+        </div>
+      ) : (
+        !_.isEmpty(filteredWorkspacesInProject) && (
+          <div role='table' aria-label={`workspaces in billing project ${billingProject.projectName}`}>
+            <WorkspaceCardHeaders
+              needsStatusColumn={billingAccountsOutOfDate}
+              sort={workspaceSort}
+              onSort={setWorkspaceSort}
+            />
+            <div>
+              {_.flow(
+                _.orderBy([workspaceSort.field], [workspaceSort.direction]),
+                _.map((workspace: WorkspaceInfo) => {
+                  const isExpanded = expandedWorkspaceName === workspace.name;
+                  return (
+                    <WorkspaceCard
+                      workspace={workspace}
+                      billingAccountDisplayName={
+                        isGoogleWorkspaceInfo(workspace)
+                          ? billingAccounts[workspace.billingAccount]?.displayName
+                          : undefined
+                      }
+                      billingProject={billingProject}
+                      billingAccountStatus={billingAccountsOutOfDate && getBillingAccountStatus(workspace)}
+                      key={workspace.workspaceId}
+                      isExpanded={isExpanded}
+                      onExpand={() => setExpandedWorkspaceName(isExpanded ? undefined : workspace.name)}
+                      workspaceCategorySpendReport={WorkspaceCategorySpendReport}
+                    />
+                  );
+                })
+              )(filteredWorkspacesInProject)}
+            </div>
+          </div>
+        )
+      )}
+      ;
+    </>
   );
 };
