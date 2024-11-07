@@ -1,6 +1,8 @@
 import { Icon, Link, useUniqueId } from '@terra-ui-packages/components';
+import { subDays } from 'date-fns/fp';
 import _ from 'lodash/fp';
 import React, { CSSProperties, ReactNode, useState } from 'react';
+import { ErrorAlert } from 'src/alerts/ErrorAlert';
 import { DateRangeFilter } from 'src/billing/Filter/DateRangeFilter';
 import { SearchFilter } from 'src/billing/Filter/SearchFilter';
 import { billingAccountIconSize, BillingAccountStatus, getBillingAccountIconProps } from 'src/billing/utils';
@@ -12,12 +14,18 @@ import {
 } from 'src/billing-core/models';
 import { ariaSort, HeaderRenderer } from 'src/components/table';
 import { Ajax } from 'src/libs/ajax';
+import {
+  AggregatedWorkspaceSpendData,
+  SpendReport as SpendReportServerResponse,
+  WorkspaceCategorySpendReport,
+  WorkspaceSpendData,
+} from 'src/libs/ajax/billing/billing-models';
 import colors from 'src/libs/colors';
 import Events, { extractBillingDetails } from 'src/libs/events';
 import { isFeaturePreviewEnabled } from 'src/libs/feature-previews';
 import { SPEND_REPORTING } from 'src/libs/feature-previews-config';
 import * as Nav from 'src/libs/nav';
-import { memoWithName } from 'src/libs/react-utils';
+import { memoWithName, useCancellation } from 'src/libs/react-utils';
 import * as Style from 'src/libs/style';
 import * as Utils from 'src/libs/utils';
 import { isGoogleWorkspaceInfo, WorkspaceInfo } from 'src/workspaces/utils';
@@ -126,10 +134,19 @@ interface WorkspaceCardProps {
   billingAccountStatus: false | BillingAccountStatus;
   isExpanded: boolean;
   onExpand: () => void;
+  workspaceCategorySpendReport: WorkspaceCategorySpendReport[];
 }
 
 const WorkspaceCard: React.FC<WorkspaceCardProps> = memoWithName('WorkspaceCard', (props: WorkspaceCardProps) => {
-  const { workspace, billingProject, billingAccountStatus, billingAccountDisplayName, isExpanded, onExpand } = props;
+  const {
+    workspace,
+    billingProject,
+    billingAccountStatus,
+    billingAccountDisplayName,
+    isExpanded,
+    onExpand,
+    workspaceCategorySpendReport,
+  } = props;
   const { namespace, name, createdBy, lastModified, googleProject, errorMessage } = workspace;
   const workspaceCardStyles = {
     field: {
@@ -177,13 +194,13 @@ const WorkspaceCard: React.FC<WorkspaceCardProps> = memoWithName('WorkspaceCard'
         {isFeaturePreviewEnabled(SPEND_REPORTING) && (
           <>
             <div role='cell' style={workspaceCardStyles.field}>
-              N/A
+              {_.find({ namespace, workspaceName: name }, workspaceCategorySpendReport)?.totalCost ?? 'N/A'}
             </div>
             <div role='cell' style={workspaceCardStyles.field}>
-              N/A
+              {_.find({ namespace, workspaceName: name }, workspaceCategorySpendReport)?.totalComputeCost ?? 'N/A'}
             </div>
             <div role='cell' style={workspaceCardStyles.field}>
-              N/A
+              {_.find({ namespace, workspaceName: name }, workspaceCategorySpendReport)?.totalStorageCost ?? 'N/A'}
             </div>
           </>
         )}
@@ -262,8 +279,53 @@ export const Workspaces = (props: WorkspacesProps): ReactNode => {
     // @ts-ignore
     _.findKey((g) => g.has(workspace), groups);
 
+  const signal = useCancellation();
+
   const [selectedDays, setSelectedDays] = useState<number>(30);
   const [searchValue, setSearchValue] = useState<string>('');
+  const [WorkspaceCategorySpendReport, setWorkspaceCategorySpendReport] = useState<WorkspaceCategorySpendReport[]>([]);
+  const [errorMessage, setErrorMessage] = useState<string>();
+
+  const getSpendReportByWorkspaceAndCategory = (selectedDays: number) => {
+    const startDate = subDays(selectedDays, new Date()).toISOString().slice(0, 10);
+    const endDate = new Date().toISOString().slice(0, 10);
+    const aggregationKeys = ['Workspace~Category'];
+
+    Ajax(signal)
+      .Billing.getSpendReport({
+        billingProjectName: billingProject.projectName,
+        startDate,
+        endDate,
+        aggregationKeys,
+      })
+      .then((spend: SpendReportServerResponse) => {
+        const WorkspaceCategorySpendReport = _.map((spendItem: WorkspaceSpendData) => {
+          const costFormatter = new Intl.NumberFormat(navigator.language, {
+            style: 'currency',
+            currency: spendItem.currency,
+          });
+          return {
+            namespace: spendItem.workspace.namespace,
+            workspaceName: spendItem.workspace.name,
+            projectName: spendItem.googleProjectId,
+            currencyFormatter: spendItem.currency,
+            totalCost: costFormatter.format(parseFloat(spendItem.cost ?? '0.00')),
+            totalComputeCost: costFormatter.format(
+              parseFloat(_.find({ category: 'Compute' }, spendItem.subAggregation.spendData)?.cost ?? '0.00')
+            ),
+            totalStorageCost: costFormatter.format(
+              parseFloat(_.find({ category: 'Storage' }, spendItem.subAggregation.spendData)?.cost ?? '0.00')
+            ),
+          };
+        }, (spend.spendDetails[0] as AggregatedWorkspaceSpendData).spendData);
+        setWorkspaceCategorySpendReport(WorkspaceCategorySpendReport);
+      })
+      .catch((error) => {
+        setErrorMessage(error instanceof Response ? error.text() : error);
+      });
+  };
+
+  getSpendReportByWorkspaceAndCategory(selectedDays);
 
   // Apply filters to WorkspacesInProject
   const searchValueLower = searchValue.toLowerCase();
@@ -312,6 +374,7 @@ export const Workspaces = (props: WorkspacesProps): ReactNode => {
             />
           </div>
         )}
+        {!!errorMessage && <ErrorAlert errorValue={errorMessage} />}
         <div role='table' aria-label={`workspaces in billing project ${billingProject.projectName}`}>
           <WorkspaceCardHeaders
             needsStatusColumn={billingAccountsOutOfDate}
@@ -336,6 +399,7 @@ export const Workspaces = (props: WorkspacesProps): ReactNode => {
                     key={workspace.workspaceId}
                     isExpanded={isExpanded}
                     onExpand={() => setExpandedWorkspaceName(isExpanded ? undefined : workspace.name)}
+                    workspaceCategorySpendReport={WorkspaceCategorySpendReport}
                   />
                 );
               })
