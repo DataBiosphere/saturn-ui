@@ -303,12 +303,17 @@ export const WorkflowsContainer = (props: WorkflowContainerProps) => {
         defaultSnapshotComment: snapshot?.snapshotComment,
         buttonActionName: 'Clone snapshot',
         postMethodProvider,
-        onSuccess: (namespace: string, name: string, snapshotId: number) =>
+        onSuccess: (namespace: string, name: string, snapshotId: number) => {
+          // there is an interesting situation where if a user has the same namespace and name for the cloned method
+          // as the original method, instead of creating a new method Agora will create a new snapshot of the original method.
+          // Hence, to ensure the data is correct in the UI reset the cached snapshot list store and then load the page.
+          snapshotsListStore.reset();
           Nav.goToPath('workflow-dashboard', {
             namespace,
             name,
             snapshotId,
-          }),
+          });
+        },
         onDismiss: () => setShowCloneModal(false),
       }),
     busy && spinnerOverlay,
