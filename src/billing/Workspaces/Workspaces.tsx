@@ -1,4 +1,4 @@
-import { Icon, Link, useUniqueId } from '@terra-ui-packages/components';
+import { Icon, Link, SpinnerOverlay, useUniqueId } from '@terra-ui-packages/components';
 import { subDays } from 'date-fns/fp';
 import _ from 'lodash/fp';
 import React, { CSSProperties, ReactNode, useEffect, useState } from 'react';
@@ -20,6 +20,7 @@ import {
   WorkspaceSpendData,
 } from 'src/libs/ajax/billing/billing-models';
 import colors from 'src/libs/colors';
+import { reportErrorAndRethrow } from 'src/libs/error';
 import Events, { extractBillingDetails } from 'src/libs/events';
 import { isFeaturePreviewEnabled } from 'src/libs/feature-previews';
 import { SPEND_REPORTING } from 'src/libs/feature-previews-config';
@@ -280,6 +281,7 @@ export const Workspaces = (props: WorkspacesProps): ReactNode => {
 
   const signal = useCancellation();
 
+  const [updating, setUpdating] = useState(false);
   const [selectedDays, setSelectedDays] = useState<number>(30);
   const [searchValue, setSearchValue] = useState<string>('');
   const [WorkspaceCategorySpendReport, setWorkspaceCategorySpendReport] = useState<WorkspaceCategorySpendReport[]>([]);
@@ -290,35 +292,41 @@ export const Workspaces = (props: WorkspacesProps): ReactNode => {
       const endDate = new Date().toISOString().slice(0, 10);
       const aggregationKeys = ['Workspace~Category'];
 
-      Ajax(signal)
-        .Billing.getSpendReport({
-          billingProjectName: billingProject.projectName,
-          startDate,
-          endDate,
-          aggregationKeys,
-        })
-        .then((spend: SpendReportServerResponse) => {
-          const WorkspaceCategorySpendReport = _.map((spendItem: WorkspaceSpendData) => {
-            const costFormatter = new Intl.NumberFormat(navigator.language, {
-              style: 'currency',
-              currency: spendItem.currency,
-            });
-            return {
-              namespace: spendItem.workspace.namespace,
-              workspaceName: spendItem.workspace.name,
-              projectName: spendItem.googleProjectId,
-              currencyFormatter: spendItem.currency,
-              totalCost: costFormatter.format(parseFloat(spendItem.cost ?? '0.00')),
-              totalComputeCost: costFormatter.format(
-                parseFloat(_.find({ category: 'Compute' }, spendItem.subAggregation.spendData)?.cost ?? '0.00')
-              ),
-              totalStorageCost: costFormatter.format(
-                parseFloat(_.find({ category: 'Storage' }, spendItem.subAggregation.spendData)?.cost ?? '0.00')
-              ),
-            };
-          }, (spend.spendDetails[0] as AggregatedWorkspaceSpendData).spendData);
-          setWorkspaceCategorySpendReport(WorkspaceCategorySpendReport);
-        });
+      const reloadBillingProjectSpendReport = _.flow(
+        reportErrorAndRethrow(`Error loading spend report for ${billingProject.projectName}`),
+        Utils.withBusyState(setUpdating)
+      )(() =>
+        Ajax(signal)
+          .Billing.getSpendReport({
+            billingProjectName: billingProject.projectName,
+            startDate,
+            endDate,
+            aggregationKeys,
+          })
+          .then((spend: SpendReportServerResponse) => {
+            const WorkspaceCategorySpendReport = _.map((spendItem: WorkspaceSpendData) => {
+              const costFormatter = new Intl.NumberFormat(navigator.language, {
+                style: 'currency',
+                currency: spendItem.currency,
+              });
+              return {
+                namespace: spendItem.workspace.namespace,
+                workspaceName: spendItem.workspace.name,
+                projectName: spendItem.googleProjectId,
+                currencyFormatter: spendItem.currency,
+                totalCost: costFormatter.format(parseFloat(spendItem.cost ?? '0.00')),
+                totalComputeCost: costFormatter.format(
+                  parseFloat(_.find({ category: 'Compute' }, spendItem.subAggregation.spendData)?.cost ?? '0.00')
+                ),
+                totalStorageCost: costFormatter.format(
+                  parseFloat(_.find({ category: 'Storage' }, spendItem.subAggregation.spendData)?.cost ?? '0.00')
+                ),
+              };
+            }, (spend.spendDetails[0] as AggregatedWorkspaceSpendData).spendData);
+            setWorkspaceCategorySpendReport(WorkspaceCategorySpendReport);
+          })
+      );
+      reloadBillingProjectSpendReport();
     };
 
     getSpendReportByWorkspaceAndCategory(selectedDays);
@@ -359,6 +367,7 @@ export const Workspaces = (props: WorkspacesProps): ReactNode => {
           />
         </div>
       )}
+      {isFeaturePreviewEnabled(SPEND_REPORTING) && updating && <SpinnerOverlay mode='FullScreen' />}
       {_.isEmpty(workspacesInProject) ? (
         <div style={{ ...Style.cardList.longCardShadowless, width: 'fit-content' }}>
           <span aria-hidden='true'>Use this Terra billing project to create</span>
