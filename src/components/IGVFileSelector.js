@@ -33,9 +33,9 @@ const isTdrUrl = (fileUrl) => {
   return /datarepo(-(dev|alpha|perf|staging|tools))?-[a-f0-9]+-bucket/.test(bucket) && isUUID(datasetId) && isUUID(fileRefId);
 };
 
-const genomicFiles = ['bam', 'bed', 'cram', 'gz', 'vcf']
-const indexFiles = ['bai', 'crai', 'idx', 'tbi']
-const allFiles = genomicFiles.concat(indexFiles)
+const genomicFiles = ['bam', 'bed', 'cram', 'gz', 'vcf'];
+const indexFiles = ['bai', 'crai', 'idx', 'tbi'];
+const allFiles = genomicFiles.concat(indexFiles);
 
 function indexMap(base) {
   return {
@@ -43,7 +43,7 @@ function indexMap(base) {
     bam: [`${base}.bai`, `${base}.bam.bai`],
     vcf: [`${base}.idx`, `${base}.vcf.idx`, `${base}.tbi`, `${base}.vcf.tbi`],
     gz: [`${base}.gz.tbi`],
-  }
+  };
 }
 
 const findIndexForFile = (fileUrl, fileUrls) => {
