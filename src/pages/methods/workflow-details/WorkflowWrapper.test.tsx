@@ -441,8 +441,6 @@ describe('workflows container', () => {
 
     const dialog = screen.getByRole('dialog', { name: /clone snapshot/i });
 
-    screen.logTestingPlaygroundURL();
-
     // Assert
     expect(dialog).toBeInTheDocument();
     expect(within(dialog).getByRole('textbox', { name: 'Namespace *' })).toHaveDisplayValue('');
