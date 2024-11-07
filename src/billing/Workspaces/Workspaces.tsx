@@ -304,25 +304,27 @@ export const Workspaces = (props: WorkspacesProps): ReactNode => {
             aggregationKeys,
           })
           .then((spend: SpendReportServerResponse) => {
-            const WorkspaceCategorySpendReport = _.map((spendItem: WorkspaceSpendData) => {
-              const costFormatter = new Intl.NumberFormat(navigator.language, {
-                style: 'currency',
-                currency: spendItem.currency,
-              });
-              return {
-                namespace: spendItem.workspace.namespace,
-                workspaceName: spendItem.workspace.name,
-                projectName: spendItem.googleProjectId,
-                currencyFormatter: spendItem.currency,
-                totalCost: costFormatter.format(parseFloat(spendItem.cost ?? '0.00')),
-                totalComputeCost: costFormatter.format(
-                  parseFloat(_.find({ category: 'Compute' }, spendItem.subAggregation.spendData)?.cost ?? '0.00')
-                ),
-                totalStorageCost: costFormatter.format(
-                  parseFloat(_.find({ category: 'Storage' }, spendItem.subAggregation.spendData)?.cost ?? '0.00')
-                ),
-              };
-            }, (spend.spendDetails[0] as AggregatedWorkspaceSpendData).spendData);
+            const WorkspaceCategorySpendReport =
+              spend.spendDetails &&
+              _.map((spendItem: WorkspaceSpendData) => {
+                const costFormatter = new Intl.NumberFormat(navigator.language, {
+                  style: 'currency',
+                  currency: spendItem.currency,
+                });
+                return {
+                  namespace: spendItem.workspace.namespace,
+                  workspaceName: spendItem.workspace.name,
+                  projectName: spendItem.googleProjectId,
+                  currencyFormatter: spendItem.currency,
+                  totalCost: costFormatter.format(parseFloat(spendItem.cost ?? '0.00')),
+                  totalComputeCost: costFormatter.format(
+                    parseFloat(_.find({ category: 'Compute' }, spendItem.subAggregation.spendData)?.cost ?? '0.00')
+                  ),
+                  totalStorageCost: costFormatter.format(
+                    parseFloat(_.find({ category: 'Storage' }, spendItem.subAggregation.spendData)?.cost ?? '0.00')
+                  ),
+                };
+              }, (spend.spendDetails[0] as AggregatedWorkspaceSpendData).spendData);
             setWorkspaceCategorySpendReport(WorkspaceCategorySpendReport);
           })
       );
