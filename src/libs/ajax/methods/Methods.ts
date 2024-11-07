@@ -4,6 +4,7 @@ import * as qs from 'qs';
 import { authOpts } from 'src/auth/auth-session';
 import { fetchAgora, fetchOrchestration, fetchRawls } from 'src/libs/ajax/ajax-common';
 import {
+  CreateSnapshotRequest,
   MethodConfigACL,
   MethodDefinition,
   MethodQuery,
@@ -60,6 +61,17 @@ export const Methods = (signal?: AbortSignal) => ({
         return res.json();
       },
 
+      createSnapshot: async (
+        payload: CreateSnapshotRequest,
+        redactPreviousSnapshot: boolean
+      ): Promise<MethodResponse> => {
+        const res = await fetchOrchestration(
+          `api/${root}?redact=${redactPreviousSnapshot}`,
+          _.mergeAll([authOpts(), jsonBody(payload), { signal, method: 'POST' }])
+        );
+        return res.json();
+      },
+
       configs: async () => {
         const res = await fetchAgora(`${root}/configurations`, _.merge(authOpts(), { signal }));
         return res.json();
@@ -75,11 +87,6 @@ export const Methods = (signal?: AbortSignal) => ({
           `api/${root}/permissions`,
           _.mergeAll([authOpts(), jsonBody(payload), { signal, method: 'POST' }])
         );
-        return res.json();
-      },
-
-      allConfigs: async () => {
-        const res = await fetchAgora(`methods/${namespace}/${name}/configurations`, _.merge(authOpts(), { signal }));
         return res.json();
       },
 
