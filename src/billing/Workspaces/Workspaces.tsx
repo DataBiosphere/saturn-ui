@@ -16,7 +16,6 @@ import { Ajax } from 'src/libs/ajax';
 import {
   AggregatedWorkspaceSpendData,
   SpendReport as SpendReportServerResponse,
-  WorkspaceCategorySpendReport,
   WorkspaceSpendData,
 } from 'src/libs/ajax/billing/billing-models';
 import colors from 'src/libs/colors';
@@ -133,20 +132,21 @@ interface WorkspaceCardProps {
   billingAccountStatus: false | BillingAccountStatus;
   isExpanded: boolean;
   onExpand: () => void;
-  workspaceCategorySpendReport: WorkspaceCategorySpendReport[];
 }
 
 const WorkspaceCard: React.FC<WorkspaceCardProps> = memoWithName('WorkspaceCard', (props: WorkspaceCardProps) => {
+  const { workspace, billingProject, billingAccountStatus, billingAccountDisplayName, isExpanded, onExpand } = props;
   const {
-    workspace,
-    billingProject,
-    billingAccountStatus,
-    billingAccountDisplayName,
-    isExpanded,
-    onExpand,
-    workspaceCategorySpendReport,
-  } = props;
-  const { namespace, name, createdBy, lastModified, googleProject, errorMessage } = workspace;
+    namespace,
+    name,
+    createdBy,
+    lastModified,
+    googleProject,
+    errorMessage,
+    totalSpend,
+    totalCompute,
+    totalStorage,
+  } = workspace;
   const workspaceCardStyles = {
     field: {
       ...Style.noWrapEllipsis,
@@ -193,13 +193,13 @@ const WorkspaceCard: React.FC<WorkspaceCardProps> = memoWithName('WorkspaceCard'
         {isFeaturePreviewEnabled(SPEND_REPORTING) && (
           <>
             <div role='cell' style={workspaceCardStyles.field}>
-              {_.find({ namespace, workspaceName: name }, workspaceCategorySpendReport)?.totalCost ?? 'N/A'}
+              {totalSpend ?? 'N/A'}
             </div>
             <div role='cell' style={workspaceCardStyles.field}>
-              {_.find({ namespace, workspaceName: name }, workspaceCategorySpendReport)?.totalComputeCost ?? 'N/A'}
+              {totalCompute ?? 'N/A'}
             </div>
             <div role='cell' style={workspaceCardStyles.field}>
-              {_.find({ namespace, workspaceName: name }, workspaceCategorySpendReport)?.totalStorageCost ?? 'N/A'}
+              {totalStorage ?? 'N/A'}
             </div>
           </>
         )}
@@ -283,10 +283,10 @@ export const Workspaces = (props: WorkspacesProps): ReactNode => {
   const [updating, setUpdating] = useState(false);
   const [selectedDays, setSelectedDays] = useState<number>(30);
   const [searchValue, setSearchValue] = useState<string>('');
-  const [WorkspaceCategorySpendReport, setWorkspaceCategorySpendReport] = useState<WorkspaceCategorySpendReport[]>([]);
+  const [allWorkspacesInProject, setAllWorkspacesInProject] = useState<WorkspaceInfo[]>(workspacesInProject);
 
   useEffect(() => {
-    const getSpendReportByWorkspaceAndCategory = (selectedDays: number) => {
+    const getSpendReportByWorkspaceAndCategory = (selectedDays: number, workspacesInProject: WorkspaceInfo[]) => {
       const startDate = subDays(selectedDays, new Date()).toISOString().slice(0, 10);
       const endDate = new Date().toISOString().slice(0, 10);
       const aggregationKeys = ['Workspace~Category'];
@@ -300,35 +300,44 @@ export const Workspaces = (props: WorkspacesProps): ReactNode => {
           aggregationKeys,
         })
         .then((spend: SpendReportServerResponse) => {
-          const WorkspaceCategorySpendReport =
-            spend.spendDetails &&
-            _.map((spendItem: WorkspaceSpendData) => {
+          const spendDataMap = _.keyBy(
+            (spendItem: WorkspaceSpendData) => `${spendItem.workspace.namespace}-${spendItem.workspace.name}`,
+            (spend.spendDetails[0] as AggregatedWorkspaceSpendData).spendData
+          );
+
+          const updatedWorkspaces = _.map((workspace) => {
+            const key = `${workspace.namespace}-${workspace.name}`;
+            const spendItem = spendDataMap[key];
+
+            if (spendItem) {
               const costFormatter = new Intl.NumberFormat(navigator.language, {
                 style: 'currency',
                 currency: spendItem.currency,
               });
+
               return {
-                namespace: spendItem.workspace.namespace,
-                workspaceName: spendItem.workspace.name,
-                projectName: spendItem.googleProjectId,
-                currencyFormatter: spendItem.currency,
-                totalCost: costFormatter.format(parseFloat(spendItem.cost ?? '0.00')),
-                totalComputeCost: costFormatter.format(
+                ...workspace,
+                totalSpend: costFormatter.format(parseFloat(spendItem.cost ?? '0.00')),
+                totalCompute: costFormatter.format(
                   parseFloat(_.find({ category: 'Compute' }, spendItem.subAggregation.spendData)?.cost ?? '0.00')
                 ),
-                totalStorageCost: costFormatter.format(
+                totalStorage: costFormatter.format(
                   parseFloat(_.find({ category: 'Storage' }, spendItem.subAggregation.spendData)?.cost ?? '0.00')
                 ),
               };
-            }, (spend.spendDetails[0] as AggregatedWorkspaceSpendData).spendData);
-          setWorkspaceCategorySpendReport(WorkspaceCategorySpendReport);
+            }
+
+            return workspace;
+          }, workspacesInProject);
+
+          setAllWorkspacesInProject(updatedWorkspaces);
           setUpdating(false);
         })
         .catch(() => setUpdating(false));
     };
 
-    getSpendReportByWorkspaceAndCategory(selectedDays);
-  }, [billingProject.projectName, selectedDays, signal]);
+    getSpendReportByWorkspaceAndCategory(selectedDays, workspacesInProject);
+  }, [billingProject.projectName, selectedDays, signal, workspacesInProject]);
 
   // Apply filters to WorkspacesInProject
   const searchValueLower = searchValue.toLowerCase();
@@ -337,7 +346,7 @@ export const Workspaces = (props: WorkspacesProps): ReactNode => {
       workspace.name.toLowerCase().includes(searchValueLower) ||
       workspace.googleProject?.toLowerCase().includes(searchValueLower) ||
       workspace.bucketName?.toLowerCase().includes(searchValueLower),
-    workspacesInProject
+    allWorkspacesInProject
   );
 
   return (
@@ -403,7 +412,6 @@ export const Workspaces = (props: WorkspacesProps): ReactNode => {
                       key={workspace.workspaceId}
                       isExpanded={isExpanded}
                       onExpand={() => setExpandedWorkspaceName(isExpanded ? undefined : workspace.name)}
-                      workspaceCategorySpendReport={WorkspaceCategorySpendReport}
                     />
                   );
                 })
@@ -412,7 +420,6 @@ export const Workspaces = (props: WorkspacesProps): ReactNode => {
           </div>
         )
       )}
-      ;
     </>
   );
 };

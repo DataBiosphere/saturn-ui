@@ -128,5 +128,4 @@ export interface SpendReport {
     startTime: string;
   };
 }
-
 // End of interfaces for dealing with the server SpendReport JSON response
