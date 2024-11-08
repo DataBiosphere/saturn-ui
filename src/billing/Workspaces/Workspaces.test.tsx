@@ -1,8 +1,7 @@
-import { screen, within } from '@testing-library/react';
+import { act, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { axe } from 'jest-axe';
 import React from 'react';
-import { act } from 'react-dom/test-utils';
 import { Workspaces } from 'src/billing/Workspaces/Workspaces';
 import { GoogleBillingAccount } from 'src/billing-core/models';
 import { azureBillingProject, gcpBillingProject } from 'src/testing/billing-project-fixtures';
