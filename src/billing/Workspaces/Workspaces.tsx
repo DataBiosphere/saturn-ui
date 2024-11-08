@@ -312,17 +312,17 @@ export const Workspaces = (props: WorkspacesProps): ReactNode => {
             if (spendItem) {
               const costFormatter = new Intl.NumberFormat(navigator.language, {
                 style: 'currency',
-                currency: spendItem.currency,
+                currency: spendItem?.currency,
               });
 
               return {
                 ...workspace,
-                totalSpend: costFormatter.format(parseFloat(spendItem.cost ?? '0.00')),
+                totalSpend: costFormatter.format(parseFloat(spendItem?.cost ?? '0.00')),
                 totalCompute: costFormatter.format(
-                  parseFloat(_.find({ category: 'Compute' }, spendItem.subAggregation.spendData)?.cost ?? '0.00')
+                  parseFloat(_.find({ category: 'Compute' }, spendItem?.subAggregation?.spendData)?.cost ?? '0.00')
                 ),
                 totalStorage: costFormatter.format(
-                  parseFloat(_.find({ category: 'Storage' }, spendItem.subAggregation.spendData)?.cost ?? '0.00')
+                  parseFloat(_.find({ category: 'Storage' }, spendItem?.subAggregation?.spendData)?.cost ?? '0.00')
                 ),
               };
             }
