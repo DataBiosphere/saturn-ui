@@ -5,7 +5,7 @@ import CreateGCPBillingProject from 'src/billing/CreateGCPBillingProject';
 import { billingProjectNameValidator } from 'src/billing/utils';
 import { GoogleBillingAccount } from 'src/billing-core/models';
 import { ButtonPrimary, Link, spinnerOverlay } from 'src/components/common';
-import { Ajax } from 'src/libs/ajax';
+import { Billing } from 'src/libs/ajax/billing/Billing';
 import colors from 'src/libs/colors';
 import { reportErrorAndRethrow } from 'src/libs/error';
 import { getTerraUser } from 'src/libs/state';
@@ -31,7 +31,7 @@ export const GCPNewBillingProjectModal = (props: GCPNewBillingProjectModalProps)
   )(async () => {
     try {
       // Submit is only enabled when choseBillingAccount is non-null.
-      await Ajax().Billing.createGCPProject(billingProjectName, chosenBillingAccount!.accountName);
+      await Billing().createGCPProject(billingProjectName, chosenBillingAccount!.accountName);
       props.onSuccess(billingProjectName);
     } catch (error: any) {
       if (error?.status === 409) {

@@ -2,15 +2,14 @@ import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import React from 'react';
 import { BillingProjectActions } from 'src/billing/List/BillingProjectActions';
-import { Ajax } from 'src/libs/ajax';
+import { Billing, BillingContract } from 'src/libs/ajax/billing/Billing';
 import { reportError } from 'src/libs/error';
 import * as Nav from 'src/libs/nav';
 import { history } from 'src/libs/nav';
-import { asMockedFn, renderWithAppContexts as render } from 'src/testing/test-utils';
+import { asMockedFn, MockedFn, partial, renderWithAppContexts as render } from 'src/testing/test-utils';
 import { WorkspaceWrapper } from 'src/workspaces/utils';
 
-type AjaxContract = ReturnType<typeof Ajax>;
-jest.mock('src/libs/ajax');
+jest.mock('src/libs/ajax/billing/Billing');
 
 type UseWorkspacesExports = typeof import('src/workspaces/common/state/useWorkspaces');
 jest.mock('src/workspaces/common/state/useWorkspaces', (): UseWorkspacesExports => {
@@ -32,7 +31,10 @@ jest.mock(
 describe('BillingProjectActions', () => {
   const verifyDisabled = (item) => expect(item).toHaveAttribute('disabled');
   const verifyEnabled = (item) => expect(item).not.toHaveAttribute('disabled');
-  const deleteProjectMock = jest.fn(() => Promise.resolve(new Response('', { status: 204 })));
+
+  const deleteProjectMock: MockedFn<BillingContract['deleteProject']> = jest.fn();
+  deleteProjectMock.mockResolvedValue(new Response('', { status: 204 }));
+
   const projectName = 'testProject';
   const propsWithNoWorkspacesInProject = {
     projectName,
@@ -51,11 +53,10 @@ describe('BillingProjectActions', () => {
   };
 
   beforeEach(() => {
-    asMockedFn(Ajax).mockImplementation(
-      () =>
-        ({
-          Billing: { deleteProject: deleteProjectMock } as Partial<AjaxContract['Billing']>,
-        } as Partial<AjaxContract> as AjaxContract)
+    asMockedFn(Billing).mockReturnValue(
+      partial<BillingContract>({
+        deleteProject: deleteProjectMock,
+      })
     );
 
     Nav.history.replace({ search: 'initial' });
@@ -153,12 +154,10 @@ describe('BillingProjectActions', () => {
 
   it('handles errors from deleting a billing project', async () => {
     // Arrange
-    asMockedFn(Ajax).mockImplementation(
-      () =>
-        ({
-          Billing: { deleteProject: jest.fn().mockRejectedValue({ status: 500 }) } as Partial<AjaxContract['Billing']>,
-        } as Partial<AjaxContract> as AjaxContract)
-    );
+    const deleteProject: MockedFn<BillingContract['deleteProject']> = jest.fn();
+    deleteProject.mockRejectedValue({ status: 500 });
+    asMockedFn(Billing).mockReturnValue(partial<BillingContract>({ deleteProject }));
+
     const loadProjects = jest.fn();
     propsWithNoWorkspacesInProject.loadProjects = loadProjects;
 

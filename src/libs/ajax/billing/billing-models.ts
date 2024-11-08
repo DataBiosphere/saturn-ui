@@ -14,6 +14,8 @@ export interface AzureManagedAppCoordinates {
   applicationDeploymentName?: string;
 }
 
+export type AzureManagedAppListing = AzureManagedAppCoordinates & { assigned: boolean };
+
 export interface Organization {
   enterprise?: boolean;
 

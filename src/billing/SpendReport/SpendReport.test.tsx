@@ -1,17 +1,16 @@
 import { act, fireEvent, screen, waitFor } from '@testing-library/react';
 import React from 'react';
 import { SpendReport, WorkspaceLink } from 'src/billing/SpendReport/SpendReport';
-import { Ajax } from 'src/libs/ajax';
+import { Billing, BillingContract } from 'src/libs/ajax/billing/Billing';
 import {
   AggregatedCategorySpendData,
   AggregatedWorkspaceSpendData,
   SpendReport as SpendReportServerResponse,
 } from 'src/libs/ajax/billing/billing-models';
 import { getLink } from 'src/libs/nav';
-import { asMockedFn, renderWithAppContexts as render } from 'src/testing/test-utils';
+import { asMockedFn, MockedFn, partial, renderWithAppContexts as render } from 'src/testing/test-utils';
 
-type AjaxContract = ReturnType<typeof Ajax>;
-jest.mock('src/libs/ajax');
+jest.mock('src/libs/ajax/billing/Billing');
 
 type NavExports = typeof import('src/libs/nav');
 jest.mock(
@@ -139,13 +138,9 @@ describe('SpendReport', () => {
 
   it('does not call the server if view is not active', async () => {
     // Arrange
-    const getSpendReport = jest.fn(() => Promise.resolve({} as SpendReportServerResponse));
-    asMockedFn(Ajax).mockImplementation(
-      () =>
-        ({
-          Billing: { getSpendReport } as Partial<AjaxContract['Billing']>,
-        } as Partial<AjaxContract> as AjaxContract)
-    );
+    const getSpendReport: MockedFn<BillingContract['getSpendReport']> = jest.fn();
+    getSpendReport.mockResolvedValue({} as SpendReportServerResponse);
+    asMockedFn(Billing).mockReturnValue(partial<BillingContract>({ getSpendReport }));
 
     // Act
     await act(async () => {
@@ -159,14 +154,9 @@ describe('SpendReport', () => {
 
   it('displays GCP cost information', async () => {
     // Arrange
-    const getSpendReport = jest.fn();
-    asMockedFn(Ajax).mockImplementation(
-      () =>
-        ({
-          Billing: { getSpendReport } as Partial<AjaxContract['Billing']>,
-        } as Partial<AjaxContract> as AjaxContract)
-    );
+    const getSpendReport: MockedFn<BillingContract['getSpendReport']> = jest.fn();
     getSpendReport.mockResolvedValue(createSpendReportResult('1110'));
+    asMockedFn(Billing).mockReturnValue(partial<BillingContract>({ getSpendReport }));
 
     // Act
     await act(async () => {
@@ -190,14 +180,9 @@ describe('SpendReport', () => {
 
   it('displays Azure cost information but does not include per-workspace costs', async () => {
     // Arrange
-    const getSpendReport = jest.fn();
-    asMockedFn(Ajax).mockImplementation(
-      () =>
-        ({
-          Billing: { getSpendReport } as Partial<AjaxContract['Billing']>,
-        } as Partial<AjaxContract> as AjaxContract)
-    );
+    const getSpendReport: MockedFn<BillingContract['getSpendReport']> = jest.fn();
     getSpendReport.mockResolvedValue(createSpendReportResult('1110'));
+    asMockedFn(Billing).mockReturnValue(partial<BillingContract>({ getSpendReport }));
 
     // Act
     await act(async () => {
@@ -222,13 +207,8 @@ describe('SpendReport', () => {
 
   it('fetches reports based on selected date range, if active', async () => {
     // Arrange
-    const getSpendReport = jest.fn();
-    asMockedFn(Ajax).mockImplementation(
-      () =>
-        ({
-          Billing: { getSpendReport } as Partial<AjaxContract['Billing']>,
-        } as Partial<AjaxContract> as AjaxContract)
-    );
+    const getSpendReport: MockedFn<BillingContract['getSpendReport']> = jest.fn();
+    asMockedFn(Billing).mockReturnValue(partial<BillingContract>({ getSpendReport }));
     getSpendReport
       .mockResolvedValueOnce(createSpendReportResult('1110'))
       .mockResolvedValue(createSpendReportResult('1110.17'));
@@ -261,15 +241,11 @@ describe('SpendReport', () => {
 
   it('shows an error if no cost information exists', async () => {
     // Arrange
-    let getSpendReport = jest.fn(() =>
-      Promise.reject(new Response(JSON.stringify({ message: 'No spend data for 30 days' }), { status: 404 }))
+    const getSpendReport: MockedFn<BillingContract['getSpendReport']> = jest.fn();
+    getSpendReport.mockRejectedValue(
+      new Response(JSON.stringify({ message: 'No spend data for 30 days' }), { status: 404 })
     );
-    asMockedFn(Ajax).mockImplementation(
-      () =>
-        ({
-          Billing: { getSpendReport } as Partial<AjaxContract['Billing']>,
-        } as Partial<AjaxContract> as AjaxContract)
-    );
+    asMockedFn(Billing).mockReturnValue(partial<BillingContract>({ getSpendReport }));
 
     // Act
     await act(async () => {
@@ -282,14 +258,8 @@ describe('SpendReport', () => {
     });
 
     // Arrange, switch error message to verify that the UI updates with the new message.
-    getSpendReport = jest.fn(() =>
-      Promise.reject(new Response(JSON.stringify({ message: 'No spend data for 90 days' }), { status: 404 }))
-    );
-    asMockedFn(Ajax).mockImplementation(
-      () =>
-        ({
-          Billing: { getSpendReport } as Partial<AjaxContract['Billing']>,
-        } as Partial<AjaxContract> as AjaxContract)
+    getSpendReport.mockRejectedValue(
+      new Response(JSON.stringify({ message: 'No spend data for 90 days' }), { status: 404 })
     );
 
     // Act -- switch to 90 days and verify that the alert is updated
