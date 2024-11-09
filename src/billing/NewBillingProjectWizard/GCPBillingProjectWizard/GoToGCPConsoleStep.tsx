@@ -3,7 +3,7 @@ import { Step } from 'src/billing/NewBillingProjectWizard/StepWizard/Step';
 import { StepInfo } from 'src/billing/NewBillingProjectWizard/StepWizard/StepFields';
 import { StepHeader } from 'src/billing/NewBillingProjectWizard/StepWizard/StepHeader';
 import { ButtonOutline } from 'src/components/common';
-import { Ajax } from 'src/libs/ajax';
+import { Metrics } from 'src/libs/ajax/Metrics';
 import Events from 'src/libs/events';
 import * as Utils from 'src/libs/utils';
 
@@ -25,7 +25,7 @@ export const GoToGCPConsoleStep = ({ isActive, ...props }: GoToGCPConsoleStepPro
           href='https://console.cloud.google.com'
           {...Utils.newTabLinkProps}
           onClick={() => {
-            Ajax().Metrics.captureEvent(Events.billingGCPCreationStep1);
+            void Metrics().captureEvent(Events.billingGCPCreationStep1);
             // FIXME: this seems wrong
             //  I would think the button would just be inactive if we're not on step 1
             //  then we wouldn't need this check, and we'd also only capture the metric when active

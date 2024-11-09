@@ -18,6 +18,7 @@ import {
   SpendReport as SpendReportServerResponse,
   WorkspaceSpendData,
 } from 'src/libs/ajax/billing/billing-models';
+import { Metrics } from 'src/libs/ajax/Metrics';
 import colors from 'src/libs/colors';
 import Events, { extractBillingDetails } from 'src/libs/events';
 import { isFeaturePreviewEnabled } from 'src/libs/feature-previews';
@@ -100,7 +101,6 @@ interface ExpandedInfoRowProps {
   details: string | undefined;
   errorMessage?: string;
 }
-
 const ExpandedInfoRow = (props: ExpandedInfoRowProps) => {
   const { title, details, errorMessage } = props;
   const expandedInfoStyles = {
@@ -181,7 +181,7 @@ const WorkspaceCard: React.FC<WorkspaceCardProps> = memoWithName('WorkspaceCard'
             style={Style.noWrapEllipsis}
             href={Nav.getLink('workspace-dashboard', { namespace, name })}
             onClick={() => {
-              void Ajax().Metrics.captureEvent(Events.billingProjectGoToWorkspace, {
+              void Metrics().captureEvent(Events.billingProjectGoToWorkspace, {
                 workspaceName: name,
                 ...extractBillingDetails(billingProject),
               });
@@ -218,7 +218,7 @@ const WorkspaceCard: React.FC<WorkspaceCardProps> = memoWithName('WorkspaceCard'
             aria-owns={isExpanded ? billingDetailsId : undefined}
             style={{ display: 'flex', alignItems: 'center' }}
             onClick={() => {
-              void Ajax().Metrics.captureEvent(Events.billingProjectExpandWorkspace, {
+              void Metrics().captureEvent(Events.billingProjectExpandWorkspace, {
                 workspaceName: name,
                 ...extractBillingDetails(billingProject),
               });

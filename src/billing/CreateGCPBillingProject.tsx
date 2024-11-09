@@ -5,7 +5,7 @@ import { billingProjectNameValidator } from 'src/billing/utils';
 import { GoogleBillingAccount } from 'src/billing-core/models';
 import { VirtualizedSelect } from 'src/components/common';
 import { ValidatedInput } from 'src/components/input';
-import { Ajax } from 'src/libs/ajax';
+import { Metrics } from 'src/libs/ajax/Metrics';
 import Events from 'src/libs/events';
 import { formHint, FormLabel } from 'src/libs/forms';
 import * as Utils from 'src/libs/utils';
@@ -50,7 +50,7 @@ const CreateGCPBillingProject = ({
           onChange: (v) => {
             setBillingProjectName(v);
             if (!billingProjectNameTouched) {
-              Ajax().Metrics.captureEvent(Events.billingCreationGCPProjectNameEntered);
+              void Metrics().captureEvent(Events.billingCreationGCPProjectNameEntered);
             }
             setBillingProjectNameTouched(true);
           },
@@ -70,7 +70,7 @@ const CreateGCPBillingProject = ({
           value={chosenBillingAccount || null}
           onChange={(opt: { value: GoogleBillingAccount; label: string }) => {
             setChosenBillingAccount(opt!.value);
-            Ajax().Metrics.captureEvent(Events.billingCreationGCPBillingAccountSelected);
+            void Metrics().captureEvent(Events.billingCreationGCPBillingAccountSelected);
           }}
           options={_.map((account) => {
             return {

@@ -3,15 +3,16 @@ import userEvent from '@testing-library/user-event';
 import { axe } from 'jest-axe';
 import React from 'react';
 import GCPBillingProjectWizard from 'src/billing/NewBillingProjectWizard/GCPBillingProjectWizard/GCPBillingProjectWizard';
-import { Ajax } from 'src/libs/ajax';
+import { Billing, BillingContract } from 'src/libs/ajax/billing/Billing';
+import { Metrics, MetricsContract } from 'src/libs/ajax/Metrics';
 import Events from 'src/libs/events';
 import * as Preferences from 'src/libs/prefs';
-import { asMockedFn, renderWithAppContexts as render } from 'src/testing/test-utils';
+import { asMockedFn, MockedFn, partial, renderWithAppContexts as render } from 'src/testing/test-utils';
 
-jest.mock('src/libs/ajax');
+jest.mock('src/libs/ajax/billing/Billing');
+jest.mock('src/libs/ajax/Metrics');
+
 jest.spyOn(Preferences, 'getLocalPref');
-
-type AjaxContract = ReturnType<typeof Ajax>;
 
 function expectNotNull<T>(value: T | null): T {
   expect(value).not.toBeNull();
@@ -147,8 +148,11 @@ const testStep4Enabled = () => {
 
 const accountName = 'Billing_Account_Name';
 const displayName = 'Billing_Account_Display_Name';
-const createGCPProject = jest.fn(() => Promise.resolve(new Response('', { status: 201 })));
-const captureEvent = jest.fn();
+
+const createGCPProject: MockedFn<BillingContract['createGCPProject']> = jest.fn();
+createGCPProject.mockResolvedValue(new Response('', { status: 201 }));
+
+const captureEvent: MockedFn<MetricsContract['captureEvent']> = jest.fn();
 
 describe('GCPBillingProjectWizard Steps', () => {
   let wizardComponent;
@@ -157,13 +161,8 @@ describe('GCPBillingProjectWizard Steps', () => {
     jest.resetAllMocks();
 
     // Arrange
-    asMockedFn(Ajax).mockImplementation(
-      () =>
-        ({
-          Billing: { createGCPProject } as Partial<AjaxContract['Billing']>,
-          Metrics: { captureEvent } as Partial<AjaxContract['Metrics']>,
-        } as Partial<AjaxContract> as AjaxContract)
-    );
+    asMockedFn(Billing).mockReturnValue(partial<BillingContract>({ createGCPProject }));
+    asMockedFn(Metrics).mockReturnValue(partial<MetricsContract>({ captureEvent }));
 
     wizardComponent = render(
       <GCPBillingProjectWizard
@@ -402,13 +401,8 @@ describe('GCPBillingProjectWizard Steps', () => {
 describe('Step 4 Warning Message', () => {
   // Arrange
   beforeEach(async () => {
-    asMockedFn(Ajax).mockImplementation(
-      () =>
-        ({
-          Billing: { createGCPProject } as Partial<AjaxContract['Billing']>,
-          Metrics: { captureEvent } as Partial<AjaxContract['Metrics']>,
-        } as Partial<AjaxContract> as AjaxContract)
-    );
+    asMockedFn(Billing).mockReturnValue(partial<BillingContract>({ createGCPProject }));
+    asMockedFn(Metrics).mockReturnValue(partial<MetricsContract>({ captureEvent }));
 
     render(<GCPBillingProjectWizard onSuccess={jest.fn()} billingAccounts={{}} authorizeAndLoadAccounts={jest.fn()} />);
 
@@ -444,12 +438,8 @@ describe('Step 4 Warning Message', () => {
 
 describe('Changing prior answers', () => {
   beforeEach(() => {
-    asMockedFn(Ajax).mockImplementation(
-      () =>
-        ({
-          Metrics: { captureEvent } as Partial<AjaxContract['Metrics']>,
-        } as Partial<AjaxContract> as AjaxContract)
-    );
+    asMockedFn(Metrics).mockReturnValue(partial<MetricsContract>({ captureEvent }));
+
     render(
       <GCPBillingProjectWizard
         onSuccess={jest.fn()}

@@ -53,6 +53,7 @@
     "react-dropzone": "^11.4.0",
     "react-favicon": "^2.0.3",
     "react-hyperscript-helpers": "^2.0.0",
+    "react-lazy-named": "^1.2.2",
     "react-modal": "^3.16.1",
     "react-notifications-component": "^4.0.1",
     "react-oidc-context": "^2.1.0",

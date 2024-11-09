@@ -1,15 +1,18 @@
-import { asMockedFn } from '@terra-ui-packages/test-utils';
+import { asMockedFn, MockedFn, partial } from '@terra-ui-packages/test-utils';
 import { act, screen } from '@testing-library/react';
 import React from 'react';
 import Project, { groupByBillingAccountStatus } from 'src/billing/Project';
 import { GCPBillingProject, GoogleBillingAccount } from 'src/billing-core/models';
-import { Ajax } from 'src/libs/ajax';
+import { Ajax, AjaxContract } from 'src/libs/ajax';
+import { Billing, BillingContract } from 'src/libs/ajax/billing/Billing';
 import { SpendReport as SpendReportServerResponse } from 'src/libs/ajax/billing/billing-models';
+import { Metrics, MetricsContract } from 'src/libs/ajax/Metrics';
 import { azureBillingProject, gcpBillingProject } from 'src/testing/billing-project-fixtures';
 import { renderWithAppContexts } from 'src/testing/test-utils';
 import { defaultAzureWorkspace, defaultGoogleWorkspace } from 'src/testing/workspace-fixtures';
 
-type AjaxContract = ReturnType<typeof Ajax>;
+jest.mock('src/libs/ajax/billing/Billing');
+jest.mock('src/libs/ajax/Metrics');
 jest.mock('src/libs/ajax');
 type NavExports = typeof import('src/libs/nav');
 jest.mock(
@@ -133,9 +136,21 @@ describe('groupByBillingAccountStatus', () => {
 describe('Project', () => {
   const getSpendReport = jest.fn(() => Promise.resolve({} as SpendReportServerResponse));
 
+  const listProjectUsers: MockedFn<BillingContract['listProjectUsers']> = jest.fn();
+
+  beforeEach(() => {
+    asMockedFn(Billing).mockReturnValue(
+      partial<BillingContract>({
+        listProjectUsers,
+        removeProjectUser: jest.fn(),
+      })
+    );
+    asMockedFn(Metrics).mockReturnValue(partial<MetricsContract>({ captureEvent: jest.fn() }));
+  });
+
   it('shows all tabs if the user is an owner', async () => {
     // Arrange
-    const listProjectUsers = jest.fn().mockResolvedValue([
+    listProjectUsers.mockResolvedValue([
       {
         email: 'testuser1@example.com',
         role: 'Owner',
@@ -182,7 +197,7 @@ describe('Project', () => {
   it('shows only the workspaces and owners tab is the user is not an owner', async () => {
     // Arrange
     // Returns only owners if the user is not an owner.
-    const listProjectUsers = jest.fn().mockResolvedValue([
+    listProjectUsers.mockResolvedValue([
       {
         email: 'testuser1@example.com',
         role: 'Owner',
@@ -201,6 +216,7 @@ describe('Project', () => {
           Metrics: { captureEvent: jest.fn() } as Partial<AjaxContract['Metrics']>,
         } as Partial<AjaxContract> as AjaxContract)
     );
+
     // Act
     await act(async () =>
       renderWithAppContexts(
@@ -228,7 +244,7 @@ describe('Project', () => {
 
   it('does not show a warning if the user is the only owner of a billing project with no other users', async () => {
     // Arrange
-    const listProjectUsers = jest.fn().mockResolvedValue([
+    listProjectUsers.mockResolvedValue([
       {
         email: 'testuser1@example.com',
         role: 'Owner',
@@ -266,7 +282,7 @@ describe('Project', () => {
 
   it('shows a warning if the user is the only owner of a billing project that has other users', async () => {
     // Arrange
-    const listProjectUsers = jest.fn().mockResolvedValue([
+    listProjectUsers.mockResolvedValue([
       {
         email: 'testuser1@example.com',
         role: 'Owner',
@@ -308,7 +324,7 @@ describe('Project', () => {
   it('shows a warning if the billing project has only one owner, and the user is not an owner', async () => {
     // Arrange
     // This method only returns owners if the user is not an owner.
-    const listProjectUsers = jest.fn().mockResolvedValue([
+    listProjectUsers.mockResolvedValue([
       {
         email: 'testuser1@example.com',
         role: 'Owner',
@@ -345,7 +361,7 @@ describe('Project', () => {
 
   it('shows a link to the Azure portal for Azure billing projects', async () => {
     // Arrange
-    const listProjectUsers = jest.fn().mockResolvedValue([
+    listProjectUsers.mockResolvedValue([
       {
         email: 'testuser1@example.com',
         role: 'Owner',
@@ -382,7 +398,7 @@ describe('Project', () => {
 
   it('does not show a link to the Azure portal for GCP billing projects', async () => {
     // Arrange
-    const listProjectUsers = jest.fn().mockResolvedValue([
+    listProjectUsers.mockResolvedValue([
       {
         email: 'testuser1@example.com',
         role: 'Owner',
