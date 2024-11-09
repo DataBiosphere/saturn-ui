@@ -1,11 +1,14 @@
-import { act, screen, within } from '@testing-library/react';
+import { act, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { axe } from 'jest-axe';
 import React from 'react';
 import { Workspaces } from 'src/billing/Workspaces/Workspaces';
 import { GoogleBillingAccount } from 'src/billing-core/models';
+import { Ajax, AjaxContract } from 'src/libs/ajax';
+import { SpendReport as SpendReportServerResponse } from 'src/libs/ajax/billing/billing-models';
+import { isFeaturePreviewEnabled } from 'src/libs/feature-previews';
 import { azureBillingProject, gcpBillingProject } from 'src/testing/billing-project-fixtures';
-import { renderWithAppContexts } from 'src/testing/test-utils';
+import { asMockedFn, renderWithAppContexts } from 'src/testing/test-utils';
 import {
   defaultAzureWorkspace,
   defaultGoogleWorkspace,
@@ -24,7 +27,25 @@ jest.mock(
     updateSearch: jest.fn(),
   })
 );
+jest.mock('src/libs/ajax');
+jest.mock('src/libs/feature-previews', () => ({
+  isFeaturePreviewEnabled: jest.fn(),
+}));
+
 describe('Workspaces', () => {
+  const getSpendReport = jest.fn();
+
+  beforeEach(() => {
+    asMockedFn(Ajax).mockImplementation(
+      () =>
+        ({
+          Billing: { getSpendReport } as Partial<AjaxContract['Billing']>,
+          Metrics: { captureEvent: jest.fn() } as Partial<AjaxContract['Metrics']>,
+        } as Partial<AjaxContract> as AjaxContract)
+    );
+    getSpendReport.mockResolvedValue({} as SpendReportServerResponse);
+  });
+
   it('renders a message when there are no workspaces', async () => {
     // Act
     await act(async () => {
@@ -205,5 +226,81 @@ describe('Workspaces', () => {
     within(users[3]).getByLabelText('billing account up-to-date');
     // Verify accessibility
     expect(await axe(container)).toHaveNoViolations();
+  });
+
+  it('fetches and filters workspaces based on spend report and search value', async () => {
+    // Mock the return value of isFeaturePreviewEnabled
+    (isFeaturePreviewEnabled as jest.Mock).mockReturnValue(true);
+
+    const testNamespace = 'test-gcp-ws-namespace';
+    const testWorkspaceName = 'test-gcp-ws-name';
+
+    // Arrange
+    const mockSpendReport = {
+      spendDetails: [
+        {
+          aggregationKey: 'Workspace',
+          spendData: [
+            {
+              cost: '100.00',
+              credits: '0.00',
+              currency: 'USD',
+              googleProjectId: 'test-gcp-ws-project',
+              subAggregation: {
+                aggregationKey: 'Category',
+                spendData: [
+                  { category: 'Compute', cost: '60.00', credits: '0.00', currency: 'USD' },
+                  { category: 'Storage', cost: '40.00', credits: '0.00', currency: 'USD' },
+                ],
+              },
+              workspace: { namespace: testNamespace, name: testWorkspaceName },
+            },
+          ],
+        },
+      ],
+      spendSummary: {
+        cost: '100.00',
+        credits: '0.00',
+        currency: 'USD',
+        endTime: '2024-11-15T00:00:00Z',
+        startTime: '2024-10-15T00:00:00Z',
+      },
+    };
+    const user = userEvent.setup();
+
+    getSpendReport.mockResolvedValue(mockSpendReport);
+
+    // Act
+    await act(async () => {
+      renderWithAppContexts(
+        <Workspaces
+          billingProject={gcpBillingProject}
+          workspacesInProject={[defaultGoogleWorkspace.workspace]}
+          billingAccounts={{}}
+          billingAccountsOutOfDate={false}
+          groups={{}}
+        />
+      );
+    });
+
+    // Assert
+    expect(getSpendReport).toHaveBeenCalledWith({
+      billingProjectName: gcpBillingProject.projectName,
+      startDate: expect.any(String),
+      endDate: expect.any(String),
+      aggregationKeys: ['Workspace~Category'],
+    });
+
+    // Apply search filter
+    await user.type(screen.getByPlaceholderText('Search by name, project or bucket'), testWorkspaceName);
+    await waitFor(() => {
+      const workspaceTable = screen.getByRole('table');
+      const workspaces = within(workspaceTable).getAllByRole('row');
+      expect(workspaces).toHaveLength(2); // 1 header row + 1 workspace row
+      expect(workspaces[1]).toHaveTextContent(/test-gcp-ws-name/);
+      expect(workspaces[1]).toHaveTextContent(/\$100.00/);
+      expect(workspaces[1]).toHaveTextContent(/\$60.00/);
+      expect(workspaces[1]).toHaveTextContent(/\$40.00/);
+    });
   });
 });
