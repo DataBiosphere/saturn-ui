@@ -89,17 +89,17 @@ const fetchBuckets = _.flow(
   withUrlPrefix('https://storage.googleapis.com/')
 )(fetchOk);
 
-/**
- * Only use this if the user has write access to the workspace to avoid proliferation of service accounts in projects containing public workspaces.
- * If we want to fetch a SA token for read access, we must use a "default" SA instead (api/google/user/petServiceAccount/token).
- */
 const getServiceAccountToken: (googleProject: string, token: string) => Promise<string> = Utils.memoizeAsync(
   async (googleProject, token) => {
+    const workspace = workspaceStore.get();
+    const url =
+      workspace && canWrite(workspace.accessLevel)
+        ? // if the user has write access to the workspace, use the project-specific pet service account
+          `api/google/v1/user/petServiceAccount/${googleProject}/token`
+        : // otherwise, use the general pet service account
+          'api/google/v1/user/petServiceAccount/token';
     const scopes = ['https://www.googleapis.com/auth/devstorage.full_control'];
-    const res = await fetchSam(
-      `api/google/v1/user/petServiceAccount/${googleProject}/token`,
-      _.mergeAll([authOpts(token), jsonBody(scopes), { method: 'POST' }])
-    );
+    const res = await fetchSam(url, _.mergeAll([authOpts(token), jsonBody(scopes), { method: 'POST' }]));
     return res.json();
   },
   {
