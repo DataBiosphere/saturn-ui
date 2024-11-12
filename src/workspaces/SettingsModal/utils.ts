@@ -95,7 +95,7 @@ export const modifyFirstBucketDeletionRule = (
 
   // If no bucketLifecycleSettings existed, create a new one.
   if (bucketLifecycleSettings.length === 0) {
-    return _.concat(
+    const newSettings = _.concat(
       [
         {
           settingType: 'GcpBucketLifecycle',
@@ -111,7 +111,10 @@ export const modifyFirstBucketDeletionRule = (
       ],
       otherSettings
     );
+    // When enable bucket lifecycle rules, we also enable separate submission outputs.
+    return modifySeparateSubmissionOutputsSetting(newSettings, true);
   }
+
   // If multiple bucketLifecycleSettings, we will modify only the first one.
   const existingSetting = bucketLifecycleSettings[0];
   // Modify the first delete rule in this setting and leave the rest.
