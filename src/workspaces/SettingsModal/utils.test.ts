@@ -198,7 +198,13 @@ describe('modifyFirstBucketDeletionRule', () => {
     const result = modifyFirstBucketDeletionRule([], 1, []);
 
     // Assert
-    expect(result).toEqual([newSetting]);
+    expect(result).toEqual([
+      {
+        settingType: 'SeparateSubmissionFinalOutputs',
+        config: { enabled: true },
+      },
+      newSetting,
+    ]);
   });
 
   it('adds a new setting in the case of no existing delete bucket lifecycle', async () => {
