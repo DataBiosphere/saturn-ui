@@ -268,10 +268,17 @@ interface WorkspacesProps {
 
 export const Workspaces = (props: WorkspacesProps): ReactNode => {
   const { billingAccounts, billingAccountsOutOfDate, billingProject, groups, workspacesInProject } = props;
-  const [workspaceSort, setWorkspaceSort] = useState<{ field: string; direction: 'asc' | 'desc' }>({
-    field: isFeaturePreviewEnabled(SPEND_REPORTING) ? 'totalSpend' : 'name',
-    direction: isFeaturePreviewEnabled(SPEND_REPORTING) ? 'desc' : 'asc',
-  });
+  const [workspaceSort, setWorkspaceSort] = useState<{ field: string; direction: 'asc' | 'desc' }>(
+    isFeaturePreviewEnabled(SPEND_REPORTING)
+      ? {
+          field: 'totalSpend',
+          direction: 'desc',
+        }
+      : {
+          field: 'name',
+          direction: 'asc',
+        }
+  );
   const [expandedWorkspaceName, setExpandedWorkspaceName] = useState<string>();
 
   const getBillingAccountStatus = (workspace: WorkspaceInfo): BillingAccountStatus =>
