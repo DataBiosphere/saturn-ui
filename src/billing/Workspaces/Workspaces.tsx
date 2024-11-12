@@ -269,8 +269,8 @@ interface WorkspacesProps {
 export const Workspaces = (props: WorkspacesProps): ReactNode => {
   const { billingAccounts, billingAccountsOutOfDate, billingProject, groups, workspacesInProject } = props;
   const [workspaceSort, setWorkspaceSort] = useState<{ field: string; direction: 'asc' | 'desc' }>({
-    field: 'name',
-    direction: 'asc',
+    field: isFeaturePreviewEnabled(SPEND_REPORTING) ? 'totalSpend' : 'name',
+    direction: isFeaturePreviewEnabled(SPEND_REPORTING) ? 'desc' : 'asc',
   });
   const [expandedWorkspaceName, setExpandedWorkspaceName] = useState<string>();
 
