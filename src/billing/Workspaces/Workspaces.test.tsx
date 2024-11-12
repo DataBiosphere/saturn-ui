@@ -82,7 +82,6 @@ describe('Workspaces', () => {
   it('renders Azure workspaces', async () => {
     // Arrange
     const secondWorkspace = makeAzureWorkspace({ workspace: { name: 'secondWorkspace', workspaceId: 'secondId' } });
-    const user = userEvent.setup();
 
     // Act
     await act(async () => {
@@ -96,8 +95,6 @@ describe('Workspaces', () => {
         />
       );
     });
-    // Expand the first workspace to render (alphabetically) so we can test its details
-    await user.click(screen.getByLabelText('expand workspace secondWorkspace'));
 
     // Assert
     const userTable = screen.getByRole('table');
@@ -105,9 +102,7 @@ describe('Workspaces', () => {
     const users = within(userTable).getAllByRole('row');
     expect(users).toHaveLength(3); // 1 header row + 2 workspace rows
     // users sort initially by name, resource group ID comes from the billing project
-    expect(users[1]).toHaveTextContent(
-      /secondWorkspacejustin@gmail.comMar 15, 2023Resource Group IDaaaabbbb-cccc-dddd-0000-111122223333/
-    );
+    expect(users[1]).toHaveTextContent(/secondWorkspacejustin@gmail.comMar 15, 2023/);
     expect(users[2]).toHaveTextContent(/test-azure-ws-namejustin@gmail.comMar 15, 2023/);
   });
 
@@ -122,14 +117,13 @@ describe('Workspaces', () => {
         errorMessage,
       },
     });
-    const user = userEvent.setup();
     const testBillingAccount: GoogleBillingAccount = {
       accountName: gcpBillingProject.billingAccount,
       displayName: 'Test Billing Account',
     };
     const billingAccounts: Record<string, GoogleBillingAccount> = {};
     billingAccounts[`${secondWorkspace.workspace.billingAccount}`] = testBillingAccount;
-    const secondWorkspaceInfo = `secondWorkspacegroot@gmail.comMar 15, 2023Google Project${secondWorkspace.workspace.googleProject}Billing Account${testBillingAccount.displayName}${errorMessage}`;
+    const secondWorkspaceInfo = 'secondWorkspacegroot@gmail.comMar 15, 2023';
 
     // Act
     await act(async () => {
@@ -143,8 +137,6 @@ describe('Workspaces', () => {
         />
       );
     });
-    // Expand the first workspace to render (alphabetically) so we can test its details
-    await user.click(screen.getByLabelText('expand workspace secondWorkspace'));
 
     // Assert
     const userTable = screen.getByRole('table');

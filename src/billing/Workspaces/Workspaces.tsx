@@ -1,16 +1,11 @@
-import { Icon, Link, SpinnerOverlay, useUniqueId } from '@terra-ui-packages/components';
+import { Icon, Link, SpinnerOverlay } from '@terra-ui-packages/components';
 import { subDays } from 'date-fns/fp';
 import _ from 'lodash/fp';
 import React, { CSSProperties, ReactNode, useEffect, useState } from 'react';
 import { DateRangeFilter } from 'src/billing/Filter/DateRangeFilter';
 import { SearchFilter } from 'src/billing/Filter/SearchFilter';
 import { billingAccountIconSize, BillingAccountStatus, getBillingAccountIconProps } from 'src/billing/utils';
-import {
-  BillingProject,
-  GoogleBillingAccount,
-  isAzureBillingProject,
-  isGoogleBillingProject,
-} from 'src/billing-core/models';
+import { BillingProject, GoogleBillingAccount } from 'src/billing-core/models';
 import { ariaSort, HeaderRenderer } from 'src/components/table';
 import { Billing } from 'src/libs/ajax/billing/Billing';
 import {
@@ -19,7 +14,6 @@ import {
   WorkspaceSpendData,
 } from 'src/libs/ajax/billing/billing-models';
 import { Metrics } from 'src/libs/ajax/Metrics';
-import colors from 'src/libs/colors';
 import Events, { extractBillingDetails } from 'src/libs/events';
 import { isFeaturePreviewEnabled } from 'src/libs/feature-previews';
 import { SPEND_REPORTING } from 'src/libs/feature-previews-config';
@@ -96,35 +90,6 @@ const WorkspaceCardHeaders: React.FC<WorkspaceCardHeadersProps> = memoWithName(
   }
 );
 
-interface ExpandedInfoRowProps {
-  title: string;
-  details: string | undefined;
-  errorMessage?: string;
-}
-const ExpandedInfoRow = (props: ExpandedInfoRowProps) => {
-  const { title, details, errorMessage } = props;
-  const expandedInfoStyles = {
-    row: { display: 'flex', justifyContent: 'flex-start', alignItems: 'flex-start' },
-    title: { fontWeight: 600, padding: '0.5rem 1rem 0 2rem', height: '1rem' },
-    details: { flexGrow: 1, marginTop: '0.5rem', height: '1rem', ...Style.noWrapEllipsis },
-    errorMessage: {
-      flexGrow: 2,
-      padding: '0.5rem',
-      backgroundColor: colors.light(0.3),
-      border: `solid 2px ${colors.danger(0.3)}`,
-      borderRadius: 5,
-    },
-  };
-
-  return (
-    <div style={expandedInfoStyles.row}>
-      <div style={expandedInfoStyles.title}>{title}</div>
-      <div style={expandedInfoStyles.details}>{details}</div>
-      {errorMessage && <div style={expandedInfoStyles.errorMessage}>{errorMessage}</div>}
-    </div>
-  );
-};
-
 interface WorkspaceCardProps {
   workspace: WorkspaceInfo;
   billingAccountDisplayName: string | undefined;
@@ -135,18 +100,8 @@ interface WorkspaceCardProps {
 }
 
 const WorkspaceCard: React.FC<WorkspaceCardProps> = memoWithName('WorkspaceCard', (props: WorkspaceCardProps) => {
-  const { workspace, billingProject, billingAccountStatus, billingAccountDisplayName, isExpanded, onExpand } = props;
-  const {
-    namespace,
-    name,
-    createdBy,
-    lastModified,
-    googleProject,
-    errorMessage,
-    totalSpend,
-    totalCompute,
-    totalStorage,
-  } = workspace;
+  const { workspace, billingProject, billingAccountStatus } = props;
+  const { namespace, name, createdBy, lastModified, totalSpend, totalCompute, totalStorage } = workspace;
   const workspaceCardStyles = {
     field: {
       ...Style.noWrapEllipsis,
@@ -158,7 +113,6 @@ const WorkspaceCard: React.FC<WorkspaceCardProps> = memoWithName('WorkspaceCard'
     row: { display: 'flex', alignItems: 'center', width: '100%', padding: '1rem' },
     expandedInfoContainer: { display: 'flex', flexDirection: 'column', width: '100%' } satisfies CSSProperties,
   };
-  const billingDetailsId = useUniqueId('details');
 
   return (
     <div role='row' style={{ ...Style.cardList.longCardShadowless, padding: 0, flexDirection: 'column' }}>
@@ -209,51 +163,7 @@ const WorkspaceCard: React.FC<WorkspaceCardProps> = memoWithName('WorkspaceCard'
         <div role='cell' style={{ height: '1rem', flex: `0 0 ${workspaceLastModifiedWidth}px` }}>
           {Utils.makeStandardDate(lastModified)}
         </div>
-        <div role='cell' style={{ flex: `0 0 ${workspaceExpandIconSize}px` }}>
-          {/* eslint-disable-next-line jsx-a11y/anchor-is-valid */}
-          <Link
-            aria-label={`expand workspace ${name}`}
-            aria-expanded={isExpanded}
-            aria-controls={isExpanded ? billingDetailsId : undefined}
-            aria-owns={isExpanded ? billingDetailsId : undefined}
-            style={{ display: 'flex', alignItems: 'center' }}
-            onClick={() => {
-              void Metrics().captureEvent(Events.billingProjectExpandWorkspace, {
-                workspaceName: name,
-                ...extractBillingDetails(billingProject),
-              });
-              onExpand();
-            }}
-          >
-            <Icon icon={isExpanded ? 'angle-up' : 'angle-down'} size={workspaceExpandIconSize} />
-          </Link>
-        </div>
       </div>
-      {isExpanded && (
-        <div
-          id={billingDetailsId}
-          style={{ ...workspaceCardStyles.row, padding: '0.5rem', border: `1px solid ${colors.light()}` }}
-        >
-          <div style={workspaceCardStyles.expandedInfoContainer}>
-            {isGoogleBillingProject(billingProject) && (
-              <ExpandedInfoRow title='Google Project' details={googleProject} />
-            )}
-            {isGoogleBillingProject(billingProject) && (
-              <ExpandedInfoRow
-                title='Billing Account'
-                details={billingAccountDisplayName}
-                errorMessage={errorMessage}
-              />
-            )}
-            {isAzureBillingProject(billingProject) && (
-              <ExpandedInfoRow
-                title='Resource Group ID'
-                details={billingProject.managedAppCoordinates.managedResourceGroupId}
-              />
-            )}
-          </div>
-        </div>
-      )}
     </div>
   );
 });
