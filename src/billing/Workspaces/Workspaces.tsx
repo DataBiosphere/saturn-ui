@@ -12,7 +12,7 @@ import {
   isGoogleBillingProject,
 } from 'src/billing-core/models';
 import { ariaSort, HeaderRenderer } from 'src/components/table';
-import { Ajax } from 'src/libs/ajax';
+import { Billing } from 'src/libs/ajax/billing/Billing';
 import {
   AggregatedWorkspaceSpendData,
   SpendReport as SpendReportServerResponse,
@@ -292,8 +292,8 @@ export const Workspaces = (props: WorkspacesProps): ReactNode => {
       const aggregationKeys = ['Workspace~Category'];
 
       setUpdating(true);
-      Ajax(signal)
-        .Billing.getSpendReport({
+      Billing(signal)
+        .getSpendReport({
           billingProjectName: billingProject.projectName,
           startDate,
           endDate,

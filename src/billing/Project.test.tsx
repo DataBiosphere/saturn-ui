@@ -3,7 +3,6 @@ import { act, screen } from '@testing-library/react';
 import React from 'react';
 import Project, { groupByBillingAccountStatus } from 'src/billing/Project';
 import { GCPBillingProject, GoogleBillingAccount } from 'src/billing-core/models';
-import { Ajax, AjaxContract } from 'src/libs/ajax';
 import { Billing, BillingContract } from 'src/libs/ajax/billing/Billing';
 import { SpendReport as SpendReportServerResponse } from 'src/libs/ajax/billing/billing-models';
 import { Metrics, MetricsContract } from 'src/libs/ajax/Metrics';
@@ -13,7 +12,6 @@ import { defaultAzureWorkspace, defaultGoogleWorkspace } from 'src/testing/works
 
 jest.mock('src/libs/ajax/billing/Billing');
 jest.mock('src/libs/ajax/Metrics');
-jest.mock('src/libs/ajax');
 type NavExports = typeof import('src/libs/nav');
 jest.mock(
   'src/libs/nav',
@@ -134,13 +132,14 @@ describe('groupByBillingAccountStatus', () => {
 });
 
 describe('Project', () => {
-  const getSpendReport = jest.fn(() => Promise.resolve({} as SpendReportServerResponse));
+  const getSpendReport = jest.fn().mockResolvedValue({} as SpendReportServerResponse);
 
   const listProjectUsers: MockedFn<BillingContract['listProjectUsers']> = jest.fn();
 
   beforeEach(() => {
     asMockedFn(Billing).mockReturnValue(
       partial<BillingContract>({
+        getSpendReport,
         listProjectUsers,
         removeProjectUser: jest.fn(),
       })
@@ -160,15 +159,6 @@ describe('Project', () => {
         role: 'User',
       },
     ]);
-    asMockedFn(Ajax).mockImplementation(
-      () =>
-        ({
-          Billing: { getSpendReport, listProjectUsers, removeProjectUser: jest.fn() } as Partial<
-            AjaxContract['Billing']
-          >,
-          Metrics: { captureEvent: jest.fn() } as Partial<AjaxContract['Metrics']>,
-        } as Partial<AjaxContract> as AjaxContract)
-    );
 
     // Act
     await act(async () =>
@@ -207,15 +197,6 @@ describe('Project', () => {
         role: 'Owner',
       },
     ]);
-    asMockedFn(Ajax).mockImplementation(
-      () =>
-        ({
-          Billing: { getSpendReport, listProjectUsers, removeProjectUser: jest.fn() } as Partial<
-            AjaxContract['Billing']
-          >,
-          Metrics: { captureEvent: jest.fn() } as Partial<AjaxContract['Metrics']>,
-        } as Partial<AjaxContract> as AjaxContract)
-    );
 
     // Act
     await act(async () =>
@@ -251,16 +232,6 @@ describe('Project', () => {
       },
     ]);
 
-    asMockedFn(Ajax).mockImplementation(
-      () =>
-        ({
-          Billing: { getSpendReport, listProjectUsers, removeProjectUser: jest.fn() } as Partial<
-            AjaxContract['Billing']
-          >,
-          Metrics: { captureEvent: jest.fn() } as Partial<AjaxContract['Metrics']>,
-        } as Partial<AjaxContract> as AjaxContract)
-    );
-
     // Act
     await act(async () =>
       renderWithAppContexts(
@@ -292,15 +263,6 @@ describe('Project', () => {
         role: 'User',
       },
     ]);
-    asMockedFn(Ajax).mockImplementation(
-      () =>
-        ({
-          Billing: { getSpendReport, listProjectUsers, removeProjectUser: jest.fn() } as Partial<
-            AjaxContract['Billing']
-          >,
-          Metrics: { captureEvent: jest.fn() } as Partial<AjaxContract['Metrics']>,
-        } as Partial<AjaxContract> as AjaxContract)
-    );
 
     // Act
     await act(async () =>
@@ -330,15 +292,6 @@ describe('Project', () => {
         role: 'Owner',
       },
     ]);
-    asMockedFn(Ajax).mockImplementation(
-      () =>
-        ({
-          Billing: { getSpendReport, listProjectUsers, removeProjectUser: jest.fn() } as Partial<
-            AjaxContract['Billing']
-          >,
-          Metrics: { captureEvent: jest.fn() } as Partial<AjaxContract['Metrics']>,
-        } as Partial<AjaxContract> as AjaxContract)
-    );
 
     // Act
     await act(async () =>
@@ -367,15 +320,6 @@ describe('Project', () => {
         role: 'Owner',
       },
     ]);
-    asMockedFn(Ajax).mockImplementation(
-      () =>
-        ({
-          Billing: { getSpendReport, listProjectUsers, removeProjectUser: jest.fn() } as Partial<
-            AjaxContract['Billing']
-          >,
-          Metrics: { captureEvent: jest.fn() } as Partial<AjaxContract['Metrics']>,
-        } as Partial<AjaxContract> as AjaxContract)
-    );
 
     // Act
     await act(async () =>
@@ -404,15 +348,6 @@ describe('Project', () => {
         role: 'Owner',
       },
     ]);
-    asMockedFn(Ajax).mockImplementation(
-      () =>
-        ({
-          Billing: { getSpendReport, listProjectUsers, removeProjectUser: jest.fn() } as Partial<
-            AjaxContract['Billing']
-          >,
-          Metrics: { captureEvent: jest.fn() } as Partial<AjaxContract['Metrics']>,
-        } as Partial<AjaxContract> as AjaxContract)
-    );
 
     // Act
     await act(async () =>

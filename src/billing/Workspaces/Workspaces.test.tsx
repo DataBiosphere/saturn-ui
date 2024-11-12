@@ -4,11 +4,12 @@ import { axe } from 'jest-axe';
 import React from 'react';
 import { Workspaces } from 'src/billing/Workspaces/Workspaces';
 import { GoogleBillingAccount } from 'src/billing-core/models';
-import { Ajax, AjaxContract } from 'src/libs/ajax';
+import { Billing, BillingContract } from 'src/libs/ajax/billing/Billing';
 import { SpendReport as SpendReportServerResponse } from 'src/libs/ajax/billing/billing-models';
+import { Metrics, MetricsContract } from 'src/libs/ajax/Metrics';
 import { isFeaturePreviewEnabled } from 'src/libs/feature-previews';
 import { azureBillingProject, gcpBillingProject } from 'src/testing/billing-project-fixtures';
-import { asMockedFn, renderWithAppContexts } from 'src/testing/test-utils';
+import { asMockedFn, partial, renderWithAppContexts } from 'src/testing/test-utils';
 import {
   defaultAzureWorkspace,
   defaultGoogleWorkspace,
@@ -27,23 +28,18 @@ jest.mock(
     updateSearch: jest.fn(),
   })
 );
-jest.mock('src/libs/ajax');
+jest.mock('src/libs/ajax/billing/Billing');
+jest.mock('src/libs/ajax/Metrics');
 jest.mock('src/libs/feature-previews', () => ({
   isFeaturePreviewEnabled: jest.fn(),
 }));
 
 describe('Workspaces', () => {
-  const getSpendReport = jest.fn();
+  const getSpendReport = jest.fn().mockResolvedValue({} as SpendReportServerResponse);
 
   beforeEach(() => {
-    asMockedFn(Ajax).mockImplementation(
-      () =>
-        ({
-          Billing: { getSpendReport } as Partial<AjaxContract['Billing']>,
-          Metrics: { captureEvent: jest.fn() } as Partial<AjaxContract['Metrics']>,
-        } as Partial<AjaxContract> as AjaxContract)
-    );
-    getSpendReport.mockResolvedValue({} as SpendReportServerResponse);
+    asMockedFn(Billing).mockReturnValue(partial<BillingContract>({ getSpendReport }));
+    asMockedFn(Metrics).mockReturnValue(partial<MetricsContract>({ captureEvent: jest.fn() }));
   });
 
   it('renders a message when there are no workspaces', async () => {
