@@ -298,6 +298,11 @@ export const Workspaces = (props: WorkspacesProps): ReactNode => {
       const endDate = new Date().toISOString().slice(0, 10);
       const aggregationKeys = ['Workspace~Category'];
 
+      // If there are no workspaces in the project, don't make the request
+      if (_.isEmpty(workspacesInProject)) {
+        return;
+      }
+
       setUpdating(true);
       Billing(signal)
         .getSpendReport({
