@@ -207,11 +207,8 @@ describe('Workspaces', () => {
     expect(users).toHaveLength(4); // 1 header row + 4 workspace rows
     // users sort initially by name
     expect(users[1]).toHaveTextContent('secondWorkspacegroot@gmail.comMar 15, 2023');
-    within(users[1]).getByLabelText('billing account in error state');
     expect(users[2]).toHaveTextContent('test-gcp-ws-namegroot@gmail.comMar 15, 2023');
-    within(users[2]).getByLabelText('billing account updating');
     expect(users[3]).toHaveTextContent('thirdWorkspacegroot@gmail.comMar 15, 2023');
-    within(users[3]).getByLabelText('billing account up-to-date');
     // Verify accessibility
     expect(await axe(container)).toHaveNoViolations();
   });

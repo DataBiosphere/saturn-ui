@@ -140,13 +140,13 @@ const WorkspaceCard: React.FC<WorkspaceCardProps> = memoWithName('WorkspaceCard'
         {isFeaturePreviewEnabled(SPEND_REPORTING) && (
           <>
             <div role='cell' style={workspaceCardStyles.field}>
-              {totalSpend ?? 'N/A'}
+              {totalSpend ?? '...'}
             </div>
             <div role='cell' style={workspaceCardStyles.field}>
-              {totalCompute ?? 'N/A'}
+              {totalCompute ?? '...'}
             </div>
             <div role='cell' style={workspaceCardStyles.field}>
-              {totalStorage ?? 'N/A'}
+              {totalStorage ?? '...'}
             </div>
           </>
         )}
@@ -195,58 +195,87 @@ export const Workspaces = (props: WorkspacesProps): ReactNode => {
   const [allWorkspacesInProject, setAllWorkspacesInProject] = useState<WorkspaceInfo[]>(workspacesInProject);
 
   useEffect(() => {
-    const startDate = subDays(selectedDays, new Date()).toISOString().slice(0, 10);
-    const endDate = new Date().toISOString().slice(0, 10);
-    const aggregationKeys = ['Workspace~Category'];
+    const getWorkspaceSpendDataByBillingProject = async (
+      billingProjectName: string,
+      selectedDays: number,
+      signal: AbortSignal,
+      workspacesInProject: WorkspaceInfo[]
+    ) => {
+      // Define start and end dates
+      const startDate = subDays(selectedDays, new Date()).toISOString().slice(0, 10);
+      const endDate = new Date().toISOString().slice(0, 10);
+      const aggregationKeys = ['Workspace~Category'];
 
-    // If there are no workspaces in the project, don't make the request
-    if (_.isEmpty(workspacesInProject)) {
-      return;
-    }
+      // If there are no workspaces in the project, exit early
+      if (_.isEmpty(workspacesInProject)) {
+        return;
+      }
 
-    setUpdating(true);
-    Billing(signal)
-      .getSpendReport({
-        billingProjectName: billingProject.projectName,
-        startDate,
-        endDate,
-        aggregationKeys,
-      })
-      .then((spend: SpendReportServerResponse) => {
+      const setDefaultSpendValues = (workspace: WorkspaceInfo) => ({
+        ...workspace,
+        totalSpend: 'N/A',
+        totalCompute: 'N/A',
+        totalStorage: 'N/A',
+      });
+
+      setUpdating(true);
+
+      try {
+        // Fetch the spend report for the billing project
+        const billingProjectSpentReport: SpendReportServerResponse = await Billing(signal).getSpendReport({
+          billingProjectName,
+          startDate,
+          endDate,
+          aggregationKeys,
+        });
+
+        // Create a map of spend data by workspace identifier
         const spendDataMap = _.keyBy(
           (spendItem: WorkspaceSpendData) => `${spendItem.workspace.namespace}-${spendItem.workspace.name}`,
-          (spend.spendDetails[0] as AggregatedWorkspaceSpendData).spendData
+          (billingProjectSpentReport.spendDetails[0] as AggregatedWorkspaceSpendData).spendData
         );
 
-        const updatedWorkspaces = _.map((workspace) => {
+        // Update each workspace with spend data or default values
+        return workspacesInProject.map((workspace) => {
           const key = `${workspace.namespace}-${workspace.name}`;
           const spendItem = spendDataMap[key];
 
-          if (spendItem) {
-            const costFormatter = new Intl.NumberFormat(navigator.language, {
-              style: 'currency',
-              currency: spendItem?.currency,
-            });
-
-            return {
-              ...workspace,
-              totalSpend: costFormatter.format(parseFloat(spendItem?.cost ?? '0.00')),
-              totalCompute: costFormatter.format(
-                parseFloat(_.find({ category: 'Compute' }, spendItem?.subAggregation?.spendData)?.cost ?? '0.00')
-              ),
-              totalStorage: costFormatter.format(
-                parseFloat(_.find({ category: 'Storage' }, spendItem?.subAggregation?.spendData)?.cost ?? '0.00')
-              ),
-            };
+          if (!spendItem) {
+            return setDefaultSpendValues(workspace);
           }
 
-          return workspace;
-        }, workspacesInProject);
+          const costFormatter = new Intl.NumberFormat(navigator.language, {
+            style: 'currency',
+            currency: spendItem.currency,
+          });
 
-        setAllWorkspacesInProject(updatedWorkspaces);
+          return {
+            ...workspace,
+            totalSpend: costFormatter.format(parseFloat(spendItem.cost ?? '0.00')),
+            totalCompute: costFormatter.format(
+              parseFloat(_.find({ category: 'Compute' }, spendItem.subAggregation.spendData)?.cost ?? '0.00')
+            ),
+            totalStorage: costFormatter.format(
+              parseFloat(_.find({ category: 'Storage' }, spendItem.subAggregation.spendData)?.cost ?? '0.00')
+            ),
+          };
+        });
+      } catch {
+        // Return default values for each workspace in case of an error
+        return workspacesInProject.map(setDefaultSpendValues);
+      } finally {
+        // Ensure updating state is reset regardless of success or failure
         setUpdating(false);
-      })
-      .catch(() => setUpdating(false));
+      }
+    };
+
+    getWorkspaceSpendDataByBillingProject(billingProject.projectName, selectedDays, signal, workspacesInProject).then(
+      (updatedWorkspaceInProject) => {
+        if (updatedWorkspaceInProject) {
+          setAllWorkspacesInProject(updatedWorkspaceInProject);
+        }
+      }
+    );
   }, [billingProject.projectName, selectedDays, signal, workspacesInProject]);
 
   // Apply filters to WorkspacesInProject
