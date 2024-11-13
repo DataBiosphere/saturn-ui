@@ -2,6 +2,7 @@ import { jsonBody } from '@terra-ui-packages/data-client-core';
 import _ from 'lodash/fp';
 import * as qs from 'qs';
 import { authOpts } from 'src/auth/auth-session';
+import { getLocationType } from 'src/components/region-common';
 import { fetchOrchestration, fetchRawls } from 'src/libs/ajax/ajax-common';
 import { Entity, EntityQueryResponse } from 'src/libs/ajax/data-table-providers/DataTableProvider';
 import { fetchOk } from 'src/libs/ajax/fetch/fetch-core';
@@ -173,7 +174,14 @@ export const Workspaces = (signal?: AbortSignal) => ({
 
       checkBucketAccess: GoogleStorage(signal).checkBucketAccess,
 
-      checkBucketLocation: GoogleStorage(signal).checkBucketLocation,
+      checkBucketLocation: async (userProject?) => {
+        const res = await fetchRawls(
+          `${root}/bucketOptions${userProject ? `?userProject=${userProject}` : ''}`,
+          _.merge(authOpts(), { signal })
+        );
+        const obj = await res.json();
+        return _.merge(obj, { locationType: getLocationType(obj.location) });
+      },
 
       details: async (fields: FieldsArg): Promise<WorkspaceWrapper> => {
         const res = await fetchRawls(

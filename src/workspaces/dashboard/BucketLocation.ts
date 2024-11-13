@@ -7,11 +7,10 @@ import { getRegionInfo } from 'src/components/region-common';
 import { TooltipCell } from 'src/components/table';
 import { Metrics } from 'src/libs/ajax/Metrics';
 import { Workspaces } from 'src/libs/ajax/workspaces/Workspaces';
-import { reportError } from 'src/libs/error';
 import Events, { extractWorkspaceDetails } from 'src/libs/events';
 import { useCancellation } from 'src/libs/react-utils';
 import { requesterPaysProjectStore } from 'src/libs/state';
-import { isBucketErrorRequesterPays, requesterPaysWrapper } from 'src/workspaces/common/requester-pays/bucket-utils';
+import { requesterPaysWrapper } from 'src/workspaces/common/requester-pays/bucket-utils';
 import { RequesterPaysModal } from 'src/workspaces/common/requester-pays/RequesterPaysModal';
 import { StorageDetails } from 'src/workspaces/common/state/useWorkspace';
 import { GoogleWorkspace } from 'src/workspaces/utils';
@@ -36,22 +35,21 @@ export const BucketLocation = requesterPaysWrapper({ onDismiss: _.noop })((props
     setLoading(true);
     try {
       const {
-        workspace: { namespace, name, googleProject, bucketName },
+        workspace: { namespace, name, googleProject },
       } = workspace;
-      const response = await Workspaces(signal)
-        .workspace(namespace, name)
-        .checkBucketLocation(googleProject, bucketName);
+      const project = needsRequesterPaysProject ? requesterPaysProjectStore.get() : googleProject;
+      const response = await Workspaces(signal).workspace(namespace, name).checkBucketLocation(project);
       setBucketLocation(response);
     } catch (error) {
-      if (isBucketErrorRequesterPays(error)) {
-        setNeedsRequesterPaysProject(true);
-      } else {
-        reportError('Unable to get bucket location.', error);
-      }
+      // if (error) {
+      setNeedsRequesterPaysProject(true);
+      // } else {
+      //  reportError('Unable to get bucket location.', error);
+      // }
     } finally {
       setLoading(false);
     }
-  }, [workspace, signal]);
+  }, [workspace, signal, needsRequesterPaysProject]);
 
   useEffect(() => {
     if (workspace?.workspaceInitialized) {
@@ -60,6 +58,9 @@ export const BucketLocation = requesterPaysWrapper({ onDismiss: _.noop })((props
         // while storageDetails.googleBucketLocation will contain the default value.
         // In the case of requester pays workspaces, we wish to show the user more information in this case and allow them to link a workspace.
         loadGoogleBucketLocation();
+      } else if (storageDetails.fetchedGoogleBucketLocation === 'RPERROR') {
+        setNeedsRequesterPaysProject(true);
+        setLoading(false);
       } else if (storageDetails.fetchedGoogleBucketLocation === 'SUCCESS') {
         setBucketLocation({
           location: storageDetails.googleBucketLocation,
@@ -71,6 +72,7 @@ export const BucketLocation = requesterPaysWrapper({ onDismiss: _.noop })((props
   }, [
     loadGoogleBucketLocation,
     setBucketLocation,
+    needsRequesterPaysProject,
     // Explicit dependencies to avoid extra calls to loadGoogleBucketLocation
     workspace?.workspaceInitialized,
     storageDetails.fetchedGoogleBucketLocation,
