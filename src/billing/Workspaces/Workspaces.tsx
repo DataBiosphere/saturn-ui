@@ -1,7 +1,7 @@
 import { Icon, Link, SpinnerOverlay } from '@terra-ui-packages/components';
 import { subDays } from 'date-fns/fp';
 import _ from 'lodash/fp';
-import React, { CSSProperties, ReactNode, useEffect, useState } from 'react';
+import React, { ReactNode, useEffect, useState } from 'react';
 import { DateRangeFilter } from 'src/billing/Filter/DateRangeFilter';
 import { SearchFilter } from 'src/billing/Filter/SearchFilter';
 import { billingAccountIconSize, BillingAccountStatus, getBillingAccountIconProps } from 'src/billing/utils';
@@ -95,8 +95,6 @@ interface WorkspaceCardProps {
   billingAccountDisplayName: string | undefined;
   billingProject: BillingProject;
   billingAccountStatus: false | BillingAccountStatus;
-  isExpanded: boolean;
-  onExpand: () => void;
 }
 
 const WorkspaceCard: React.FC<WorkspaceCardProps> = memoWithName('WorkspaceCard', (props: WorkspaceCardProps) => {
@@ -111,7 +109,6 @@ const WorkspaceCard: React.FC<WorkspaceCardProps> = memoWithName('WorkspaceCard'
       paddingRight: '1rem',
     },
     row: { display: 'flex', alignItems: 'center', width: '100%', padding: '1rem' },
-    expandedInfoContainer: { display: 'flex', flexDirection: 'column', width: '100%' } satisfies CSSProperties,
   };
 
   return (
@@ -189,7 +186,6 @@ export const Workspaces = (props: WorkspacesProps): ReactNode => {
           direction: 'asc',
         }
   );
-  const [expandedWorkspaceName, setExpandedWorkspaceName] = useState<string>();
 
   const getBillingAccountStatus = (workspace: WorkspaceInfo): BillingAccountStatus =>
     // @ts-ignore
@@ -320,7 +316,6 @@ export const Workspaces = (props: WorkspacesProps): ReactNode => {
               {_.flow(
                 _.orderBy([workspaceSort.field], [workspaceSort.direction]),
                 _.map((workspace: WorkspaceInfo) => {
-                  const isExpanded = expandedWorkspaceName === workspace.name;
                   return (
                     <WorkspaceCard
                       workspace={workspace}
@@ -332,8 +327,6 @@ export const Workspaces = (props: WorkspacesProps): ReactNode => {
                       billingProject={billingProject}
                       billingAccountStatus={billingAccountsOutOfDate && getBillingAccountStatus(workspace)}
                       key={workspace.workspaceId}
-                      isExpanded={isExpanded}
-                      onExpand={() => setExpandedWorkspaceName(isExpanded ? undefined : workspace.name)}
                     />
                   );
                 })
