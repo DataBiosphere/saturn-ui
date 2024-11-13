@@ -6,6 +6,7 @@ import { DateRangeFilter } from 'src/billing/Filter/DateRangeFilter';
 import { SearchFilter } from 'src/billing/Filter/SearchFilter';
 import { billingAccountIconSize, BillingAccountStatus, getBillingAccountIconProps } from 'src/billing/utils';
 import { BillingProject, GoogleBillingAccount } from 'src/billing-core/models';
+import { fixedSpinnerOverlay } from 'src/components/common';
 import { ariaSort, HeaderRenderer } from 'src/components/table';
 import { Billing } from 'src/libs/ajax/billing/Billing';
 import {
@@ -312,7 +313,6 @@ export const Workspaces = (props: WorkspacesProps): ReactNode => {
               style={{ gridRowStart: 1, gridColumnStart: 2, margin: '1.35rem' }}
               onChange={setSearchValue}
             />
-            {updating && <div style={{ gridRowStart: 1, gridColumnStart: 3, margin: '2.75rem' }}>Loading...</div>}
           </div>
           <div aria-live='polite' aria-atomic>
             <span aria-hidden>*</span>
@@ -339,7 +339,7 @@ export const Workspaces = (props: WorkspacesProps): ReactNode => {
               sort={workspaceSort}
               onSort={setWorkspaceSort}
             />
-            <div>
+            <div style={{ position: 'relative' }}>
               {_.flow(
                 _.orderBy([workspaceSort.field], [workspaceSort.direction]),
                 _.map((workspace: WorkspaceInfo) => {
@@ -358,6 +358,7 @@ export const Workspaces = (props: WorkspacesProps): ReactNode => {
                   );
                 })
               )(filteredWorkspacesInProject)}
+              {isFeaturePreviewEnabled(SPEND_REPORTING) && updating && fixedSpinnerOverlay}
             </div>
           </div>
         )
