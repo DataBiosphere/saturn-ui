@@ -1,4 +1,4 @@
-import { Icon, Link, SpinnerOverlay } from '@terra-ui-packages/components';
+import { Icon, Link } from '@terra-ui-packages/components';
 import { subDays } from 'date-fns/fp';
 import _ from 'lodash/fp';
 import React, { ReactNode, useEffect, useState } from 'react';
@@ -290,9 +290,9 @@ export const Workspaces = (props: WorkspacesProps): ReactNode => {
             style={{ gridRowStart: 1, gridColumnStart: 2, margin: '1.35rem' }}
             onChange={setSearchValue}
           />
+          {updating && <div style={{ gridRowStart: 1, gridColumnStart: 3, margin: '3rem' }}>Loading...</div>}
         </div>
       )}
-      {isFeaturePreviewEnabled(SPEND_REPORTING) && updating && <SpinnerOverlay mode='FullScreen' />}
       {_.isEmpty(workspacesInProject) ? (
         <div style={{ ...Style.cardList.longCardShadowless, width: 'fit-content' }}>
           <span aria-hidden='true'>Use this Terra billing project to create</span>
