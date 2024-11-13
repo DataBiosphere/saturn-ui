@@ -24,7 +24,6 @@ import * as Utils from 'src/libs/utils';
 import { isGoogleWorkspaceInfo, WorkspaceInfo } from 'src/workspaces/utils';
 
 const workspaceLastModifiedWidth = 150;
-const workspaceExpandIconSize = 20;
 
 interface WorkspaceCardHeadersProps {
   needsStatusColumn: boolean;
@@ -82,9 +81,6 @@ const WorkspaceCardHeaders: React.FC<WorkspaceCardHeadersProps> = memoWithName(
         >
           <HeaderRenderer sort={sort} onSort={onSort} name='lastModified' />
         </div>
-        <div role='columnheader' style={{ flex: `0 0 ${workspaceExpandIconSize}px` }}>
-          <div className='sr-only'>Expand</div>
-        </div>
       </div>
     );
   }
@@ -105,7 +101,7 @@ const WorkspaceCard: React.FC<WorkspaceCardProps> = memoWithName('WorkspaceCard'
       ...Style.noWrapEllipsis,
       flex: 1,
       height: '1.20rem',
-      width: `calc(50% - ${(workspaceLastModifiedWidth + workspaceExpandIconSize) / 2}px)`,
+      width: `calc(50% - ${workspaceLastModifiedWidth / 2}px)`,
       paddingRight: '1rem',
     },
     row: { display: 'flex', alignItems: 'center', width: '100%', padding: '1rem' },
@@ -270,28 +266,34 @@ export const Workspaces = (props: WorkspacesProps): ReactNode => {
   return (
     <>
       {isFeaturePreviewEnabled(SPEND_REPORTING) && (
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(3, minmax(max-content, 1fr))',
-            rowGap: '1.66rem',
-            columnGap: '1.25rem',
-          }}
-        >
-          <DateRangeFilter
-            label='Date range'
-            rangeOptions={[7, 30, 90]}
-            defaultValue={selectedDays}
-            style={{ gridRowStart: 1, gridColumnStart: 1 }}
-            onChange={setSelectedDays}
-          />
-          <SearchFilter
-            placeholder='Search by name, project or bucket'
-            style={{ gridRowStart: 1, gridColumnStart: 2, margin: '1.35rem' }}
-            onChange={setSearchValue}
-          />
-          {updating && <div style={{ gridRowStart: 1, gridColumnStart: 3, margin: '3rem' }}>Loading...</div>}
-        </div>
+        <>
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(3, minmax(max-content, 1fr))',
+              rowGap: '1.66rem',
+              columnGap: '1.25rem',
+            }}
+          >
+            <DateRangeFilter
+              label='Date range'
+              rangeOptions={[7, 30, 90]}
+              defaultValue={selectedDays}
+              style={{ gridRowStart: 1, gridColumnStart: 1 }}
+              onChange={setSelectedDays}
+            />
+            <SearchFilter
+              placeholder='Search by name, project or bucket'
+              style={{ gridRowStart: 1, gridColumnStart: 2, margin: '1.35rem' }}
+              onChange={setSearchValue}
+            />
+            {updating && <div style={{ gridRowStart: 1, gridColumnStart: 3, margin: '2.75rem' }}>Loading...</div>}
+          </div>
+          <div aria-live='polite' aria-atomic>
+            <span aria-hidden>*</span>
+            Total spend includes infrastructure or query costs related to the general operations of Terra.
+          </div>
+        </>
       )}
       {_.isEmpty(workspacesInProject) ? (
         <div style={{ ...Style.cardList.longCardShadowless, width: 'fit-content' }}>
