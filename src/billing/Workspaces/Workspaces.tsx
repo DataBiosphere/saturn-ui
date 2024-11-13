@@ -195,62 +195,58 @@ export const Workspaces = (props: WorkspacesProps): ReactNode => {
   const [allWorkspacesInProject, setAllWorkspacesInProject] = useState<WorkspaceInfo[]>(workspacesInProject);
 
   useEffect(() => {
-    const getSpendReportByWorkspaceAndCategory = (selectedDays: number, workspacesInProject: WorkspaceInfo[]) => {
-      const startDate = subDays(selectedDays, new Date()).toISOString().slice(0, 10);
-      const endDate = new Date().toISOString().slice(0, 10);
-      const aggregationKeys = ['Workspace~Category'];
+    const startDate = subDays(selectedDays, new Date()).toISOString().slice(0, 10);
+    const endDate = new Date().toISOString().slice(0, 10);
+    const aggregationKeys = ['Workspace~Category'];
 
-      // If there are no workspaces in the project, don't make the request
-      if (_.isEmpty(workspacesInProject)) {
-        return;
-      }
+    // If there are no workspaces in the project, don't make the request
+    if (_.isEmpty(workspacesInProject)) {
+      return;
+    }
 
-      setUpdating(true);
-      Billing(signal)
-        .getSpendReport({
-          billingProjectName: billingProject.projectName,
-          startDate,
-          endDate,
-          aggregationKeys,
-        })
-        .then((spend: SpendReportServerResponse) => {
-          const spendDataMap = _.keyBy(
-            (spendItem: WorkspaceSpendData) => `${spendItem.workspace.namespace}-${spendItem.workspace.name}`,
-            (spend.spendDetails[0] as AggregatedWorkspaceSpendData).spendData
-          );
+    setUpdating(true);
+    Billing(signal)
+      .getSpendReport({
+        billingProjectName: billingProject.projectName,
+        startDate,
+        endDate,
+        aggregationKeys,
+      })
+      .then((spend: SpendReportServerResponse) => {
+        const spendDataMap = _.keyBy(
+          (spendItem: WorkspaceSpendData) => `${spendItem.workspace.namespace}-${spendItem.workspace.name}`,
+          (spend.spendDetails[0] as AggregatedWorkspaceSpendData).spendData
+        );
 
-          const updatedWorkspaces = _.map((workspace) => {
-            const key = `${workspace.namespace}-${workspace.name}`;
-            const spendItem = spendDataMap[key];
+        const updatedWorkspaces = _.map((workspace) => {
+          const key = `${workspace.namespace}-${workspace.name}`;
+          const spendItem = spendDataMap[key];
 
-            if (spendItem) {
-              const costFormatter = new Intl.NumberFormat(navigator.language, {
-                style: 'currency',
-                currency: spendItem?.currency,
-              });
+          if (spendItem) {
+            const costFormatter = new Intl.NumberFormat(navigator.language, {
+              style: 'currency',
+              currency: spendItem?.currency,
+            });
 
-              return {
-                ...workspace,
-                totalSpend: costFormatter.format(parseFloat(spendItem?.cost ?? '0.00')),
-                totalCompute: costFormatter.format(
-                  parseFloat(_.find({ category: 'Compute' }, spendItem?.subAggregation?.spendData)?.cost ?? '0.00')
-                ),
-                totalStorage: costFormatter.format(
-                  parseFloat(_.find({ category: 'Storage' }, spendItem?.subAggregation?.spendData)?.cost ?? '0.00')
-                ),
-              };
-            }
+            return {
+              ...workspace,
+              totalSpend: costFormatter.format(parseFloat(spendItem?.cost ?? '0.00')),
+              totalCompute: costFormatter.format(
+                parseFloat(_.find({ category: 'Compute' }, spendItem?.subAggregation?.spendData)?.cost ?? '0.00')
+              ),
+              totalStorage: costFormatter.format(
+                parseFloat(_.find({ category: 'Storage' }, spendItem?.subAggregation?.spendData)?.cost ?? '0.00')
+              ),
+            };
+          }
 
-            return workspace;
-          }, workspacesInProject);
+          return workspace;
+        }, workspacesInProject);
 
-          setAllWorkspacesInProject(updatedWorkspaces);
-          setUpdating(false);
-        })
-        .catch(() => setUpdating(false));
-    };
-
-    getSpendReportByWorkspaceAndCategory(selectedDays, workspacesInProject);
+        setAllWorkspacesInProject(updatedWorkspaces);
+        setUpdating(false);
+      })
+      .catch(() => setUpdating(false));
   }, [billingProject.projectName, selectedDays, signal, workspacesInProject]);
 
   // Apply filters to WorkspacesInProject
