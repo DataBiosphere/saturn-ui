@@ -57,6 +57,8 @@ export const BucketLocation = requesterPaysWrapper({ onDismiss: _.noop })((props
         // storageDetails.fetchedGoogleBucketLocation stores if an error was encountered from the server,
         // while storageDetails.googleBucketLocation will contain the default value.
         // In the case of requester pays workspaces, we wish to show the user more information in this case and allow them to link a workspace.
+        loadGoogleBucketLocation();
+      } else if (storageDetails.fetchedGoogleBucketLocation === 'RPERROR') {
         setNeedsRequesterPaysProject(true);
         setLoading(false);
       } else if (storageDetails.fetchedGoogleBucketLocation === 'SUCCESS') {

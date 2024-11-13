@@ -22,7 +22,7 @@ export type { InitializedWorkspaceWrapper } from 'src/libs/state';
 export interface StorageDetails {
   googleBucketLocation: string; // historically returns defaultLocation if bucket location cannot be retrieved or Azure
   googleBucketType: string; // historically returns locationTypes.default if bucket type cannot be retrieved or Azure
-  fetchedGoogleBucketLocation: 'SUCCESS' | 'ERROR' | undefined; // undefined: still fetching
+  fetchedGoogleBucketLocation: 'SUCCESS' | 'ERROR' | 'RPERROR' | undefined; // undefined: still fetching
   azureContainerRegion?: string;
   azureContainerUrl?: string;
   azureContainerSasUrl?: string;
@@ -46,7 +46,7 @@ export const useWorkspace = (namespace, name): WorkspaceDetails => {
   const workspace = useStore(workspaceStore);
 
   const [{ location, locationType, fetchedLocation }, setGoogleStorage] = useState<{
-    fetchedLocation: 'SUCCESS' | 'ERROR' | undefined;
+    fetchedLocation: 'SUCCESS' | 'ERROR' | 'RPERROR' | undefined;
     location: string;
     locationType: string;
   }>({
@@ -115,7 +115,7 @@ export const useWorkspace = (namespace, name): WorkspaceDetails => {
       if (responseContainsRequesterPaysError(errorText)) {
         // loadGoogleBucketLocation will not get called in this case because checkBucketReadAccess fails first,
         // but it would also fail with the requester pays error.
-        setGoogleStorage({ fetchedLocation: 'ERROR', location, locationType });
+        setGoogleStorage({ fetchedLocation: 'RPERROR', location, locationType });
         updateWorkspaceInStore(workspace, true);
       } else {
         updateWorkspaceInStore(workspace, false);
@@ -145,7 +145,7 @@ export const useWorkspace = (namespace, name): WorkspaceDetails => {
     try {
       const storageDetails = await Workspaces(signal)
         .workspace(namespace, name)
-        .checkBucketLocation(workspace.workspace.googleProject, workspace.workspace.bucketName);
+        .checkBucketLocation(workspace.workspace.googleProject);
       storageDetails.fetchedLocation = 'SUCCESS';
       setGoogleStorage(storageDetails);
     } catch (error) {
