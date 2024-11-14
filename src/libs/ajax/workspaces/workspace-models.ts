@@ -115,6 +115,9 @@ export interface BaseWorkspaceInfo {
   completedCloneWorkspaceFileTransfer?: string;
   workspaceType?: 'mc' | 'rawls';
   workspaceVersion?: string;
+  totalSpend?: string;
+  totalCompute?: string;
+  totalStorage?: string;
 }
 
 export interface AzureWorkspaceInfo extends BaseWorkspaceInfo {
