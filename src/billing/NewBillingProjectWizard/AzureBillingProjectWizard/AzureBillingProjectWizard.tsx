@@ -8,7 +8,8 @@ import { ProtectedDataStep } from 'src/billing/NewBillingProjectWizard/AzureBill
 import { StepWizard } from 'src/billing/NewBillingProjectWizard/StepWizard/StepWizard';
 import { billingProjectNameValidator } from 'src/billing/utils';
 import { AzureManagedAppCoordinates, BillingRole } from 'src/billing-core/models';
-import { Ajax } from 'src/libs/ajax';
+import { Billing } from 'src/libs/ajax/billing/Billing';
+import { Metrics } from 'src/libs/ajax/Metrics';
 import { isAnvil } from 'src/libs/brand-utils';
 import { reportErrorAndRethrow } from 'src/libs/error';
 import Events from 'src/libs/events';
@@ -57,7 +58,7 @@ export const AzureBillingProjectWizard = ({ onSuccess }: AzureBillingProjectWiza
       const users = userInfoListToProjectAccessObjects(userEmails.emails, 'User');
       const owners = userInfoListToProjectAccessObjects(ownerEmails.emails, 'Owner');
       const members = _.concat(users, owners);
-      await Ajax().Billing.createAzureProject(
+      await Billing().createAzureProject(
         billingProjectName,
         // managedApp and subscriptionId are set in previous steps before this function is called.
         managedApp!.tenantId,
@@ -71,9 +72,9 @@ export const AzureBillingProjectWizard = ({ onSuccess }: AzureBillingProjectWiza
     } catch (error: any) {
       if (error?.status === 409) {
         setExistingProjectNames(_.concat(billingProjectName, existingProjectNames));
-        Ajax().Metrics.captureEvent(Events.billingAzureCreationProjectCreateFail, { existingName: true });
+        void Metrics().captureEvent(Events.billingAzureCreationProjectCreateFail, { existingName: true });
       } else {
-        Ajax().Metrics.captureEvent(Events.billingAzureCreationProjectCreateFail, { existingName: false });
+        void Metrics().captureEvent(Events.billingAzureCreationProjectCreateFail, { existingName: false });
         throw error;
       }
     }
@@ -104,7 +105,7 @@ export const AzureBillingProjectWizard = ({ onSuccess }: AzureBillingProjectWiza
   }, [billingProjectName, existingProjectNames]);
 
   useOnMount(() => {
-    Ajax().Metrics.captureEvent(Events.billingAzureCreationSubscriptionStep);
+    void Metrics().captureEvent(Events.billingAzureCreationSubscriptionStep);
   });
 
   const stepFinished = (step: number, finished: boolean) => {
@@ -121,7 +122,7 @@ export const AzureBillingProjectWizard = ({ onSuccess }: AzureBillingProjectWiza
     stepFinished(1, !!managedApp);
     setManagedApp(managedApp);
     if (managedApp) {
-      Ajax().Metrics.captureEvent(Events.billingAzureCreationMRGSelected);
+      void Metrics().captureEvent(Events.billingAzureCreationMRGSelected);
     }
   };
 
@@ -173,7 +174,7 @@ export const AzureBillingProjectWizard = ({ onSuccess }: AzureBillingProjectWiza
           onSetProtectedData={(protectedData) => {
             stepFinished(2, true);
             setProtectedData(protectedData);
-            Ajax().Metrics.captureEvent(
+            void Metrics().captureEvent(
               protectedData
                 ? Events.billingAzureCreationProtectedDataSelected
                 : Events.billingAzureCreationProtectedDataNotSelected
@@ -187,7 +188,7 @@ export const AzureBillingProjectWizard = ({ onSuccess }: AzureBillingProjectWiza
           onAddUsersOrOwners={(addUsersOrOwners) => {
             stepFinished(3, !addUsersOrOwners);
             setAddUsersOrOwners(addUsersOrOwners);
-            Ajax().Metrics.captureEvent(
+            void Metrics().captureEvent(
               addUsersOrOwners ? Events.billingAzureCreationWillAddUsers : Events.billingAzureCreationNoUsersToAdd
             );
           }}
@@ -212,7 +213,7 @@ export const AzureBillingProjectWizard = ({ onSuccess }: AzureBillingProjectWiza
           onBillingProjectInputFocused={() => {
             if (step1HasNoErrors && step2HasNoErrors && step3HasNoErrors) {
               stepFinished(3, true);
-              Ajax().Metrics.captureEvent(Events.billingAzureCreationProjectNameStep);
+              void Metrics().captureEvent(Events.billingAzureCreationProjectNameStep);
             }
           }}
           createBillingProject={createBillingProject}

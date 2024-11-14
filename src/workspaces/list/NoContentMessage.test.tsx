@@ -11,7 +11,6 @@ describe('NoContentMessage', () => {
     // Arrange
     const workspaces: CategorizedWorkspaces = {
       myWorkspaces: [],
-      newAndInteresting: [],
       featured: [],
       public: [],
     };
@@ -34,7 +33,6 @@ describe('NoContentMessage', () => {
     // Arrange
     const workspaces: CategorizedWorkspaces = {
       myWorkspaces: [],
-      newAndInteresting: [],
       featured: [],
       public: [],
     };
@@ -60,7 +58,6 @@ describe('NoContentMessage', () => {
     // Arrange
     const workspaces: CategorizedWorkspaces = {
       myWorkspaces: [],
-      newAndInteresting: [],
       featured: [],
       public: [],
     };
@@ -83,7 +80,6 @@ describe('NoContentMessage', () => {
     // Arrange
     const workspaces: CategorizedWorkspaces = {
       myWorkspaces: [defaultGoogleWorkspace],
-      newAndInteresting: [],
       featured: [],
       public: [],
     };

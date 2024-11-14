@@ -7,7 +7,7 @@ import { billingRoles, isCreating, isDeleting, isErrored } from 'src/billing/uti
 import { BillingProject } from 'src/billing-core/models';
 import { CloudProviderIcon } from 'src/components/CloudProviderIcon';
 import { InfoBox } from 'src/components/InfoBox';
-import { Ajax } from 'src/libs/ajax';
+import { Metrics } from 'src/libs/ajax/Metrics';
 import colors from 'src/libs/colors';
 import Events, { extractBillingDetails } from 'src/libs/events';
 import * as Nav from 'src/libs/nav';
@@ -68,7 +68,7 @@ export const ProjectListItem = (props: ProjectListItemProps) => {
         }}
         href={`${Nav.getLink('billing')}?${qs.stringify({ selectedName: projectName, type: 'project' })}`}
         onClick={() =>
-          Ajax().Metrics.captureEvent(Events.billingProjectOpenFromList, extractBillingDetails(props.project))
+          void Metrics().captureEvent(Events.billingProjectOpenFromList, extractBillingDetails(props.project))
         }
         aria-current={props.isActive ? 'location' : false}
       >

@@ -9,7 +9,7 @@ import { DateRangeFilter } from 'src/billing/Filter/DateRangeFilter';
 import { ExternalLink } from 'src/billing/NewBillingProjectWizard/StepWizard/ExternalLink';
 import { CostCard } from 'src/billing/SpendReport/CostCard';
 import { CloudPlatform } from 'src/billing-core/models';
-import { Ajax } from 'src/libs/ajax';
+import { Billing } from 'src/libs/ajax/billing/Billing';
 import {
   AggregatedCategorySpendData,
   AggregatedWorkspaceSpendData,
@@ -179,7 +179,7 @@ export const SpendReport = (props: SpendReportProps) => {
         const endDate = new Date().toISOString().slice(0, 10);
         const startDate = subDays(spendReportLengthInDays, new Date()).toISOString().slice(0, 10);
         const aggregationKeys = includePerWorkspaceCosts ? ['Workspace~Category', 'Category'] : ['Category'];
-        const spend: SpendReportServerResponse = await Ajax(signal).Billing.getSpendReport({
+        const spend: SpendReportServerResponse = await Billing(signal).getSpendReport({
           billingProjectName: props.billingProjectName,
           startDate,
           endDate,

@@ -42,7 +42,6 @@ describe('The filterWorkspaces method', () => {
     const workspaces: CategorizedWorkspaces = {
       myWorkspaces: [defaultAzureWorkspace, defaultGoogleWorkspace],
       public: [defaultAzureWorkspace, defaultGoogleWorkspace],
-      newAndInteresting: [defaultAzureWorkspace, defaultGoogleWorkspace],
       featured: [defaultAzureWorkspace, defaultGoogleWorkspace],
     };
     const filters = getWorkspaceFiltersFromQuery({ tab: 'myWorkspaces', filter: defaultAzureWorkspace.workspace.name });
@@ -54,7 +53,6 @@ describe('The filterWorkspaces method', () => {
     expect(filteredWorkspaces.myWorkspaces).toEqual([defaultAzureWorkspace]);
     // All categories should be filtered
     expect(filteredWorkspaces.public).toEqual([defaultAzureWorkspace]);
-    expect(filteredWorkspaces.newAndInteresting).toEqual([defaultAzureWorkspace]);
     expect(filteredWorkspaces.featured).toEqual([defaultAzureWorkspace]);
   });
 
@@ -63,7 +61,6 @@ describe('The filterWorkspaces method', () => {
     const workspaces: CategorizedWorkspaces = {
       myWorkspaces: [defaultAzureWorkspace, defaultGoogleWorkspace, defaultInitializedGoogleWorkspace],
       public: [],
-      newAndInteresting: [],
       featured: [],
     };
     const filters = getWorkspaceFiltersFromQuery({
@@ -84,7 +81,6 @@ describe('The filterWorkspaces method', () => {
     const workspaces: CategorizedWorkspaces = {
       myWorkspaces: [defaultAzureWorkspace, defaultGoogleWorkspace, defaultInitializedGoogleWorkspace],
       public: [],
-      newAndInteresting: [],
       featured: [],
     };
     const filters = getWorkspaceFiltersFromQuery({ filter: defaultGoogleWorkspace.workspace.googleProject });
@@ -120,7 +116,6 @@ describe('The filterWorkspaces method', () => {
     const workspaces: CategorizedWorkspaces = {
       myWorkspaces: [defaultAzureWorkspace, deleteFailedWorkspace, cloningFailedWorkspace],
       public: [],
-      newAndInteresting: [],
       featured: [],
     };
     const filters = getWorkspaceFiltersFromQuery({ filter: 'fail' });
@@ -137,7 +132,6 @@ describe('The filterWorkspaces method', () => {
     const workspaces: CategorizedWorkspaces = {
       myWorkspaces: [defaultAzureWorkspace, defaultGoogleWorkspace],
       public: [defaultAzureWorkspace, defaultGoogleWorkspace],
-      newAndInteresting: [defaultAzureWorkspace, defaultGoogleWorkspace],
       featured: [defaultAzureWorkspace, defaultGoogleWorkspace],
     };
     const filters = getWorkspaceFiltersFromQuery({
@@ -152,7 +146,6 @@ describe('The filterWorkspaces method', () => {
     expect(filteredWorkspaces.myWorkspaces).toEqual([defaultGoogleWorkspace]);
     // All categories should be filtered
     expect(filteredWorkspaces.public).toEqual([defaultGoogleWorkspace]);
-    expect(filteredWorkspaces.newAndInteresting).toEqual([defaultGoogleWorkspace]);
     expect(filteredWorkspaces.featured).toEqual([defaultGoogleWorkspace]);
   });
 
@@ -161,7 +154,6 @@ describe('The filterWorkspaces method', () => {
     const workspaces: CategorizedWorkspaces = {
       myWorkspaces: [defaultAzureWorkspace, defaultGoogleWorkspace, defaultInitializedGoogleWorkspace],
       public: [],
-      newAndInteresting: [],
       featured: [],
     };
     const filters = getWorkspaceFiltersFromQuery({ projectsFilter: defaultGoogleWorkspace.workspace.namespace });
@@ -179,7 +171,6 @@ describe('The filterWorkspaces method', () => {
     const workspaces: CategorizedWorkspaces = {
       myWorkspaces: [defaultAzureWorkspace, defaultGoogleWorkspace],
       public: [],
-      newAndInteresting: [],
       featured: [],
     };
     const filters = getWorkspaceFiltersFromQuery({ cloudPlatform: cloudProviderTypes.GCP });
@@ -206,7 +197,6 @@ describe('The filterWorkspaces method', () => {
     const workspaces: CategorizedWorkspaces = {
       myWorkspaces: [defaultAzureWorkspace, readerWorkspace, writerWorkspace],
       public: [],
-      newAndInteresting: [],
       featured: [],
     };
     const filters = getWorkspaceFiltersFromQuery({ accessLevelsFilter: ['OWNER', 'WRITER'] });
@@ -249,7 +239,6 @@ describe('The filterWorkspaces method', () => {
     const workspaces: CategorizedWorkspaces = {
       myWorkspaces: [defaultAzureWorkspace, fooTagWorkspace, fooBarTagWorkspace],
       public: [],
-      newAndInteresting: [],
       featured: [],
     };
     const filters = getWorkspaceFiltersFromQuery({ tagsFilter: ['foo', 'bar'] });
@@ -272,7 +261,6 @@ describe('The WorkspacesListTabs component', () => {
     const workspaces: CategorizedWorkspaces = {
       myWorkspaces: [defaultAzureWorkspace],
       public: [defaultGoogleWorkspace],
-      newAndInteresting: [],
       featured: [],
     };
     asMockedFn(useRoute).mockImplementation(() => ({ params: {}, query: { tab: 'public' } }));
@@ -298,7 +286,6 @@ describe('The WorkspacesListTabs component', () => {
     const workspaces: CategorizedWorkspaces = {
       myWorkspaces: [defaultAzureWorkspace, defaultGoogleWorkspace],
       public: [defaultGoogleWorkspace],
-      newAndInteresting: [],
       featured: [],
     };
     asMockedFn(useRoute).mockImplementation(() => ({ params: {}, query: { tab: 'public' } }));
@@ -322,7 +309,6 @@ describe('The WorkspacesListTabs component', () => {
     const workspaces: CategorizedWorkspaces = {
       myWorkspaces: [defaultAzureWorkspace, defaultGoogleWorkspace],
       public: [defaultGoogleWorkspace],
-      newAndInteresting: [],
       featured: [],
     };
     asMockedFn(useRoute).mockImplementation(() => ({
@@ -349,7 +335,6 @@ describe('The WorkspacesListTabs component', () => {
     const workspaces: CategorizedWorkspaces = {
       myWorkspaces: [defaultAzureWorkspace],
       public: [defaultGoogleWorkspace],
-      newAndInteresting: [],
       featured: [],
     };
     asMockedFn(useRoute).mockImplementation(() => ({ params: {}, query: {} }));
@@ -375,7 +360,6 @@ describe('The WorkspacesListTabs component', () => {
     const workspaces: CategorizedWorkspaces = {
       myWorkspaces: [defaultAzureWorkspace],
       public: [defaultGoogleWorkspace],
-      newAndInteresting: [],
       featured: [],
     };
     asMockedFn(useRoute).mockImplementation(() => ({ params: {}, query: {} }));
@@ -402,7 +386,6 @@ describe('The WorkspacesListTabs component', () => {
     const workspaces: CategorizedWorkspaces = {
       myWorkspaces: [defaultAzureWorkspace],
       public: [defaultGoogleWorkspace],
-      newAndInteresting: [],
       featured: [],
     };
     asMockedFn(updateSearch);
@@ -422,7 +405,7 @@ describe('The WorkspacesListTabs component', () => {
 
     // Assert
     const tabs = screen.getAllByRole('tab');
-    const publicTab = tabs[3];
+    const publicTab = tabs[2];
     act(() => fireEvent.click(publicTab));
     expect(updateSearch).toHaveBeenCalledWith({ tab: 'public' });
     expect(captureEvent).toHaveBeenNthCalledWith(1, `${Events.workspacesListSelectTab}:view:myWorkspaces`, {});

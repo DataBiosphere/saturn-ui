@@ -1,15 +1,18 @@
-import { DeepPartial } from '@terra-ui-packages/core-utils';
 import { screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { axe } from 'jest-axe';
 import React from 'react';
 import { Members } from 'src/billing/Members/Members';
 import { Member } from 'src/groups/Members/MemberTable';
-import { Ajax } from 'src/libs/ajax';
-import { asMockedFn, renderWithAppContexts } from 'src/testing/test-utils';
+import { Billing, BillingContract } from 'src/libs/ajax/billing/Billing';
+import { Groups, GroupsContract } from 'src/libs/ajax/Groups';
+import { Workspaces, WorkspacesAjaxContract } from 'src/libs/ajax/workspaces/Workspaces';
+import { asMockedFn, MockedFn, partial, renderWithAppContexts } from 'src/testing/test-utils';
 
-type AjaxContract = ReturnType<typeof Ajax>;
-jest.mock('src/libs/ajax');
+jest.mock('src/libs/ajax/billing/Billing');
+jest.mock('src/libs/ajax/Groups');
+jest.mock('src/libs/ajax/workspaces/Workspaces');
+
 describe('Members', () => {
   it('renders a list of members in the billing project with no accessibility errors', async () => {
     // Arrange
@@ -78,14 +81,20 @@ describe('Members', () => {
     const projectUsers: Member[] = [{ email: 'owner@test.email.org', roles: ['Owner'] }];
     const user = userEvent.setup();
 
-    const addProjectUser = jest.fn();
-    const mockAjax: DeepPartial<AjaxContract> = {
-      Billing: { addProjectUser } as Partial<AjaxContract['Billing']>,
-      // Next 2 mocks are needed for suggestions in the NewUserModal.
-      Workspaces: { getShareLog: jest.fn(() => Promise.resolve([])) },
-      Groups: { list: jest.fn(() => Promise.resolve([])) },
-    };
-    asMockedFn(Ajax).mockImplementation(() => mockAjax as AjaxContract);
+    const addProjectUser: MockedFn<BillingContract['addProjectUser']> = jest.fn();
+    asMockedFn(Billing).mockReturnValue(partial<BillingContract>({ addProjectUser }));
+    // Next 2 mocks are needed for suggestions in the NewUserModal.
+    asMockedFn(Workspaces).mockReturnValue(
+      partial<WorkspacesAjaxContract>({
+        getShareLog: jest.fn(async () => []),
+      })
+    );
+    asMockedFn(Groups).mockReturnValue(
+      partial<GroupsContract>({
+        list: jest.fn(async () => []),
+      })
+    );
+
     const userAddedCallback = jest.fn();
 
     // Act
@@ -255,11 +264,10 @@ describe('Members', () => {
       { email: userEmail, roles: ['User'] },
     ];
     const user = userEvent.setup();
-    const changeUserRoles = jest.fn();
-    const mockAjax: DeepPartial<AjaxContract> = {
-      Billing: { changeUserRoles } as Partial<AjaxContract['Billing']>,
-    };
-    asMockedFn(Ajax).mockImplementation(() => mockAjax as AjaxContract);
+
+    const changeUserRoles: MockedFn<BillingContract['changeUserRoles']> = jest.fn();
+    asMockedFn(Billing).mockReturnValue(partial<BillingContract>({ changeUserRoles }));
+
     const editingUserCallback = jest.fn();
 
     // Act
@@ -296,11 +304,10 @@ describe('Members', () => {
       { email: 'owner2@test.email.org', roles: ['Owner'] },
     ];
     const user = userEvent.setup();
-    const changeUserRoles = jest.fn();
-    const mockAjax: DeepPartial<AjaxContract> = {
-      Billing: { changeUserRoles } as Partial<AjaxContract['Billing']>,
-    };
-    asMockedFn(Ajax).mockImplementation(() => mockAjax as AjaxContract);
+
+    const changeUserRoles: MockedFn<BillingContract['changeUserRoles']> = jest.fn();
+    asMockedFn(Billing).mockReturnValue(partial<BillingContract>({ changeUserRoles }));
+
     const userEditedCallback = jest.fn();
 
     // Act

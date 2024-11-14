@@ -14,7 +14,7 @@ import { StepHeader } from 'src/billing/NewBillingProjectWizard/StepWizard/StepH
 import { AzureManagedAppCoordinates } from 'src/billing-core/models';
 import { Link, Select } from 'src/components/common';
 import { ValidatedInputWithRef } from 'src/components/input';
-import { Ajax } from 'src/libs/ajax';
+import { Billing } from 'src/libs/ajax/billing/Billing';
 import { getRegionLabel } from 'src/libs/azure-utils';
 import { useCancellation } from 'src/libs/react-utils';
 import * as Utils from 'src/libs/utils';
@@ -81,7 +81,7 @@ export const AzureSubscriptionStep = ({ isActive, subscriptionId, ...props }: Az
     if (!!v && !errors) {
       setManagedApps(async () => {
         setSubscriptionIdError(undefined);
-        const response = await Ajax(signal).Billing.listAzureManagedApplications(v, false);
+        const response = await Billing(signal).listAzureManagedApplications(v, false);
         const managedApps = response.managedApps;
         if (managedApps.length === 0) {
           setSubscriptionIdError(<NoManagedApps />);
