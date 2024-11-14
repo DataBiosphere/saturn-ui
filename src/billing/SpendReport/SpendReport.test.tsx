@@ -171,7 +171,7 @@ describe('SpendReport', () => {
     expect(screen.getByTestId('spend')).toHaveTextContent('$1,110.00*');
     expect(screen.getByTestId('compute')).toHaveTextContent('$999.00');
     expect(screen.getByTestId('storage')).toHaveTextContent('$22.00');
-    // validate that 'workspaceInfractructure' card is not shown for GCP report
+    // validate that 'workspaceInfrastructure' card is not shown for GCP report
     expect(screen.queryByTestId('workspaceInfrastructure')).not.toBeInTheDocument();
 
     // Highcharts content is very minimal when rendered in the unit test. Testing of "most expensive workspaces"

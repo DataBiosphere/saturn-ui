@@ -4,6 +4,7 @@ import React from 'react';
 import Project, { groupByBillingAccountStatus } from 'src/billing/Project';
 import { GCPBillingProject, GoogleBillingAccount } from 'src/billing-core/models';
 import { Billing, BillingContract } from 'src/libs/ajax/billing/Billing';
+import { SpendReport as SpendReportServerResponse } from 'src/libs/ajax/billing/billing-models';
 import { Metrics, MetricsContract } from 'src/libs/ajax/Metrics';
 import { azureBillingProject, gcpBillingProject } from 'src/testing/billing-project-fixtures';
 import { renderWithAppContexts } from 'src/testing/test-utils';
@@ -11,7 +12,6 @@ import { defaultAzureWorkspace, defaultGoogleWorkspace } from 'src/testing/works
 
 jest.mock('src/libs/ajax/billing/Billing');
 jest.mock('src/libs/ajax/Metrics');
-
 type NavExports = typeof import('src/libs/nav');
 jest.mock(
   'src/libs/nav',
@@ -132,11 +132,14 @@ describe('groupByBillingAccountStatus', () => {
 });
 
 describe('Project', () => {
+  const getSpendReport = jest.fn().mockResolvedValue({} as SpendReportServerResponse);
+
   const listProjectUsers: MockedFn<BillingContract['listProjectUsers']> = jest.fn();
 
   beforeEach(() => {
     asMockedFn(Billing).mockReturnValue(
       partial<BillingContract>({
+        getSpendReport,
         listProjectUsers,
         removeProjectUser: jest.fn(),
       })
