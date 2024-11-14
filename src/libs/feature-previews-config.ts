@@ -43,6 +43,11 @@ export type FeaturePreview = {
    * Optional URL for users to provide feedback on the feature. Shown on the feature previews page.
    */
   readonly feedbackUrl?: string;
+
+  /**
+   * Optional date string for the last updated date. Shown on the feature previews page.
+   */
+  readonly lastUpdated?: string;
 };
 
 const featurePreviewsConfig: readonly FeaturePreview[] = [
@@ -52,6 +57,7 @@ const featurePreviewsConfig: readonly FeaturePreview[] = [
     description: 'Enabling this feature will allow you to launch notebooks using JupyterLab in GCP workspaces.',
     groups: ['preview-jupyterlab-gcp'],
     feedbackUrl: `mailto:dsp-sue@broadinstitute.org?subject=${encodeURIComponent('Feedback on JupyterLab (GCP)')}`,
+    lastUpdated: '12/22/2022',
   },
   {
     id: HAIL_BATCH_AZURE_FEATURE_ID,
@@ -59,6 +65,7 @@ const featurePreviewsConfig: readonly FeaturePreview[] = [
     description: 'Enabling this feature will allow you to launch the Hail Batch app in Azure workspaces.',
     groups: ['preview-hail-batch-azure'],
     feedbackUrl: `mailto:dsp-sue@broadinstitute.org?subject=${encodeURIComponent('Feedback on Hail Batch (Azure)')}`,
+    lastUpdated: '5/22/2023',
   },
   {
     id: ENABLE_AZURE_PFB_IMPORT,
@@ -68,6 +75,7 @@ const featurePreviewsConfig: readonly FeaturePreview[] = [
     feedbackUrl: `mailto:dsp-core-services@broadinstitute.org?subject=${encodeURIComponent(
       'Feedback on Azure PFB Import'
     )}`,
+    lastUpdated: '11/15/2023',
   },
   {
     id: ENABLE_AZURE_TDR_IMPORT,
@@ -77,6 +85,7 @@ const featurePreviewsConfig: readonly FeaturePreview[] = [
     feedbackUrl: `mailto:dsp-core-services@broadinstitute.org?subject=${encodeURIComponent(
       'Feedback on Azure TDR snapshot Import'
     )}`,
+    lastUpdated: '12/1/2023',
   },
   {
     id: FIRECLOUD_UI_MIGRATION,
@@ -85,6 +94,7 @@ const featurePreviewsConfig: readonly FeaturePreview[] = [
     feedbackUrl: `mailto:dsp-workflow-management@broadinstitute.org?subject=${encodeURIComponent(
       'Feedback on deprecating Firecloud UI'
     )}`,
+    lastUpdated: '3/22/2024',
   },
   {
     id: COHORT_BUILDER_CARD,
@@ -94,6 +104,7 @@ const featurePreviewsConfig: readonly FeaturePreview[] = [
     feedbackUrl: `mailto:dsp-data-exploration@broadinstitute.org?subject=${encodeURIComponent(
       'Feedback on Cohort Builder Card'
     )}`,
+    lastUpdated: '7/25/2024',
   },
   {
     id: GCP_BUCKET_LIFECYCLE_RULES,
@@ -103,6 +114,7 @@ const featurePreviewsConfig: readonly FeaturePreview[] = [
     feedbackUrl: `mailto:dsp-core-services@broadinstitute.org?subject=${encodeURIComponent(
       'Feedback on GCP Bucket Lifecycle Rules'
     )}`,
+    lastUpdated: '11/12/2024',
   },
   {
     id: SPEND_REPORTING,
@@ -112,6 +124,7 @@ const featurePreviewsConfig: readonly FeaturePreview[] = [
     feedbackUrl: `mailto:dsp-core-services@broadinstitute.org?subject=${encodeURIComponent(
       'Feedback on Improved Spend Reports'
     )}`,
+    lastUpdated: '11/19/2024',
   },
 ];
 
