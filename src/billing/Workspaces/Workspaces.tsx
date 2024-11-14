@@ -326,15 +326,21 @@ export const Workspaces = (props: WorkspacesProps): ReactNode => {
         </>
       )}
       {_.isEmpty(workspacesInProject) ? (
-        <div style={{ ...Style.cardList.longCardShadowless, width: 'fit-content' }}>
-          <span aria-hidden='true'>Use this Terra billing project to create</span>
-          <Link
-            aria-label='Use this Terra billing project to create workspaces'
-            style={{ marginLeft: '0.3em', textDecoration: 'underline' }}
-            href={Nav.getLink('workspaces')}
-          >
-            Workspaces
-          </Link>
+        <div
+          style={{
+            marginTop: '2rem',
+          }}
+        >
+          <div style={{ ...Style.cardList.longCardShadowless, width: 'fit-content' }}>
+            <span aria-hidden='true'>Use this Terra billing project to create</span>
+            <Link
+              aria-label='Use this Terra billing project to create workspaces'
+              style={{ marginLeft: '0.3em', textDecoration: 'underline' }}
+              href={Nav.getLink('workspaces')}
+            >
+              Workspaces
+            </Link>
+          </div>
         </div>
       ) : (
         !_.isEmpty(filteredWorkspacesInProject) && (
