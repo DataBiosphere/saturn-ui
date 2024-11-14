@@ -84,7 +84,7 @@ export const currencyStringToFloat = (currencyString: string) => {
 };
 
 // Main function to parse currency only for specified fields
-export const parseCurrencyIfNeeded = (field: string, value: string): number | string => {
+export const parseCurrencyIfNeeded = (field: string, value: string | undefined): number | string => {
   const currencyFields = new Set(['totalSpend', 'totalCompute', 'totalStorage']);
 
   // Handle non-numeric cases
