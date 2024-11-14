@@ -89,17 +89,13 @@ const fetchBuckets = _.flow(
   withUrlPrefix('https://storage.googleapis.com/')
 )(fetchOk);
 
-const getServiceAccountToken: (googleProject: string, token: string) => Promise<string> = Utils.memoizeAsync(
-  async (googleProject, token) => {
-    const workspace = workspaceStore.get();
-    const url =
-      workspace && canWrite(workspace.accessLevel)
-        ? // if the user has write access to the workspace, use the project-specific pet service account
-          `api/google/v1/user/petServiceAccount/${googleProject}/token`
-        : // otherwise, use the general pet service account
-          'api/google/v1/user/petServiceAccount/token';
+const getServiceAccountToken: (token: string) => Promise<string> = Utils.memoizeAsync(
+  async (token) => {
     const scopes = ['https://www.googleapis.com/auth/devstorage.full_control'];
-    const res = await fetchSam(url, _.mergeAll([authOpts(token), jsonBody(scopes), { method: 'POST' }]));
+    const res = await fetchSam(
+      'api/google/v1/user/petServiceAccount/token',
+      _.mergeAll([authOpts(token), jsonBody(scopes), { method: 'POST' }])
+    );
     return res.json();
   },
   {
@@ -108,8 +104,8 @@ const getServiceAccountToken: (googleProject: string, token: string) => Promise<
   }
 );
 
-export const saToken = (googleProject: string): Promise<string> =>
-  getServiceAccountToken(googleProject, getAuthToken()!);
+// the parameter used to be the google project but now it is not used
+export const saToken = (_: string): Promise<string> => getServiceAccountToken(getAuthToken()!);
 
 export type GCSMetadata = { [key: string]: string };
 
