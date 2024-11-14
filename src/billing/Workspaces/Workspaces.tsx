@@ -4,7 +4,12 @@ import _ from 'lodash/fp';
 import React, { ReactNode, useEffect, useState } from 'react';
 import { DateRangeFilter } from 'src/billing/Filter/DateRangeFilter';
 import { SearchFilter } from 'src/billing/Filter/SearchFilter';
-import { billingAccountIconSize, BillingAccountStatus, getBillingAccountIconProps } from 'src/billing/utils';
+import {
+  billingAccountIconSize,
+  BillingAccountStatus,
+  getBillingAccountIconProps,
+  parseCurrencyIfNeeded,
+} from 'src/billing/utils';
 import { BillingProject, GoogleBillingAccount } from 'src/billing-core/models';
 import { fixedSpinnerOverlay } from 'src/components/common';
 import { ariaSort, HeaderRenderer } from 'src/components/table';
@@ -341,7 +346,10 @@ export const Workspaces = (props: WorkspacesProps): ReactNode => {
             />
             <div style={{ position: 'relative' }}>
               {_.flow(
-                _.orderBy([workspaceSort.field], [workspaceSort.direction]),
+                _.orderBy(
+                  [(workspace) => parseCurrencyIfNeeded(workspaceSort.field, _.get(workspaceSort.field, workspace))],
+                  [workspaceSort.direction]
+                ),
                 _.map((workspace: WorkspaceInfo) => {
                   return (
                     <WorkspaceCard

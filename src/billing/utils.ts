@@ -60,3 +60,42 @@ export const accountLinkStyle = {
   marginTop: '0.5rem',
   marginLeft: '1rem',
 };
+
+export const currencyStringToFloat = (currencyString: string) => {
+  // Helper function to check if comma appears before period
+  const isCommaBeforePeriod = (currencyStr: string) => {
+    const commaIndex = currencyStr.indexOf(',');
+    const periodIndex = currencyStr.indexOf('.');
+    return commaIndex < periodIndex;
+  };
+
+  // Remove any non-numeric symbols except comma, period, and dash for negative numbers
+  let cleanString = currencyString.replace(/[^\d,.-]/g, '');
+
+  // If comma appears before period, assume US format and replace commas only
+  if (isCommaBeforePeriod(cleanString)) {
+    cleanString = cleanString.replace(/,/g, '');
+  } else {
+    // Otherwise, remove periods and replace commas with periods
+    cleanString = cleanString.replace(/\./g, '').replace(/,/g, '.');
+  }
+
+  return parseFloat(cleanString);
+};
+
+// Main function to parse currency only for specified fields
+export const parseCurrencyIfNeeded = (field: string, value: string): number | string => {
+  const currencyFields = new Set(['totalSpend', 'totalCompute', 'totalStorage']);
+
+  // Handle non-numeric cases
+  if (value === 'N/A' || typeof value === 'undefined') return -Infinity;
+
+  // Convert currency string if field matches specified currency fields
+  if (currencyFields.has(field)) {
+    const parsedValue = currencyStringToFloat(value);
+    return Number.isNaN(parsedValue) ? value : parsedValue;
+  }
+
+  // Return original value for non-currency fields
+  return value;
+};
