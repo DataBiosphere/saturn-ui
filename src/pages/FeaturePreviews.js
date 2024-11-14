@@ -1,7 +1,8 @@
+import { Switch } from '@terra-ui-packages/components';
 import _ from 'lodash/fp';
 import { Fragment, useCallback, useEffect, useState } from 'react';
 import { div, h, h2, p, span } from 'react-hyperscript-helpers';
-import { Checkbox, Link, spinnerOverlay } from 'src/components/common';
+import { Link, spinnerOverlay } from 'src/components/common';
 import FooterWrapper from 'src/components/FooterWrapper';
 import { PageBox } from 'src/components/PageBox';
 import { SimpleFlexTable } from 'src/components/table';
@@ -43,25 +44,32 @@ export const FeaturePreviews = () => {
           rowCount: featurePreviews.length,
           columns: [
             {
-              size: { basis: 55, grow: 0 },
+              size: { basis: 60, grow: 0 },
               field: 'enabled',
               headerRenderer: () => span({ className: 'sr-only' }, ['Enabled']),
               cellRenderer: ({ rowIndex }) => {
                 const { id, title } = featurePreviews[rowIndex];
-                return h(Checkbox, {
-                  'aria-label': `Enable ${title}`,
-                  checked: featurePreviewState[id],
+
+                return h(Switch, {
+                  onLabel: '',
+                  offLabel: '',
                   onChange: (checked) => {
                     toggleFeaturePreview(id, checked);
                     setFeaturePreviewState(_.set(id, checked));
                   },
+                  id,
+                  checked: featurePreviewState[id],
+                  width: 30,
+                  height: 15,
+                  ariaDescribedBy: `Enable ${title}`,
+                  disabled: false, // TODO: Group check
                 });
               },
             },
             {
-              size: { basis: 250 },
+              size: { basis: 150 },
               field: 'description',
-              headerRenderer: () => 'Description',
+              headerRenderer: () => span({ style: { fontWeight: 'bold' } }, ['Description']),
               cellRenderer: ({ rowIndex }) => {
                 const { title, description, documentationUrl, feedbackUrl } = featurePreviews[rowIndex];
                 return div([
@@ -74,6 +82,16 @@ export const FeaturePreviews = () => {
                       feedbackUrl && h(Link, { ...Utils.newTabLinkProps, href: feedbackUrl }, ['Submit feedback']),
                     ]),
                 ]);
+              },
+            },
+            {
+              size: { basis: 150, grow: 0 },
+              field: 'lastUpdated',
+              headerRenderer: () => span({ style: { fontWeight: 'bold' } }, ['Last Updated']),
+              cellRenderer: ({ rowIndex }) => {
+                const { lastUpdated } = featurePreviews[rowIndex];
+
+                return lastUpdated ? Utils.makePrettyDate(lastUpdated) : '';
               },
             },
           ],
