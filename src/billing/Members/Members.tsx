@@ -6,7 +6,7 @@ import { DeleteMemberModal } from 'src/groups/Members/DeleteMemberModal';
 import { EditMemberModal } from 'src/groups/Members/EditMemberModal';
 import { Member, MemberTable } from 'src/groups/Members/MemberTable';
 import { NewMemberModal } from 'src/groups/Members/NewMemberModal';
-import { Ajax } from 'src/libs/ajax';
+import { Billing } from 'src/libs/ajax/billing/Billing';
 
 interface MembersProps {
   billingProjectName: string;
@@ -48,7 +48,7 @@ export const Members = (props: MembersProps): ReactNode => {
             'Warning: Adding any user to this project will mean they can incur costs to the billing associated with this project.',
           ]}
           addFunction={(roles: string[], email: string) =>
-            Ajax().Billing.addProjectUser(billingProjectName, roles as BillingRole[], email)
+            Billing().addProjectUser(billingProjectName, roles as BillingRole[], email)
           }
           onDismiss={() => setAddingMember(false)}
           onSuccess={() => {
@@ -63,7 +63,7 @@ export const Members = (props: MembersProps): ReactNode => {
           memberLabel={billingRoles.user}
           member={editingMember}
           saveFunction={(email: string, roles: string[], newRoles: string[]) =>
-            Ajax().Billing.changeUserRoles(billingProjectName, email, roles as BillingRole[], newRoles as BillingRole[])
+            Billing().changeUserRoles(billingProjectName, email, roles as BillingRole[], newRoles as BillingRole[])
           }
           onDismiss={() => setEditingMember(undefined)}
           onSuccess={() => {

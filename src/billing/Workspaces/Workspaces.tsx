@@ -1,25 +1,35 @@
-import { Icon, Link, useUniqueId } from '@terra-ui-packages/components';
+import { Icon, Link } from '@terra-ui-packages/components';
+import { subDays } from 'date-fns/fp';
 import _ from 'lodash/fp';
-import React, { CSSProperties, ReactNode, useState } from 'react';
-import { billingAccountIconSize, BillingAccountStatus, getBillingAccountIconProps } from 'src/billing/utils';
+import React, { ReactNode, useEffect, useState } from 'react';
+import { DateRangeFilter } from 'src/billing/Filter/DateRangeFilter';
+import { SearchFilter } from 'src/billing/Filter/SearchFilter';
 import {
-  BillingProject,
-  GoogleBillingAccount,
-  isAzureBillingProject,
-  isGoogleBillingProject,
-} from 'src/billing-core/models';
+  billingAccountIconSize,
+  BillingAccountStatus,
+  getBillingAccountIconProps,
+  parseCurrencyIfNeeded,
+} from 'src/billing/utils';
+import { BillingProject, GoogleBillingAccount } from 'src/billing-core/models';
+import { fixedSpinnerOverlay } from 'src/components/common';
 import { ariaSort, HeaderRenderer } from 'src/components/table';
+import { Billing } from 'src/libs/ajax/billing/Billing';
+import {
+  AggregatedWorkspaceSpendData,
+  SpendReport as SpendReportServerResponse,
+  WorkspaceSpendData,
+} from 'src/libs/ajax/billing/billing-models';
 import { Metrics } from 'src/libs/ajax/Metrics';
-import colors from 'src/libs/colors';
 import Events, { extractBillingDetails } from 'src/libs/events';
+import { isFeaturePreviewEnabled } from 'src/libs/feature-previews';
+import { SPEND_REPORTING } from 'src/libs/feature-previews-config';
 import * as Nav from 'src/libs/nav';
-import { memoWithName } from 'src/libs/react-utils';
+import { memoWithName, useCancellation } from 'src/libs/react-utils';
 import * as Style from 'src/libs/style';
 import * as Utils from 'src/libs/utils';
 import { isGoogleWorkspaceInfo, WorkspaceInfo } from 'src/workspaces/utils';
 
 const workspaceLastModifiedWidth = 150;
-const workspaceExpandIconSize = 20;
 
 interface WorkspaceCardHeadersProps {
   needsStatusColumn: boolean;
@@ -54,6 +64,19 @@ const WorkspaceCardHeaders: React.FC<WorkspaceCardHeadersProps> = memoWithName(
         >
           <HeaderRenderer sort={sort} onSort={onSort} name='name' />
         </div>
+        {isFeaturePreviewEnabled(SPEND_REPORTING) && (
+          <>
+            <div role='columnheader' aria-sort={ariaSort(sort, 'totalSpend')} style={{ flex: 1 }}>
+              <HeaderRenderer sort={sort} onSort={onSort} name='totalSpend' />
+            </div>
+            <div role='columnheader' aria-sort={ariaSort(sort, 'totalCompute')} style={{ flex: 1 }}>
+              <HeaderRenderer sort={sort} onSort={onSort} name='totalCompute' />
+            </div>
+            <div role='columnheader' aria-sort={ariaSort(sort, 'totalStorage')} style={{ flex: 1 }}>
+              <HeaderRenderer sort={sort} onSort={onSort} name='totalStorage' />
+            </div>
+          </>
+        )}
         <div role='columnheader' aria-sort={ariaSort(sort, 'createdBy')} style={{ flex: 1 }}>
           <HeaderRenderer sort={sort} onSort={onSort} name='createdBy' />
         </div>
@@ -64,67 +87,31 @@ const WorkspaceCardHeaders: React.FC<WorkspaceCardHeadersProps> = memoWithName(
         >
           <HeaderRenderer sort={sort} onSort={onSort} name='lastModified' />
         </div>
-        <div role='columnheader' style={{ flex: `0 0 ${workspaceExpandIconSize}px` }}>
-          <div className='sr-only'>Expand</div>
-        </div>
       </div>
     );
   }
 );
-
-interface ExpandedInfoRowProps {
-  title: string;
-  details: string | undefined;
-  errorMessage?: string;
-}
-const ExpandedInfoRow = (props: ExpandedInfoRowProps) => {
-  const { title, details, errorMessage } = props;
-  const expandedInfoStyles = {
-    row: { display: 'flex', justifyContent: 'flex-start', alignItems: 'flex-start' },
-    title: { fontWeight: 600, padding: '0.5rem 1rem 0 2rem', height: '1rem' },
-    details: { flexGrow: 1, marginTop: '0.5rem', height: '1rem', ...Style.noWrapEllipsis },
-    errorMessage: {
-      flexGrow: 2,
-      padding: '0.5rem',
-      backgroundColor: colors.light(0.3),
-      border: `solid 2px ${colors.danger(0.3)}`,
-      borderRadius: 5,
-    },
-  };
-
-  return (
-    <div style={expandedInfoStyles.row}>
-      <div style={expandedInfoStyles.title}>{title}</div>
-      <div style={expandedInfoStyles.details}>{details}</div>
-      {errorMessage && <div style={expandedInfoStyles.errorMessage}>{errorMessage}</div>}
-    </div>
-  );
-};
 
 interface WorkspaceCardProps {
   workspace: WorkspaceInfo;
   billingAccountDisplayName: string | undefined;
   billingProject: BillingProject;
   billingAccountStatus: false | BillingAccountStatus;
-  isExpanded: boolean;
-  onExpand: () => void;
 }
 
 const WorkspaceCard: React.FC<WorkspaceCardProps> = memoWithName('WorkspaceCard', (props: WorkspaceCardProps) => {
-  const { workspace, billingProject, billingAccountStatus, billingAccountDisplayName, isExpanded, onExpand } = props;
-  const { namespace, name, createdBy, lastModified, googleProject, errorMessage } = workspace;
+  const { workspace, billingProject, billingAccountStatus } = props;
+  const { namespace, name, createdBy, lastModified, totalSpend, totalCompute, totalStorage } = workspace;
   const workspaceCardStyles = {
     field: {
       ...Style.noWrapEllipsis,
       flex: 1,
       height: '1.20rem',
-      width: `calc(50% - ${(workspaceLastModifiedWidth + workspaceExpandIconSize) / 2}px)`,
+      width: `calc(50% - ${workspaceLastModifiedWidth / 2}px)`,
       paddingRight: '1rem',
     },
     row: { display: 'flex', alignItems: 'center', width: '100%', padding: '1rem' },
-    expandedInfoContainer: { display: 'flex', flexDirection: 'column', width: '100%' } satisfies CSSProperties,
   };
-  const billingDetailsId = useUniqueId('details');
 
   return (
     <div role='row' style={{ ...Style.cardList.longCardShadowless, padding: 0, flexDirection: 'column' }}>
@@ -156,57 +143,26 @@ const WorkspaceCard: React.FC<WorkspaceCardProps> = memoWithName('WorkspaceCard'
             {name}
           </Link>
         </div>
+        {isFeaturePreviewEnabled(SPEND_REPORTING) && (
+          <>
+            <div role='cell' style={workspaceCardStyles.field}>
+              {totalSpend ?? '...'}
+            </div>
+            <div role='cell' style={workspaceCardStyles.field}>
+              {totalCompute ?? '...'}
+            </div>
+            <div role='cell' style={workspaceCardStyles.field}>
+              {totalStorage ?? '...'}
+            </div>
+          </>
+        )}
         <div role='cell' style={workspaceCardStyles.field}>
           {createdBy}
         </div>
         <div role='cell' style={{ height: '1rem', flex: `0 0 ${workspaceLastModifiedWidth}px` }}>
           {Utils.makeStandardDate(lastModified)}
         </div>
-        <div role='cell' style={{ flex: `0 0 ${workspaceExpandIconSize}px` }}>
-          {/* eslint-disable-next-line jsx-a11y/anchor-is-valid */}
-          <Link
-            aria-label={`expand workspace ${name}`}
-            aria-expanded={isExpanded}
-            aria-controls={isExpanded ? billingDetailsId : undefined}
-            aria-owns={isExpanded ? billingDetailsId : undefined}
-            style={{ display: 'flex', alignItems: 'center' }}
-            onClick={() => {
-              void Metrics().captureEvent(Events.billingProjectExpandWorkspace, {
-                workspaceName: name,
-                ...extractBillingDetails(billingProject),
-              });
-              onExpand();
-            }}
-          >
-            <Icon icon={isExpanded ? 'angle-up' : 'angle-down'} size={workspaceExpandIconSize} />
-          </Link>
-        </div>
       </div>
-      {isExpanded && (
-        <div
-          id={billingDetailsId}
-          style={{ ...workspaceCardStyles.row, padding: '0.5rem', border: `1px solid ${colors.light()}` }}
-        >
-          <div style={workspaceCardStyles.expandedInfoContainer}>
-            {isGoogleBillingProject(billingProject) && (
-              <ExpandedInfoRow title='Google Project' details={googleProject} />
-            )}
-            {isGoogleBillingProject(billingProject) && (
-              <ExpandedInfoRow
-                title='Billing Account'
-                details={billingAccountDisplayName}
-                errorMessage={errorMessage}
-              />
-            )}
-            {isAzureBillingProject(billingProject) && (
-              <ExpandedInfoRow
-                title='Resource Group ID'
-                details={billingProject.managedAppCoordinates.managedResourceGroupId}
-              />
-            )}
-          </div>
-        </div>
-      )}
     </div>
   );
 });
@@ -221,59 +177,206 @@ interface WorkspacesProps {
 
 export const Workspaces = (props: WorkspacesProps): ReactNode => {
   const { billingAccounts, billingAccountsOutOfDate, billingProject, groups, workspacesInProject } = props;
-  const [workspaceSort, setWorkspaceSort] = useState<{ field: string; direction: 'asc' | 'desc' }>({
-    field: 'name',
-    direction: 'asc',
-  });
-  const [expandedWorkspaceName, setExpandedWorkspaceName] = useState<string>();
+  const [workspaceSort, setWorkspaceSort] = useState<{ field: string; direction: 'asc' | 'desc' }>(
+    isFeaturePreviewEnabled(SPEND_REPORTING)
+      ? {
+          field: 'totalSpend',
+          direction: 'desc',
+        }
+      : {
+          field: 'name',
+          direction: 'asc',
+        }
+  );
 
   const getBillingAccountStatus = (workspace: WorkspaceInfo): BillingAccountStatus =>
     // @ts-ignore
     _.findKey((g) => g.has(workspace), groups);
 
-  return _.isEmpty(workspacesInProject) ? (
-    <div style={{ ...Style.cardList.longCardShadowless, width: 'fit-content' }}>
-      <span aria-hidden='true'>Use this Terra billing project to create</span>
-      <Link
-        aria-label='Use this Terra billing project to create workspaces'
-        style={{ marginLeft: '0.3em', textDecoration: 'underline' }}
-        href={Nav.getLink('workspaces')}
-      >
-        Workspaces
-      </Link>
-    </div>
-  ) : (
-    !_.isEmpty(workspacesInProject) && (
-      <div role='table' aria-label={`workspaces in billing project ${billingProject.projectName}`}>
-        <WorkspaceCardHeaders
-          needsStatusColumn={billingAccountsOutOfDate}
-          sort={workspaceSort}
-          onSort={setWorkspaceSort}
-        />
-        <div>
-          {_.flow(
-            _.orderBy([workspaceSort.field], [workspaceSort.direction]),
-            _.map((workspace: WorkspaceInfo) => {
-              const isExpanded = expandedWorkspaceName === workspace.name;
-              return (
-                <WorkspaceCard
-                  workspace={workspace}
-                  billingAccountDisplayName={
-                    isGoogleWorkspaceInfo(workspace)
-                      ? billingAccounts[workspace.billingAccount]?.displayName
-                      : undefined
-                  }
-                  billingProject={billingProject}
-                  billingAccountStatus={billingAccountsOutOfDate && getBillingAccountStatus(workspace)}
-                  key={workspace.workspaceId}
-                  isExpanded={isExpanded}
-                  onExpand={() => setExpandedWorkspaceName(isExpanded ? undefined : workspace.name)}
-                />
-              );
-            })
-          )(workspacesInProject)}
+  const signal = useCancellation();
+
+  const [updating, setUpdating] = useState(false);
+  const [selectedDays, setSelectedDays] = useState<number>(30);
+  const [searchValue, setSearchValue] = useState<string>('');
+  const [allWorkspacesInProject, setAllWorkspacesInProject] = useState<WorkspaceInfo[]>(workspacesInProject);
+
+  useEffect(() => {
+    const getWorkspaceSpendDataByBillingProject = async (
+      billingProjectName: string,
+      selectedDays: number,
+      signal: AbortSignal,
+      workspacesInProject: WorkspaceInfo[]
+    ) => {
+      // Define start and end dates
+      const startDate = subDays(selectedDays, new Date()).toISOString().slice(0, 10);
+      const endDate = new Date().toISOString().slice(0, 10);
+      const aggregationKeys = ['Workspace~Category'];
+
+      // If there are no workspaces in the project, exit early
+      if (_.isEmpty(workspacesInProject)) {
+        return;
+      }
+
+      const setDefaultSpendValues = (workspace: WorkspaceInfo) => ({
+        ...workspace,
+        totalSpend: 'N/A',
+        totalCompute: 'N/A',
+        totalStorage: 'N/A',
+      });
+
+      setUpdating(true);
+
+      try {
+        // Fetch the spend report for the billing project
+        const billingProjectSpentReport: SpendReportServerResponse = await Billing(signal).getSpendReport({
+          billingProjectName,
+          startDate,
+          endDate,
+          aggregationKeys,
+        });
+
+        // Create a map of spend data by workspace identifier
+        const spendDataMap = _.keyBy(
+          (spendItem: WorkspaceSpendData) => `${spendItem.workspace.namespace}-${spendItem.workspace.name}`,
+          (billingProjectSpentReport.spendDetails[0] as AggregatedWorkspaceSpendData).spendData
+        );
+
+        // Update each workspace with spend data or default values
+        return workspacesInProject.map((workspace) => {
+          const key = `${workspace.namespace}-${workspace.name}`;
+          const spendItem = spendDataMap[key];
+
+          if (!spendItem) {
+            return setDefaultSpendValues(workspace);
+          }
+
+          const costFormatter = new Intl.NumberFormat(navigator.language, {
+            style: 'currency',
+            currency: spendItem.currency,
+          });
+
+          return {
+            ...workspace,
+            totalSpend: costFormatter.format(parseFloat(spendItem.cost ?? '0.00')),
+            totalCompute: costFormatter.format(
+              parseFloat(_.find({ category: 'Compute' }, spendItem.subAggregation.spendData)?.cost ?? '0.00')
+            ),
+            totalStorage: costFormatter.format(
+              parseFloat(_.find({ category: 'Storage' }, spendItem.subAggregation.spendData)?.cost ?? '0.00')
+            ),
+          };
+        });
+      } catch {
+        // Return default values for each workspace in case of an error
+        return workspacesInProject.map(setDefaultSpendValues);
+      } finally {
+        // Ensure updating state is reset regardless of success or failure
+        setUpdating(false);
+      }
+    };
+
+    getWorkspaceSpendDataByBillingProject(billingProject.projectName, selectedDays, signal, workspacesInProject).then(
+      (updatedWorkspaceInProject) => {
+        if (updatedWorkspaceInProject) {
+          setAllWorkspacesInProject(updatedWorkspaceInProject);
+        }
+      }
+    );
+  }, [billingProject.projectName, selectedDays, signal, workspacesInProject]);
+
+  // Apply filters to WorkspacesInProject
+  const searchValueLower = searchValue.toLowerCase();
+  const filteredWorkspacesInProject = _.filter(
+    (workspace: WorkspaceInfo) =>
+      workspace.name.toLowerCase().includes(searchValueLower) ||
+      workspace.googleProject?.toLowerCase().includes(searchValueLower) ||
+      workspace.bucketName?.toLowerCase().includes(searchValueLower),
+    allWorkspacesInProject
+  );
+
+  return (
+    <>
+      {isFeaturePreviewEnabled(SPEND_REPORTING) && (
+        <>
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(3, minmax(max-content, 1fr))',
+              rowGap: '1.66rem',
+              columnGap: '1.25rem',
+            }}
+          >
+            <DateRangeFilter
+              label='Date range'
+              rangeOptions={[7, 30, 90]}
+              defaultValue={selectedDays}
+              style={{ gridRowStart: 1, gridColumnStart: 1 }}
+              onChange={setSelectedDays}
+            />
+            <SearchFilter
+              placeholder='Search by name, project or bucket'
+              style={{ gridRowStart: 1, gridColumnStart: 2, margin: '1.35rem' }}
+              onChange={setSearchValue}
+            />
+          </div>
+          <div aria-live='polite' aria-atomic>
+            <span aria-hidden>*</span>
+            Total spend includes infrastructure or query costs related to the general operations of Terra.
+          </div>
+        </>
+      )}
+      {_.isEmpty(workspacesInProject) ? (
+        <div
+          style={{
+            marginTop: '2rem',
+          }}
+        >
+          <div style={{ ...Style.cardList.longCardShadowless, width: 'fit-content' }}>
+            <span aria-hidden='true'>Use this Terra billing project to create</span>
+            <Link
+              aria-label='Use this Terra billing project to create workspaces'
+              style={{ marginLeft: '0.3em', textDecoration: 'underline' }}
+              href={Nav.getLink('workspaces')}
+            >
+              Workspaces
+            </Link>
+          </div>
         </div>
-      </div>
-    )
+      ) : (
+        !_.isEmpty(filteredWorkspacesInProject) && (
+          <div role='table' aria-label={`workspaces in billing project ${billingProject.projectName}`}>
+            <WorkspaceCardHeaders
+              needsStatusColumn={billingAccountsOutOfDate}
+              sort={workspaceSort}
+              onSort={setWorkspaceSort}
+            />
+            <div style={{ position: 'relative' }}>
+              {_.flow(
+                _.orderBy(
+                  [(workspace) => parseCurrencyIfNeeded(workspaceSort.field, _.get(workspaceSort.field, workspace))],
+                  [workspaceSort.direction]
+                ),
+                _.map((workspace: WorkspaceInfo) => {
+                  return (
+                    <WorkspaceCard
+                      workspace={workspace}
+                      billingAccountDisplayName={
+                        isGoogleWorkspaceInfo(workspace)
+                          ? billingAccounts[workspace.billingAccount]?.displayName
+                          : undefined
+                      }
+                      billingProject={billingProject}
+                      billingAccountStatus={billingAccountsOutOfDate && getBillingAccountStatus(workspace)}
+                      key={workspace.workspaceId}
+                    />
+                  );
+                })
+              )(filteredWorkspacesInProject)}
+              {isFeaturePreviewEnabled(SPEND_REPORTING) && updating && fixedSpinnerOverlay}
+            </div>
+          </div>
+        )
+      )}
+    </>
   );
 };

@@ -143,7 +143,6 @@ export const getDisplayRuntimeStatus = (status: LeoRuntimeStatus): DisplayRuntim
 export const displayNameForGpuType = (type: string): string => {
   return Utils.switchCase(
     type,
-    ['nvidia-tesla-k80', () => 'NVIDIA Tesla K80'],
     ['nvidia-tesla-p4', () => 'NVIDIA Tesla P4'],
     ['nvidia-tesla-v100', () => 'NVIDIA Tesla V100'],
     ['nvidia-tesla-p100', () => 'NVIDIA Tesla P100'],
