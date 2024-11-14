@@ -5,7 +5,7 @@ import React from 'react';
 import { Workspaces } from 'src/billing/Workspaces/Workspaces';
 import { GoogleBillingAccount } from 'src/billing-core/models';
 import { Billing, BillingContract } from 'src/libs/ajax/billing/Billing';
-import { SpendReport as SpendReportServerResponse } from 'src/libs/ajax/billing/billing-models';
+import { BillingProject, SpendReport as SpendReportServerResponse } from 'src/libs/ajax/billing/billing-models';
 import { Metrics, MetricsContract } from 'src/libs/ajax/Metrics';
 import { isFeaturePreviewEnabled } from 'src/libs/feature-previews';
 import { azureBillingProject, gcpBillingProject } from 'src/testing/billing-project-fixtures';
@@ -16,6 +16,9 @@ import {
   makeAzureWorkspace,
   makeGoogleWorkspace,
 } from 'src/testing/workspace-fixtures';
+import { WorkspaceInfo } from 'src/workspaces/utils';
+
+import { BillingAccountStatus } from '../utils';
 
 type NavExports = typeof import('src/libs/nav');
 jest.mock(
@@ -36,6 +39,26 @@ jest.mock('src/libs/feature-previews', () => ({
 
 describe('Workspaces', () => {
   const getSpendReport = jest.fn().mockResolvedValue({} as SpendReportServerResponse);
+
+  const renderSpendWorkspaces = async (
+    billingProject: BillingProject,
+    workspacesInProject: WorkspaceInfo[],
+    billingAccounts: Record<string, GoogleBillingAccount>,
+    billingAccountsOutOfDate: boolean,
+    groups: Partial<Record<BillingAccountStatus, Set<WorkspaceInfo>>>
+  ) => {
+    await act(async () => {
+      renderWithAppContexts(
+        <Workspaces
+          billingProject={billingProject}
+          workspacesInProject={workspacesInProject}
+          billingAccounts={billingAccounts}
+          billingAccountsOutOfDate={billingAccountsOutOfDate}
+          groups={groups}
+        />
+      );
+    });
+  };
 
   beforeEach(() => {
     asMockedFn(Billing).mockReturnValue(partial<BillingContract>({ getSpendReport }));
@@ -256,17 +279,7 @@ describe('Workspaces', () => {
     getSpendReport.mockResolvedValue(mockSpendReport);
 
     // Act
-    await act(async () => {
-      renderWithAppContexts(
-        <Workspaces
-          billingProject={gcpBillingProject}
-          workspacesInProject={[defaultGoogleWorkspace.workspace]}
-          billingAccounts={{}}
-          billingAccountsOutOfDate={false}
-          groups={{}}
-        />
-      );
-    });
+    await renderSpendWorkspaces(gcpBillingProject, [defaultGoogleWorkspace.workspace], {}, false, {});
 
     // Assert
     expect(getSpendReport).toHaveBeenCalledWith({
@@ -286,6 +299,41 @@ describe('Workspaces', () => {
       expect(workspaces[1]).toHaveTextContent(/\$100.00/);
       expect(workspaces[1]).toHaveTextContent(/\$60.00/);
       expect(workspaces[1]).toHaveTextContent(/\$40.00/);
+    });
+  });
+
+  it('fetches and filters workspaces without on spend report and search value', async () => {
+    // Mock the return value of isFeaturePreviewEnabled
+    (isFeaturePreviewEnabled as jest.Mock).mockReturnValue(true);
+
+    const testWorkspaceName = 'test-gcp-ws-name';
+
+    // Arrange
+    const user = userEvent.setup();
+
+    getSpendReport.mockResolvedValue({});
+
+    // Act
+    await renderSpendWorkspaces(gcpBillingProject, [defaultGoogleWorkspace.workspace], {}, false, {});
+
+    // Assert
+    expect(getSpendReport).toHaveBeenCalledWith({
+      billingProjectName: gcpBillingProject.projectName,
+      startDate: expect.any(String),
+      endDate: expect.any(String),
+      aggregationKeys: ['Workspace~Category'],
+    });
+
+    // Apply search filter
+    await user.type(screen.getByPlaceholderText('Search by name, project or bucket'), testWorkspaceName);
+    await waitFor(() => {
+      const workspaceTable = screen.getByRole('table');
+      const workspaces = within(workspaceTable).getAllByRole('row');
+      expect(workspaces).toHaveLength(2); // 1 header row + 1 workspace row
+      expect(workspaces[1]).toHaveTextContent(/test-gcp-ws-name/);
+      expect(workspaces[1]).toHaveTextContent(/N\/A/);
+      expect(workspaces[1]).toHaveTextContent(/N\/A/);
+      expect(workspaces[1]).toHaveTextContent(/N\/A/);
     });
   });
 });
