@@ -35,7 +35,9 @@ export const FeaturePreviews = () => {
     [_.isEmpty(featurePreviews), () => p({ style: { margin: 0 } }, ['No feature previews available at this time.'])],
     () =>
       h(Fragment, [
-        p(['These features are proof-of-concept and may change without notice.']),
+        p([
+          "Feature Preview gives you early access to the latest Terra features before they're made generally available to all users. Opt-in below to try new features and give feedback so Terra can continue to make improvements before the features are released. These features may change without notice.",
+        ]),
         h(SimpleFlexTable, {
           'aria-label': 'Features',
           rowCount: featurePreviews.length,
