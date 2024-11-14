@@ -1,15 +1,15 @@
-import { SpinnerOverlay, useUniqueId } from '@terra-ui-packages/components';
+import { SpinnerOverlay } from '@terra-ui-packages/components';
 import { subDays } from 'date-fns/fp';
 import _ from 'lodash/fp';
 import { Suspense, useEffect, useState } from 'react';
 import React from 'react';
 import lazy from 'react-lazy-named';
 import { ErrorAlert } from 'src/alerts/ErrorAlert';
+import { DateRangeFilter } from 'src/billing/Filter/DateRangeFilter';
 import { ExternalLink } from 'src/billing/NewBillingProjectWizard/StepWizard/ExternalLink';
 import { CostCard } from 'src/billing/SpendReport/CostCard';
 import { CloudPlatform } from 'src/billing-core/models';
-import { Select } from 'src/components/common';
-import { Ajax } from 'src/libs/ajax';
+import { Billing } from 'src/libs/ajax/billing/Billing';
 import {
   AggregatedCategorySpendData,
   AggregatedWorkspaceSpendData,
@@ -18,7 +18,6 @@ import {
   WorkspaceSpendData,
 } from 'src/libs/ajax/billing/billing-models';
 import colors from 'src/libs/colors';
-import { FormLabel } from 'src/libs/forms';
 import * as Nav from 'src/libs/nav';
 import { useCancellation } from 'src/libs/react-utils';
 
@@ -109,19 +108,6 @@ export const SpendReport = (props: SpendReportProps) => {
       followPointer: true,
       shared: true,
       headerFormat: '{point.key}',
-      pointFormatter() {
-        // @ts-ignore
-        // eslint-disable-next-line react/no-this-in-sfc
-        return `<br/><span style="color:${this.color}">\u25CF</span> ${
-          // @ts-ignore
-          // eslint-disable-next-line react/no-this-in-sfc
-          this.series.name
-        }: ${
-          // @ts-ignore
-          // eslint-disable-next-line react/no-this-in-sfc
-          costPerWorkspace.costFormatter.format(this.y)
-        }`;
-      },
     },
     xAxis: {
       categories: costPerWorkspace.workspaceNames,
@@ -193,7 +179,7 @@ export const SpendReport = (props: SpendReportProps) => {
         const endDate = new Date().toISOString().slice(0, 10);
         const startDate = subDays(spendReportLengthInDays, new Date()).toISOString().slice(0, 10);
         const aggregationKeys = includePerWorkspaceCosts ? ['Workspace~Category', 'Category'] : ['Category'];
-        const spend: SpendReportServerResponse = await Ajax(signal).Billing.getSpendReport({
+        const spend: SpendReportServerResponse = await Billing(signal).getSpendReport({
           billingProjectName: props.billingProjectName,
           startDate,
           endDate,
@@ -287,8 +273,6 @@ export const SpendReport = (props: SpendReportProps) => {
     includePerWorkspaceCosts,
   ]);
 
-  const selectId = useUniqueId('select');
-
   return (
     <>
       <div style={{ display: 'grid', rowGap: '0.5rem' }}>
@@ -301,28 +285,19 @@ export const SpendReport = (props: SpendReportProps) => {
             columnGap: '1.25rem',
           }}
         >
-          <div style={{ gridRowStart: 1, gridColumnStart: 1 }}>
-            <FormLabel htmlFor={selectId}>Date range</FormLabel>
-            <Select<number>
-              id={selectId}
-              value={spendReportLengthInDays}
-              options={_.map(
-                (days) => ({
-                  label: `Last ${days} days`,
-                  value: days,
-                }),
-                [7, 30, 90]
-              )}
-              onChange={(selectedOption) => {
-                const selectedDays = selectedOption!.value;
-                if (selectedDays !== spendReportLengthInDays) {
-                  setSpendReportLengthInDays(selectedDays);
-                  setProjectCost(null);
-                  setErrorMessage(undefined);
-                }
-              }}
-            />
-          </div>
+          <DateRangeFilter
+            label='Date range'
+            rangeOptions={[7, 30, 90]}
+            defaultValue={spendReportLengthInDays}
+            style={{ gridRowStart: 1, gridColumnStart: 1 }}
+            onChange={(selectedOption) => {
+              if (selectedOption !== spendReportLengthInDays) {
+                setSpendReportLengthInDays(selectedOption);
+                setProjectCost(null);
+                setErrorMessage(undefined);
+              }
+            }}
+          />
           {_.map(
             (name) => (
               <CostCard

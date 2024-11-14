@@ -6,6 +6,7 @@ export const ENABLE_AZURE_TDR_IMPORT = 'enableAzureTdrImport';
 export const FIRECLOUD_UI_MIGRATION = 'firecloudUiMigration';
 export const COHORT_BUILDER_CARD = 'cohortBuilderCard';
 export const GCP_BUCKET_LIFECYCLE_RULES = 'gcpBucketLifecycleRules';
+export const SPEND_REPORTING = 'spendReporting';
 
 // If the groups option is defined for a FeaturePreview, it must contain at least one group.
 type GroupsList = readonly [string, ...string[]];
@@ -101,6 +102,15 @@ const featurePreviewsConfig: readonly FeaturePreview[] = [
       'Enabling this feature will allow GCP bucket lifecycle rules to be set via the Workspace Settings dialog.',
     feedbackUrl: `mailto:dsp-core-services@broadinstitute.org?subject=${encodeURIComponent(
       'Feedback on GCP Bucket Lifecycle Rules'
+    )}`,
+  },
+  {
+    id: SPEND_REPORTING,
+    title: 'Improved Spend Reports',
+    description:
+      'Enabling this feature will show billing project owners costs associated with all workspaces in billing projects with spend reporting enabled. Additional updates to spend reports coming soon!',
+    feedbackUrl: `mailto:dsp-core-services@broadinstitute.org?subject=${encodeURIComponent(
+      'Feedback on Improved Spend Reports'
     )}`,
   },
 ];

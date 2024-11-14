@@ -16,14 +16,14 @@ import {
   nameBillingProject,
   verifyCreateBillingProjectDisabled,
 } from 'src/billing/NewBillingProjectWizard/AzureBillingProjectWizard/CreateNamedProjectStep.test';
-import { Ajax } from 'src/libs/ajax';
+import { Metrics, MetricsContract } from 'src/libs/ajax/Metrics';
 import { isAnvil } from 'src/libs/brand-utils';
 import Events from 'src/libs/events';
-import { asMockedFn, renderWithAppContexts as render } from 'src/testing/test-utils';
+import { asMockedFn, partial, renderWithAppContexts as render } from 'src/testing/test-utils';
 
 // Note that mocking is done by selectManagedApp (as well as default mocking in setUp).
-type AjaxContract = ReturnType<typeof Ajax>;
-jest.mock('src/libs/ajax');
+jest.mock('src/libs/ajax/billing/Billing');
+jest.mock('src/libs/ajax/Metrics');
 
 type BrandUtilsExports = typeof import('src/libs/brand-utils');
 jest.mock('src/libs/brand-utils', (): BrandUtilsExports => {
@@ -78,12 +78,7 @@ describe('AzureBillingProjectWizard', () => {
   const getNoProtectedDataRadio = () => screen.getByLabelText('No');
 
   const setup = () => {
-    asMockedFn(Ajax).mockImplementation(
-      () =>
-        ({
-          Metrics: { captureEvent } as Partial<AjaxContract['Metrics']>,
-        } as Partial<AjaxContract> as AjaxContract)
-    );
+    asMockedFn(Metrics).mockReturnValue(partial<MetricsContract>({ captureEvent }));
 
     renderResult = render(<AzureBillingProjectWizard onSuccess={onSuccess} />);
   };

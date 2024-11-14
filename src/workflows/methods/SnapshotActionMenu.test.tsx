@@ -76,7 +76,6 @@ describe('snapshot action menu', () => {
 
     // Act
     const cloneSnapshotButton = screen.getByRole('button', { name: 'Clone snapshot' });
-    await user.pointer({ target: cloneSnapshotButton });
 
     // Assert
     // clone option is always enabled irrespective of snapshot ownership

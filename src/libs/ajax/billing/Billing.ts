@@ -4,7 +4,7 @@ import * as qs from 'qs';
 import { authOpts } from 'src/auth/auth-session';
 import { fetchBillingProfileManager, fetchOrchestration, fetchRawls } from 'src/libs/ajax/ajax-common';
 import {
-  AzureManagedAppCoordinates,
+  AzureManagedAppListing,
   BillingProfile,
   BillingProject,
   BillingProjectMember,
@@ -180,7 +180,7 @@ export const Billing = (signal?: AbortSignal) => ({
   listAzureManagedApplications: async (
     subscriptionId: string,
     includeAssignedApplications: boolean
-  ): Promise<{ managedApps: (AzureManagedAppCoordinates & { assigned: boolean })[] }> => {
+  ): Promise<{ managedApps: AzureManagedAppListing[] }> => {
     const response = await fetchBillingProfileManager(
       `azure/v1/managedApps?azureSubscriptionId=${subscriptionId}&includeAssignedApplications=${includeAssignedApplications}`,
       _.merge(authOpts(), { signal })

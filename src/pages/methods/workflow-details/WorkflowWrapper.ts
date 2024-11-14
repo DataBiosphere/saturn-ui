@@ -297,10 +297,9 @@ export const WorkflowsContainer = (props: WorkflowContainerProps) => {
       h(WorkflowModal, {
         title: 'Clone snapshot',
         defaultName: name.concat('_copy'),
-        defaultWdl: snapshot?.payload,
-        defaultDocumentation: snapshot?.documentation,
-        defaultSynopsis: snapshot?.synopsis,
-        defaultSnapshotComment: snapshot?.snapshotComment,
+        defaultWdl: snapshot!.payload,
+        defaultDocumentation: snapshot!.documentation,
+        defaultSynopsis: snapshot!.synopsis,
         buttonActionName: 'Clone snapshot',
         postMethodProvider,
         onSuccess: (namespace: string, name: string, snapshotId: number) => {
