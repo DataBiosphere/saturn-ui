@@ -36,7 +36,7 @@ export const WorkspacesListTabs = (props: WorkspacesListTabsProps): ReactNode =>
       title: span([_.upperCase(key), ` (${loadingWorkspaces ? '...' : filteredWorkspaces[key].length})`]),
       tableName: _.lowerCase(key),
     }),
-    ['myWorkspaces', 'newAndInteresting', 'featured', 'public']
+    ['myWorkspaces', 'featured', 'public']
   );
 
   return h(
@@ -96,7 +96,6 @@ export const filterWorkspaces = (
   return {
     myWorkspaces: filterWorkspacesCategory(workspaces.myWorkspaces, filters),
     public: filterWorkspacesCategory(workspaces.public, filters),
-    newAndInteresting: filterWorkspacesCategory(workspaces.newAndInteresting, filters),
     featured: filterWorkspacesCategory(workspaces.featured, filters),
   };
 };

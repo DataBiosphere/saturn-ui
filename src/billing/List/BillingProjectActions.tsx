@@ -2,7 +2,7 @@ import { Icon, Link } from '@terra-ui-packages/components';
 import _ from 'lodash/fp';
 import React, { useState } from 'react';
 import DeleteBillingProjectModal from 'src/billing/DeleteBillingProjectModal';
-import { Ajax } from 'src/libs/ajax';
+import { Billing } from 'src/libs/ajax/billing/Billing';
 import { reportError } from 'src/libs/error';
 import * as Nav from 'src/libs/nav';
 import * as Utils from 'src/libs/utils';
@@ -45,7 +45,7 @@ export const BillingProjectActions = (props: BillingProjectActionsProps) => {
           onConfirm={async () => {
             setDeleting(true);
             try {
-              await Ajax().Billing.deleteProject(props.projectName);
+              await Billing().deleteProject(props.projectName);
               setShowDeleteProjectModal(false);
               props.loadProjects();
               Nav.history.replace({ search: '' });

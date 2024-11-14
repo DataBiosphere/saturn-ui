@@ -14,7 +14,8 @@ import { isCreating, isDeleting } from 'src/billing/utils';
 import { billingRoles } from 'src/billing/utils';
 import { BillingProject, GoogleBillingAccount } from 'src/billing-core/models';
 import Collapse from 'src/components/Collapse';
-import { Ajax } from 'src/libs/ajax';
+import { Billing } from 'src/libs/ajax/billing/Billing';
+import { Metrics } from 'src/libs/ajax/Metrics';
 import colors from 'src/libs/colors';
 import { reportErrorAndRethrow } from 'src/libs/error';
 import Events from 'src/libs/events';
@@ -82,7 +83,7 @@ const RightHandContent = (props: RightHandContentProps): ReactNode => {
     return (
       <AzureBillingProjectWizard
         onSuccess={(billingProjectName, protectedData) => {
-          Ajax().Metrics.captureEvent(Events.billingCreationBillingProjectCreated, {
+          void Metrics().captureEvent(Events.billingCreationBillingProjectCreated, {
             billingProjectName,
             cloudPlatform: cloudProviderTypes.AZURE,
             protectedData,
@@ -99,7 +100,7 @@ const RightHandContent = (props: RightHandContentProps): ReactNode => {
         billingAccounts={billingAccounts}
         authorizeAndLoadAccounts={authorizeAndLoadAccounts}
         onSuccess={(billingProjectName) => {
-          Ajax().Metrics.captureEvent(Events.billingCreationBillingProjectCreated, {
+          void Metrics().captureEvent(Events.billingCreationBillingProjectCreated, {
             billingProjectName,
             cloudPlatform: cloudProviderTypes.GCP,
           });
@@ -162,7 +163,7 @@ export const BillingList = (props: BillingListProps) => {
   const loadProjects = _.flow(
     reportErrorAndRethrow('Error loading billing projects list'),
     Utils.withBusyState(setIsLoadingProjects)
-  )(async () => setBillingProjects(_.sortBy('projectName', await Ajax(signal).Billing.listProjects())));
+  )(async () => setBillingProjects(_.sortBy('projectName', await Billing(signal).listProjects())));
 
   const reloadBillingProject = _.flow(
     reportErrorAndRethrow('Error loading billing project'),
@@ -172,7 +173,7 @@ export const BillingList = (props: BillingListProps) => {
     // fetch the project to error if it doesn't exist/user can't access
     // The component that calls this function is only rendered when selectedName is non-null.
     try {
-      const project = await Ajax(signal).Billing.getProject(selectedName!);
+      const project = await Billing(signal).getProject(selectedName!);
       setBillingProjects(_.set([index], project));
     } catch (error: unknown) {
       // Remove project if user doesn't have access or project doesn't exist then redirect to billing page
@@ -200,8 +201,8 @@ export const BillingList = (props: BillingListProps) => {
     [reportErrorAndRethrow('Error loading billing accounts'), Utils.withBusyState(setIsLoadingAccounts)],
     async () => {
       if (Auth.hasBillingScope()) {
-        void (await Ajax(signal)
-          .Billing.listAccounts()
+        void (await Billing(signal)
+          .listAccounts()
           .then(_.keyBy('accountName')) // @ts-ignore
           .then(setBillingAccounts));
       }
@@ -310,7 +311,7 @@ export const BillingList = (props: BillingListProps) => {
             loadAccounts={loadAccounts}
             onDismiss={() => setCreatingBillingProjectType(null)}
             onSuccess={(billingProjectName) => {
-              Ajax().Metrics.captureEvent(Events.billingCreationBillingProjectCreated, {
+              void Metrics().captureEvent(Events.billingCreationBillingProjectCreated, {
                 billingProjectName,
                 cloudPlatform: cloudProviderTypes.GCP,
               });

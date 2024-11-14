@@ -3,7 +3,7 @@ import { FetchFn, FetchWrapper } from '@terra-ui-packages/data-client-core';
 import _ from 'lodash/fp';
 import { ajaxOverridesStore } from 'src/libs/state';
 
-// Allows use of ajaxOverrideStore to stub responses for testing
+// Allows use of ajaxOverrideStore to stub responses for end2end testing
 export const withInstrumentation =
   (wrappedFetch) =>
   (...args) => {
