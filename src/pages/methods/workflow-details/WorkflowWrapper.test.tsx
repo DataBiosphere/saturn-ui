@@ -447,9 +447,7 @@ describe('workflows container', () => {
     expect(within(dialog).getByRole('textbox', { name: 'Name *' })).toHaveDisplayValue('testname_copy');
     expect(within(dialog).getByRole('textbox', { name: 'Documentation' })).toHaveDisplayValue('mock documentation');
     expect(within(dialog).getByRole('textbox', { name: 'Synopsis (80 characters max)' })).toHaveDisplayValue('');
-    expect(within(dialog).getByRole('textbox', { name: 'Snapshot comment' })).toHaveDisplayValue(
-      'mock snapshot comment'
-    );
+    expect(within(dialog).getByRole('textbox', { name: 'Snapshot comment' })).toHaveDisplayValue('');
     expect(within(dialog).getByTestId('wdl editor')).toHaveDisplayValue(mockSnapshot.payload.toString());
   });
 

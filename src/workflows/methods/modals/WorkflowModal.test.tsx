@@ -495,7 +495,6 @@ describe('WorkflowModal', () => {
           defaultWdl='workflow do-great-stuff {}'
           defaultDocumentation='I am Groot'
           defaultSynopsis='I am Groot'
-          defaultSnapshotComment='I am Groot'
           buttonActionName='Clone snapshot'
           postMethodProvider={successPostMethodProvider}
           onSuccess={mockOnSuccess}
@@ -510,7 +509,7 @@ describe('WorkflowModal', () => {
     expect(screen.getByTestId('wdl editor')).toHaveDisplayValue('workflow do-great-stuff {}');
     expect(screen.getByRole('textbox', { name: 'Documentation' })).toHaveDisplayValue('I am Groot');
     expect(screen.getByRole('textbox', { name: 'Synopsis (80 characters max)' })).toHaveDisplayValue('I am Groot');
-    expect(screen.getByRole('textbox', { name: 'Snapshot comment' })).toHaveDisplayValue('I am Groot');
+    expect(screen.getByRole('textbox', { name: 'Snapshot comment' })).toHaveDisplayValue('');
 
     const cloneMethodButton = screen.getByRole('button', { name: 'Clone snapshot' });
 
@@ -520,6 +519,10 @@ describe('WorkflowModal', () => {
     // user enters value for 'Namespace' text box
     fireEvent.change(screen.getByRole('textbox', { name: 'Namespace *' }), {
       target: { value: 'groot-test-namespace' },
+    });
+    // user enters value for 'Snapshot comment' text box
+    fireEvent.change(screen.getByRole('textbox', { name: 'Snapshot comment' }), {
+      target: { value: "Groot's brand new snapshot" },
     });
 
     // Act
@@ -533,7 +536,7 @@ describe('WorkflowModal', () => {
       'workflow do-great-stuff {}',
       'I am Groot',
       'I am Groot',
-      'I am Groot'
+      "Groot's brand new snapshot"
     );
     expect(mockOnSuccess).toHaveBeenCalledWith('response-namespace', 'response-name', 1);
     expect(mockOnDismiss).not.toHaveBeenCalled();

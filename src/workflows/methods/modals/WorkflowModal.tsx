@@ -57,9 +57,10 @@ export interface WorkflowModalProps {
   defaultSnapshotComment?: string;
 
   /**
-   * Provides a function to make an API call to perform the create method
-   * operation. The create function provided is called with the information
-   * inputted into the modal.
+   * Provides a function to make an API call to perform the post method
+   * operation. The postMethod function provided is called with the information
+   * inputted into the modal. This provider is used for both "create new method"
+   * and "clone method snapshot" functionality.
    */
   postMethodProvider: PostMethodProvider;
 
