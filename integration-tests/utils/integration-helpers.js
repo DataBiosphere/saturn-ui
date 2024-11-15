@@ -54,14 +54,14 @@ const waitForAccessToWorkspaceBucket = async ({ page, billingProject, workspaceN
     async ({ billingProject, workspaceName, timeout }) => {
       console.info('waitForAccessToWorkspaceBucket ...');
       const {
-        workspace: { googleProject, bucketName },
+        workspace: { googleProject },
       } = await window.Ajax().Workspaces.workspace(billingProject, workspaceName).details(['workspace', 'azureContext']);
 
       const startTime = Date.now();
 
       const checks = [
         // Get bucket metadata
-        () => window.Ajax().Buckets.checkBucketLocation(googleProject, bucketName),
+        () => window.Ajax().Buckets.checkBucketLocation(googleProject),
         // https://rawls.dsde-dev.broadinstitute.org/#/workspaces/readBucket
         // Checks if user has bucket access, 403 if not.
         // This API checks if user has all expected permissions. `read` on API name does not accurately describe APIs functionality.
