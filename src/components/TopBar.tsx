@@ -269,6 +269,30 @@ export const TopBar = (props: TopBarProps): ReactNode => {
               </DropDownSubItem>
             </DropDownSection>
             <DropDownSection
+              titleIcon='newspaper'
+              title='Platform News'
+              onClick={() => setOpenPlatformNewsMenu(!openPlatformNewsMenu)}
+              isOpened={openPlatformNewsMenu}
+            >
+              <DropDownSubItem href='#feature-preview' onClick={hideNav}>
+                Feature Preview
+              </DropDownSubItem>
+              <DropDownSubItem
+                href='https://support.terra.bio/hc/en-us/community/topics/360000500452'
+                onClick={hideNav}
+                {...Utils.newTabLinkProps}
+              >
+                Request a Feature
+              </DropDownSubItem>
+              <DropDownSubItem
+                href='https://support.terra.bio/hc/en-us/sections/4414878945819'
+                onClick={hideNav}
+                {...Utils.newTabLinkProps}
+              >
+                Release Notes
+              </DropDownSubItem>
+            </DropDownSection>
+            <DropDownSection
               titleIcon='help'
               title='Support'
               onClick={() => setOpenSupportMenu(!openSupportMenu)}
@@ -326,30 +350,6 @@ export const TopBar = (props: TopBarProps): ReactNode => {
                 {...Utils.newTabLinkProps}
               >
                 Service Notifications
-              </DropDownSubItem>
-            </DropDownSection>
-            <DropDownSection
-              titleIcon='newspaper'
-              title='Platform News'
-              onClick={() => setOpenPlatformNewsMenu(!openPlatformNewsMenu)}
-              isOpened={openPlatformNewsMenu}
-            >
-              <DropDownSubItem href='#feature-preview' onClick={hideNav}>
-                Feature Preview
-              </DropDownSubItem>
-              <DropDownSubItem
-                href='https://support.terra.bio/hc/en-us/community/topics/360000500452'
-                onClick={hideNav}
-                {...Utils.newTabLinkProps}
-              >
-                Request a Feature
-              </DropDownSubItem>
-              <DropDownSubItem
-                href='https://support.terra.bio/hc/en-us/sections/4414878945819'
-                onClick={hideNav}
-                {...Utils.newTabLinkProps}
-              >
-                Release Notes
               </DropDownSubItem>
             </DropDownSection>
             {isFirecloud() && (
