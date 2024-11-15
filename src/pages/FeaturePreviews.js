@@ -49,7 +49,7 @@ export const FeaturePreviews = () => {
               field: 'enabled',
               headerRenderer: () => {
                 const allEnabled = _.every(({ id }) => featurePreviewState[id], featurePreviews);
-                const allDisabled = _.every(({ id }) => !featurePreviewState[id], featurePreviews);
+                const allText = 'Select All';
 
                 return h(Switch, {
                   onLabel: '',
@@ -62,10 +62,10 @@ export const FeaturePreviews = () => {
                   },
                   id: 'toggle-all',
                   checked: allEnabled,
-                  indeterminate: !allEnabled && !allDisabled,
                   width: 30,
                   height: 15,
-                  ariaDescribedBy: 'Enable all features',
+                  title: allText,
+                  'aria-describedby': allText,
                 });
               },
               cellRenderer: ({ rowIndex }) => {
@@ -82,7 +82,7 @@ export const FeaturePreviews = () => {
                   checked: featurePreviewState[id],
                   width: 30,
                   height: 15,
-                  ariaDescribedBy: `Enable ${title}`,
+                  'aria-describedby': `Enable ${title}`,
                 });
               },
             },
