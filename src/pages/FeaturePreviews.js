@@ -31,6 +31,13 @@ export const FeaturePreviews = () => {
     setFeaturePreviewState(getFeaturePreviewState());
   }, [getFeaturePreviewState]);
 
+  const handleToggleAll = (checked) => {
+    _.forEach(({ id }) => {
+      toggleFeaturePreview(id, checked);
+      setFeaturePreviewState(_.set(id, checked));
+    }, featurePreviews);
+  };
+
   return Utils.cond(
     [loading, () => spinnerOverlay],
     [error, () => p({ style: { margin: 0 } }, ['Unable to load feature previews.'])],
@@ -54,12 +61,7 @@ export const FeaturePreviews = () => {
                 return h(Switch, {
                   onLabel: '',
                   offLabel: '',
-                  onChange: (checked) => {
-                    _.forEach(({ id }) => {
-                      toggleFeaturePreview(id, checked);
-                      setFeaturePreviewState(_.set(id, checked));
-                    }, featurePreviews);
-                  },
+                  onChange: handleToggleAll,
                   id: 'toggle-all',
                   checked: allEnabled,
                   width: 30,
