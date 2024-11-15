@@ -42,18 +42,9 @@ const SnapshotActionMenu = (props: SnapshotActionMenuProps): ReactNode => {
 
   const menuContent = (
     <>
-      <MenuButton
-        disabled={!isSnapshotOwner}
-        tooltip={!isSnapshotOwner && notSnapshotOwnerTooltip}
-        tooltipSide='left'
-        onClick={onEditPermissions}
-      >
-        {makeMenuIcon('cog')}
-        Edit snapshot permissions
-      </MenuButton>
       <MenuButton disabled={false} tooltipSide='left' onClick={onClone}>
         {makeMenuIcon('copy')}
-        Clone snapshot
+        Save as
       </MenuButton>
       <MenuButton
         disabled={!isSnapshotOwner}
@@ -63,6 +54,15 @@ const SnapshotActionMenu = (props: SnapshotActionMenuProps): ReactNode => {
       >
         {makeMenuIcon('trash')}
         Delete snapshot
+      </MenuButton>
+      <MenuButton
+        disabled={!isSnapshotOwner}
+        tooltip={!isSnapshotOwner && notSnapshotOwnerTooltip}
+        tooltipSide='left'
+        onClick={onEditPermissions}
+      >
+        {makeMenuIcon('cog')}
+        Edit snapshot permissions
       </MenuButton>
     </>
   );

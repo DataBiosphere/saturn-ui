@@ -415,7 +415,7 @@ describe('workflows container', () => {
     expect(goToPath).toHaveBeenCalledWith('workflows');
   });
 
-  it('renders the clone snapshot modal when the corresponding button is pressed', async () => {
+  it('renders the save as new method modal when the corresponding button is pressed', async () => {
     // Arrange
     mockAjax();
 
@@ -437,9 +437,9 @@ describe('workflows container', () => {
     });
 
     await user.click(screen.getByRole('button', { name: 'Snapshot action menu' }));
-    await user.click(screen.getByRole('button', { name: 'Clone snapshot' }));
+    await user.click(screen.getByRole('button', { name: 'Save as' }));
 
-    const dialog = screen.getByRole('dialog', { name: /clone snapshot/i });
+    const dialog = screen.getByRole('dialog', { name: /create new method/i });
 
     // Assert
     expect(dialog).toBeInTheDocument();
@@ -451,7 +451,7 @@ describe('workflows container', () => {
     expect(within(dialog).getByTestId('wdl editor')).toHaveDisplayValue(mockSnapshot.payload.toString());
   });
 
-  it('hides the clone snapshot modal when it is dismissed', async () => {
+  it('hides the save as new method modal when it is dismissed', async () => {
     // Arrange
     mockAjax();
 
@@ -473,11 +473,11 @@ describe('workflows container', () => {
     });
 
     await user.click(screen.getByRole('button', { name: 'Snapshot action menu' }));
-    await user.click(screen.getByRole('button', { name: 'Clone snapshot' }));
+    await user.click(screen.getByRole('button', { name: 'Save as' }));
     await user.click(screen.getByRole('button', { name: 'Cancel' }));
 
     // Assert
-    const dialog = screen.queryByRole('dialog', { name: /clone snapshot/i });
+    const dialog = screen.queryByRole('dialog', { name: /save as/i });
 
     expect(dialog).not.toBeInTheDocument();
   });
