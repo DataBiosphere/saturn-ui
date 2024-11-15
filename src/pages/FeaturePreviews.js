@@ -85,6 +85,7 @@ export const FeaturePreviews = () => {
                   width: 30,
                   height: 15,
                   'aria-describedby': `Enable ${title}`,
+                  title,
                 });
               },
             },
