@@ -16,6 +16,7 @@ describe('FeaturePreviews', () => {
           title: 'Feature #1',
           description: 'A new feature',
           documentationUrl: 'https://example.com/feature-1-docs',
+          lastUpdated: '2024-11-01',
         },
         // @ts-expect-error
         {
@@ -23,6 +24,7 @@ describe('FeaturePreviews', () => {
           title: 'Feature #2',
           description: 'Another new feature',
           feedbackUrl: 'mailto:feature2-feedback@example.com',
+          lastUpdated: '2024-11-02',
         },
       ],
       loading: false,
@@ -37,30 +39,47 @@ describe('FeaturePreviews', () => {
 
     expect(getByText(cells[1], 'Feature #1')).toBeTruthy();
     expect(getByText(cells[1], 'A new feature')).toBeTruthy();
+    expect(getByText(cells[2], 'Nov 1, 2024')).toBeTruthy();
 
-    expect(getByText(cells[3], 'Feature #2')).toBeTruthy();
-    expect(getByText(cells[3], 'Another new feature')).toBeTruthy();
+    expect(getByText(cells[4], 'Feature #2')).toBeTruthy();
+    expect(getByText(cells[4], 'Another new feature')).toBeTruthy();
+    expect(getByText(cells[5], 'Nov 2, 2024')).toBeTruthy();
   });
 
   it('should render whether features are enabled', () => {
     asMockedFn(isFeaturePreviewEnabled).mockImplementation((id) => id === 'feature1');
 
     const { getAllByRole } = render(h(FeaturePreviews));
-    const checkboxes = getAllByRole('checkbox');
+    const checkboxes = getAllByRole('switch');
 
-    expect(checkboxes[0].getAttribute('aria-checked')).toBe('true');
-    expect(checkboxes[1].getAttribute('aria-checked')).toBe('false');
+    expect(checkboxes[1].hasAttribute('checked')).toBe(true);
+    expect(checkboxes[2].hasAttribute('checked')).toBe(false);
   });
 
   it('checking a checkbox should toggle feature previews', () => {
     const { getAllByRole } = render(h(FeaturePreviews));
-    const checkboxes = getAllByRole('checkbox');
+    const checkboxes = getAllByRole('switch');
 
     fireEvent.click(checkboxes[0]);
     expect(toggleFeaturePreview).toHaveBeenCalledWith('feature1', true);
 
     fireEvent.click(checkboxes[0]);
     expect(toggleFeaturePreview).toHaveBeenCalledWith('feature1', false);
+  });
+
+  it('should (de)select all feature previews when "Select All" toggle is clicked', () => {
+    const { getByTitle } = render(h(FeaturePreviews));
+    const selectAllButton = getByTitle('Select All');
+
+    fireEvent.click(selectAllButton);
+
+    expect(toggleFeaturePreview).toHaveBeenCalledWith('feature1', true);
+    expect(toggleFeaturePreview).toHaveBeenCalledWith('feature2', true);
+
+    fireEvent.click(selectAllButton);
+
+    expect(toggleFeaturePreview).toHaveBeenCalledWith('feature1', false);
+    expect(toggleFeaturePreview).toHaveBeenCalledWith('feature2', false);
   });
 
   it('should render documentation link if provided', () => {
