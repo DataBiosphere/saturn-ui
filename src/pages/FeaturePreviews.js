@@ -47,7 +47,27 @@ export const FeaturePreviews = () => {
             {
               size: { basis: 60, grow: 0 },
               field: 'enabled',
-              headerRenderer: () => span({ className: 'sr-only' }, ['Enabled']),
+              headerRenderer: () => {
+                const allEnabled = _.every(({ id }) => featurePreviewState[id], featurePreviews);
+                const allDisabled = _.every(({ id }) => !featurePreviewState[id], featurePreviews);
+
+                return h(Switch, {
+                  onLabel: '',
+                  offLabel: '',
+                  onChange: (checked) => {
+                    _.forEach(({ id }) => {
+                      toggleFeaturePreview(id, checked);
+                      setFeaturePreviewState(_.set(id, checked));
+                    }, featurePreviews);
+                  },
+                  id: 'toggle-all',
+                  checked: allEnabled,
+                  indeterminate: !allEnabled && !allDisabled,
+                  width: 30,
+                  height: 15,
+                  ariaDescribedBy: 'Enable all features',
+                });
+              },
               cellRenderer: ({ rowIndex }) => {
                 const { id, title } = featurePreviews[rowIndex];
 
