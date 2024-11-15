@@ -474,12 +474,17 @@ describe('workflows container', () => {
 
     await user.click(screen.getByRole('button', { name: 'Snapshot action menu' }));
     await user.click(screen.getByRole('button', { name: 'Save as' }));
+
+    // Assert
+    const dialog1 = screen.queryByRole('dialog', { name: /create new method/i });
+    expect(dialog1).toBeInTheDocument();
+
+    // Act
     await user.click(screen.getByRole('button', { name: 'Cancel' }));
 
     // Assert
-    const dialog = screen.queryByRole('dialog', { name: /save as/i });
-
-    expect(dialog).not.toBeInTheDocument();
+    const dialog2 = screen.queryByRole('dialog', { name: /create new method/i });
+    expect(dialog2).not.toBeInTheDocument();
   });
 
   it('hides the delete snapshot modal and displays a loading spinner when the deletion is confirmed', async () => {
