@@ -147,6 +147,7 @@ export const TopBar = (props: TopBarProps): ReactNode => {
   const [openUserMenu, setOpenUserMenu] = useState(false);
   const [openLibraryMenu, setOpenLibraryMenu] = useState(false);
   const [openSupportMenu, setOpenSupportMenu] = useState(false);
+  const [openPlatformNewsMenu, setOpenPlatformNewsMenu] = useState(false);
   const [openFirecloudModal, setOpenFirecloudModal] = useState(false);
 
   const authState = useStore(authStore);
@@ -165,6 +166,7 @@ export const TopBar = (props: TopBarProps): ReactNode => {
     setOpenUserMenu(false);
     setOpenLibraryMenu(false);
     setOpenSupportMenu(false);
+    setOpenPlatformNewsMenu(false);
     document.body.classList.remove('overlayOpen', 'overHeight');
   };
 
@@ -267,6 +269,30 @@ export const TopBar = (props: TopBarProps): ReactNode => {
               </DropDownSubItem>
             </DropDownSection>
             <DropDownSection
+              titleIcon='newspaper'
+              title='Platform News'
+              onClick={() => setOpenPlatformNewsMenu(!openPlatformNewsMenu)}
+              isOpened={openPlatformNewsMenu}
+            >
+              <DropDownSubItem href='#feature-preview' onClick={hideNav}>
+                Feature Preview
+              </DropDownSubItem>
+              <DropDownSubItem
+                href='https://support.terra.bio/hc/en-us/community/topics/360000500452'
+                onClick={hideNav}
+                {...Utils.newTabLinkProps}
+              >
+                Request a Feature
+              </DropDownSubItem>
+              <DropDownSubItem
+                href='https://support.terra.bio/hc/en-us/sections/4414878945819'
+                onClick={hideNav}
+                {...Utils.newTabLinkProps}
+              >
+                Release Notes
+              </DropDownSubItem>
+            </DropDownSection>
+            <DropDownSection
               titleIcon='help'
               title='Support'
               onClick={() => setOpenSupportMenu(!openSupportMenu)}
@@ -295,13 +321,6 @@ export const TopBar = (props: TopBarProps): ReactNode => {
                 </DropDownSubItem>
               )}
               <DropDownSubItem
-                href='https://support.terra.bio/hc/en-us/community/topics/360000500452'
-                onClick={hideNav}
-                {...Utils.newTabLinkProps}
-              >
-                Request a Feature
-              </DropDownSubItem>
-              <DropDownSubItem
                 href='https://support.terra.bio/hc/en-us/community/topics'
                 onClick={hideNav}
                 {...Utils.newTabLinkProps}
@@ -324,13 +343,6 @@ export const TopBar = (props: TopBarProps): ReactNode => {
                 }}
               >
                 Contact Us
-              </DropDownSubItem>
-              <DropDownSubItem
-                href='https://support.terra.bio/hc/en-us/sections/4414878945819'
-                onClick={hideNav}
-                {...Utils.newTabLinkProps}
-              >
-                Release Notes
               </DropDownSubItem>
               <DropDownSubItem
                 href='https://support.terra.bio/hc/en-us/sections/4415104213787'

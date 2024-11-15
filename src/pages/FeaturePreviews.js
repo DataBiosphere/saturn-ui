@@ -1,11 +1,13 @@
+import { Icon, Switch } from '@terra-ui-packages/components';
 import _ from 'lodash/fp';
 import { Fragment, useCallback, useEffect, useState } from 'react';
 import { div, h, h2, p, span } from 'react-hyperscript-helpers';
-import { Checkbox, Link, spinnerOverlay } from 'src/components/common';
+import { Link, spinnerOverlay } from 'src/components/common';
 import FooterWrapper from 'src/components/FooterWrapper';
 import { PageBox } from 'src/components/PageBox';
 import { SimpleFlexTable } from 'src/components/table';
 import { TopBar } from 'src/components/TopBar';
+import colors from 'src/libs/colors';
 import { isFeaturePreviewEnabled, toggleFeaturePreview, useAvailableFeaturePreviews } from 'src/libs/feature-previews';
 import * as Style from 'src/libs/style';
 import * as Utils from 'src/libs/utils';
@@ -29,41 +31,85 @@ export const FeaturePreviews = () => {
     setFeaturePreviewState(getFeaturePreviewState());
   }, [getFeaturePreviewState]);
 
+  const handleToggleAll = (checked) => {
+    _.forEach(({ id }) => {
+      toggleFeaturePreview(id, checked);
+      setFeaturePreviewState(_.set(id, checked));
+    }, featurePreviews);
+  };
+
   return Utils.cond(
     [loading, () => spinnerOverlay],
     [error, () => p({ style: { margin: 0 } }, ['Unable to load feature previews.'])],
     [_.isEmpty(featurePreviews), () => p({ style: { margin: 0 } }, ['No feature previews available at this time.'])],
     () =>
       h(Fragment, [
-        p(['These features are proof-of-concept and may change without notice.']),
+        p({ style: { whiteSpace: 'pre-wrap' } }, [
+          "Feature Preview gives you early access to the latest Terra features before they're made generally available to all users. \nOpt-in below to try new features and give feedback so Terra can continue to make improvements before the features are released. These features may change without notice.",
+        ]),
         h(SimpleFlexTable, {
           'aria-label': 'Features',
           rowCount: featurePreviews.length,
           columns: [
             {
-              size: { basis: 55, grow: 0 },
+              size: { basis: 60, grow: 0 },
               field: 'enabled',
-              headerRenderer: () => span({ className: 'sr-only' }, ['Enabled']),
+              headerRenderer: () => {
+                const allEnabled = _.every(({ id }) => featurePreviewState[id], featurePreviews);
+                const allText = 'Select All';
+
+                return h(Switch, {
+                  onLabel: '',
+                  offLabel: '',
+                  onChange: handleToggleAll,
+                  id: 'toggle-all',
+                  checked: allEnabled,
+                  width: 30,
+                  height: 15,
+                  title: allText,
+                  'aria-describedby': allText,
+                });
+              },
               cellRenderer: ({ rowIndex }) => {
                 const { id, title } = featurePreviews[rowIndex];
-                return h(Checkbox, {
-                  'aria-label': `Enable ${title}`,
-                  checked: featurePreviewState[id],
+
+                return h(Switch, {
+                  onLabel: '',
+                  offLabel: '',
                   onChange: (checked) => {
                     toggleFeaturePreview(id, checked);
                     setFeaturePreviewState(_.set(id, checked));
                   },
+                  id,
+                  checked: featurePreviewState[id],
+                  width: 30,
+                  height: 15,
+                  'aria-describedby': `Enable ${title}`,
+                  title,
                 });
               },
             },
             {
-              size: { basis: 250 },
+              size: { basis: 150 },
               field: 'description',
-              headerRenderer: () => 'Description',
+              headerRenderer: () => span({ style: { fontWeight: 'bold' } }, ['Description']),
               cellRenderer: ({ rowIndex }) => {
-                const { title, description, documentationUrl, feedbackUrl } = featurePreviews[rowIndex];
+                const { title, description, documentationUrl, feedbackUrl, groups } = featurePreviews[rowIndex];
+                const isPrivate = !_.isEmpty(groups);
+                const privateText = 'This feature is in Private Preview and is only visible to you.';
+                const privateIcon = Icon({
+                  style: {
+                    color: colors.warning(0.5),
+                    marginRight: '0.5rem',
+                  },
+                  size: 16,
+                  icon: 'lock',
+                  title: privateText,
+                  alt: privateText,
+                });
+
                 return div([
-                  p({ style: { fontWeight: 600, margin: '0.5rem 0 0.5rem' } }, [title]),
+                  p({ style: { fontWeight: 600, margin: '0.5rem 0 0.5rem' } }, [isPrivate && privateIcon, title]),
                   p({ style: { margin: '0.5rem 0' } }, [description]),
                   !!(documentationUrl || feedbackUrl) &&
                     p({ style: { margin: '0.5rem 0' } }, [
@@ -72,6 +118,16 @@ export const FeaturePreviews = () => {
                       feedbackUrl && h(Link, { ...Utils.newTabLinkProps, href: feedbackUrl }, ['Submit feedback']),
                     ]),
                 ]);
+              },
+            },
+            {
+              size: { basis: 150, grow: 0 },
+              field: 'lastUpdated',
+              headerRenderer: () => span({ style: { fontWeight: 'bold' } }, ['Last Updated']),
+              cellRenderer: ({ rowIndex }) => {
+                const { lastUpdated } = featurePreviews[rowIndex];
+
+                return lastUpdated ? Utils.makeCompleteDateParts(lastUpdated)[0] : '';
               },
             },
           ],
