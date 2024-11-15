@@ -1,4 +1,4 @@
-import { Switch } from '@terra-ui-packages/components';
+import { Icon, Switch } from '@terra-ui-packages/components';
 import _ from 'lodash/fp';
 import { Fragment, useCallback, useEffect, useState } from 'react';
 import { div, h, h2, p, span } from 'react-hyperscript-helpers';
@@ -7,6 +7,7 @@ import FooterWrapper from 'src/components/FooterWrapper';
 import { PageBox } from 'src/components/PageBox';
 import { SimpleFlexTable } from 'src/components/table';
 import { TopBar } from 'src/components/TopBar';
+import colors from 'src/libs/colors';
 import { isFeaturePreviewEnabled, toggleFeaturePreview, useAvailableFeaturePreviews } from 'src/libs/feature-previews';
 import * as Style from 'src/libs/style';
 import * as Utils from 'src/libs/utils';
@@ -36,8 +37,8 @@ export const FeaturePreviews = () => {
     [_.isEmpty(featurePreviews), () => p({ style: { margin: 0 } }, ['No feature previews available at this time.'])],
     () =>
       h(Fragment, [
-        p([
-          "Feature Preview gives you early access to the latest Terra features before they're made generally available to all users. Opt-in below to try new features and give feedback so Terra can continue to make improvements before the features are released. These features may change without notice.",
+        p({ style: { whiteSpace: 'pre-wrap' } }, [
+          "Feature Preview gives you early access to the latest Terra features before they're made generally available to all users. \nOpt-in below to try new features and give feedback so Terra can continue to make improvements before the features are released. These features may change without notice.",
         ]),
         h(SimpleFlexTable, {
           'aria-label': 'Features',
@@ -62,7 +63,6 @@ export const FeaturePreviews = () => {
                   width: 30,
                   height: 15,
                   ariaDescribedBy: `Enable ${title}`,
-                  disabled: false, // TODO: Group check
                 });
               },
             },
@@ -71,9 +71,22 @@ export const FeaturePreviews = () => {
               field: 'description',
               headerRenderer: () => span({ style: { fontWeight: 'bold' } }, ['Description']),
               cellRenderer: ({ rowIndex }) => {
-                const { title, description, documentationUrl, feedbackUrl } = featurePreviews[rowIndex];
+                const { title, description, documentationUrl, feedbackUrl, groups } = featurePreviews[rowIndex];
+                const isPrivate = !_.isEmpty(groups);
+                const privateText = 'This feature is in Private Preview and is only visible to you.';
+                const privateIcon = Icon({
+                  style: {
+                    color: colors.warning(0.5),
+                    marginRight: '0.5rem',
+                  },
+                  size: 16,
+                  icon: 'lock',
+                  title: privateText,
+                  alt: privateText,
+                });
+
                 return div([
-                  p({ style: { fontWeight: 600, margin: '0.5rem 0 0.5rem' } }, [title]),
+                  p({ style: { fontWeight: 600, margin: '0.5rem 0 0.5rem' } }, [isPrivate && privateIcon, title]),
                   p({ style: { margin: '0.5rem 0' } }, [description]),
                   !!(documentationUrl || feedbackUrl) &&
                     p({ style: { margin: '0.5rem 0' } }, [
@@ -91,7 +104,7 @@ export const FeaturePreviews = () => {
               cellRenderer: ({ rowIndex }) => {
                 const { lastUpdated } = featurePreviews[rowIndex];
 
-                return lastUpdated ? Utils.makePrettyDate(lastUpdated) : '';
+                return lastUpdated ? Utils.makeCompleteDateParts(lastUpdated)[0] : '';
               },
             },
           ],
