@@ -75,7 +75,7 @@ describe('snapshot action menu', () => {
     expect(screen.queryByRole('tooltip')).not.toBeInTheDocument();
 
     // Act
-    const cloneSnapshotButton = screen.getByRole('button', { name: 'Clone snapshot' });
+    const cloneSnapshotButton = screen.getByRole('button', { name: 'Save as' });
 
     // Assert
     // clone option is always enabled irrespective of snapshot ownership
@@ -128,7 +128,7 @@ describe('snapshot action menu', () => {
     expect(screen.getByRole('tooltip')).toBeInTheDocument();
 
     // Act
-    const cloneSnapshotButton = screen.getByRole('button', { name: 'Clone snapshot' });
+    const cloneSnapshotButton = screen.getByRole('button', { name: 'Save as' });
     await user.pointer({ target: cloneSnapshotButton });
 
     // Assert
@@ -191,7 +191,7 @@ describe('snapshot action menu delete snapshot button', () => {
   });
 });
 
-describe('snapshot action menu clone snapshot button', () => {
+describe('snapshot action menu save as button', () => {
   it('closes and calls the onClone callback when clicked', async () => {
     // Arrange
     const user: UserEvent = userEvent.setup();
@@ -209,10 +209,10 @@ describe('snapshot action menu clone snapshot button', () => {
     });
 
     await user.click(screen.getByRole('button', { name: 'Snapshot action menu' }));
-    await user.click(screen.getByRole('button', { name: 'Clone snapshot' }));
+    await user.click(screen.getByRole('button', { name: 'Save as' }));
 
     // Assert
-    expect(screen.queryByRole('button', { name: 'Clone snapshot' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Save as' })).not.toBeInTheDocument();
     expect(mockOnClone).toHaveBeenCalled();
   });
 });

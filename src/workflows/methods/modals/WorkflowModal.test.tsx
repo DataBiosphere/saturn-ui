@@ -479,7 +479,7 @@ describe('WorkflowModal', () => {
     expect(mockOnDismiss).toHaveBeenCalled();
   });
 
-  it('displays clone method modal and calls correct function on submit', async () => {
+  it('displays save as new method modal and calls correct function on submit', async () => {
     // Arrange
     const mockOnSuccess = jest.fn();
     const mockOnDismiss = jest.fn();
@@ -490,12 +490,12 @@ describe('WorkflowModal', () => {
     await act(async () => {
       render(
         <WorkflowModal
-          title='Clone snapshot'
+          title='Create new method'
           defaultName='groot-scientific-workflow_copy'
           defaultWdl='workflow do-great-stuff {}'
           defaultDocumentation='I am Groot'
           defaultSynopsis='I am Groot'
-          buttonActionName='Clone snapshot'
+          buttonActionName='Create new method'
           postMethodProvider={successPostMethodProvider}
           onSuccess={mockOnSuccess}
           onDismiss={mockOnDismiss}
@@ -511,7 +511,7 @@ describe('WorkflowModal', () => {
     expect(screen.getByRole('textbox', { name: 'Synopsis (80 characters max)' })).toHaveDisplayValue('I am Groot');
     expect(screen.getByRole('textbox', { name: 'Snapshot comment' })).toHaveDisplayValue('');
 
-    const cloneMethodButton = screen.getByRole('button', { name: 'Clone snapshot' });
+    const cloneMethodButton = screen.getByRole('button', { name: 'Create new method' });
 
     // Assert
     expect(cloneMethodButton).toHaveAttribute('aria-disabled', 'true');
@@ -526,7 +526,7 @@ describe('WorkflowModal', () => {
     });
 
     // Act
-    await user.click(screen.getByRole('button', { name: 'Clone snapshot' }));
+    await user.click(screen.getByRole('button', { name: 'Create new method' }));
 
     // Assert
     expect(successPostMethodProvider.postMethod).toHaveBeenCalledTimes(1);

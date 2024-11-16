@@ -295,12 +295,12 @@ export const WorkflowsContainer = (props: WorkflowContainerProps) => {
       }),
     showCloneModal &&
       h(WorkflowModal, {
-        title: 'Clone snapshot',
+        title: 'Create new method',
         defaultName: name.concat('_copy'),
         defaultWdl: snapshot!.payload,
         defaultDocumentation: snapshot!.documentation,
         defaultSynopsis: snapshot!.synopsis,
-        buttonActionName: 'Clone snapshot',
+        buttonActionName: 'Create new method',
         postMethodProvider,
         onSuccess: (namespace: string, name: string, snapshotId: number) => {
           // when the user has owner permissions on the original method, there is an interesting situation where
