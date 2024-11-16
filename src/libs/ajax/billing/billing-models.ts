@@ -106,8 +106,17 @@ export interface WorkspaceSpendData {
   workspace: { name: string; namespace: string };
 }
 
+export interface DailySpendData {
+  cost: string;
+  credits: string;
+  currency: string;
+  endTime: string;
+  startTime: string;
+  subAggregation: { aggregationKey: 'Category'; spendData: CategorySpendData[] };
+}
+
 interface AggregatedSpendData {
-  aggregationKey: 'Workspace' | 'Category';
+  aggregationKey: 'Workspace' | 'Category' | 'Daily';
 }
 
 export interface AggregatedWorkspaceSpendData extends AggregatedSpendData {
@@ -118,6 +127,11 @@ export interface AggregatedWorkspaceSpendData extends AggregatedSpendData {
 export interface AggregatedCategorySpendData extends AggregatedSpendData {
   aggregationKey: 'Category';
   spendData: CategorySpendData[];
+}
+
+export interface AggregatedDailySpendData extends AggregatedSpendData {
+  aggregationKey: 'Daily';
+  spendData: DailySpendData[];
 }
 
 export interface SpendReport {
