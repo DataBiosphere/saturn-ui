@@ -167,7 +167,7 @@ export const SpendReport = (props: SpendReportProps) => {
         _.map((point: { color: any; series: { name: any }; y: any; percentage: any }) => {
           return `<span style="color:${point.color}">\u25CF</span> ${point.series.name}: ${yAxisLabelsFormatter(
             point.y
-          )} (${point.percentage.toFixed(2)}%)<br/>`;
+          )} ${!_.isNil(point.percentage) ? `(${point.percentage.toFixed(2)}%)` : ''} <br/>`;
         }),
         _.join('')
       )(points)}<br/>Total: ${yAxisLabelsFormatter(total)}`;
@@ -370,6 +370,7 @@ export const SpendReport = (props: SpendReportProps) => {
           setCostPerDay(dailyCosts);
         }
 
+        // Only show workspace costs if the feature preview is not enabled
         if (includeAggregateSpendChart && !isFeaturePreviewEnabled(SPEND_REPORTING)) {
           const workspaceDetails = _.find(
             (details) => details.aggregationKey === 'Workspace',
