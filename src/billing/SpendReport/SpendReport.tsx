@@ -428,7 +428,7 @@ export const SpendReport = (props: SpendReportProps) => {
   ]);
 
   return (
-    <>
+    <div style={{ position: 'relative' }}>
       <div style={{ display: 'grid', rowGap: '0.5rem' }}>
         {!!errorMessage && <ErrorAlert errorValue={errorMessage} />}
         <div
@@ -476,8 +476,8 @@ export const SpendReport = (props: SpendReportProps) => {
           </div>
         )}
       </div>
-      {updatingProjectCost && <SpinnerOverlay mode='FullScreen' />}
-    </>
+      {updatingProjectCost && <SpinnerOverlay mode='Fixed' />}
+    </div>
   );
 };
 
