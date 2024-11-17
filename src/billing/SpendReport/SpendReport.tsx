@@ -111,10 +111,13 @@ export const SpendReport = (props: SpendReportProps) => {
   interface SpendChartOptionsParams {
     chartType: string;
     chartTitle: string;
-    xAxisCategories: string[];
-    xAxisLabelsFormatter: (value: string) => string;
-    yAxisLabelsFormatter: (value: number) => number;
-    seriesData: { name: string; data: number[] }[];
+    chartCategoryUnit: string;
+    chartCategories: string[];
+    chartSeries: { name: string; data: number[] }[];
+    chartFormatters: {
+      xAxisLabelsFormatter: (value: string) => string;
+      yAxisLabelsFormatter: (value: number) => number;
+    };
   }
 
   const workspaceSpendChartOptionsParams: SpendChartOptionsParams = {
@@ -123,10 +126,9 @@ export const SpendReport = (props: SpendReportProps) => {
       costPerWorkspace.numWorkspaces > maxWorkspacesInChart
         ? `Top ${maxWorkspacesInChart} Spending Workspaces`
         : 'Spend By Workspace',
-    xAxisCategories: costPerWorkspace.workspaceNames,
-    xAxisLabelsFormatter: (value) => WorkspaceLink(props.billingProjectName, value),
-    yAxisLabelsFormatter: (value) => costPerWorkspace.costFormatter.format(value),
-    seriesData: [
+    chartCategoryUnit: 'Workspace',
+    chartCategories: costPerWorkspace.workspaceNames,
+    chartSeries: [
       {
         name: 'Compute',
         data: costPerWorkspace.computeCosts,
@@ -136,15 +138,18 @@ export const SpendReport = (props: SpendReportProps) => {
         data: costPerWorkspace.storageCosts,
       },
     ],
+    chartFormatters: {
+      xAxisLabelsFormatter: (value) => value,
+      yAxisLabelsFormatter: (value) => costPerWorkspace.costFormatter.format(value),
+    },
   };
 
   const dailySpendChartOptionsParams: SpendChartOptionsParams = {
     chartType: 'column',
     chartTitle: 'Daily Spend',
-    xAxisCategories: costPerDay.days,
-    xAxisLabelsFormatter: (value) => value,
-    yAxisLabelsFormatter: (value) => costPerDay.costFormatter.format(value),
-    seriesData: [
+    chartCategoryUnit: 'Day',
+    chartCategories: costPerDay.days,
+    chartSeries: [
       {
         name: 'Storage',
         data: costPerDay.storageCosts,
@@ -154,11 +159,21 @@ export const SpendReport = (props: SpendReportProps) => {
         data: costPerDay.computeCosts,
       },
     ],
+    chartFormatters: {
+      xAxisLabelsFormatter: (value) => value,
+      yAxisLabelsFormatter: (value) => costPerDay.costFormatter.format(value),
+    },
   };
 
   const spendChartOptionsTemplate = (spendChartOptionsParams: SpendChartOptionsParams) => {
-    const { chartType, chartTitle, xAxisCategories, xAxisLabelsFormatter, yAxisLabelsFormatter, seriesData } =
-      spendChartOptionsParams;
+    const {
+      chartType,
+      chartTitle,
+      chartCategoryUnit,
+      chartCategories,
+      chartSeries,
+      chartFormatters: { xAxisLabelsFormatter, yAxisLabelsFormatter },
+    } = spendChartOptionsParams;
 
     const tooltipFormatter = (points: any[], category: string) => {
       const total: number = _.reduce((sum: number, point: any) => sum + point.y, 0, points);
@@ -196,16 +211,17 @@ export const SpendReport = (props: SpendReportProps) => {
       },
       accessibility: {
         point: {
-          descriptionFormatter() {
+          descriptionFormatter: (point: any) => {
             // @ts-ignore
-            // eslint-disable-next-line react/no-this-in-sfc
-            return tooltipFormatter(this.points, this.x);
+            return `${point.index + 1}. ${chartCategoryUnit} ${point.category}, ${
+              point.series.name
+            }: ${yAxisLabelsFormatter(point.y)}.`;
           },
         },
       },
       exporting: { buttons: { contextButton: { x: -15 } } },
       xAxis: {
-        categories: xAxisCategories,
+        categories: chartCategories,
         crosshair: true,
         labels: {
           formatter() {
@@ -240,7 +256,7 @@ export const SpendReport = (props: SpendReportProps) => {
           },
         },
       },
-      series: seriesData,
+      series: chartSeries,
       plotOptions: {
         series: {
           stacking: 'normal',
