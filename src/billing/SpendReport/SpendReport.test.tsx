@@ -4,9 +4,11 @@ import { SpendReport, WorkspaceLink } from 'src/billing/SpendReport/SpendReport'
 import { Billing, BillingContract } from 'src/libs/ajax/billing/Billing';
 import {
   AggregatedCategorySpendData,
+  AggregatedDailySpendData,
   AggregatedWorkspaceSpendData,
   SpendReport as SpendReportServerResponse,
 } from 'src/libs/ajax/billing/billing-models';
+import { isFeaturePreviewEnabled } from 'src/libs/feature-previews';
 import { getLink } from 'src/libs/nav';
 import { asMockedFn, MockedFn, partial, renderWithAppContexts as render } from 'src/testing/test-utils';
 
@@ -20,6 +22,9 @@ jest.mock(
     getLink: jest.fn(),
   })
 );
+jest.mock('src/libs/feature-previews', () => ({
+  isFeaturePreviewEnabled: jest.fn(),
+}));
 
 describe('SpendReport', () => {
   beforeEach(() => {
@@ -60,7 +65,7 @@ describe('SpendReport', () => {
 
   const otherCostMessaging = /other infrastructure or query costs related to the general operations of Terra/i;
 
-  const createSpendReportResult = (totalCost) => {
+  const createSpendReportResult = (totalCost: string, isWorkspaceReport = true) => {
     const categorySpendData: AggregatedCategorySpendData = {
       aggregationKey: 'Category',
       spendData: [
@@ -122,6 +127,54 @@ describe('SpendReport', () => {
       ],
     };
 
+    const dailySpendData: AggregatedDailySpendData = {
+      aggregationKey: 'Daily',
+      spendData: [
+        {
+          cost: '0.08',
+          credits: '0.00',
+          currency: 'USD',
+          endTime: '2022-04-01T23:59:59.999Z',
+          startTime: '2022-03-27T00:00:00.000Z',
+          subAggregation: {
+            aggregationKey: 'Category',
+            spendData: [
+              { category: 'Storage', cost: '0.00', credits: '0.00', currency: 'USD' },
+              { category: 'Other', cost: '0.08', credits: '0.00', currency: 'USD' },
+            ],
+          },
+        },
+        {
+          cost: '0.08',
+          credits: '0.00',
+          currency: 'USD',
+          endTime: '2022-04-01T23:59:59.999Z',
+          startTime: '2022-03-28T00:00:00.000Z',
+          subAggregation: {
+            aggregationKey: 'Category',
+            spendData: [
+              { category: 'Storage', cost: '0.00', credits: '0.00', currency: 'USD' },
+              { category: 'Other', cost: '0.08', credits: '0.00', currency: 'USD' },
+            ],
+          },
+        },
+        {
+          cost: '0.08',
+          credits: '0.00',
+          currency: 'USD',
+          endTime: '2022-04-01T23:59:59.999Z',
+          startTime: '2022-03-29T00:00:00.000Z',
+          subAggregation: {
+            aggregationKey: 'Category',
+            spendData: [
+              { category: 'Storage', cost: '0.00', credits: '0.00', currency: 'USD' },
+              { category: 'Other', cost: '0.08', credits: '0.00', currency: 'USD' },
+            ],
+          },
+        },
+      ],
+    };
+
     const mockServerResponse: SpendReportServerResponse = {
       spendSummary: {
         cost: totalCost,
@@ -130,7 +183,7 @@ describe('SpendReport', () => {
         endTime: 'dummyTime',
         startTime: 'dummyTime',
       },
-      spendDetails: [workspaceSpendData, categorySpendData],
+      spendDetails: [isWorkspaceReport ? workspaceSpendData : dailySpendData, categorySpendData],
     };
 
     return mockServerResponse;
@@ -268,6 +321,50 @@ describe('SpendReport', () => {
     // Assert
     await waitFor(() => {
       expect(screen.getByRole('alert')).toHaveTextContent('No spend data for 90 days');
+    });
+  });
+
+  it('renders daily spend chart when feature preview is enabled', async () => {
+    // Arrange
+    const getSpendReport: MockedFn<BillingContract['getSpendReport']> = jest.fn();
+    getSpendReport.mockResolvedValue(createSpendReportResult('1110', false));
+    asMockedFn(Billing).mockReturnValue(partial<BillingContract>({ getSpendReport }));
+
+    // Mock the return value of isFeaturePreviewEnabled
+    (isFeaturePreviewEnabled as jest.Mock).mockReturnValue(true);
+
+    // Act
+    await act(async () => {
+      render(<SpendReport viewSelected billingProjectName='thrifty' cloudPlatform='GCP' />);
+    });
+
+    // Assert
+    await waitFor(() => {
+      const dailySpendElements = screen.getAllByText('Daily Spend');
+      expect(dailySpendElements.length).toBeGreaterThan(0);
+      expect(dailySpendElements[0]).toBeInTheDocument();
+    });
+  });
+
+  it('renders workspace spend chart when feature preview is disabled', async () => {
+    // Arrange
+    const getSpendReport: MockedFn<BillingContract['getSpendReport']> = jest.fn();
+    getSpendReport.mockResolvedValue(createSpendReportResult('1110'));
+    asMockedFn(Billing).mockReturnValue(partial<BillingContract>({ getSpendReport }));
+
+    // Mock the return value of isFeaturePreviewEnabled
+    (isFeaturePreviewEnabled as jest.Mock).mockReturnValue(false);
+
+    // Act
+    await act(async () => {
+      render(<SpendReport viewSelected billingProjectName='thrifty' cloudPlatform='GCP' />);
+    });
+
+    // Assert
+    await waitFor(() => {
+      const spendByWorkspaceElements = screen.getAllByText('Spend By Workspace');
+      expect(spendByWorkspaceElements.length).toBeGreaterThan(0);
+      expect(spendByWorkspaceElements[0]).toBeInTheDocument();
     });
   });
 });
