@@ -12,12 +12,16 @@ import { CloudPlatform } from 'src/billing-core/models';
 import { Billing } from 'src/libs/ajax/billing/Billing';
 import {
   AggregatedCategorySpendData,
+  AggregatedDailySpendData,
   AggregatedWorkspaceSpendData,
   CategorySpendData,
+  DailySpendData,
   SpendReport as SpendReportServerResponse,
   WorkspaceSpendData,
 } from 'src/libs/ajax/billing/billing-models';
 import colors from 'src/libs/colors';
+import { isFeaturePreviewEnabled } from 'src/libs/feature-previews';
+import { SPEND_REPORTING } from 'src/libs/feature-previews-config';
 import * as Nav from 'src/libs/nav';
 import { useCancellation } from 'src/libs/react-utils';
 
@@ -54,6 +58,15 @@ interface WorkspaceCosts {
   costFormatter: any;
 }
 
+interface DailyCosts {
+  days: string[];
+  computeCosts: number[];
+  storageCosts: number[];
+  otherCosts: number[];
+  numDays: number;
+  costFormatter: any;
+}
+
 interface ProjectCost {
   spend: string;
   compute: string;
@@ -79,74 +92,190 @@ export const SpendReport = (props: SpendReportProps) => {
     numWorkspaces: 0,
     costFormatter: null,
   });
+  const [costPerDay, setCostPerDay] = useState<DailyCosts>({
+    days: [],
+    computeCosts: [],
+    otherCosts: [],
+    storageCosts: [],
+    numDays: 0,
+    costFormatter: null,
+  });
   const [updatingProjectCost, setUpdatingProjectCost] = useState(false);
   const [spendReportLengthInDays, setSpendReportLengthInDays] = useState(30);
   const [errorMessage, setErrorMessage] = useState();
-  const includePerWorkspaceCosts = props.cloudPlatform === 'GCP';
+  const includeAggregateSpendChart = props.cloudPlatform === 'GCP';
+  const hasSpendData = costPerWorkspace.numWorkspaces > 0 || costPerDay.numDays > 0;
 
   const signal = useCancellation();
 
-  const spendChartOptions = {
-    chart: { marginTop: 50, spacingLeft: 20, style: { fontFamily: 'inherit' }, type: 'bar' },
-    credits: { enabled: false },
-    legend: { reversed: true },
-    plotOptions: { series: { stacking: 'normal' } },
-    series: [
-      { name: 'Compute', data: costPerWorkspace.computeCosts },
-      { name: 'Storage', data: costPerWorkspace.storageCosts },
+  interface SpendChartOptionsParams {
+    chartType: string;
+    chartTitle: string;
+    chartCategoryUnit: string;
+    chartCategories: string[];
+    chartSeries: { name: string; data: number[] }[];
+    chartFormatters: {
+      xAxisLabelsFormatter: (value: string) => string;
+      yAxisLabelsFormatter: (value: number) => number;
+    };
+  }
+
+  const workspaceSpendChartOptionsParams: SpendChartOptionsParams = {
+    chartType: 'bar',
+    chartTitle:
+      costPerWorkspace.numWorkspaces > maxWorkspacesInChart
+        ? `Top ${maxWorkspacesInChart} Spending Workspaces`
+        : 'Spend By Workspace',
+    chartCategoryUnit: 'Workspace',
+    chartCategories: costPerWorkspace.workspaceNames,
+    chartSeries: [
+      {
+        name: 'Compute',
+        data: costPerWorkspace.computeCosts,
+      },
+      {
+        name: 'Storage',
+        data: costPerWorkspace.storageCosts,
+      },
     ],
-    title: {
-      align: 'left',
-      style: { fontSize: '16px' },
-      y: 25,
-      text:
-        costPerWorkspace.numWorkspaces > maxWorkspacesInChart
-          ? `Top ${maxWorkspacesInChart} Spending Workspaces`
-          : 'Spend By Workspace',
+    chartFormatters: {
+      xAxisLabelsFormatter: (value) => value,
+      yAxisLabelsFormatter: (value) => costPerWorkspace.costFormatter.format(value),
     },
-    tooltip: {
-      followPointer: true,
-      shared: true,
-      headerFormat: '{point.key}',
-    },
-    xAxis: {
-      categories: costPerWorkspace.workspaceNames,
-      crosshair: true,
-      labels: {
-        formatter() {
-          // @ts-ignore
-          // eslint-disable-next-line react/no-this-in-sfc
-          return WorkspaceLink(props.billingProjectName, this.value);
-        },
-        style: { xfontSize: '12px' },
-      },
-    },
-    yAxis: {
-      crosshair: true,
-      min: 0,
-      labels: {
-        formatter() {
-          // @ts-ignore
-          // eslint-disable-next-line react/no-this-in-sfc
-          return costPerWorkspace.costFormatter.format(this.value);
-        },
-        style: { fontSize: '12px' },
-      },
-      title: { enabled: false },
-      width: '96%',
-    },
-    accessibility: {
-      point: {
-        descriptionFormatter: (point) => {
-          // @ts-ignore
-          return `${point.index + 1}. Workspace ${point.category}, ${
-            point.series.name
-          }: ${costPerWorkspace.costFormatter.format(point.y)}.`;
-        },
-      },
-    },
-    exporting: { buttons: { contextButton: { x: -15 } } },
   };
+
+  const dailySpendChartOptionsParams: SpendChartOptionsParams = {
+    chartType: 'column',
+    chartTitle: 'Daily Spend',
+    chartCategoryUnit: 'Day',
+    chartCategories: costPerDay.days,
+    chartSeries: [
+      {
+        name: 'Storage',
+        data: costPerDay.storageCosts,
+      },
+      {
+        name: 'Compute',
+        data: costPerDay.computeCosts,
+      },
+    ],
+    chartFormatters: {
+      xAxisLabelsFormatter: (value) => value,
+      yAxisLabelsFormatter: (value) => costPerDay.costFormatter.format(value),
+    },
+  };
+
+  const spendChartOptionsTemplate = (spendChartOptionsParams: SpendChartOptionsParams) => {
+    const {
+      chartType,
+      chartTitle,
+      chartCategoryUnit,
+      chartCategories,
+      chartSeries,
+      chartFormatters: { xAxisLabelsFormatter, yAxisLabelsFormatter },
+    } = spendChartOptionsParams;
+
+    const tooltipFormatter = (points: any[], category: string) => {
+      const total: number = _.reduce((sum: number, point: any) => sum + point.y, 0, points);
+
+      return `${category} <br/> ${_.flow(
+        _.map((point: { color: any; series: { name: any }; y: any; percentage: any }) => {
+          return `<span style="color:${point.color}">\u25CF</span> ${point.series.name}: ${yAxisLabelsFormatter(
+            point.y
+          )} ${!_.isNil(point.percentage) ? `(${point.percentage.toFixed(2)}%)` : ''} <br/>`;
+        }),
+        _.join('')
+      )(points)}<br/>Total: ${yAxisLabelsFormatter(total)}`;
+    };
+
+    return {
+      chart: { marginTop: 50, spacingLeft: 20, style: { fontFamily: 'inherit' }, type: chartType },
+      credits: { enabled: false },
+      legend: {
+        reversed: true,
+      },
+      title: {
+        align: 'left',
+        style: { fontSize: '16px' },
+        y: 25,
+        text: chartTitle,
+      },
+      tooltip: {
+        followPointer: true,
+        shared: true,
+        formatter() {
+          // @ts-ignore
+          // eslint-disable-next-line react/no-this-in-sfc
+          return tooltipFormatter(this.points, this.x);
+        },
+      },
+      accessibility: {
+        point: {
+          descriptionFormatter: (point: any) => {
+            // @ts-ignore
+            return `${point.index + 1}. ${chartCategoryUnit} ${point.category}, ${
+              point.series.name
+            }: ${yAxisLabelsFormatter(point.y)}.`;
+          },
+        },
+      },
+      exporting: { buttons: { contextButton: { x: -15 } } },
+      xAxis: {
+        categories: chartCategories,
+        crosshair: true,
+        labels: {
+          formatter() {
+            // @ts-ignore
+            // eslint-disable-next-line react/no-this-in-sfc
+            return xAxisLabelsFormatter(this.value);
+          },
+          style: { xfontSize: '12px' },
+        },
+      },
+      yAxis: {
+        crosshair: true,
+        min: 0,
+        title: {
+          text: 'Cost',
+        },
+        width: '96%',
+        labels: {
+          formatter() {
+            // @ts-ignore
+            // eslint-disable-next-line react/no-this-in-sfc
+            return yAxisLabelsFormatter(this.value);
+          },
+          style: { fontSize: '12px' },
+        },
+        stackLabels: {
+          enabled: false, // Show the total cost for each day
+          formatter() {
+            // @ts-ignore
+            // eslint-disable-next-line react/no-this-in-sfc
+            return yAxisLabelsFormatter(this.total);
+          },
+        },
+      },
+      series: chartSeries,
+      plotOptions: {
+        series: {
+          stacking: 'normal',
+          dataLabels: {
+            enabled: false, // Show the cost on top of each stacked bar
+            formatter() {
+              // @ts-ignore
+              // eslint-disable-next-line react/no-this-in-sfc
+              return yAxisLabelsFormatter(this.y);
+            },
+          },
+        },
+      },
+    };
+  };
+
+  const spendChartOptions = spendChartOptionsTemplate(
+    isFeaturePreviewEnabled(SPEND_REPORTING) ? dailySpendChartOptionsParams : workspaceSpendChartOptionsParams
+  );
 
   const isProjectCostReady = projectCost !== null;
 
@@ -155,7 +284,7 @@ export const SpendReport = (props: SpendReportProps) => {
   const COMPUTE_CATEGORY = 'compute';
   const STORAGE_CATEGORY = 'storage';
 
-  const getReportCategoryCardCaption = (name, cloudPlatformName) => {
+  const getReportCategoryCardCaption = (name: string, cloudPlatformName: string) => {
     const azureCategoryCardCaptionMap = new Map([
       [TOTAL_SPEND_CATEGORY, 'spend'],
       [WORKSPACEINFRASTRUCTURE_CATEGORY, 'workspace infrastructure'],
@@ -178,7 +307,9 @@ export const SpendReport = (props: SpendReportProps) => {
         setUpdatingProjectCost(true);
         const endDate = new Date().toISOString().slice(0, 10);
         const startDate = subDays(spendReportLengthInDays, new Date()).toISOString().slice(0, 10);
-        const aggregationKeys = includePerWorkspaceCosts ? ['Workspace~Category', 'Category'] : ['Category'];
+        const aggregationKeys = includeAggregateSpendChart
+          ? [isFeaturePreviewEnabled(SPEND_REPORTING) ? 'Daily~Category' : 'Workspace~Category', 'Category']
+          : ['Category'];
         const spend: SpendReportServerResponse = await Billing(signal).getSpendReport({
           billingProjectName: props.billingProjectName,
           startDate,
@@ -216,7 +347,47 @@ export const SpendReport = (props: SpendReportProps) => {
           other: costFormatter.format(costDict.other),
         });
 
-        if (includePerWorkspaceCosts) {
+        // Only show daily costs if the feature preview is enabled
+        if (includeAggregateSpendChart && isFeaturePreviewEnabled(SPEND_REPORTING)) {
+          const dailyDetails = _.find(
+            (details) => details.aggregationKey === 'Daily',
+            spend.spendDetails
+          ) as AggregatedDailySpendData;
+          console.assert(dailyDetails !== undefined, 'Spend report details do not include aggregation by Day');
+          const dailySpend = _.flow(
+            _.sortBy(({ startTime }) => {
+              return startTime;
+            })
+          )(dailyDetails?.spendData) as DailySpendData[];
+          const formatDate = (dateString: string): string => {
+            const date = new Date(dateString);
+            return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+          };
+          const dailyCosts: DailyCosts = {
+            days: [],
+            computeCosts: [],
+            storageCosts: [],
+            otherCosts: [],
+            costFormatter,
+            numDays: dailyDetails?.spendData.length,
+          };
+          _.forEach((dailySpendData) => {
+            dailyCosts.days.push(formatDate(dailySpendData.startTime));
+            const categoryDetails = dailySpendData.subAggregation;
+            console.assert(
+              categoryDetails.aggregationKey === 'Category',
+              'Daily spend report details do not include sub-aggregation by Category'
+            );
+            const costDict = getCategoryCosts(categoryDetails.spendData);
+            dailyCosts.computeCosts.push(costDict.compute);
+            dailyCosts.storageCosts.push(costDict.storage);
+            dailyCosts.otherCosts.push(costDict.other);
+          }, dailySpend);
+          setCostPerDay(dailyCosts);
+        }
+
+        // Only show workspace costs if the feature preview is not enabled
+        if (includeAggregateSpendChart && !isFeaturePreviewEnabled(SPEND_REPORTING)) {
           const workspaceDetails = _.find(
             (details) => details.aggregationKey === 'Workspace',
             spend.spendDetails
@@ -270,11 +441,11 @@ export const SpendReport = (props: SpendReportProps) => {
     projectCost,
     updatingProjectCost,
     errorMessage,
-    includePerWorkspaceCosts,
+    includeAggregateSpendChart,
   ]);
 
   return (
-    <>
+    <div style={{ position: 'relative' }}>
       <div style={{ display: 'grid', rowGap: '0.5rem' }}>
         {!!errorMessage && <ErrorAlert errorValue={errorMessage} />}
         <div
@@ -313,7 +484,7 @@ export const SpendReport = (props: SpendReportProps) => {
           )}
         </div>
         <OtherMessaging cost={isProjectCostReady ? projectCost.other : null} cloudPlatform={props.cloudPlatform} />
-        {includePerWorkspaceCosts && costPerWorkspace.numWorkspaces > 0 && (
+        {includeAggregateSpendChart && hasSpendData && (
           // Set minWidth so chart will shrink on resize
           <div style={{ minWidth: 500, marginTop: '1rem' }}>
             <Suspense fallback={null}>
@@ -322,12 +493,12 @@ export const SpendReport = (props: SpendReportProps) => {
           </div>
         )}
       </div>
-      {updatingProjectCost && <SpinnerOverlay mode='FullScreen' />}
-    </>
+      {updatingProjectCost && <SpinnerOverlay mode='Fixed' />}
+    </div>
   );
 };
 
-export const WorkspaceLink = (billingProject, workspace) => {
+export const WorkspaceLink = (billingProject: string, workspace: string) => {
   return `<a style="color:${colors.accent()}" href=${Nav.getLink('workspace-dashboard', {
     namespace: billingProject,
     name: workspace,
