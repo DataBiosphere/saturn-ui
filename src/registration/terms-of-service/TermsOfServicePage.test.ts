@@ -4,13 +4,14 @@ import { Groups, GroupsContract } from 'src/libs/ajax/Groups';
 import { Metrics, MetricsContract } from 'src/libs/ajax/Metrics';
 import { SamUserTermsOfServiceDetails, TermsOfService, TermsOfServiceContract } from 'src/libs/ajax/TermsOfService';
 import {
+  OrchestrationUserPreferLegacyFireCloudResponse,
   SamUserAllowances,
   SamUserCombinedStateResponse,
   SamUserResponse,
   User,
   UserContract,
 } from 'src/libs/ajax/User';
-import { AuthState, authStore } from 'src/libs/state';
+import { AuthState, authStore, TerraUserProfile } from 'src/libs/state';
 import { TermsOfServicePage } from 'src/registration/terms-of-service/TermsOfServicePage';
 import { asMockedFn, MockedFn, partial, renderWithAppContexts as render } from 'src/testing/test-utils';
 
@@ -104,10 +105,10 @@ const setupMockAjax = async (
     partial<UserContract>({
       getSamUserCombinedState: jest.fn().mockResolvedValue(mockSamUserCombinedState),
       profile: {
-        get: jest.fn().mockResolvedValue({ keyValuePairs: [] }),
-        update: jest.fn().mockResolvedValue({ keyValuePairs: [] }),
-        setPreferences: jest.fn().mockResolvedValue({}),
-        preferLegacyFirecloud: jest.fn().mockResolvedValue({}),
+        get: jest.fn(async () => partial<TerraUserProfile>({})),
+        update: jest.fn(async () => undefined),
+        setPreferences: jest.fn(async () => undefined),
+        preferLegacyFirecloud: jest.fn(async () => partial<OrchestrationUserPreferLegacyFireCloudResponse>({})),
       },
       getNihStatus,
     })
