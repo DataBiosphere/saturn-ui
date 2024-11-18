@@ -125,6 +125,7 @@ export const WorkflowsContainer = (props: WorkflowContainerProps) => {
   const [exportingWorkflow, setExportingWorkflow] = useState<boolean>(false);
   const [showDeleteModal, setShowDeleteModal] = useState<boolean>(false);
   const [showCloneModal, setShowCloneModal] = useState<boolean>(false);
+  const [showEditMethodModal, setShowEditMethodModal] = useState<boolean>(false);
   const [busy, setBusy] = useState<boolean>(false);
   const [permissionsModalOpen, setPermissionsModalOpen] = useState<boolean>(false);
 
@@ -243,6 +244,7 @@ export const WorkflowsContainer = (props: WorkflowContainerProps) => {
               onEditPermissions: () => setPermissionsModalOpen(true),
               onDelete: () => setShowDeleteModal(true),
               onClone: () => setShowCloneModal(true),
+              onEdit: () => setShowEditMethodModal(true),
             }),
           ]),
         ]
@@ -316,6 +318,26 @@ export const WorkflowsContainer = (props: WorkflowContainerProps) => {
           });
         },
         onDismiss: () => setShowCloneModal(false),
+      }),
+    showEditMethodModal &&
+      h(WorkflowModal, {
+        title: 'Edit method',
+        defaultNamespace: namespace,
+        defaultName: name,
+        defaultWdl: snapshot!.payload,
+        defaultDocumentation: snapshot!.documentation,
+        defaultSynopsis: snapshot!.synopsis,
+        buttonActionName: 'Create new snapshot',
+        postMethodProvider, // editMethodProvider ????
+        onSuccess: (namespace: string, name: string, snapshotId: number) => {
+          snapshotsListStore.reset();
+          Nav.goToPath('workflow-dashboard', {
+            namespace,
+            name,
+            snapshotId,
+          });
+        },
+        onDismiss: () => setShowEditMethodModal(false),
       }),
     busy && spinnerOverlay,
     snapshotNotFound && h(NotFoundMessage, { subject: 'snapshot' }),
