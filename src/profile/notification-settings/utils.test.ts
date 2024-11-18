@@ -1,15 +1,16 @@
-import { asMockedFn } from '@terra-ui-packages/test-utils';
+import { asMockedFn, MockedFn, partial } from '@terra-ui-packages/test-utils';
 import { refreshSamUserAttributes, refreshTerraProfile } from 'src/auth/user-profile/user';
-import { Ajax } from 'src/libs/ajax';
+import { Metrics, MetricsContract } from 'src/libs/ajax/Metrics';
+import { SamUserAttributes, UserContract, UserProfileContract } from 'src/libs/ajax/User';
 import Events, { EventWorkspaceAttributes, extractWorkspaceDetails } from 'src/libs/events';
 
 import { notificationEnabled, updateNotificationPreferences, updateUserAttributes } from './utils';
 
-type AjaxContract = ReturnType<typeof Ajax>;
-
 jest.mock('src/auth/auth');
 jest.mock('src/auth/user-profile/user');
-jest.mock('src/libs/ajax');
+
+jest.mock('src/libs/ajax/Metrics');
+jest.mock('src/libs/ajax/User');
 
 describe('utils', () => {
   describe('notificationEnabled', () => {
@@ -35,25 +36,19 @@ describe('utils', () => {
   });
 
   describe('updateNotificationPreferences', () => {
-    const setPreferences = jest.fn().mockReturnValue(Promise.resolve());
-    const captureEvent = jest.fn();
+    const setPreferences: MockedFn<UserProfileContract['setPreferences']> = jest.fn();
+    setPreferences.mockResolvedValue(undefined);
+    const captureEvent: MockedFn<MetricsContract['captureEvent']> = jest.fn();
     const keys = ['key1', 'key2'];
     const workspace = { namespace: 'ns', name: 'name' } as EventWorkspaceAttributes;
 
     beforeEach(() => {
       jest.resetAllMocks();
-      asMockedFn(Ajax).mockImplementation(
-        () =>
-          ({
-            Metrics: {
-              captureEvent,
-            } as Partial<AjaxContract['Metrics']>,
-            User: {
-              profile: {
-                setPreferences,
-              } as Partial<AjaxContract['User']['profile']>,
-            } as Partial<AjaxContract['User']>,
-          } as Partial<AjaxContract> as AjaxContract)
+      asMockedFn(Metrics).mockReturnValue(partial<MetricsContract>({ captureEvent }));
+      asMockedFn(User).mockReturnValue(
+        partial<UserContract>({
+          profile: partial<UserProfileContract>({ setPreferences }),
+        })
       );
     });
 
@@ -99,23 +94,15 @@ describe('utils', () => {
   });
 
   describe('updateUserAttributes', () => {
-    const setUserAttributes = jest.fn().mockReturnValue(Promise.resolve());
-    const captureEvent = jest.fn();
+    const setUserAttributes: MockedFn<UserContract['setUserAttributes']> = jest.fn();
+    setUserAttributes.mockResolvedValue(partial<SamUserAttributes>({}));
+    const captureEvent: MockedFn<MetricsContract['captureEvent']> = jest.fn();
     const keys = ['key1', 'key2'];
 
     beforeEach(() => {
       jest.resetAllMocks();
-      asMockedFn(Ajax).mockImplementation(
-        () =>
-          ({
-            Metrics: {
-              captureEvent,
-            } as Partial<AjaxContract['Metrics']>,
-            User: {
-              setUserAttributes,
-            } as Partial<AjaxContract['User']>,
-          } as Partial<AjaxContract> as AjaxContract)
-      );
+      asMockedFn(Metrics).mockReturnValue(partial<MetricsContract>({ captureEvent }));
+      asMockedFn(User).mockReturnValue(partial<UserContract>({ setUserAttributes }));
     });
 
     it('updates user attributes, refreshes the sam profile, and sends an event when the preference is disabled', async () => {

@@ -1,7 +1,8 @@
 import _ from 'lodash/fp';
 import React, { useState } from 'react';
 import { ClipboardButton } from 'src/components/ClipboardButton';
-import { Ajax } from 'src/libs/ajax';
+import { ExternalCredentials } from 'src/libs/ajax/ExternalCredentials';
+import { Metrics } from 'src/libs/ajax/Metrics';
 import colors from 'src/libs/colors';
 import { withErrorReporting } from 'src/libs/error';
 import Events from 'src/libs/events';
@@ -76,11 +77,9 @@ export const OAuth2Account = (props: OAuth2AccountProps) => {
 
   useOnMount(() => {
     const linkAccount = withErrorReporting(`Error linking ${provider.short} account`)(async (code, state) => {
-      const accountInfo = await Ajax(signal)
-        .ExternalCredentials(provider)
-        .linkAccountWithAuthorizationCode(code, state);
+      const accountInfo = await ExternalCredentials(signal)(provider).linkAccountWithAuthorizationCode(code, state);
       authStore.update(_.set(['oAuth2AccountStatus', provider.key], accountInfo));
-      Ajax().Metrics.captureEvent(Events.user.externalCredential.link, { provider: provider.key });
+      void Metrics().captureEvent(Events.user.externalCredential.link, { provider: provider.key });
       setIsLinking(false);
     });
 
@@ -117,7 +116,7 @@ export const OAuth2Account = (props: OAuth2AccountProps) => {
               <UnlinkOAuth2Account linkText='Unlink' provider={provider} />
             </div>
             {provider.supportsIdToken && (
-              <ClipboardButton text={Ajax(signal).ExternalCredentials(provider).getIdentityToken}>
+              <ClipboardButton text={ExternalCredentials(signal)(provider).getIdentityToken}>
                 Copy identity token to clipboard
               </ClipboardButton>
             )}

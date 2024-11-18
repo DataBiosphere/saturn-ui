@@ -5,7 +5,9 @@ import { loadTerraUser } from 'src/auth/user-profile/user';
 import { ButtonPrimary, ButtonSecondary, LabeledCheckbox } from 'src/components/common';
 import { centeredSpinner } from 'src/components/icons';
 import planet from 'src/images/register-planet.svg';
-import { Ajax } from 'src/libs/ajax';
+import { Metrics } from 'src/libs/ajax/Metrics';
+import { TermsOfService } from 'src/libs/ajax/TermsOfService';
+import { User } from 'src/libs/ajax/User';
 import colors from 'src/libs/colors';
 import { reportError } from 'src/libs/error';
 import Events from 'src/libs/events';
@@ -68,20 +70,20 @@ export const Register = (): ReactNode => {
             title,
           }
         : {};
-      await Ajax().User.registerWithProfile(termsOfServiceAccepted, {
+      await User().registerWithProfile(termsOfServiceAccepted, {
         firstName: givenName,
         lastName: familyName,
         contactEmail: email,
         interestInTerra,
         ...orgFields,
       });
-      await Ajax().User.setUserAttributes({ marketingConsent });
+      await User().setUserAttributes({ marketingConsent });
       await loadTerraUser();
       const rootElement = document.getElementById('root');
       if (rootElement) {
         rootElement!.scrollTop = 0;
       }
-      Ajax().Metrics.captureEvent(Events.user.register);
+      await Metrics().captureEvent(Events.user.register);
     } catch (error) {
       reportError('Error registering', error);
       setBusy(false);
@@ -218,7 +220,7 @@ export const Register = (): ReactNode => {
         <Modal width='80%' title='Terra Terms of Service' showCancel={false} onDismiss={termsOfServiceViewed}>
           <RemoteMarkdown
             style={{ height: '75vh', overflowY: 'auto' }}
-            getRemoteText={() => Ajax().TermsOfService.getTermsOfServiceText()}
+            getRemoteText={() => TermsOfService().getTermsOfServiceText()}
             failureMessage='Could not get Terms of Service'
           />
         </Modal>

@@ -3,7 +3,7 @@ import { signOut } from 'src/auth/signout/sign-out';
 import { loadTerraUser } from 'src/auth/user-profile/user';
 import { ButtonPrimary, ButtonSecondary, spinnerOverlay } from 'src/components/common';
 import scienceBackground from 'src/images/science-background.jpg';
-import { Ajax } from 'src/libs/ajax';
+import { TermsOfService } from 'src/libs/ajax/TermsOfService';
 import { reportError } from 'src/libs/error';
 import * as Nav from 'src/libs/nav';
 import { useStore } from 'src/libs/react-utils';
@@ -23,7 +23,7 @@ export const TermsOfServicePage = () => {
   const accept = async () => {
     try {
       setBusy(true);
-      await Ajax().TermsOfService.acceptTermsOfService();
+      await TermsOfService().acceptTermsOfService();
       await loadTerraUser();
       // Clear out the alerts so that the user doesn't see the alert again after accepting the TOS.
       tosAlertsStore.reset();
@@ -38,7 +38,7 @@ export const TermsOfServicePage = () => {
   const reject = async () => {
     try {
       setBusy(true);
-      await Ajax().TermsOfService.rejectTermsOfService();
+      await TermsOfService().rejectTermsOfService();
     } catch (error) {
       reportError('Error rejecting Terms of Service', error);
     } finally {
@@ -84,7 +84,7 @@ export const TermsOfServicePage = () => {
         )}
         <RemoteMarkdown
           style={{ height: '60vh', overflowY: 'auto', lineHeight: 1.5, marginTop: '1rem', paddingRight: '1rem' }}
-          getRemoteText={() => Ajax().TermsOfService.getTermsOfServiceText()}
+          getRemoteText={() => TermsOfService().getTermsOfServiceText()}
           failureMessage='Could not get Terms of Service'
         />
         {buttons}
