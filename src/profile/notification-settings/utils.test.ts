@@ -1,7 +1,7 @@
 import { asMockedFn, MockedFn, partial } from '@terra-ui-packages/test-utils';
 import { refreshSamUserAttributes, refreshTerraProfile } from 'src/auth/user-profile/user';
 import { Metrics, MetricsContract } from 'src/libs/ajax/Metrics';
-import { SamUserAttributes, UserContract, UserProfileContract } from 'src/libs/ajax/User';
+import { SamUserAttributes, User, UserContract, UserProfileContract } from 'src/libs/ajax/User';
 import Events, { EventWorkspaceAttributes, extractWorkspaceDetails } from 'src/libs/events';
 
 import { notificationEnabled, updateNotificationPreferences, updateUserAttributes } from './utils';
