@@ -61,7 +61,7 @@ const waitForAccessToWorkspaceBucket = async ({ page, billingProject, workspaceN
 
       const checks = [
         // Get bucket metadata
-        () => window.Ajax().Workspaces.checkBucketLocation(googleProject),
+        () => window.Ajax().Workspaces.workspace(billingProject, workspaceName).checkBucketLocation(googleProject),
         // https://rawls.dsde-dev.broadinstitute.org/#/workspaces/readBucket
         // Checks if user has bucket access, 403 if not.
         // This API checks if user has all expected permissions. `read` on API name does not accurately describe APIs functionality.
