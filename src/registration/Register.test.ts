@@ -1,15 +1,19 @@
-import { DeepPartial } from '@terra-ui-packages/core-utils';
 import { act, fireEvent, screen } from '@testing-library/react';
 import { axe } from 'jest-axe';
 import { h } from 'react-hyperscript-helpers';
 import { signOut } from 'src/auth/signout/sign-out';
 import { loadTerraUser } from 'src/auth/user-profile/user';
-import { Ajax } from 'src/libs/ajax';
-import { asMockedFn, renderWithAppContexts as render } from 'src/testing/test-utils';
+import { Metrics, MetricsContract } from 'src/libs/ajax/Metrics';
+import { TermsOfService, TermsOfServiceContract } from 'src/libs/ajax/TermsOfService';
+import { SamUserResponse, User, UserContract, UserProfileContract } from 'src/libs/ajax/User';
+import { TerraUserProfile } from 'src/libs/state';
+import { asMockedFn, MockedFn, partial, renderWithAppContexts as render } from 'src/testing/test-utils';
 
 import { Register } from './Register';
 
-jest.mock('src/libs/ajax');
+jest.mock('src/libs/ajax/Metrics');
+jest.mock('src/libs/ajax/TermsOfService');
+jest.mock('src/libs/ajax/User');
 
 jest.mock('src/auth/signout/sign-out', () => ({
   ...jest.requireActual('src/auth/signout/sign-out'),
@@ -31,9 +35,6 @@ jest.mock('react-notifications-component', () => {
   };
 });
 
-type AjaxExports = typeof import('src/libs/ajax');
-type AjaxContract = ReturnType<AjaxExports['Ajax']>;
-
 const fillInPersonalInfo = (): void => {
   fireEvent.change(screen.getByLabelText(/First Name/), { target: { value: 'Test Name' } });
   fireEvent.change(screen.getByLabelText(/Last Name/), { target: { value: 'Test Last Name' } });
@@ -47,14 +48,9 @@ const fillInOrgInfo = (): void => {
   fireEvent.change(screen.getByLabelText(/Title/), { target: { value: 'Test Title' } });
 };
 const acceptTermsOfService = (): void => {
-  asMockedFn(Ajax).mockImplementation(
-    () =>
-      ({
-        TermsOfService: {
-          getTermsOfServiceText: jest.fn().mockResolvedValue('Terra Terms of Service'),
-        },
-      } as DeepPartial<AjaxContract> as AjaxContract)
-  );
+  const getTermsOfServiceText: MockedFn<TermsOfServiceContract['getTermsOfServiceText']> = jest.fn();
+  getTermsOfServiceText.mockResolvedValue('Terra Terms of Service');
+  asMockedFn(TermsOfService).mockReturnValue(partial<TermsOfServiceContract>({ getTermsOfServiceText }));
 
   fireEvent.click(screen.getByText('Read Terra Platform Terms of Service here'));
 
@@ -135,26 +131,20 @@ describe('Register', () => {
     });
     it('enables the terms of service checkbox if the user has read the terms of service', async () => {
       // Arrange
-      const tosTextFn = jest.fn().mockResolvedValue('Terra Terms of Service');
+      const getTermsOfServiceText: MockedFn<TermsOfServiceContract['getTermsOfServiceText']> = jest.fn();
+      getTermsOfServiceText.mockResolvedValue('Terra Terms of Service');
       // Act
       render(h(Register));
       fillInPersonalInfo();
       fillInOrgInfo();
-      asMockedFn(Ajax).mockImplementation(
-        () =>
-          ({
-            TermsOfService: {
-              getTermsOfServiceText: tosTextFn,
-            },
-          } as DeepPartial<AjaxContract> as AjaxContract)
-      );
+      asMockedFn(TermsOfService).mockReturnValue(partial<TermsOfServiceContract>({ getTermsOfServiceText }));
 
       fireEvent.click(screen.getByText('Read Terra Platform Terms of Service here'));
 
       fireEvent.click(screen.getByText('OK'));
 
       // Assert
-      expect(tosTextFn).toHaveBeenCalled();
+      expect(getTermsOfServiceText).toHaveBeenCalled();
       const termsOfServiceCheckbox = screen.getByLabelText(
         'By checking this box, you are agreeing to the Terra Terms of Service'
       );
@@ -168,13 +158,10 @@ describe('Register', () => {
       render(h(Register));
       fillInPersonalInfo();
       fillInOrgInfo();
-      asMockedFn(Ajax).mockImplementation(
-        () =>
-          ({
-            TermsOfService: {
-              getTermsOfServiceText: jest.fn().mockResolvedValue('Terra Terms of Service'),
-            },
-          } as DeepPartial<AjaxContract> as AjaxContract)
+      asMockedFn(TermsOfService).mockReturnValue(
+        partial<TermsOfServiceContract>({
+          getTermsOfServiceText: jest.fn().mockResolvedValue('Terra Terms of Service'),
+        })
       );
 
       fireEvent.click(screen.getByText('Read Terra Platform Terms of Service here'));
@@ -195,9 +182,14 @@ describe('Register', () => {
   describe('Registration', () => {
     it('fires off a request to Orch and Sam to register a user', async () => {
       // Arrange
-      const registerUserFunction = jest.fn().mockResolvedValue({});
-      const setUserAttributesFunction = jest.fn().mockResolvedValue({ marketingConsent: false });
-      const getUserAttributesFunction = jest.fn().mockResolvedValue({ marketingConsent: false });
+      const registerWithProfile: MockedFn<UserContract['registerWithProfile']> = jest.fn();
+      registerWithProfile.mockResolvedValue(partial<SamUserResponse>({}));
+      const setUserAttributes: MockedFn<UserContract['setUserAttributes']> = jest.fn();
+      setUserAttributes.mockResolvedValue({ marketingConsent: false });
+      const getUserAttributes: MockedFn<UserContract['getUserAttributes']> = jest.fn();
+      getUserAttributes.mockResolvedValue({ marketingConsent: false });
+      const userProfileGet: MockedFn<UserProfileContract['get']> = jest.fn();
+      userProfileGet.mockResolvedValue(partial<TerraUserProfile>({}));
 
       // Act
       render(h(Register));
@@ -207,19 +199,14 @@ describe('Register', () => {
       fireEvent.click(screen.getByLabelText(/Marketing communications.*/));
       acceptTermsOfService();
 
-      asMockedFn(Ajax).mockImplementation(
-        () =>
-          ({
-            Metrics: { captureEvent: jest.fn() },
-            User: {
-              setUserAttributes: setUserAttributesFunction,
-              getUserAttributes: getUserAttributesFunction,
-              registerWithProfile: registerUserFunction,
-              profile: {
-                get: jest.fn().mockReturnValue({}),
-              },
-            },
-          } as DeepPartial<AjaxContract> as AjaxContract)
+      asMockedFn(Metrics).mockReturnValue(partial<MetricsContract>({ captureEvent: jest.fn() }));
+      asMockedFn(User).mockReturnValue(
+        partial<UserContract>({
+          setUserAttributes,
+          getUserAttributes,
+          registerWithProfile,
+          profile: partial<UserProfileContract>({ get: userProfileGet }),
+        })
       );
 
       const loadTerraUserFn = jest.fn().mockResolvedValue(undefined);
@@ -230,7 +217,7 @@ describe('Register', () => {
       await act(() => fireEvent.click(registerButton));
 
       // Assert
-      expect(registerUserFunction).toHaveBeenCalledWith(true, {
+      expect(registerWithProfile).toHaveBeenCalledWith(true, {
         firstName: 'Test Name',
         lastName: 'Test Last Name',
         contactEmail: 'ltcommanderdata@neighborhood.horse',
@@ -240,7 +227,7 @@ describe('Register', () => {
         interestInTerra: '',
       });
 
-      expect(setUserAttributesFunction).toHaveBeenCalledWith({ marketingConsent: false });
+      expect(setUserAttributes).toHaveBeenCalledWith({ marketingConsent: false });
       expect(loadTerraUserFn).toHaveBeenCalled();
     });
     it('logs the user out if they cancel registration', async () => {
