@@ -1,25 +1,22 @@
-import { ButtonPrimary, Clickable, Modal, SpinnerOverlay, useUniqueId } from '@terra-ui-packages/components';
-import { readFileAsText } from '@terra-ui-packages/core-utils';
+import { ButtonPrimary, Modal, SpinnerOverlay, useUniqueId } from '@terra-ui-packages/components';
 import _ from 'lodash/fp';
 import React, { useState } from 'react';
-import Dropzone from 'src/components/Dropzone';
 import ErrorView from 'src/components/ErrorView';
-import { TextArea, TextInput, ValidatedInput } from 'src/components/input';
+import { ValidatedInput } from 'src/components/input';
 import { PostMethodProvider } from 'src/libs/ajax/methods/providers/PostMethodProvider';
-import colors from 'src/libs/colors';
 import { FormLabel } from 'src/libs/forms';
 import * as Utils from 'src/libs/utils';
 import { withBusyState } from 'src/libs/utils';
-import { WDLEditor } from 'src/workflows/methods/WDLEditor';
+import {
+  baseWorkflowModalConstraints,
+  BaseWorkflowModalProps,
+  DocumentationSection,
+  SynopsisSnapshotSection,
+  WdlBoxSection,
+} from 'src/workflows/methods/modals/BaseWorkflowModal';
 import validate from 'validate.js';
 
-export interface WorkflowModalProps {
-  /** The title to be shown at the top of the modal. */
-  title: string;
-
-  /** The text to be shown on the primary button of the modal. */
-  buttonActionName: string;
-
+export interface CreateNewWorkflowModalProps extends BaseWorkflowModalProps {
   /**
    * The default value to be prefilled in the namespace input. If not present,
    * the input will initially be blank.
@@ -33,75 +30,12 @@ export interface WorkflowModalProps {
   defaultName?: string;
 
   /**
-   * The default value to be prefilled in the WDL input. If not present, the
-   * input will initially be blank.
-   */
-  defaultWdl?: string;
-
-  /**
-   * The default value to be prefilled in the documentation input. If not
-   * present, the input will initially be blank.
-   */
-  defaultDocumentation?: string;
-
-  /**
-   * The default value to be prefilled in the synopsis input. If not present,
-   * the input will initially be blank.
-   */
-  defaultSynopsis?: string;
-
-  /**
-   * The default value to be prefilled in the snapshot comment input. If not
-   * present, the input will initially be blank.
-   */
-  defaultSnapshotComment?: string;
-
-  /**
    * Provides a function to make an API call to perform the post method
    * operation. The postMethod function provided is called with the information
    * inputted into the modal. This provider is used for both "create new method"
    * and "clone method snapshot" functionality.
    */
   postMethodProvider: PostMethodProvider;
-
-  /**
-   * The function to be called with the namespace, name, and snapshot ID of the
-   * created method snapshot after the user presses the primary modal button and
-   * the triggered operation successfully completes.
-   */
-  onSuccess: (namespace: string, name: string, snapshotId: number) => void;
-
-  /**
-   * Called when the underlying modal is dismissed (e.g., when the Cancel button
-   * is pressed or the user clicks outside the modal).
-   */
-  onDismiss: () => void;
-}
-
-interface NamespaceNameSectionProps {
-  namespace: string | undefined;
-  name: string | undefined;
-  setWorkflowNamespace: (value: string) => void;
-  setWorkflowName: (value: string) => void;
-  errors: any;
-}
-
-interface SynopsisSnapshotSectionProps {
-  synopsis: string;
-  snapshotComment: string;
-  setWorkflowSynopsis: (value: string) => void;
-  setSnapshotComment: (value: string) => void;
-  errors: any;
-}
-
-interface WdlBoxSectionProps {
-  wdlPayload: string;
-  setWdlPayload: (value: string) => void;
-}
-
-interface DocumentationSectionProps {
-  documentation: string;
-  setWorkflowDocumentation: (value: string) => void;
 }
 
 // Custom validator used to ensure that the namespace and name input values do
@@ -116,7 +50,8 @@ validate.validators.maxNamespaceNameCombinedLength = <OtherFieldName extends str
     ? '^Namespace and name are too long (maximum is 250 characters total)' // ^ character prevents attribute from being prepended
     : null;
 
-const constraints = {
+const newWorkflowModalConstraints = {
+  ...baseWorkflowModalConstraints,
   namespace: {
     presence: { allowEmpty: false },
     format: {
@@ -137,18 +72,15 @@ const constraints = {
       otherField: 'namespace',
     },
   },
-  synopsis: {
-    length: { maximum: 80 },
-  },
-  wdl: {
-    presence: { allowEmpty: false },
-  },
 };
 
-const uploadWdl = async (wdlFile, setWdlPayload) => {
-  const rawWdl = await readFileAsText(wdlFile);
-  setWdlPayload(rawWdl);
-};
+interface NamespaceNameSectionProps {
+  namespace: string | undefined;
+  name: string | undefined;
+  setWorkflowNamespace: (value: string) => void;
+  setWorkflowName: (value: string) => void;
+  errors: any;
+}
 
 const NamespaceNameSection = (props: NamespaceNameSectionProps) => {
   const { namespace, name, setWorkflowNamespace, setWorkflowName, errors } = props;
@@ -201,99 +133,10 @@ const NamespaceNameSection = (props: NamespaceNameSectionProps) => {
   );
 };
 
-const SynopsisSnapshotSection = (props: SynopsisSnapshotSectionProps) => {
-  const { synopsis, snapshotComment, setWorkflowSynopsis, setSnapshotComment, errors } = props;
-  const [synopsisModified, setSynopsisModified] = useState<boolean>(false);
-
-  const synopsisInputId = useUniqueId();
-  const snapshotCommentInputId = useUniqueId();
-
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column' }}>
-      <div style={{ paddingTop: '1.5rem' }}>
-        <div style={{ marginBottom: '0.1667em' }}>
-          <FormLabel htmlFor={synopsisInputId}>Synopsis (80 characters max)</FormLabel>
-          <ValidatedInput
-            inputProps={{
-              id: synopsisInputId,
-              value: synopsis,
-              onChange: (v) => {
-                setWorkflowSynopsis(v);
-                setSynopsisModified(true);
-              },
-            }}
-            error={Utils.summarizeErrors((synopsisModified || synopsis) && errors?.synopsis)}
-          />
-        </div>
-      </div>
-      <div style={{ paddingTop: '1.5rem' }}>
-        <div style={{ marginBottom: '0.1667em' }}>
-          <FormLabel htmlFor={snapshotCommentInputId}>Snapshot comment</FormLabel>
-        </div>
-        <TextInput id={snapshotCommentInputId} value={snapshotComment} onChange={setSnapshotComment} />
-      </div>
-    </div>
-  );
-};
-
-const WdlBoxSection = (props: WdlBoxSectionProps) => {
-  const { wdlPayload, setWdlPayload } = props;
-
-  const wdlLabelId = useUniqueId();
-
-  return (
-    <>
-      <div style={{ display: 'flex', alignItems: 'baseline' }}>
-        <FormLabel id={wdlLabelId} required>
-          WDL
-        </FormLabel>
-        <Dropzone
-          multiple={false}
-          style={{ paddingLeft: '1rem' }}
-          onDropAccepted={(wdlFile) => uploadWdl(wdlFile[0], setWdlPayload)}
-        >
-          {({ openUploader }) => (
-            <Clickable
-              style={{ color: colors.accent(1.05) }}
-              aria-label='Load WDL from file'
-              onClick={() => openUploader()}
-            >
-              Load from file
-            </Clickable>
-          )}
-        </Dropzone>
-      </div>
-      <div aria-labelledby={wdlLabelId}>
-        <WDLEditor wdl={wdlPayload} onChange={setWdlPayload} />
-      </div>
-    </>
-  );
-};
-
-const DocumentationSection = (props: DocumentationSectionProps) => {
-  const { documentation, setWorkflowDocumentation } = props;
-
-  const documentationInputId = useUniqueId();
-
-  return (
-    <div style={{ paddingTop: '1.5rem' }}>
-      <FormLabel htmlFor={documentationInputId}>Documentation</FormLabel>
-      <TextArea
-        id={documentationInputId}
-        style={{ height: 100 }}
-        value={documentation}
-        onChange={setWorkflowDocumentation}
-      />
-    </div>
-  );
-};
-
 /**
- * A customizable component for inputting workflow information - namespace,
- * name, WDL, documentation, synopsis, and snapshot comment - to facilitate
- * creating, editing, or cloning a method snapshot.
+ * Component for inputting workflow information to facilitate creating new workflow or cloning a workflow snapshot.
  */
-export const WorkflowModal = (props: WorkflowModalProps) => {
+export const CreateNewWorkflowModal = (props: CreateNewWorkflowModalProps) => {
   const {
     title,
     buttonActionName,
@@ -318,7 +161,7 @@ export const WorkflowModal = (props: WorkflowModalProps) => {
   const [busy, setBusy] = useState<boolean>(false);
   const [submissionError, setSubmissionError] = useState<any>(null);
 
-  const validationErrors = validate({ namespace, name, synopsis, wdl }, constraints, {
+  const validationErrors = validate({ namespace, name, synopsis, wdl }, newWorkflowModalConstraints, {
     prettify: (v) =>
       ({ namespace: 'Namespace', name: 'Name', synopsis: 'Synopsis', wdl: 'WDL' }[v] || validate.prettify(v)),
   });

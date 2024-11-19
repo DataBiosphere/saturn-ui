@@ -1,0 +1,160 @@
+import { ButtonPrimary, Modal, SpinnerOverlay, useUniqueId } from '@terra-ui-packages/components';
+import _ from 'lodash/fp';
+import React, { useState } from 'react';
+import { LabeledCheckbox } from 'src/components/common';
+import ErrorView from 'src/components/ErrorView';
+import { TextInput } from 'src/components/input';
+import { EditMethodProvider } from 'src/libs/ajax/methods/providers/EditMethodProvider';
+import { FormLabel } from 'src/libs/forms';
+import * as Utils from 'src/libs/utils';
+import { withBusyState } from 'src/libs/utils';
+import {
+  baseWorkflowModalConstraints,
+  BaseWorkflowModalProps,
+  DocumentationSection,
+  SynopsisSnapshotSection,
+  WdlBoxSection,
+} from 'src/workflows/methods/modals/BaseWorkflowModal';
+import validate from 'validate.js';
+
+export interface EditWorkflowModalProps extends BaseWorkflowModalProps {
+  /**
+   * Prefilled method namespace
+   */
+  namespace: string;
+
+  /**
+   * Prefilled method name
+   */
+  name: string;
+
+  /**
+   * Snapshot ID for the snapshot whose details are populated in the modal
+   */
+  snapshotId: number;
+
+  /**
+   * Provides functions related to API call to edit method. This provider is
+   * used for creating new snapshot functionality.
+   */
+  editMethodProvider: EditMethodProvider;
+}
+
+interface FixedNamespaceNameSectionProps {
+  namespace: string;
+  name: string;
+}
+
+const FixedNamespaceNameSection = (props: FixedNamespaceNameSectionProps) => {
+  const { namespace, name } = props;
+
+  const namespaceInputId = useUniqueId();
+  const nameInputId = useUniqueId();
+
+  return (
+    <>
+      <div style={{ flexWrap: 'wrap', flexGrow: 1, flexBasis: '400px' }}>
+        <div style={{ marginBottom: '0.1667em' }}>
+          <FormLabel htmlFor={namespaceInputId}>Namespace</FormLabel>
+          <TextInput id={namespaceInputId} placeholder={namespace} disabled />
+        </div>
+      </div>
+      <div style={{ flexWrap: 'wrap', flexGrow: 1, flexBasis: '400px' }}>
+        <div style={{ marginBottom: '0.1667em' }}>
+          <FormLabel htmlFor={nameInputId}>Name</FormLabel>
+          <TextInput id={nameInputId} placeholder={name} disabled />
+        </div>
+      </div>
+    </>
+  );
+};
+
+/**
+ * Component for inputting workflow information to facilitate creating new workflow snapshot.
+ */
+export const EditWorkflowModal = (props: EditWorkflowModalProps) => {
+  const {
+    title,
+    buttonActionName,
+    namespace,
+    name,
+    defaultWdl,
+    defaultDocumentation,
+    defaultSynopsis,
+    defaultSnapshotComment,
+    snapshotId,
+    editMethodProvider,
+    onSuccess,
+    onDismiss,
+  } = props;
+
+  const [wdl, setWdl] = useState<string>(defaultWdl ?? '');
+  const [documentation, setDocumentation] = useState<string>(defaultDocumentation ?? '');
+  const [synopsis, setSynopsis] = useState<string>(defaultSynopsis ?? '');
+  const [snapshotComment, setSnapshotComment] = useState<string>(defaultSnapshotComment ?? '');
+  const [redactPreviousSnapshot, setRedactPreviousSnapshot] = useState<boolean>(false);
+
+  const [busy, setBusy] = useState<boolean>(false);
+  const [submissionError, setSubmissionError] = useState<any>(null);
+
+  const validationErrors = validate({ synopsis, wdl }, baseWorkflowModalConstraints, {
+    prettify: (v) => ({ synopsis: 'Synopsis', wdl: 'WDL' }[v] || validate.prettify(v)),
+  });
+
+  const onSubmitWorkflow = withBusyState(setBusy, async () => {
+    try {
+      const { snapshotId: createdWorkflowSnapshotId } = await editMethodProvider.createNewSnapshot(
+        namespace,
+        name,
+        snapshotId,
+        redactPreviousSnapshot,
+        synopsis,
+        documentation,
+        wdl,
+        snapshotComment
+      );
+      onSuccess(namespace, name, createdWorkflowSnapshotId);
+    } catch (error) {
+      setSubmissionError(error instanceof Response ? await error.text() : error);
+    }
+  });
+
+  const submitWorkflowButton = (
+    <ButtonPrimary
+      // the same error message will not appear multiple times
+      tooltip={validationErrors && _.uniqBy('props.children', Utils.summarizeErrors(validationErrors))}
+      disabled={validationErrors}
+      onClick={onSubmitWorkflow}
+    >
+      {buttonActionName}
+    </ButtonPrimary>
+  );
+
+  return (
+    <Modal onDismiss={onDismiss} title={title} width='75rem' okButton={submitWorkflowButton}>
+      <div style={{ padding: '0.5rem 0' }}>
+        <div style={{ display: 'flex', alignItems: 'flex-end', flexWrap: 'wrap', gap: '16px' }}>
+          <FixedNamespaceNameSection namespace={namespace} name={name} />
+        </div>
+        <div style={{ paddingTop: '1.5rem' }}>
+          <WdlBoxSection wdlPayload={wdl} setWdlPayload={setWdl} />
+        </div>
+        <DocumentationSection documentation={documentation} setWorkflowDocumentation={setDocumentation} />
+        <SynopsisSnapshotSection
+          synopsis={synopsis}
+          snapshotComment={snapshotComment}
+          setWorkflowSynopsis={setSynopsis}
+          setSnapshotComment={setSnapshotComment}
+          errors={validationErrors}
+        />
+        <div style={{ paddingTop: '1.5rem' }}>
+          <LabeledCheckbox checked={redactPreviousSnapshot} onChange={setRedactPreviousSnapshot}>
+            <span style={{ marginLeft: '0.5rem' }}>Delete snapshot {snapshotId}</span>
+          </LabeledCheckbox>
+        </div>
+        {busy && <SpinnerOverlay />}
+        {submissionError && <ErrorView error={submissionError} />}
+      </div>
+    </Modal>
+  );
+};
