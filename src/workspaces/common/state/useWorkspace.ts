@@ -96,11 +96,6 @@ export const useWorkspace = (namespace, name): WorkspaceDetails => {
 
   const checkGooglePermissions = async (workspace, times) => {
     try {
-      // Because checkBucketReadAccess can succeed and subsequent calls to get the bucket location or storage
-      // cost estimate may fail (due to caching of previous failure results), do not consider permissions
-      // to be done syncing until all the methods that we know will be called quickly in succession succeed.
-      // This is not guaranteed to eliminate the issue, but it improves the odds.
-      await Workspaces(signal).workspace(namespace, name).checkBucketReadAccess();
       if (canWrite(workspace.accessLevel)) {
         // Calls done on the Workspace Dashboard. We could store the results and pass them
         // through, but then we would have to do it checkWorkspaceInitialization as well,
@@ -113,8 +108,6 @@ export const useWorkspace = (namespace, name): WorkspaceDetails => {
     } catch (error: any) {
       const errorText = await error.text();
       if (responseContainsRequesterPaysError(errorText)) {
-        // loadGoogleBucketLocation will not get called in this case because checkBucketReadAccess fails first,
-        // but it would also fail with the requester pays error.
         setGoogleStorage({ fetchedLocation: 'RPERROR', location, locationType });
         updateWorkspaceInStore(workspace, true);
       } else {

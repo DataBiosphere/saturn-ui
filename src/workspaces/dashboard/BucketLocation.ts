@@ -7,6 +7,7 @@ import { getRegionInfo } from 'src/components/region-common';
 import { TooltipCell } from 'src/components/table';
 import { Metrics } from 'src/libs/ajax/Metrics';
 import { Workspaces } from 'src/libs/ajax/workspaces/Workspaces';
+import { reportErrorAndRethrow } from 'src/libs/error';
 import Events, { extractWorkspaceDetails } from 'src/libs/events';
 import { useCancellation } from 'src/libs/react-utils';
 import { requesterPaysProjectStore } from 'src/libs/state';
@@ -41,15 +42,15 @@ export const BucketLocation = requesterPaysWrapper({ onDismiss: _.noop })((props
       const response = await Workspaces(signal).workspace(namespace, name).checkBucketLocation(project);
       setBucketLocation(response);
     } catch (error) {
-      // if (error) {
-      setNeedsRequesterPaysProject(true);
-      // } else {
-      //  reportError('Unable to get bucket location.', error);
-      // }
+      if (storageDetails.fetchedGoogleBucketLocation === 'RPERROR') {
+        setNeedsRequesterPaysProject(true);
+      } else {
+        reportErrorAndRethrow('Error loading bucket location');
+      }
     } finally {
       setLoading(false);
     }
-  }, [workspace, signal, needsRequesterPaysProject]);
+  }, [workspace, needsRequesterPaysProject, signal, storageDetails.fetchedGoogleBucketLocation]);
 
   useEffect(() => {
     if (workspace?.workspaceInitialized) {
