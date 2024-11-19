@@ -135,7 +135,7 @@ describe('BucketLocation', () => {
       workspace,
       storageDetails: _.mergeAll([
         defaultGoogleBucketOptions,
-        { fetchedGoogleBucketLocation: 'ERROR' },
+        { fetchedGoogleBucketLocation: 'RPERROR' },
         defaultAzureStorageOptions,
       ]),
     };
