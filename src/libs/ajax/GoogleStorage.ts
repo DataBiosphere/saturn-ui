@@ -76,7 +76,7 @@ const checkRequesterPaysError = async (response): Promise<RequesterPaysErrorInfo
 };
 
 export const responseContainsRequesterPaysError = (responseText) => {
-  return _.includes('access to user project', responseText);
+  return _.some((msg) => _.includes(msg, responseText), ['access to user project', 'user project to bill']);
 };
 
 // requesterPaysError may be set on responses from requests to the GCS API that are wrapped in withRequesterPays.
