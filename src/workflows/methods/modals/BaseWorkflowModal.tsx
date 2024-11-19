@@ -1,5 +1,6 @@
-import { Clickable, useUniqueId } from '@terra-ui-packages/components';
+import { ButtonPrimary, Clickable, useUniqueId } from '@terra-ui-packages/components';
 import { readFileAsText } from '@terra-ui-packages/core-utils';
+import _ from 'lodash/fp';
 import React, { useState } from 'react';
 import Dropzone from 'src/components/Dropzone';
 import { TextArea, TextInput, ValidatedInput } from 'src/components/input';
@@ -69,6 +70,12 @@ interface WdlBoxSectionProps {
 interface DocumentationSectionProps {
   documentation: string;
   setWorkflowDocumentation: (value: string) => void;
+}
+
+interface SubmitWorkflowModalButtonProps {
+  buttonActionName: string;
+  validationErrors: string | undefined;
+  onSubmitWorkflow: () => void;
 }
 
 export const baseWorkflowModalConstraints = {
@@ -169,5 +176,20 @@ export const DocumentationSection = (props: DocumentationSectionProps) => {
         onChange={setWorkflowDocumentation}
       />
     </div>
+  );
+};
+
+export const SubmitWorkflowModalButton = (props: SubmitWorkflowModalButtonProps) => {
+  const { buttonActionName, validationErrors, onSubmitWorkflow } = props;
+
+  return (
+    <ButtonPrimary
+      // the same error message will not appear multiple times
+      tooltip={validationErrors && _.uniqBy('props.children', Utils.summarizeErrors(validationErrors))}
+      disabled={!!validationErrors}
+      onClick={onSubmitWorkflow}
+    >
+      {buttonActionName}
+    </ButtonPrimary>
   );
 };

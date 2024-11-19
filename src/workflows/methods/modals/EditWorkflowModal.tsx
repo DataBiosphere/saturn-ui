@@ -1,17 +1,16 @@
-import { ButtonPrimary, Modal, SpinnerOverlay, useUniqueId } from '@terra-ui-packages/components';
-import _ from 'lodash/fp';
+import { Modal, SpinnerOverlay, useUniqueId } from '@terra-ui-packages/components';
 import React, { useState } from 'react';
 import { LabeledCheckbox } from 'src/components/common';
 import ErrorView from 'src/components/ErrorView';
 import { TextInput } from 'src/components/input';
 import { EditMethodProvider } from 'src/libs/ajax/methods/providers/EditMethodProvider';
 import { FormLabel } from 'src/libs/forms';
-import * as Utils from 'src/libs/utils';
 import { withBusyState } from 'src/libs/utils';
 import {
   baseWorkflowModalConstraints,
   BaseWorkflowModalProps,
   DocumentationSection,
+  SubmitWorkflowModalButton,
   SynopsisSnapshotSection,
   WdlBoxSection,
 } from 'src/workflows/methods/modals/BaseWorkflowModal';
@@ -29,7 +28,7 @@ export interface EditWorkflowModalProps extends BaseWorkflowModalProps {
   name: string;
 
   /**
-   * Snapshot ID for the snapshot whose details are populated in the modal
+   * Snapshot ID of the snapshot whose details are populated in the modal
    */
   snapshotId: number;
 
@@ -119,19 +118,13 @@ export const EditWorkflowModal = (props: EditWorkflowModalProps) => {
     }
   });
 
-  const submitWorkflowButton = (
-    <ButtonPrimary
-      // the same error message will not appear multiple times
-      tooltip={validationErrors && _.uniqBy('props.children', Utils.summarizeErrors(validationErrors))}
-      disabled={validationErrors}
-      onClick={onSubmitWorkflow}
-    >
-      {buttonActionName}
-    </ButtonPrimary>
-  );
-
   return (
-    <Modal onDismiss={onDismiss} title={title} width='75rem' okButton={submitWorkflowButton}>
+    <Modal
+      onDismiss={onDismiss}
+      title={title}
+      width='75rem'
+      okButton={SubmitWorkflowModalButton({ buttonActionName, validationErrors, onSubmitWorkflow })}
+    >
       <div style={{ padding: '0.5rem 0' }}>
         <div style={{ display: 'flex', alignItems: 'flex-end', flexWrap: 'wrap', gap: '16px' }}>
           <FixedNamespaceNameSection namespace={namespace} name={name} />
