@@ -86,9 +86,7 @@ export const useWorkspace = (namespace, name): WorkspaceDetails => {
     console.assert(!!workspace, 'initialization should not be called before workspace details are fetched');
 
     if (isGoogleWorkspace(workspace)) {
-      !workspaceInitialized
-        ? checkGooglePermissions(workspace, times)
-        : loadGoogleBucketLocationIgnoringError(workspace);
+      !workspaceInitialized ? checkGooglePermissions(workspace, times) : loadGoogleBucketLocationIgnoringError();
     } else if (isAzureWorkspace(workspace)) {
       !workspaceInitialized ? checkAzureStorageExists(workspace) : loadAzureStorageDetails(workspace);
     }
@@ -103,7 +101,7 @@ export const useWorkspace = (namespace, name): WorkspaceDetails => {
         await Workspaces(signal).workspace(namespace, name).storageCostEstimate();
         await Workspaces(signal).workspace(namespace, name).bucketUsage();
       }
-      await loadGoogleBucketLocation(workspace);
+      await loadGoogleBucketLocation();
       updateWorkspaceInStore(workspace, true);
     } catch (error: any) {
       const errorText = await error.text();
@@ -130,15 +128,13 @@ export const useWorkspace = (namespace, name): WorkspaceDetails => {
   };
 
   // Note that withErrorIgnoring is used because checkBucketLocation will error for requester pays workspaces.
-  const loadGoogleBucketLocationIgnoringError = withErrorIgnoring(async (workspace) => {
-    await loadGoogleBucketLocation(workspace);
+  const loadGoogleBucketLocationIgnoringError = withErrorIgnoring(async () => {
+    await loadGoogleBucketLocation();
   });
 
-  const loadGoogleBucketLocation = async (workspace) => {
+  const loadGoogleBucketLocation = async () => {
     try {
-      const storageDetails = await Workspaces(signal)
-        .workspace(namespace, name)
-        .checkBucketLocation(workspace.workspace.googleProject);
+      const storageDetails = await Workspaces(signal).workspace(namespace, name).checkBucketLocation();
       storageDetails.fetchedLocation = 'SUCCESS';
       setGoogleStorage(storageDetails);
     } catch (error) {

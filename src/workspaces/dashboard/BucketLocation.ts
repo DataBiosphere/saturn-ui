@@ -36,9 +36,9 @@ export const BucketLocation = requesterPaysWrapper({ onDismiss: _.noop })((props
     setLoading(true);
     try {
       const {
-        workspace: { namespace, name, googleProject },
+        workspace: { namespace, name },
       } = workspace;
-      const project = needsRequesterPaysProject ? requesterPaysProjectStore.get() : googleProject;
+      const project = needsRequesterPaysProject ? requesterPaysProjectStore.get() : undefined;
       const response = await Workspaces(signal).workspace(namespace, name).checkBucketLocation(project);
       setBucketLocation(response);
     } catch (error) {

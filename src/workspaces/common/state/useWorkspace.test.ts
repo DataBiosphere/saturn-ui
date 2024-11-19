@@ -405,6 +405,9 @@ describe('useWorkspace', () => {
     // remove workspaceInitialized because the server response does not include this information
     const { workspaceInitialized, ...serverWorkspaceResponse } = initializedGoogleWorkspace;
 
+    const checkBucketLocationMock = jest.fn(() =>
+      Promise.reject(new Response('User must have access to user project', { status: 400 }))
+    );
     // Throw error from checkBucketLocation
     asMockedFn(Workspaces).mockReturnValue(
       partial<WorkspacesAjaxContract>({
@@ -413,8 +416,7 @@ describe('useWorkspace', () => {
             details: jest.fn().mockResolvedValue(serverWorkspaceResponse),
             storageCostEstimate: jest.fn(),
             bucketUsage: jest.fn(),
-            checkBucketLocation: () =>
-              Promise.reject(new Response('User must have access to user project', { status: 400 })),
+            checkBucketLocation: checkBucketLocationMock,
           }),
       })
     );
@@ -439,6 +441,8 @@ describe('useWorkspace', () => {
     expect(recentlyViewedWorkspaces.updateRecentlyViewedWorkspaces).toHaveBeenCalledWith(
       initializedGoogleWorkspace.workspace.workspaceId
     );
+    // Unless a specific user project is selected, checkBucketLocation should be called without a user project
+    expect(checkBucketLocationMock).toHaveBeenCalledWith();
   });
 
   it('can read workspace details from server, and poll WSM until the container exists', async () => {

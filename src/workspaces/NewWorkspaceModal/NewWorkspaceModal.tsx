@@ -289,7 +289,7 @@ export const NewWorkspaceModal = withDisplayName(
           isGoogleWorkspace(cloneWorkspace) &&
           Workspaces(signal)
             .workspace(namespace!, cloneWorkspace.workspace.name)
-            .checkBucketLocation(cloneWorkspace.workspace.googleProject)
+            .checkBucketLocation()
             .then(({ location }) => {
               // For current phased regionality release, we only allow US or NORTHAMERICA-NORTHEAST1 (Montreal) workspace buckets.
               setBucketLocation(isSupportedBucketLocation(location) ? location : defaultLocation);
