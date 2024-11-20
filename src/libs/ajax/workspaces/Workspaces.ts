@@ -478,6 +478,12 @@ export const Workspaces = (signal?: AbortSignal) => ({
           _.mergeAll([authOpts(), { signal }])
         ).then((r) => r.blob()),
 
+      autoGenerateTsv: (entityType: string, prefix: string): Promise<Blob> =>
+        fetchOrchestration(
+          `api/workspaces/${namespace}/${name}/entities/${entityType}/paired-tsv`,
+          _.mergeAll([authOpts(), jsonBody({ prefix }), { signal, method: 'POST' }])
+        ).then((r: { blob: () => any }) => r.blob()),
+
       copyEntities: async (
         destNamespace: string,
         destName: string,
