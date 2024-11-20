@@ -5,7 +5,7 @@ import { div, h, h3, span } from 'react-hyperscript-helpers';
 import Collapse from 'src/components/Collapse';
 import { ButtonPrimary, Link, spinnerOverlay } from 'src/components/common';
 import { InfoBox } from 'src/components/InfoBox';
-import { Ajax } from 'src/libs/ajax';
+import { User } from 'src/libs/ajax/User';
 import { NihDatasetPermission } from 'src/libs/ajax/User';
 import { withErrorReporting } from 'src/libs/error';
 import * as Nav from 'src/libs/nav';
@@ -30,7 +30,7 @@ export const NihAccount = ({ nihToken }) => {
       withErrorReporting('Error linking NIH account'),
       Utils.withBusyState(setIsLinking)
     )(async () => {
-      const nihStatus = await Ajax().User.linkNihAccount(nihToken);
+      const nihStatus = await User().linkNihAccount(nihToken);
       authStore.update((oldState: AuthState) => ({
         ...oldState,
         nihStatus,
@@ -157,7 +157,7 @@ export const NihAccount = ({ nihToken }) => {
                 Utils.withBusyState(setIsUnlinking)
               )(async () => {
                 authStore.update(_.set('nihStatusLoaded', false));
-                await Ajax().User.unlinkNihAccount();
+                await User().unlinkNihAccount();
                 authStore.update((oldState: AuthState) => ({
                   ...oldState,
                   nihStatus: undefined,

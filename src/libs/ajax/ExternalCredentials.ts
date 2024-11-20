@@ -75,3 +75,5 @@ export const ExternalCredentials = (signal?: AbortSignal) => (oAuth2Provider: OA
     },
   };
 };
+
+export type ExternalCredentialsContract = ReturnType<ReturnType<typeof ExternalCredentials>>;

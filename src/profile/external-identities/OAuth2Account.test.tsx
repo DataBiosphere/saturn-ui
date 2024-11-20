@@ -1,19 +1,20 @@
-import { DeepPartial } from '@terra-ui-packages/core-utils';
 import { act, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { axe } from 'jest-axe';
 import React from 'react';
-import { Ajax } from 'src/libs/ajax';
+import { ExternalCredentials, ExternalCredentialsContract } from 'src/libs/ajax/ExternalCredentials';
+import { Metrics, MetricsContract } from 'src/libs/ajax/Metrics';
 import Events from 'src/libs/events';
 import { getCurrentRoute } from 'src/libs/nav';
 import { authStore } from 'src/libs/state';
 import * as Utils from 'src/libs/utils';
 import { OAuth2Provider } from 'src/profile/external-identities/OAuth2Providers';
-import { asMockedFn, renderWithAppContexts as render } from 'src/testing/test-utils';
+import { asMockedFn, MockedFn, partial, renderWithAppContexts as render } from 'src/testing/test-utils';
 
 import { OAuth2Account } from './OAuth2Account';
 
-jest.mock('src/libs/ajax');
+jest.mock('src/libs/ajax/ExternalCredentials');
+jest.mock('src/libs/ajax/Metrics');
 
 jest.mock('src/auth/auth', () => ({
   ...jest.requireActual('src/auth/auth'),
@@ -45,9 +46,6 @@ jest.mock(
   })
 );
 
-type AjaxExports = typeof import('src/libs/ajax');
-type AjaxContract = ReturnType<AjaxExports['Ajax']>;
-
 const testAccessTokenProvider: OAuth2Provider = {
   key: 'github',
   name: 'Test Provider',
@@ -64,19 +62,17 @@ describe('OAuth2Account', () => {
   describe('When no account is linked', () => {
     it('shows the button to link an account', async () => {
       // Arrange
-      const getLinkStatusFn = jest.fn().mockResolvedValue(undefined);
-      const getAuthorizationUrlFn = jest.fn().mockResolvedValue('https://foo.bar.com/oauth2/authorize');
-      asMockedFn(Ajax).mockImplementation(
-        () =>
-          ({
-            ExternalCredentials: () => {
-              return {
-                getAccountLinkStatus: getLinkStatusFn,
-                getAuthorizationUrl: getAuthorizationUrlFn,
-              };
-            },
-          } as DeepPartial<AjaxContract> as AjaxContract)
+      const getLinkStatusFn: MockedFn<ExternalCredentialsContract['getAccountLinkStatus']> = jest.fn();
+      getLinkStatusFn.mockResolvedValue(undefined);
+      const getAuthorizationUrlFn: MockedFn<ExternalCredentialsContract['getAuthorizationUrl']> = jest.fn();
+      getAuthorizationUrlFn.mockResolvedValue('https://foo.bar.com/oauth2/authorize');
+      asMockedFn(ExternalCredentials).mockReturnValue(() =>
+        partial<ExternalCredentialsContract>({
+          getAccountLinkStatus: getLinkStatusFn,
+          getAuthorizationUrl: getAuthorizationUrlFn,
+        })
       );
+
       // Act
       const { container } = await act(() =>
         render(<OAuth2Account queryParams={{}} provider={testAccessTokenProvider} />)
@@ -93,19 +89,19 @@ describe('OAuth2Account', () => {
       // Arrange
       const user = userEvent.setup();
       jest.spyOn(window, 'open').mockImplementation(() => null);
-      const getLinkStatusFn = jest.fn().mockResolvedValue(undefined);
-      const getAuthorizationUrlFn = jest.fn().mockResolvedValue('https://foo.bar.com/oauth2/authorize');
-      asMockedFn(Ajax).mockImplementation(
-        () =>
-          ({
-            ExternalCredentials: () => {
-              return {
-                getAccountLinkStatus: getLinkStatusFn,
-                getAuthorizationUrl: getAuthorizationUrlFn,
-              };
-            },
-          } as DeepPartial<AjaxContract> as AjaxContract)
+
+      const getLinkStatusFn: MockedFn<ExternalCredentialsContract['getAccountLinkStatus']> = jest.fn();
+      getLinkStatusFn.mockResolvedValue(undefined);
+      const getAuthorizationUrlFn: MockedFn<ExternalCredentialsContract['getAuthorizationUrl']> = jest.fn();
+      getAuthorizationUrlFn.mockResolvedValue('https://foo.bar.com/oauth2/authorize');
+
+      asMockedFn(ExternalCredentials).mockReturnValue(() =>
+        partial<ExternalCredentialsContract>({
+          getAccountLinkStatus: getLinkStatusFn,
+          getAuthorizationUrl: getAuthorizationUrlFn,
+        })
       );
+
       // Act
       await act(() => render(<OAuth2Account queryParams={{}} provider={testAccessTokenProvider} />));
 
@@ -122,28 +118,28 @@ describe('OAuth2Account', () => {
         oauthcode: 'abcde12345',
         state: btoa(JSON.stringify({ provider: testAccessTokenProvider.key, nonce: 'abcxyz' })),
       };
-      const getLinkStatusFn = jest.fn().mockResolvedValue(undefined);
-      const getAuthorizationUrlFn = jest.fn().mockResolvedValue('https://foo.bar.com/oauth2/authorize');
-      const linkAccountFn = jest
-        .fn()
-        .mockResolvedValue({ externalUserId: 'testUser', expirationTimestamp: new Date(), authenticated: true });
-      const captureEventFn = jest.fn();
 
-      asMockedFn(Ajax).mockImplementation(
-        () =>
-          ({
-            ExternalCredentials: () => {
-              return {
-                getAccountLinkStatus: getLinkStatusFn,
-                getAuthorizationUrl: getAuthorizationUrlFn,
-                linkAccountWithAuthorizationCode: linkAccountFn,
-              };
-            },
-            Metrics: {
-              captureEvent: captureEventFn,
-            },
-          } as DeepPartial<AjaxContract> as AjaxContract)
+      const getLinkStatusFn: MockedFn<ExternalCredentialsContract['getAccountLinkStatus']> = jest.fn();
+      getLinkStatusFn.mockResolvedValue(undefined);
+      const getAuthorizationUrlFn: MockedFn<ExternalCredentialsContract['getAuthorizationUrl']> = jest.fn();
+      getAuthorizationUrlFn.mockResolvedValue('https://foo.bar.com/oauth2/authorize');
+      const linkAccountFn: MockedFn<ExternalCredentialsContract['linkAccountWithAuthorizationCode']> = jest.fn();
+      linkAccountFn.mockResolvedValue({
+        externalUserId: 'testUser',
+        expirationTimestamp: new Date(),
+        authenticated: true,
+      });
+      const captureEventFn: MockedFn<MetricsContract['captureEvent']> = jest.fn();
+
+      asMockedFn(ExternalCredentials).mockReturnValue(() =>
+        partial<ExternalCredentialsContract>({
+          getAccountLinkStatus: getLinkStatusFn,
+          getAuthorizationUrl: getAuthorizationUrlFn,
+          linkAccountWithAuthorizationCode: linkAccountFn,
+        })
       );
+      asMockedFn(Metrics).mockReturnValue(partial<MetricsContract>({ captureEvent: captureEventFn }));
+
       // Act
       await act(() => render(<OAuth2Account queryParams={queryParams} provider={testAccessTokenProvider} />));
 
@@ -170,26 +166,24 @@ describe('OAuth2Account', () => {
       screen.getByText('Link Expiration:');
       screen.getByText(Utils.makeCompleteDate(linkStatus.expirationTimestamp));
     });
+
     it("unlinks the account when 'Unlink' is clicked", async () => {
       // Arrange
       const user = userEvent.setup();
       const linkStatus = { externalUserId: 'testUser', expirationTimestamp: new Date(), authenticated: true };
       authStore.update((state) => ({ ...state, oAuth2AccountStatus: { [testAccessTokenProvider.key]: linkStatus } }));
-      const unlinkAccountFn = jest.fn().mockResolvedValue(undefined);
-      const captureEventFn = jest.fn();
-      asMockedFn(Ajax).mockImplementation(
-        () =>
-          ({
-            ExternalCredentials: () => {
-              return {
-                unlinkAccount: unlinkAccountFn,
-              };
-            },
-            Metrics: {
-              captureEvent: captureEventFn,
-            },
-          } as DeepPartial<AjaxContract> as AjaxContract)
+
+      const unlinkAccountFn: MockedFn<ExternalCredentialsContract['unlinkAccount']> = jest.fn();
+      unlinkAccountFn.mockResolvedValue(undefined);
+      const captureEventFn: MockedFn<MetricsContract['captureEvent']> = jest.fn();
+
+      asMockedFn(ExternalCredentials).mockReturnValue(() =>
+        partial<ExternalCredentialsContract>({
+          unlinkAccount: unlinkAccountFn,
+        })
       );
+      asMockedFn(Metrics).mockReturnValue(partial<MetricsContract>({ captureEvent: captureEventFn }));
+
       // Act
       const { container } = await act(() =>
         render(<OAuth2Account queryParams={{}} provider={testAccessTokenProvider} />)
