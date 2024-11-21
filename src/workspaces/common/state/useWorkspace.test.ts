@@ -3,6 +3,7 @@ import { act } from '@testing-library/react';
 import _ from 'lodash/fp';
 import { AzureStorage, AzureStorageContract } from 'src/libs/ajax/AzureStorage';
 import * as GoogleStorage from 'src/libs/ajax/GoogleStorage';
+import { Metrics, MetricsContract } from 'src/libs/ajax/Metrics';
 import { WorkspaceContract, Workspaces, WorkspacesAjaxContract } from 'src/libs/ajax/workspaces/Workspaces';
 import * as Notifications from 'src/libs/notifications';
 import { InitializedWorkspaceWrapper, workspaceStore } from 'src/libs/state';
@@ -272,6 +273,7 @@ describe('useWorkspace', () => {
         workspace: () =>
           partial<WorkspaceContract>({
             checkBucketLocation: jest.fn().mockResolvedValue(bucketLocationResponse),
+            checkBucketReadAccess: jest.fn(),
             storageCostEstimate: jest.fn(),
             bucketUsage: jest.fn(),
           }),
@@ -288,6 +290,61 @@ describe('useWorkspace', () => {
     expect(workspaceStore.set).toHaveBeenCalledWith(initializedGoogleWorkspace);
   };
 
+  it('can read workspace details from server, and poll until permissions synced (handling checkBucketAccess failure)', async () => {
+    // Arrange
+    // remove workspaceInitialized because the server response does not include this information
+    const { workspaceInitialized, ...serverWorkspaceResponse } = initializedGoogleWorkspace;
+
+    asMockedFn(Workspaces).mockReturnValue(
+      partial<WorkspacesAjaxContract>({
+        workspace: () =>
+          partial<WorkspaceContract>({
+            details: jest.fn().mockResolvedValue(serverWorkspaceResponse),
+            checkBucketReadAccess: () => Promise.reject(new Response('Mock permissions error', { status: 500 })),
+          }),
+      })
+    );
+
+    // Verify initial failure based on error mock.
+    const { result } = await verifyGooglePermissionsFailure();
+
+    // Finally, change mock to pass all checks verify success.
+    await verifyGooglePermissionsSuccess(result);
+  });
+
+  it('fires an event on the second checkBucketReadAccess failure', async () => {
+    // Arrange
+    // remove workspaceInitialized because the server response does not include this information
+    const { workspaceInitialized, ...serverWorkspaceResponse } = initializedGoogleWorkspace;
+    const captureEventFn = jest.fn();
+    asMockedFn(Metrics).mockReturnValue(partial<MetricsContract>({ captureEvent: captureEventFn }));
+    asMockedFn(Workspaces).mockReturnValue(
+      partial<WorkspacesAjaxContract>({
+        workspace: () =>
+          partial<WorkspaceContract>({
+            details: jest.fn().mockResolvedValue(serverWorkspaceResponse),
+            checkBucketReadAccess: () => Promise.reject(new Response('Mock permissions error', { status: 500 })),
+          }),
+      })
+    );
+
+    // Verify initial failure does not fire event
+    await verifyGooglePermissionsFailure();
+    expect(captureEventFn).not.toHaveBeenCalled();
+
+    // Verify second failure does fire event
+    await act(async () => {
+      jest.advanceTimersByTime(googlePermissionsRecheckRate);
+    });
+    expect(captureEventFn).toHaveBeenCalledTimes(1);
+
+    // Verify additional failures do not fire more events.
+    await act(async () => {
+      jest.advanceTimersByTime(googlePermissionsRecheckRate);
+    });
+    expect(captureEventFn).toHaveBeenCalledTimes(1);
+  });
+
   it('can read workspace details from server, and poll until permissions synced (handling storageCostEstimate failure)', async () => {
     // Arrange
     // remove workspaceInitialized because the server response does not include this information
@@ -299,6 +356,7 @@ describe('useWorkspace', () => {
           partial<WorkspaceContract>({
             details: jest.fn().mockResolvedValue(serverWorkspaceResponse),
             checkBucketLocation: jest.fn().mockResolvedValue(bucketLocationResponse),
+            checkBucketReadAccess: jest.fn(),
             storageCostEstimate: () =>
               Promise.reject(new Response('Mock storage cost estimate error', { status: 500 })),
             bucketUsage: jest.fn(),
@@ -324,6 +382,7 @@ describe('useWorkspace', () => {
           partial<WorkspaceContract>({
             details: jest.fn().mockResolvedValue(serverWorkspaceResponse),
             checkBucketLocation: jest.fn().mockResolvedValue(bucketLocationResponse),
+            checkBucketReadAccess: jest.fn(),
             storageCostEstimate: jest.fn(),
             bucketUsage: () => Promise.reject(new Response('Mock bucket usage error', { status: 500 })),
           }),
@@ -348,6 +407,7 @@ describe('useWorkspace', () => {
           partial<WorkspaceContract>({
             details: jest.fn().mockResolvedValue(serverWorkspaceResponse),
             checkBucketLocation: () => Promise.reject(new Response('Mock check bucket location', { status: 500 })),
+            checkBucketReadAccess: jest.fn(),
             storageCostEstimate: jest.fn(),
             bucketUsage: jest.fn(),
           }),
@@ -376,6 +436,7 @@ describe('useWorkspace', () => {
           partial<WorkspaceContract>({
             details: jest.fn().mockResolvedValue(serverWorkspaceResponse),
             checkBucketLocation: jest.fn().mockResolvedValue(bucketLocationResponse),
+            checkBucketReadAccess: jest.fn(),
             storageCostEstimate: () => Promise.reject(new Response('Should not call', { status: 500 })),
             bucketUsage: () => Promise.reject(new Response('Should not call', { status: 500 })),
           }),
@@ -392,7 +453,7 @@ describe('useWorkspace', () => {
     );
 
     // Act
-    // Wait for the call to checkBucketLocation to execute
+    // Wait for the calls to checkBucketReadAccess and checkBucketLocation to execute
     const { result } = await renderHookInAct(() => useWorkspace('testNamespace', 'testName'));
 
     // Assert
@@ -414,6 +475,7 @@ describe('useWorkspace', () => {
         workspace: () =>
           partial<WorkspaceContract>({
             details: jest.fn().mockResolvedValue(serverWorkspaceResponse),
+            checkBucketReadAccess: jest.fn(),
             storageCostEstimate: jest.fn(),
             bucketUsage: jest.fn(),
             checkBucketLocation: checkBucketLocationMock,
@@ -629,6 +691,7 @@ describe('useWorkspace', () => {
           partial<WorkspaceContract>({
             details: jest.fn().mockResolvedValue(serverWorkspaceResponse),
             checkBucketLocation: jest.fn().mockResolvedValue(bucketLocationResponse),
+            checkBucketReadAccess: jest.fn(),
           }),
       })
     );
@@ -643,7 +706,7 @@ describe('useWorkspace', () => {
     );
 
     // Act
-    // Wait for the call to to execute
+    // Wait for the call to checkBucketReadAccess to execute
     const { result } = await renderHookInAct(() => useWorkspace('testNamespace', 'testName'));
 
     // Assert
@@ -670,6 +733,7 @@ describe('useWorkspace', () => {
           partial<WorkspaceContract>({
             details: jest.fn().mockResolvedValue(serverWorkspaceResponse),
             checkBucketLocation: jest.fn().mockResolvedValue(bucketLocationResponse),
+            checkBucketReadAccess: jest.fn(),
           }),
       })
     );
@@ -687,7 +751,7 @@ describe('useWorkspace', () => {
     jest.setSystemTime(new Date(Date.UTC(2023, 1, 3, 22, 26, 12, 0)));
 
     // Act
-    // Wait for the call to execute
+    // Wait for the call to checkBucketReadAccess to execute
     const { result } = await renderHookInAct(() => useWorkspace('testNamespace', 'testName'));
 
     // Assert
