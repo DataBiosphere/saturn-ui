@@ -9,7 +9,7 @@ import { FormLabel } from 'src/libs/forms';
 import * as Utils from 'src/libs/utils';
 import { WDLEditor } from 'src/workflows/methods/WDLEditor';
 
-export interface BaseWorkflowModalProps {
+export interface WorkflowModalCommonProps {
   /** The title to be shown at the top of the modal. */
   title: string;
 
@@ -78,7 +78,7 @@ interface SubmitWorkflowModalButtonProps {
   onSubmitWorkflow: () => void;
 }
 
-export const baseWorkflowModalConstraints = {
+export const workflowModalCommonConstraints = {
   synopsis: {
     length: { maximum: 80 },
   },

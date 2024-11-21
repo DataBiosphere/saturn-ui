@@ -19,7 +19,7 @@ import { getTerraUser, snapshotsListStore, snapshotStore } from 'src/libs/state'
 import * as Style from 'src/libs/style';
 import * as Utils from 'src/libs/utils';
 import { withBusyState } from 'src/libs/utils';
-import { CreateNewWorkflowModal } from 'src/workflows/methods/modals/CreateNewWorkflowModal';
+import { CreateWorkflowModal } from 'src/workflows/methods/modals/CreateWorkflowModal';
 import DeleteSnapshotModal from 'src/workflows/methods/modals/DeleteSnapshotModal';
 import { EditWorkflowModal } from 'src/workflows/methods/modals/EditWorkflowModal';
 import { PermissionsModal } from 'src/workflows/methods/modals/PermissionsModal';
@@ -127,7 +127,7 @@ export const WorkflowsContainer = (props: WorkflowContainerProps) => {
   const [exportingWorkflow, setExportingWorkflow] = useState<boolean>(false);
   const [showDeleteModal, setShowDeleteModal] = useState<boolean>(false);
   const [showCloneModal, setShowCloneModal] = useState<boolean>(false);
-  const [showEditMethodModal, setShowEditMethodModal] = useState<boolean>(false);
+  const [showEditWorkflowModal, setShowEditWorkflowModal] = useState<boolean>(false);
   const [busy, setBusy] = useState<boolean>(false);
   const [permissionsModalOpen, setPermissionsModalOpen] = useState<boolean>(false);
 
@@ -246,7 +246,7 @@ export const WorkflowsContainer = (props: WorkflowContainerProps) => {
               onEditPermissions: () => setPermissionsModalOpen(true),
               onDelete: () => setShowDeleteModal(true),
               onClone: () => setShowCloneModal(true),
-              onEdit: () => setShowEditMethodModal(true),
+              onEdit: () => setShowEditWorkflowModal(true),
             }),
           ]),
         ]
@@ -298,7 +298,7 @@ export const WorkflowsContainer = (props: WorkflowContainerProps) => {
         refresh: loadSnapshot,
       }),
     showCloneModal &&
-      h(CreateNewWorkflowModal, {
+      h(CreateWorkflowModal, {
         title: 'Create new method',
         defaultName: name.concat('_copy'),
         defaultWdl: snapshot!.payload,
@@ -321,7 +321,7 @@ export const WorkflowsContainer = (props: WorkflowContainerProps) => {
         },
         onDismiss: () => setShowCloneModal(false),
       }),
-    showEditMethodModal &&
+    showEditWorkflowModal &&
       h(EditWorkflowModal, {
         title: 'Edit',
         namespace,
@@ -340,7 +340,7 @@ export const WorkflowsContainer = (props: WorkflowContainerProps) => {
             snapshotId,
           });
         },
-        onDismiss: () => setShowEditMethodModal(false),
+        onDismiss: () => setShowEditWorkflowModal(false),
       }),
     busy && spinnerOverlay,
     snapshotNotFound && h(NotFoundMessage, { subject: 'snapshot' }),

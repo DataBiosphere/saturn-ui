@@ -7,23 +7,23 @@ import { EditMethodProvider } from 'src/libs/ajax/methods/providers/EditMethodPr
 import { FormLabel } from 'src/libs/forms';
 import { withBusyState } from 'src/libs/utils';
 import {
-  baseWorkflowModalConstraints,
-  BaseWorkflowModalProps,
   DocumentationSection,
   SubmitWorkflowModalButton,
   SynopsisSnapshotSection,
   WdlBoxSection,
-} from 'src/workflows/methods/modals/BaseWorkflowModal';
+  workflowModalCommonConstraints,
+  WorkflowModalCommonProps,
+} from 'src/workflows/methods/modals/WorkflowModalCommon';
 import validate from 'validate.js';
 
-export interface EditWorkflowModalProps extends BaseWorkflowModalProps {
+export interface EditWorkflowModalProps extends WorkflowModalCommonProps {
   /**
-   * Prefilled method namespace
+   * Prefilled method namespace that can't be edited
    */
   namespace: string;
 
   /**
-   * Prefilled method name
+   * Prefilled method name that can't be edited
    */
   name: string;
 
@@ -38,35 +38,6 @@ export interface EditWorkflowModalProps extends BaseWorkflowModalProps {
    */
   editMethodProvider: EditMethodProvider;
 }
-
-interface FixedNamespaceNameSectionProps {
-  namespace: string;
-  name: string;
-}
-
-const FixedNamespaceNameSection = (props: FixedNamespaceNameSectionProps) => {
-  const { namespace, name } = props;
-
-  const namespaceInputId = useUniqueId();
-  const nameInputId = useUniqueId();
-
-  return (
-    <>
-      <div style={{ flexWrap: 'wrap', flexGrow: 1, flexBasis: '400px' }}>
-        <div style={{ marginBottom: '0.1667em' }}>
-          <FormLabel htmlFor={namespaceInputId}>Namespace</FormLabel>
-          <TextInput id={namespaceInputId} placeholder={namespace} disabled />
-        </div>
-      </div>
-      <div style={{ flexWrap: 'wrap', flexGrow: 1, flexBasis: '400px' }}>
-        <div style={{ marginBottom: '0.1667em' }}>
-          <FormLabel htmlFor={nameInputId}>Name</FormLabel>
-          <TextInput id={nameInputId} placeholder={name} disabled />
-        </div>
-      </div>
-    </>
-  );
-};
 
 /**
  * Component for inputting workflow information to facilitate creating new workflow snapshot.
@@ -96,13 +67,20 @@ export const EditWorkflowModal = (props: EditWorkflowModalProps) => {
   const [busy, setBusy] = useState<boolean>(false);
   const [submissionError, setSubmissionError] = useState<any>(null);
 
-  const validationErrors = validate({ synopsis, wdl }, baseWorkflowModalConstraints, {
+  const validationErrors = validate({ synopsis, wdl }, workflowModalCommonConstraints, {
     prettify: (v) => ({ synopsis: 'Synopsis', wdl: 'WDL' }[v] || validate.prettify(v)),
   });
 
+  const namespaceInputId = useUniqueId();
+  const nameInputId = useUniqueId();
+
   const onSubmitWorkflow = withBusyState(setBusy, async () => {
     try {
-      const { snapshotId: createdWorkflowSnapshotId } = await editMethodProvider.createNewSnapshot(
+      const {
+        namespace: createdWorkflowNamespace,
+        name: createdWorkflowName,
+        snapshotId: createdWorkflowSnapshotId,
+      } = await editMethodProvider.createNewSnapshot(
         namespace,
         name,
         snapshotId,
@@ -112,7 +90,7 @@ export const EditWorkflowModal = (props: EditWorkflowModalProps) => {
         wdl,
         snapshotComment
       );
-      onSuccess(namespace, name, createdWorkflowSnapshotId);
+      onSuccess(createdWorkflowNamespace, createdWorkflowName, createdWorkflowSnapshotId);
     } catch (error) {
       setSubmissionError(error instanceof Response ? await error.text() : error);
     }
@@ -127,7 +105,18 @@ export const EditWorkflowModal = (props: EditWorkflowModalProps) => {
     >
       <div style={{ padding: '0.5rem 0' }}>
         <div style={{ display: 'flex', alignItems: 'flex-end', flexWrap: 'wrap', gap: '16px' }}>
-          <FixedNamespaceNameSection namespace={namespace} name={name} />
+          <div style={{ flexWrap: 'wrap', flexGrow: 1, flexBasis: '400px' }}>
+            <div style={{ marginBottom: '0.1667em' }}>
+              <FormLabel htmlFor={namespaceInputId}>Namespace</FormLabel>
+              <TextInput id={namespaceInputId} placeholder={namespace} disabled />
+            </div>
+          </div>
+          <div style={{ flexWrap: 'wrap', flexGrow: 1, flexBasis: '400px' }}>
+            <div style={{ marginBottom: '0.1667em' }}>
+              <FormLabel htmlFor={nameInputId}>Name</FormLabel>
+              <TextInput id={nameInputId} placeholder={name} disabled />
+            </div>
+          </div>
         </div>
         <div style={{ paddingTop: '1.5rem' }}>
           <WdlBoxSection wdlPayload={wdl} setWdlPayload={setWdl} />

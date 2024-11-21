@@ -7,16 +7,16 @@ import { FormLabel } from 'src/libs/forms';
 import * as Utils from 'src/libs/utils';
 import { withBusyState } from 'src/libs/utils';
 import {
-  baseWorkflowModalConstraints,
-  BaseWorkflowModalProps,
   DocumentationSection,
   SubmitWorkflowModalButton,
   SynopsisSnapshotSection,
   WdlBoxSection,
-} from 'src/workflows/methods/modals/BaseWorkflowModal';
+  workflowModalCommonConstraints,
+  WorkflowModalCommonProps,
+} from 'src/workflows/methods/modals/WorkflowModalCommon';
 import validate from 'validate.js';
 
-export interface CreateNewWorkflowModalProps extends BaseWorkflowModalProps {
+export interface CreateWorkflowModalProps extends WorkflowModalCommonProps {
   /**
    * The default value to be prefilled in the namespace input. If not present,
    * the input will initially be blank.
@@ -50,8 +50,8 @@ validate.validators.maxNamespaceNameCombinedLength = <OtherFieldName extends str
     ? '^Namespace and name are too long (maximum is 250 characters total)' // ^ character prevents attribute from being prepended
     : null;
 
-const newWorkflowModalConstraints = {
-  ...baseWorkflowModalConstraints,
+const createWorkflowModalConstraints = {
+  ...workflowModalCommonConstraints,
   namespace: {
     presence: { allowEmpty: false },
     format: {
@@ -136,7 +136,7 @@ const NamespaceNameSection = (props: NamespaceNameSectionProps) => {
 /**
  * Component for inputting workflow information to facilitate creating new workflow or cloning a workflow snapshot.
  */
-export const CreateNewWorkflowModal = (props: CreateNewWorkflowModalProps) => {
+export const CreateWorkflowModal = (props: CreateWorkflowModalProps) => {
   const {
     title,
     buttonActionName,
@@ -161,7 +161,7 @@ export const CreateNewWorkflowModal = (props: CreateNewWorkflowModalProps) => {
   const [busy, setBusy] = useState<boolean>(false);
   const [submissionError, setSubmissionError] = useState<any>(null);
 
-  const validationErrors = validate({ namespace, name, synopsis, wdl }, newWorkflowModalConstraints, {
+  const validationErrors = validate({ namespace, name, synopsis, wdl }, createWorkflowModalConstraints, {
     prettify: (v) =>
       ({ namespace: 'Namespace', name: 'Name', synopsis: 'Synopsis', wdl: 'WDL' }[v] || validate.prettify(v)),
   });

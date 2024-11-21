@@ -36,7 +36,7 @@ export interface SnapshotActionMenuProps {
  * A kebab (vertical three-dot) menu that displays buttons to perform actions on
  * a workflow snapshot.
  *
- * Currently supported actions: edit permissions, delete snapshot, clone snapshot
+ * Currently supported actions: edit permissions, delete snapshot, clone snapshot, edit method
  */
 const SnapshotActionMenu = (props: SnapshotActionMenuProps): ReactNode => {
   const { disabled, isSnapshotOwner, onEditPermissions, onDelete, onClone, onEdit } = props;
