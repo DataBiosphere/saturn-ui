@@ -42,7 +42,6 @@ describe('EditMethodProvider', () => {
   it('handles create new snapshot call', async () => {
     // Arrange
     mockAjax();
-
     const signal = new window.AbortController().signal;
 
     // Act
