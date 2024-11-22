@@ -4,19 +4,23 @@ import { renderWithAppContexts as render } from 'src/testing/test-utils';
 
 import { BillingListPage } from './BillingListPage';
 
-jest.mock('src/billing/list/BillingList', () => ({
-  ...jest.requireActual('src/billing/list/BillingList'),
-  BillingList: jest.fn((_) => {
-    return 'billing list';
-  }),
-}));
+type BillingListExports = typeof import('src/billing/List/BillingList');
+jest.mock(
+  'src/billing/List/BillingList',
+  (): BillingListExports => ({
+    ...jest.requireActual('src/billing/List/BillingList'),
+    BillingList: jest.fn((_) => {
+      return <>billing list</>;
+    }),
+  })
+);
 
 type FooterWrapperExports = typeof import('src/components/FooterWrapper');
 jest.mock(
   'src/components/FooterWrapper',
   (): FooterWrapperExports => ({
     ...jest.requireActual('src/components/FooterWrapper'),
-    default: jest.fn((props) => {
+    default: jest.fn((_) => {
       return <>footer wrapper</>;
     }),
   })
