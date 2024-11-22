@@ -5,6 +5,7 @@ import { ButtonPrimary, Clickable, Link } from 'src/components/common';
 import { HeroWrapper } from 'src/components/HeroWrapper';
 import { icon } from 'src/components/icons';
 import hexButton from 'src/images/hex-button.svg';
+import roadmapBgBanner from 'src/images/roadmap-bg-banner.png';
 import { Ajax } from 'src/libs/ajax';
 import { getEnabledBrand, isFirecloud, isTerra } from 'src/libs/brand-utils';
 import { landingPageCardsDefault } from 'src/libs/brands';
@@ -30,6 +31,10 @@ const styles = {
     color: 'white',
     padding: '2rem 1rem',
   },
+  roadmapBanner: {
+    width: 710,
+    backgroundImage: `url(${roadmapBgBanner})`,
+  },
 };
 
 const makeRightArrowWithBackgroundIcon = () =>
@@ -49,22 +54,24 @@ const makeRightArrowWithBackgroundIcon = () =>
     [icon('arrowRight', { color: 'white' })]
   );
 
-const makeCard = _.map(({ link, title, body, linkPathParams, linkQueryParams }) =>
-  h(
-    Clickable,
-    {
-      href: Nav.getLink(link, linkPathParams, linkQueryParams),
-      style: { ...Style.elements.card.container, ...styles.card },
-      hover: { boxShadow: '0 3px 7px 0 rgba(0,0,0,0.5), 0 5px 3px 0 rgba(0,0,0,0.2)' },
-    },
-    [
-      h2({ style: { color: colors.accent(), fontSize: 18, fontWeight: 500, lineHeight: '22px', marginBottom: '0.5rem' } }, title),
-      div({ style: { lineHeight: '22px' } }, body),
-      div({ style: { flexGrow: 1 } }),
-      makeRightArrowWithBackgroundIcon(),
-    ]
-  )
-);
+const makeCard = (customStyles = {}, cardConfigs = [], isExternalLink = false) =>
+  _.map(({ link, title, body, linkPathParams, linkQueryParams }) =>
+    h(
+      Clickable,
+      {
+        href: isExternalLink ? link : Nav.getLink(link, linkPathParams, linkQueryParams),
+        style: { ...Style.elements.card.container, ...customStyles },
+        hover: { boxShadow: '0 3px 7px 0 rgba(0,0,0,0.5), 0 5px 3px 0 rgba(0,0,0,0.2)' },
+        target: isExternalLink ? '_blank' : '',
+      },
+      [
+        h2({ style: { color: colors.accent(), fontSize: 18, fontWeight: 500, lineHeight: '22px', marginBottom: '0.5rem' } }, title),
+        div({ style: { lineHeight: '22px' } }, body),
+        div({ style: { flexGrow: 1 } }),
+        makeRightArrowWithBackgroundIcon(),
+      ]
+    )
+  )(cardConfigs);
 
 const makeDocLinks = _.map(({ link, text }) =>
   div({ style: { marginBottom: '1rem', fontSize: 18 } }, [
@@ -132,7 +139,24 @@ export const LandingPage = () => {
       ),
     // width is set to prevent text from overlapping the background image and decreasing legibility
     div({ style: { maxWidth: 'calc(100% - 460px)' } }, makeDocLinks(getEnabledBrand().docLinks)),
-    div({ style: { display: 'flex', margin: '2rem 0 1rem 0' } }, makeCard(getEnabledBrand().landingPageCards || landingPageCardsDefault)),
+    div(
+      { style: { display: 'flex', margin: '2rem 0 1rem 0' } },
+      makeCard({ ...styles.card }, getEnabledBrand().landingPageCards || landingPageCardsDefault)
+    ),
+    div(
+      { style: { display: 'flex', marginTop: '2rem' } },
+      makeCard(
+        { ...styles.roadmapBanner },
+        [
+          {
+            link: 'https://support.terra.bio/hc/en-us/sections/30968105851931-Terra-Roadmap',
+            title: 'Terra Roadmap',
+            body: "Stay connected: see what's new, what's next, and try out the latest features on Terra.",
+          },
+        ],
+        true
+      ) // isExternalLink
+    ),
     (isTerra() || isFirecloud()) &&
       div({ style: { width: 700, marginTop: '4rem' } }, [
         'This project has been funded in whole or in part with Federal funds from the National Cancer Institute, National Institutes of Health, ',
