@@ -2,7 +2,8 @@ import { Clickable, ClickableProps, Modal } from '@terra-ui-packages/components'
 import _ from 'lodash/fp';
 import React, { ReactNode, useState } from 'react';
 import { ButtonPrimary, spinnerOverlay } from 'src/components/common';
-import { Ajax } from 'src/libs/ajax';
+import { ExternalCredentials } from 'src/libs/ajax/ExternalCredentials';
+import { Metrics } from 'src/libs/ajax/Metrics';
 import colors from 'src/libs/colors';
 import { withErrorReporting } from 'src/libs/error';
 import Events from 'src/libs/events';
@@ -34,9 +35,9 @@ export const UnlinkOAuth2Account = ({ linkText, provider }: UnlinkOAuth2AccountP
         withErrorReporting('Error unlinking account'),
         Utils.withBusyState(setIsUnlinking)
       )(async () => {
-        await Ajax().ExternalCredentials(provider).unlinkAccount();
+        await ExternalCredentials()(provider).unlinkAccount();
         authStore.update(_.unset(['oAuth2AccountStatus', provider.key]));
-        Ajax().Metrics.captureEvent(Events.user.externalCredential.unlink, { provider: provider.key });
+        void Metrics().captureEvent(Events.user.externalCredential.unlink, { provider: provider.key });
         setIsModalOpen(false);
         notify('success', 'Successfully unlinked account', {
           message: `Successfully unlinked your account from ${provider.name}`,

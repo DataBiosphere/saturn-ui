@@ -94,6 +94,7 @@ const eventsList = {
   uploaderUploadMetadata: 'uploader:metadata:upload',
   uploaderCreateTable: 'uploader:table:create',
   uploaderUpdateTable: 'uploader:table:update',
+  uploaderAutoGenerateTable: 'uploader:table:autoGenerate',
   user: {
     authToken: {
       load: {

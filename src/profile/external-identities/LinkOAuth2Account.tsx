@@ -2,7 +2,7 @@ import { ClickableProps } from '@terra-ui-packages/components';
 import React, { ReactNode } from 'react';
 import { ButtonPrimary, Link } from 'src/components/common';
 import { icon } from 'src/components/icons';
-import { Ajax } from 'src/libs/ajax';
+import { ExternalCredentials } from 'src/libs/ajax/ExternalCredentials';
 import { withErrorReporting } from 'src/libs/error';
 import { useCancellation } from 'src/libs/react-utils';
 import * as Utils from 'src/libs/utils';
@@ -22,7 +22,7 @@ export const LinkOAuth2Account = (props: LinkOAuth2AccountProps): ReactNode => {
 
   const getAuthUrlAndRedirect = withErrorReporting(`Error getting Authorization URL for ${provider.short}`)(
     async () => {
-      const url = await Ajax(signal).ExternalCredentials(provider).getAuthorizationUrl();
+      const url = await ExternalCredentials(signal)(provider).getAuthorizationUrl();
       window.open(url, Utils.newTabLinkProps.target, 'noopener,noreferrer');
     }
   );

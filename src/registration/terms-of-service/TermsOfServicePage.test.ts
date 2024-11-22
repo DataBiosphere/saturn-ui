@@ -1,26 +1,25 @@
-import { DeepPartial } from '@terra-ui-packages/core-utils';
 import { act, fireEvent, screen } from '@testing-library/react';
 import { h } from 'react-hyperscript-helpers';
-import { Ajax } from 'src/libs/ajax';
 import { Groups, GroupsContract } from 'src/libs/ajax/Groups';
 import { Metrics, MetricsContract } from 'src/libs/ajax/Metrics';
 import { SamUserTermsOfServiceDetails, TermsOfService, TermsOfServiceContract } from 'src/libs/ajax/TermsOfService';
 import {
+  OrchestrationUserPreferLegacyFireCloudResponse,
   SamUserAllowances,
   SamUserCombinedStateResponse,
   SamUserResponse,
   User,
   UserContract,
 } from 'src/libs/ajax/User';
-import { AuthState, authStore } from 'src/libs/state';
+import { AuthState, authStore, TerraUserProfile } from 'src/libs/state';
 import { TermsOfServicePage } from 'src/registration/terms-of-service/TermsOfServicePage';
-import { asMockedFn, renderWithAppContexts as render } from 'src/testing/test-utils';
+import { asMockedFn, MockedFn, partial, renderWithAppContexts as render } from 'src/testing/test-utils';
 
 jest.mock('src/libs/ajax/Metrics');
 jest.mock('src/libs/ajax/TermsOfService');
 jest.mock('src/libs/ajax/User');
 jest.mock('src/libs/ajax/Groups');
-jest.mock('src/libs/ajax');
+
 jest.mock('react-notifications-component', () => {
   return {
     Store: {
@@ -49,10 +48,10 @@ jest.mock(
 );
 
 interface TermsOfServiceSetupResult {
-  getTosFn: jest.Mock;
-  getTermsOfServiceComplianceStatusFn: jest.Mock;
-  acceptTosFn: jest.Mock;
-  rejectTosFn: jest.Mock;
+  getTosFn: MockedFn<TermsOfServiceContract['getTermsOfServiceText']>;
+  getTermsOfServiceComplianceStatusFn: MockedFn<TermsOfServiceContract['getUserTermsOfServiceDetails']>;
+  acceptTosFn: MockedFn<TermsOfServiceContract['acceptTermsOfService']>;
+  rejectTosFn: MockedFn<TermsOfServiceContract['rejectTermsOfService']>;
 }
 
 const setupMockAjax = async (
@@ -81,50 +80,41 @@ const setupMockAjax = async (
     termsOfService,
     enterpriseFeatures: [],
   };
-  const getTermsOfServiceText = jest.fn().mockResolvedValue('some text');
-  const getUserTermsOfServiceDetails = jest
-    .fn()
-    .mockResolvedValue(termsOfService satisfies SamUserTermsOfServiceDetails);
-  const acceptTermsOfService = jest.fn().mockResolvedValue(undefined);
-  const rejectTermsOfService = jest.fn().mockResolvedValue(undefined);
-  const getNihStatus = jest.fn();
+  const getTermsOfServiceText: MockedFn<TermsOfServiceContract['getTermsOfServiceText']> = jest.fn();
+  getTermsOfServiceText.mockResolvedValue('some text');
+  const getUserTermsOfServiceDetails: MockedFn<TermsOfServiceContract['getUserTermsOfServiceDetails']> = jest.fn();
+  getUserTermsOfServiceDetails.mockResolvedValue(termsOfService satisfies SamUserTermsOfServiceDetails);
+  const acceptTermsOfService: MockedFn<TermsOfServiceContract['acceptTermsOfService']> = jest.fn();
+  acceptTermsOfService.mockResolvedValue(undefined);
+  const rejectTermsOfService: MockedFn<TermsOfServiceContract['rejectTermsOfService']> = jest.fn();
+  rejectTermsOfService.mockResolvedValue(undefined);
+  const getNihStatus: MockedFn<UserContract['getNihStatus']> = jest.fn();
 
-  type AjaxExports = typeof import('src/libs/ajax');
-  type AjaxContract = ReturnType<AjaxExports['Ajax']>;
-
-  asMockedFn(Ajax).mockImplementation(
-    () =>
-      ({
-        TermsOfService: {
-          acceptTermsOfService,
-          rejectTermsOfService,
-          getTermsOfServiceText,
-        },
-      } as DeepPartial<AjaxContract> as AjaxContract)
+  asMockedFn(TermsOfService).mockReturnValue(
+    partial<TermsOfServiceContract>({
+      acceptTermsOfService,
+      rejectTermsOfService,
+      getTermsOfServiceText,
+      getUserTermsOfServiceDetails,
+    })
   );
 
-  asMockedFn(Metrics).mockReturnValue({
-    captureEvent: jest.fn(),
-  } as Partial<MetricsContract> as MetricsContract);
+  asMockedFn(Metrics).mockReturnValue(partial<MetricsContract>({ captureEvent: jest.fn() }));
 
-  asMockedFn(User).mockReturnValue({
-    getSamUserCombinedState: jest.fn().mockResolvedValue(mockSamUserCombinedState),
-    profile: {
-      get: jest.fn().mockResolvedValue({ keyValuePairs: [] }),
-      update: jest.fn().mockResolvedValue({ keyValuePairs: [] }),
-      setPreferences: jest.fn().mockResolvedValue({}),
-      preferLegacyFirecloud: jest.fn().mockResolvedValue({}),
-    },
-    getNihStatus,
-  } as Partial<UserContract> as UserContract);
+  asMockedFn(User).mockReturnValue(
+    partial<UserContract>({
+      getSamUserCombinedState: jest.fn().mockResolvedValue(mockSamUserCombinedState),
+      profile: {
+        get: jest.fn(async () => partial<TerraUserProfile>({})),
+        update: jest.fn(async () => undefined),
+        setPreferences: jest.fn(async () => undefined),
+        preferLegacyFirecloud: jest.fn(async () => partial<OrchestrationUserPreferLegacyFireCloudResponse>({})),
+      },
+      getNihStatus,
+    })
+  );
 
-  asMockedFn(Groups).mockReturnValue({
-    list: jest.fn(),
-  } as Partial<GroupsContract> as GroupsContract);
-
-  asMockedFn(TermsOfService).mockReturnValue({
-    getUserTermsOfServiceDetails,
-  } as Partial<TermsOfServiceContract> as TermsOfServiceContract);
+  asMockedFn(Groups).mockReturnValue(partial<GroupsContract>({ list: jest.fn() }));
 
   await act(async () => {
     authStore.update((state: AuthState) => ({ ...state, termsOfService, signInStatus, terraUserAllowances }));
