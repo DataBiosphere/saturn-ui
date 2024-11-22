@@ -44,7 +44,7 @@ const successPostMethodProvider: PostMethodProvider = {
   postMethod: jest.fn().mockResolvedValue(mockCreateMethodResponse),
 };
 
-describe('WorkflowModal', () => {
+describe('CreateWorkflowModal', () => {
   it('renders key elements with blank default input values', async () => {
     // Act
     await act(async () => {
