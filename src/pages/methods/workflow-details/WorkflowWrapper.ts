@@ -330,7 +330,6 @@ export const WorkflowsContainer = (props: WorkflowContainerProps) => {
         defaultWdl: snapshot!.payload,
         defaultDocumentation: snapshot!.documentation,
         defaultSynopsis: snapshot!.synopsis,
-        buttonActionName: 'Create new snapshot',
         editMethodProvider,
         onSuccess: (namespace: string, name: string, snapshotId: number) => {
           snapshotsListStore.reset();

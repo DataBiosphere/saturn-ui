@@ -29,6 +29,9 @@ export interface CreateWorkflowModalProps extends WorkflowModalCommonProps {
    */
   defaultName?: string;
 
+  /** The text to be shown on the primary button of the modal. */
+  buttonActionName: string;
+
   /**
    * Provides a function to make an API call to perform the post method
    * operation. The postMethod function provided is called with the information

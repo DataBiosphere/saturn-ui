@@ -45,7 +45,6 @@ export interface EditWorkflowModalProps extends WorkflowModalCommonProps {
 export const EditWorkflowModal = (props: EditWorkflowModalProps) => {
   const {
     title,
-    buttonActionName,
     namespace,
     name,
     defaultWdl,
@@ -101,7 +100,11 @@ export const EditWorkflowModal = (props: EditWorkflowModalProps) => {
       onDismiss={onDismiss}
       title={title}
       width='75rem'
-      okButton={SubmitWorkflowModalButton({ buttonActionName, validationErrors, onSubmitWorkflow })}
+      okButton={SubmitWorkflowModalButton({
+        buttonActionName: 'Create new snapshot',
+        validationErrors,
+        onSubmitWorkflow,
+      })}
     >
       <div style={{ padding: '0.5rem 0' }}>
         <div style={{ display: 'flex', alignItems: 'flex-end', flexWrap: 'wrap', gap: '16px' }}>

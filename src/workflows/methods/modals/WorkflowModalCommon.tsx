@@ -13,9 +13,6 @@ export interface WorkflowModalCommonProps {
   /** The title to be shown at the top of the modal. */
   title: string;
 
-  /** The text to be shown on the primary button of the modal. */
-  buttonActionName: string;
-
   /**
    * The default value to be prefilled in the WDL input. If not present, the
    * input will initially be blank.
