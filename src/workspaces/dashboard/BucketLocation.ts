@@ -60,8 +60,13 @@ export const BucketLocation = requesterPaysWrapper({ onDismiss: _.noop })((props
         // In the case of requester pays workspaces, we wish to show the user more information in this case and allow them to link a workspace.
         loadGoogleBucketLocation();
       } else if (storageDetails.fetchedGoogleBucketLocation === 'RPERROR') {
-        setNeedsRequesterPaysProject(true);
-        setLoading(false);
+        // Immediately fetch location using user project if the requesterPaysProjectStore is already set
+        if (requesterPaysProjectStore.get()) {
+          loadGoogleBucketLocation();
+        } else {
+          setNeedsRequesterPaysProject(true);
+          setLoading(false);
+        }
       } else if (storageDetails.fetchedGoogleBucketLocation === 'SUCCESS') {
         setBucketLocation({
           location: storageDetails.googleBucketLocation,

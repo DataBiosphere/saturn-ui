@@ -145,7 +145,12 @@ export const useWorkspace = (namespace, name): WorkspaceDetails => {
       storageDetails.fetchedLocation = 'SUCCESS';
       setGoogleStorage(storageDetails);
     } catch (error) {
-      setGoogleStorage({ fetchedLocation: 'ERROR', location, locationType });
+      const errorText = await error.text();
+      if (responseContainsRequesterPaysError(errorText)) {
+        setGoogleStorage({ fetchedLocation: 'RPERROR', location, locationType });
+      } else {
+        setGoogleStorage({ fetchedLocation: 'ERROR', location, locationType });
+      }
       throw error;
     }
   };
