@@ -34,6 +34,9 @@ const styles = {
   roadmapBanner: {
     width: 710,
     backgroundImage: `url(${roadmapBgBanner})`,
+    backgroundSize: 'cover',
+    backgroundRepeat: 'no-repeat',
+    backgroundPosition: 'center',
   },
 };
 
