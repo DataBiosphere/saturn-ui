@@ -1,5 +1,6 @@
 import { refreshSamUserAttributes, refreshTerraProfile } from 'src/auth/user-profile/user';
-import { Ajax } from 'src/libs/ajax';
+import { Metrics } from 'src/libs/ajax/Metrics';
+import { User } from 'src/libs/ajax/User';
 import Events, { EventWorkspaceAttributes, extractWorkspaceDetails } from 'src/libs/events';
 
 export const workspaceSubmissionNotificationKeys = (namespace: string, name: string) => [
@@ -42,13 +43,13 @@ export const updateNotificationPreferences = async (
   notificationType: NotificationType | undefined,
   workspace: EventWorkspaceAttributes | undefined
 ) => {
-  await Ajax().User.profile.setPreferences(notificationKeysWithValue(notificationKeys, value));
+  await User().profile.setPreferences(notificationKeysWithValue(notificationKeys, value));
   await refreshTerraProfile();
   let eventDetails = { notificationKeys, enabled: value, notificationType };
   if (workspace) {
     eventDetails = { ...eventDetails, ...extractWorkspaceDetails(workspace) };
   }
-  Ajax().Metrics.captureEvent(Events.notificationToggle, eventDetails);
+  void Metrics().captureEvent(Events.notificationToggle, eventDetails);
 };
 
 export const updateUserAttributes = async (
@@ -56,7 +57,7 @@ export const updateUserAttributes = async (
   value: boolean,
   notificationType: NotificationType | undefined
 ) => {
-  await Ajax().User.setUserAttributes({ marketingConsent: value });
-  Ajax().Metrics.captureEvent(Events.notificationToggle, { notificationKeys, enabled: value, notificationType });
+  await User().setUserAttributes({ marketingConsent: value });
+  void Metrics().captureEvent(Events.notificationToggle, { notificationKeys, enabled: value, notificationType });
   await refreshSamUserAttributes();
 };

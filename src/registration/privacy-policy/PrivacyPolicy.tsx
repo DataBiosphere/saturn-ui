@@ -1,7 +1,7 @@
 import React from 'react';
 import { ButtonPrimary } from 'src/components/common';
 import scienceBackground from 'src/images/science-background.jpg';
-import { Ajax } from 'src/libs/ajax';
+import { TermsOfService } from 'src/libs/ajax/TermsOfService';
 import * as Nav from 'src/libs/nav';
 import { RemoteMarkdown } from 'src/libs/util/RemoteMarkdown';
 import { docContainerStyles, headerStyles, mainStyles } from 'src/registration/legal-doc-styles';
@@ -14,7 +14,7 @@ const PrivacyPolicy = () => {
         <h1 style={headerStyles}>Terra Privacy Policy</h1>
         <RemoteMarkdown
           style={{ height: '60vh', overflowY: 'auto', lineHeight: 1.5, marginTop: '1rem', paddingRight: '1rem' }}
-          getRemoteText={() => Ajax().TermsOfService.getPrivacyPolicyText()}
+          getRemoteText={() => TermsOfService().getPrivacyPolicyText()}
           failureMessage='Could not get Privacy Policy'
         />
         <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '2rem' }}>

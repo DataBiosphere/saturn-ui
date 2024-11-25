@@ -1,10 +1,11 @@
 import { act, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { h } from 'react-hyperscript-helpers';
-import { Ajax } from 'src/libs/ajax';
+import { Metrics, MetricsContract } from 'src/libs/ajax/Metrics';
+import { User, UserContract } from 'src/libs/ajax/User';
 import { authStore } from 'src/libs/state';
 import { NihAccount } from 'src/profile/external-identities/NihAccount';
-import { asMockedFn, renderWithAppContexts } from 'src/testing/test-utils';
+import { asMockedFn, MockedFn, partial, renderWithAppContexts } from 'src/testing/test-utils';
 
 jest.mock('src/libs/nav', () => ({
   ...jest.requireActual('src/libs/nav'),
@@ -25,7 +26,8 @@ jest.mock('react-notifications-component', () => {
   };
 });
 
-jest.mock('src/libs/ajax');
+jest.mock('src/libs/ajax/Metrics');
+jest.mock('src/libs/ajax/User');
 
 const nihStatus = {
   linkedNihUsername: 'TEST_USERNAME',
@@ -42,14 +44,10 @@ describe('NihAccount', () => {
   describe('when given a token', () => {
     it('links the NIH Account and renders a linked NIH Account', async () => {
       // Arrange
-      const linkNihAccountFunction = jest.fn().mockReturnValue(Promise.resolve(nihStatus));
-      asMockedFn(Ajax).mockImplementation(
-        () =>
-          ({
-            Metrics: { captureEvent: jest.fn() } as Partial<ReturnType<typeof Ajax>['Metrics']>,
-            User: { linkNihAccount: linkNihAccountFunction } as Partial<ReturnType<typeof Ajax>['User']>,
-          } as ReturnType<typeof Ajax>)
-      );
+      const linkNihAccountFunction: MockedFn<UserContract['linkNihAccount']> = jest.fn();
+      linkNihAccountFunction.mockResolvedValue(nihStatus);
+      asMockedFn(Metrics).mockReturnValue(partial<MetricsContract>({ captureEvent: jest.fn() }));
+      asMockedFn(User).mockReturnValue(partial<UserContract>({ linkNihAccount: linkNihAccountFunction }));
 
       // Act
       await act(async () => {
@@ -115,14 +113,11 @@ describe('NihAccount', () => {
       // Arrange
       const user = userEvent.setup();
 
-      const unlinkNihAccountFunction = jest.fn().mockReturnValue(Promise.resolve());
-      asMockedFn(Ajax).mockImplementation(
-        () =>
-          ({
-            Metrics: { captureEvent: jest.fn() } as Partial<ReturnType<typeof Ajax>['Metrics']>,
-            User: { unlinkNihAccount: unlinkNihAccountFunction } as Partial<ReturnType<typeof Ajax>['User']>,
-          } as ReturnType<typeof Ajax>)
-      );
+      const unlinkNihAccountFunction: MockedFn<UserContract['unlinkNihAccount']> = jest.fn();
+      unlinkNihAccountFunction.mockResolvedValue(undefined);
+      asMockedFn(Metrics).mockReturnValue(partial<MetricsContract>({ captureEvent: jest.fn() }));
+      asMockedFn(User).mockReturnValue(partial<UserContract>({ unlinkNihAccount: unlinkNihAccountFunction }));
+
       // Act
       await act(async () => {
         authStore.update((state) => ({ ...state, nihStatus, nihStatusLoaded: true }));

@@ -5,7 +5,7 @@ import React, { useState } from 'react';
 import Dropzone from 'src/components/Dropzone';
 import ErrorView from 'src/components/ErrorView';
 import { TextArea, TextInput, ValidatedInput } from 'src/components/input';
-import { CreateMethodProvider } from 'src/libs/ajax/methods/providers/CreateMethodProvider';
+import { PostMethodProvider } from 'src/libs/ajax/methods/providers/PostMethodProvider';
 import colors from 'src/libs/colors';
 import { FormLabel } from 'src/libs/forms';
 import * as Utils from 'src/libs/utils';
@@ -57,11 +57,12 @@ export interface WorkflowModalProps {
   defaultSnapshotComment?: string;
 
   /**
-   * Provides a function to make an API call to perform the create method
-   * operation. The create function provided is called with the information
-   * inputted into the modal.
+   * Provides a function to make an API call to perform the post method
+   * operation. The postMethod function provided is called with the information
+   * inputted into the modal. This provider is used for both "create new method"
+   * and "clone method snapshot" functionality.
    */
-  createMethodProvider: CreateMethodProvider;
+  postMethodProvider: PostMethodProvider;
 
   /**
    * The function to be called with the namespace, name, and snapshot ID of the
@@ -302,7 +303,7 @@ export const WorkflowModal = (props: WorkflowModalProps) => {
     defaultDocumentation,
     defaultSynopsis,
     defaultSnapshotComment,
-    createMethodProvider,
+    postMethodProvider,
     onSuccess,
     onDismiss,
   } = props;
@@ -328,7 +329,7 @@ export const WorkflowModal = (props: WorkflowModalProps) => {
         namespace: createdWorkflowNamespace,
         name: createdWorkflowName,
         snapshotId: createdWorkflowSnapshotId,
-      } = await createMethodProvider.create(namespace, name, wdl, documentation, synopsis, snapshotComment);
+      } = await postMethodProvider.postMethod(namespace, name, wdl, documentation, synopsis, snapshotComment);
       onSuccess(createdWorkflowNamespace, createdWorkflowName, createdWorkflowSnapshotId);
     } catch (error) {
       setSubmissionError(error instanceof Response ? await error.text() : error);

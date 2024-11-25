@@ -6,10 +6,12 @@ import React from 'react';
 import * as breadcrumbs from 'src/components/breadcrumbs';
 import { Ajax, AjaxContract } from 'src/libs/ajax';
 import { MethodsAjaxContract } from 'src/libs/ajax/methods/Methods';
-import { Snapshot } from 'src/libs/ajax/methods/methods-models';
+import { MethodResponse, Snapshot } from 'src/libs/ajax/methods/methods-models';
+import { postMethodProvider } from 'src/libs/ajax/methods/providers/PostMethodProvider';
 import * as ExportWorkflowToWorkspaceProvider from 'src/libs/ajax/workspaces/providers/ExportWorkflowToWorkspaceProvider';
 import { errorWatcher } from 'src/libs/error.mock';
 import { goToPath } from 'src/libs/nav';
+import * as Nav from 'src/libs/nav';
 import { forwardRefWithName } from 'src/libs/react-utils';
 import { snapshotsListStore, snapshotStore, TerraUser, TerraUserState, userStore } from 'src/libs/state';
 import { WorkflowsContainer, wrapWorkflows } from 'src/pages/methods/workflow-details/WorkflowWrapper';
@@ -21,6 +23,14 @@ jest.mock('src/libs/ajax');
 jest.mock('src/libs/notifications');
 
 type NavExports = typeof import('src/libs/nav');
+
+type WDLEditorExports = typeof import('src/workflows/methods/WDLEditor');
+jest.mock('src/workflows/methods/WDLEditor', (): WDLEditorExports => {
+  const mockWDLEditorModule = jest.requireActual('src/workflows/methods/WDLEditor.mock');
+  return {
+    WDLEditor: mockWDLEditorModule.MockWDLEditor,
+  };
+});
 
 jest.mock(
   'src/libs/nav',
@@ -37,9 +47,9 @@ const mockSnapshot: Snapshot = {
   managers: ['hello@world.org'],
   name: 'testname',
   createDate: '2024-09-04T15:37:57Z',
-  documentation: '',
+  documentation: 'mock documentation',
   entityType: 'Workflow',
-  snapshotComment: '',
+  snapshotComment: 'mock snapshot comment',
   snapshotId: 1,
   namespace: 'testnamespace',
   payload:
@@ -251,6 +261,21 @@ const snapshotStoreInitialValue = {
   url: '',
 };
 
+const mockCloneSnapshotResponse: MethodResponse = {
+  name: 'testname_copy',
+  createDate: '2024-11-15T15:41:38Z',
+  documentation: 'mock documentation',
+  synopsis: '',
+  entityType: 'Workflow',
+  snapshotComment: 'groot-new-snapshot',
+  snapshotId: 1,
+  namespace: 'groot-new-namespace',
+  payload:
+    // eslint-disable-next-line no-template-curly-in-string
+    'task echo_files {\\n  String? input1\\n  String? input2\\n  String? input3\\n  \\n  output {\\n    String out = read_string(stdout())\\n  }\\n\\n  command {\\n    echo \\"result: ${input1} ${input2} ${input3}\\"\\n  }\\n\\n  runtime {\\n    docker: \\"ubuntu:latest\\"\\n  }\\n}\\n\\nworkflow echo_strings {\\n  call echo_files\\n}',
+  url: 'http://agora.dsde-dev.broadinstitute.org/api/v1/methods/groot-new-namespace/testname_copy/1',
+};
+
 describe('workflow wrapper', () => {
   it('displays the method not found page if a method does not exist or the user does not have access', async () => {
     // Arrange
@@ -405,6 +430,140 @@ describe('workflows container', () => {
     expect(snapshotsListStore.get()).toBeUndefined();
 
     expect(goToPath).toHaveBeenCalledWith('workflows');
+  });
+
+  it('renders the save as new method modal when the corresponding button is pressed', async () => {
+    // Arrange
+    mockAjax();
+
+    // set the user's email
+    jest.spyOn(userStore, 'get').mockImplementation(jest.fn().mockReturnValue(mockUserState('hello@world.org')));
+
+    const user: UserEvent = userEvent.setup();
+
+    // Act
+    await act(async () => {
+      render(
+        <WorkflowsContainer
+          namespace={mockSnapshot.namespace}
+          name={mockSnapshot.name}
+          snapshotId={`${mockSnapshot.snapshotId}`}
+          tabName='dashboard'
+        />
+      );
+    });
+
+    await user.click(screen.getByRole('button', { name: 'Snapshot action menu' }));
+    await user.click(screen.getByRole('button', { name: 'Save as' }));
+
+    const dialog = screen.getByRole('dialog', { name: /create new method/i });
+
+    // Assert
+    expect(dialog).toBeInTheDocument();
+    expect(within(dialog).getByRole('textbox', { name: 'Namespace *' })).toHaveDisplayValue('');
+    expect(within(dialog).getByRole('textbox', { name: 'Name *' })).toHaveDisplayValue('testname_copy');
+    expect(within(dialog).getByRole('textbox', { name: 'Documentation' })).toHaveDisplayValue('mock documentation');
+    expect(within(dialog).getByRole('textbox', { name: 'Synopsis (80 characters max)' })).toHaveDisplayValue('');
+    expect(within(dialog).getByRole('textbox', { name: 'Snapshot comment' })).toHaveDisplayValue('');
+    expect(within(dialog).getByTestId('wdl editor')).toHaveDisplayValue(mockSnapshot.payload.toString());
+  });
+
+  it('calls right provider with expected arguments when snapshot is cloned', async () => {
+    // Arrange
+    mockAjax();
+
+    jest.spyOn(postMethodProvider, 'postMethod').mockResolvedValue(mockCloneSnapshotResponse);
+
+    const user: UserEvent = userEvent.setup();
+
+    // Act
+    await act(async () => {
+      render(
+        <WorkflowsContainer
+          namespace={mockSnapshot.namespace}
+          name={mockSnapshot.name}
+          snapshotId={`${mockSnapshot.snapshotId}`}
+          tabName='dashboard'
+        />
+      );
+    });
+
+    await user.click(screen.getByRole('button', { name: 'Snapshot action menu' }));
+    await user.click(screen.getByRole('button', { name: 'Save as' }));
+
+    const dialog = screen.getByRole('dialog', { name: /create new method/i });
+
+    // Assert
+    expect(dialog).toBeInTheDocument();
+    expect(within(dialog).getByRole('textbox', { name: 'Namespace *' })).toHaveDisplayValue('');
+    expect(within(dialog).getByRole('textbox', { name: 'Name *' })).toHaveDisplayValue('testname_copy');
+    expect(within(dialog).getByRole('textbox', { name: 'Documentation' })).toHaveDisplayValue('mock documentation');
+    expect(within(dialog).getByRole('textbox', { name: 'Synopsis (80 characters max)' })).toHaveDisplayValue('');
+    expect(within(dialog).getByRole('textbox', { name: 'Snapshot comment' })).toHaveDisplayValue('');
+    expect(within(dialog).getByTestId('wdl editor')).toHaveDisplayValue(mockSnapshot.payload.toString());
+
+    // Act
+    fireEvent.change(screen.getByRole('textbox', { name: 'Namespace *' }), {
+      target: { value: 'groot-new-namespace' },
+    });
+    fireEvent.change(screen.getByRole('textbox', { name: 'Snapshot comment' }), {
+      target: { value: 'groot-new-snapshot' },
+    });
+
+    await user.click(screen.getByRole('button', { name: 'Create new method' }));
+
+    // Assert
+    expect(postMethodProvider.postMethod).toHaveBeenCalled();
+    expect(postMethodProvider.postMethod).toHaveBeenCalledWith(
+      'groot-new-namespace',
+      'testname_copy',
+      mockSnapshot.payload,
+      'mock documentation',
+      '',
+      'groot-new-snapshot'
+    );
+
+    expect(Nav.goToPath).toHaveBeenCalledWith('workflow-dashboard', {
+      name: 'testname_copy',
+      namespace: 'groot-new-namespace',
+      snapshotId: 1,
+    });
+  });
+
+  it('hides the save as new method modal when it is dismissed', async () => {
+    // Arrange
+    mockAjax();
+
+    // set the user's email
+    jest.spyOn(userStore, 'get').mockImplementation(jest.fn().mockReturnValue(mockUserState('hello@world.org')));
+
+    const user: UserEvent = userEvent.setup();
+
+    // Act
+    await act(async () => {
+      render(
+        <WorkflowsContainer
+          namespace={mockSnapshot.namespace}
+          name={mockSnapshot.name}
+          snapshotId={`${mockSnapshot.snapshotId}`}
+          tabName='dashboard'
+        />
+      );
+    });
+
+    await user.click(screen.getByRole('button', { name: 'Snapshot action menu' }));
+    await user.click(screen.getByRole('button', { name: 'Save as' }));
+
+    // Assert
+    const dialog1 = screen.queryByRole('dialog', { name: /create new method/i });
+    expect(dialog1).toBeInTheDocument();
+
+    // Act
+    await user.click(screen.getByRole('button', { name: 'Cancel' }));
+
+    // Assert
+    const dialog2 = screen.queryByRole('dialog', { name: /create new method/i });
+    expect(dialog2).not.toBeInTheDocument();
   });
 
   it('hides the delete snapshot modal and displays a loading spinner when the deletion is confirmed', async () => {

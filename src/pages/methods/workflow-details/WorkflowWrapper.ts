@@ -9,6 +9,7 @@ import { TabBar } from 'src/components/tabBars';
 import { TopBar } from 'src/components/TopBar';
 import { Ajax } from 'src/libs/ajax';
 import { Snapshot } from 'src/libs/ajax/methods/methods-models';
+import { postMethodProvider } from 'src/libs/ajax/methods/providers/PostMethodProvider';
 import { makeExportWorkflowFromMethodsRepoProvider } from 'src/libs/ajax/workspaces/providers/ExportWorkflowToWorkspaceProvider';
 import { ErrorCallback, withErrorReporting } from 'src/libs/error';
 import * as Nav from 'src/libs/nav';
@@ -19,6 +20,7 @@ import * as Utils from 'src/libs/utils';
 import { withBusyState } from 'src/libs/utils';
 import DeleteSnapshotModal from 'src/workflows/methods/modals/DeleteSnapshotModal';
 import { PermissionsModal } from 'src/workflows/methods/modals/PermissionsModal';
+import { WorkflowModal } from 'src/workflows/methods/modals/WorkflowModal';
 import SnapshotActionMenu from 'src/workflows/methods/SnapshotActionMenu';
 import ExportWorkflowModal from 'src/workflows/modals/ExportWorkflowModal';
 import { isGoogleWorkspace, WorkspaceInfo, WorkspaceWrapper } from 'src/workspaces/utils';
@@ -122,6 +124,7 @@ export const WorkflowsContainer = (props: WorkflowContainerProps) => {
   const [snapshotNotFound, setSnapshotNotFound] = useState<boolean>(false);
   const [exportingWorkflow, setExportingWorkflow] = useState<boolean>(false);
   const [showDeleteModal, setShowDeleteModal] = useState<boolean>(false);
+  const [showCloneModal, setShowCloneModal] = useState<boolean>(false);
   const [busy, setBusy] = useState<boolean>(false);
   const [permissionsModalOpen, setPermissionsModalOpen] = useState<boolean>(false);
 
@@ -239,6 +242,7 @@ export const WorkflowsContainer = (props: WorkflowContainerProps) => {
               isSnapshotOwner,
               onEditPermissions: () => setPermissionsModalOpen(true),
               onDelete: () => setShowDeleteModal(true),
+              onClone: () => setShowCloneModal(true),
             }),
           ]),
         ]
@@ -288,6 +292,30 @@ export const WorkflowsContainer = (props: WorkflowContainerProps) => {
         selectedSnapshot,
         setPermissionsModalOpen,
         refresh: loadSnapshot,
+      }),
+    showCloneModal &&
+      h(WorkflowModal, {
+        title: 'Create new method',
+        defaultName: name.concat('_copy'),
+        defaultWdl: snapshot!.payload,
+        defaultDocumentation: snapshot!.documentation,
+        defaultSynopsis: snapshot!.synopsis,
+        buttonActionName: 'Create new method',
+        postMethodProvider,
+        onSuccess: (namespace: string, name: string, snapshotId: number) => {
+          // when the user has owner permissions on the original method, there is an interesting situation where
+          // if the user types in the same namespace and name for the cloned method as the original method,
+          // instead of creating a new method Agora will create a new snapshot of the original method.
+          // Hence, to ensure the data is correct in the UI we reset the cached snapshot list store and then load the page.
+          // (Note: this behaviour is same as in Firecloud UI)
+          snapshotsListStore.reset();
+          Nav.goToPath('workflow-dashboard', {
+            namespace,
+            name,
+            snapshotId,
+          });
+        },
+        onDismiss: () => setShowCloneModal(false),
       }),
     busy && spinnerOverlay,
     snapshotNotFound && h(NotFoundMessage, { subject: 'snapshot' }),
