@@ -87,6 +87,21 @@ export interface BrandConfiguration {
 
   /** Theme for components */
   theme: Theme;
+
+  /** Optional flag to show the roadmap link */
+  showRoadmap?: boolean;
+
+  /** Optional card for the roadmap */
+  roadMapCard?: {
+    /** Card link */
+    link: string;
+
+    /** Card title */
+    title: string;
+
+    /** Card body */
+    body: string;
+  };
 }
 
 export const landingPageCardsDefault = [
@@ -106,6 +121,12 @@ export const landingPageCardsDefault = [
     body: 'Access data from a rich ecosystem of data portals.',
   },
 ];
+
+export const roadMapCardDefault = {
+  link: 'https://support.terra.bio/hc/en-us/sections/30968105851931-Terra-Roadmap',
+  title: 'Terra Roadmap',
+  body: "Stay connected: see what's new, what's next, and try out the latest features on Terra.",
+};
 
 const baseColors: Theme['colorPalette'] = {
   primary: '#74ae43',
@@ -145,6 +166,7 @@ export const brands: Record<string, BrandConfiguration> = {
     theme: {
       colorPalette: { ...baseColors, primary: '#e0dd10', accent: '#035c94', light: '#f6f7f4', dark: '#012840' },
     },
+    showRoadmap: true,
   },
   baseline: {
     name: 'Project Baseline',
@@ -359,6 +381,7 @@ export const brands: Record<string, BrandConfiguration> = {
         dark: '#333F52',
       },
     },
+    showRoadmap: true,
   },
   rareX: {
     name: `The RARE${nonBreakingHyphen}X Data Analysis Platform`,
@@ -420,6 +443,7 @@ export const brands: Record<string, BrandConfiguration> = {
     theme: {
       colorPalette: { ...baseColors },
     },
+    showRoadmap: true,
   },
 };
 
