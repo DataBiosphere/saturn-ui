@@ -175,10 +175,8 @@ export const Workspaces = (signal?: AbortSignal) => ({
       checkBucketAccess: GoogleStorage(signal).checkBucketAccess,
 
       checkBucketLocation: async (userProject?) => {
-        const res = await fetchRawls(
-          `${root}/bucketOptions${userProject ? `?userProject=${userProject}` : ''}`,
-          _.merge(authOpts(), { signal })
-        );
+        const queryString = userProject ? `?userProject=${userProject}` : '';
+        const res = await fetchRawls(`${root}/bucketOptions${queryString}`, _.merge(authOpts(), { signal }));
         const obj = await res.json();
         return _.merge(obj, { locationType: getLocationType(obj.location) });
       },
