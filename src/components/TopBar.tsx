@@ -274,6 +274,13 @@ export const TopBar = (props: TopBarProps): ReactNode => {
               onClick={() => setOpenPlatformNewsMenu(!openPlatformNewsMenu)}
               isOpened={openPlatformNewsMenu}
             >
+              <DropDownSubItem
+                href='https://support.terra.bio/hc/en-us/sections/30968105851931-Terra-Roadmap'
+                onClick={hideNav}
+                {...Utils.newTabLinkProps}
+              >
+                Terra Roadmap
+              </DropDownSubItem>
               <DropDownSubItem href='#feature-preview' onClick={hideNav}>
                 Feature Preview
               </DropDownSubItem>
