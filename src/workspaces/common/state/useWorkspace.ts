@@ -145,7 +145,11 @@ export const useWorkspace = (namespace, name): WorkspaceDetails => {
       storageDetails.fetchedLocation = 'SUCCESS';
       setGoogleStorage(storageDetails);
     } catch (error) {
-      const errorText = error instanceof Response ? Error(await error.text()) : `${error}`;
+      // checkGooglePermissions, which calls loadGoogleBucketLocation, also tries to read the response
+      // text. Errors in checkGooglePermissions could come from many methods, including this one.
+      // Because of checkGooglePermissions' needs, don't consume the response text here; only read
+      // from a clone of the response so we can rethrow the original.
+      const errorText = error instanceof Response ? Error(await error.clone().text()) : `${error}`;
       if (responseContainsRequesterPaysError(errorText)) {
         setGoogleStorage({ fetchedLocation: 'RPERROR', location, locationType });
       } else {
