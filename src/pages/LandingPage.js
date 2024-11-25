@@ -8,7 +8,7 @@ import hexButton from 'src/images/hex-button.svg';
 import roadmapBgBanner from 'src/images/roadmap-bg-banner.png';
 import { Ajax } from 'src/libs/ajax';
 import { getEnabledBrand, isFirecloud, isTerra } from 'src/libs/brand-utils';
-import { landingPageCardsDefault } from 'src/libs/brands';
+import { landingPageCardsDefault, roadMapCardDefault } from 'src/libs/brands';
 import colors from 'src/libs/colors';
 import { withErrorHandling } from 'src/libs/error';
 import * as Nav from 'src/libs/nav';
@@ -146,20 +146,11 @@ export const LandingPage = () => {
       { style: { display: 'flex', margin: '2rem 0 1rem 0' } },
       makeCard({ ...styles.card }, getEnabledBrand().landingPageCards || landingPageCardsDefault)
     ),
-    div(
-      { style: { display: 'flex', marginTop: '2rem' } },
-      makeCard(
-        { ...styles.roadmapBanner },
-        [
-          {
-            link: 'https://support.terra.bio/hc/en-us/sections/30968105851931-Terra-Roadmap',
-            title: 'Terra Roadmap',
-            body: "Stay connected: see what's new, what's next, and try out the latest features on Terra.",
-          },
-        ],
-        true
-      ) // isExternalLink
-    ),
+    getEnabledBrand().showRoadmap &&
+      div(
+        { style: { display: 'flex', marginTop: '2rem' } },
+        makeCard({ ...styles.roadmapBanner }, [getEnabledBrand().roadMapCard || roadMapCardDefault], true)
+      ),
     (isTerra() || isFirecloud()) &&
       div({ style: { width: 700, marginTop: '4rem' } }, [
         'This project has been funded in whole or in part with Federal funds from the National Cancer Institute, National Institutes of Health, ',
