@@ -22,6 +22,7 @@ import * as StateHistory from 'src/libs/state-history';
 import * as Style from 'src/libs/style';
 import * as Utils from 'src/libs/utils';
 import { DockstoreTile, MethodCard, MethodRepoTile } from 'src/pages/library/Code';
+import { FindWorkflowModal } from 'src/pages/workspaces/workspace/modals/FindWorkflowModal';
 import DeleteWorkflowConfirmationModal from 'src/pages/workspaces/workspace/workflows/DeleteWorkflowConfirmationModal';
 import { methodLink } from 'src/pages/workspaces/workspace/workflows/methodLink';
 import ExportWorkflowModal from 'src/workflows/modals/ExportWorkflowModal';
@@ -192,7 +193,7 @@ const WorkflowCard = memoWithName('WorkflowCard', ({ listView, name, namespace, 
       ]);
 });
 
-export const FindWorkflowModal = ({ namespace, name, ws, onDismiss }) => {
+export const FindWorkflowModalOld = ({ namespace, name, ws, onDismiss }) => {
   // State
   const [selectedWorkflow, setSelectedWorkflow] = useState(undefined);
   const [featuredList, setFeaturedList] = useState(undefined);
@@ -483,11 +484,15 @@ export const Workflows = _.flow(
         [listView, () => div({ style: { flex: 1 } }, [workflows])],
         () => workflows
       ),
+      // findingWorkflow &&
+      //   h(FindWorkflowModal, {
+      //     namespace,
+      //     name,
+      //     ws,
+      //     onDismiss: () => setFindingWorkflow(false),
+      //   }),
       findingWorkflow &&
         h(FindWorkflowModal, {
-          namespace,
-          name,
-          ws,
           onDismiss: () => setFindingWorkflow(false),
         }),
       loading && spinnerOverlay,
