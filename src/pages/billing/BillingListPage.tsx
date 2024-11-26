@@ -11,13 +11,13 @@ interface BillingListPageProps {
   };
 }
 
-const BillingListPage = (props: BillingListPageProps) => {
+export const BillingListPage = (props: BillingListPageProps) => {
   const selectedName = props.queryParams.selectedName;
   const breadcrumbs = 'Billing > Billing Project';
 
   return (
     <FooterWrapper fixedHeight>
-      <TopBar title='Billing' href={Nav.getLink('billing')}>
+      <TopBar title='Billing' href={selectedName ? Nav.getLink('billing') : undefined}>
         {!!selectedName && (
           <div style={Style.breadcrumb.breadcrumb}>
             <div style={Style.noWrapEllipsis}>{breadcrumbs}</div>
