@@ -210,7 +210,12 @@ const withWorkspace = (test) => async (options) => {
     await test({ ...options, workspaceName });
   } finally {
     console.log('withWorkspace cleanup ...');
-    const didDelete = await withSignedInPage(deleteWorkspaceInUi)({ ...options, workspaceName });
+    let didDelete = false;
+    try {
+      didDelete = await withSignedInPage(deleteWorkspaceInUi)({ ...options, workspaceName });
+    } catch (err) {
+      console.error(`Error during workspace cleanup: ${err}`);
+    }
     if (!didDelete) {
       // Pass test on a failed cleanup - expect leaked resources to be cleaned up by the test `delete-orphaned-workspaces`
       console.error(`Unable to delete workspace ${workspaceName} via the UI. The resource will be leaked!`);
