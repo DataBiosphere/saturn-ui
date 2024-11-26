@@ -50,7 +50,6 @@ export const EditWorkflowModal = (props: EditWorkflowModalProps) => {
     defaultWdl,
     defaultDocumentation,
     defaultSynopsis,
-    defaultSnapshotComment,
     snapshotId,
     editMethodProvider,
     onSuccess,
@@ -60,7 +59,7 @@ export const EditWorkflowModal = (props: EditWorkflowModalProps) => {
   const [wdl, setWdl] = useState<string>(defaultWdl ?? '');
   const [documentation, setDocumentation] = useState<string>(defaultDocumentation ?? '');
   const [synopsis, setSynopsis] = useState<string>(defaultSynopsis ?? '');
-  const [snapshotComment, setSnapshotComment] = useState<string>(defaultSnapshotComment ?? '');
+  const [snapshotComment, setSnapshotComment] = useState<string>('');
   const [redactPreviousSnapshot, setRedactPreviousSnapshot] = useState<boolean>(false);
 
   const [busy, setBusy] = useState<boolean>(false);

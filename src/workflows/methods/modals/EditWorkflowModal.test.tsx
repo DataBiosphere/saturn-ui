@@ -1,3 +1,4 @@
+import { expect } from '@storybook/test';
 import { act, fireEvent, screen, waitFor } from '@testing-library/react';
 import userEvent, { UserEvent } from '@testing-library/user-event';
 import _ from 'lodash/fp';
@@ -56,7 +57,7 @@ describe('EditWorkflowModal', () => {
           snapshotId={3}
           defaultWdl='workflow doStuff {}'
           defaultDocumentation='documentation'
-          defaultSynopsis=''
+          defaultSynopsis='synopsis'
           editMethodProvider={editMethodProviderSuccess}
           onSuccess={jest.fn()}
           onDismiss={jest.fn()}
@@ -65,14 +66,16 @@ describe('EditWorkflowModal', () => {
     });
 
     // Assert
+    expect(screen.getByText('Edit'));
     expect(screen.getByRole('textbox', { name: 'Namespace' })).toHaveAttribute('placeholder', 'my-namespace');
     expect(screen.getByRole('textbox', { name: 'Namespace' })).toHaveAttribute('disabled');
     expect(screen.getByRole('textbox', { name: 'Name' })).toHaveAttribute('placeholder', 'my-workflow');
     expect(screen.getByRole('textbox', { name: 'Name' })).toHaveAttribute('disabled');
     expect(screen.getByTestId('wdl editor')).toHaveDisplayValue('workflow doStuff {}');
     expect(screen.getByRole('textbox', { name: 'Documentation' })).toHaveDisplayValue('documentation');
-    expect(screen.getByRole('textbox', { name: 'Synopsis (80 characters max)' })).toHaveDisplayValue('');
+    expect(screen.getByRole('textbox', { name: 'Synopsis (80 characters max)' })).toHaveDisplayValue('synopsis');
     expect(screen.getByRole('textbox', { name: 'Snapshot comment' })).toHaveDisplayValue('');
+    expect(screen.getByText('Delete snapshot 3'));
   });
 
   it('successfully creates a new snapshot with inputted information', async () => {
@@ -106,7 +109,57 @@ describe('EditWorkflowModal', () => {
     fireEvent.change(screen.getByRole('textbox', { name: 'Snapshot comment' }), {
       target: { value: 'snapshot comment' },
     });
-    fireEvent.click(screen.getByRole('checkbox', { name: 'Delete snapshot 3' }));
+
+    await user.click(screen.getByRole('button', { name: 'Create new snapshot' }));
+
+    // Assert
+    expect(editMethodProviderSuccess.createNewSnapshot).toHaveBeenCalledTimes(1);
+    expect(editMethodProviderSuccess.createNewSnapshot).toHaveBeenCalledWith(
+      'my-namespace',
+      'my-workflow',
+      3,
+      false,
+      'synopsis',
+      'documentation',
+      'workflow doStuff {}',
+      'snapshot comment'
+    );
+    expect(mockOnSuccess).toHaveBeenCalledWith('my-namespace', 'my-workflow', 4);
+    expect(mockOnDismiss).not.toHaveBeenCalled();
+  });
+
+  it('successfully creates a new snapshot with inputted information and deletes previous snapshot', async () => {
+    // Arrange
+    const mockOnSuccess = jest.fn();
+    const mockOnDismiss = jest.fn();
+
+    const user: UserEvent = userEvent.setup();
+
+    // Act
+    await act(async () => {
+      render(
+        <EditWorkflowModal
+          title='Edit'
+          namespace='my-namespace'
+          name='my-workflow'
+          snapshotId={3}
+          defaultWdl='workflow doStuff {}'
+          defaultDocumentation='documentation'
+          defaultSynopsis=''
+          editMethodProvider={editMethodProviderSuccess}
+          onSuccess={mockOnSuccess}
+          onDismiss={mockOnDismiss}
+        />
+      );
+    });
+
+    fireEvent.change(screen.getByRole('textbox', { name: 'Synopsis (80 characters max)' }), {
+      target: { value: 'synopsis' },
+    });
+    fireEvent.change(screen.getByRole('textbox', { name: 'Snapshot comment' }), {
+      target: { value: 'snapshot comment' },
+    });
+    await user.click(screen.getByRole('checkbox', { name: 'Delete snapshot 3' }));
 
     await user.click(screen.getByRole('button', { name: 'Create new snapshot' }));
 

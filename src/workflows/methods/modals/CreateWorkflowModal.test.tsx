@@ -298,7 +298,6 @@ describe('CreateWorkflowModal', () => {
           defaultWdl='workflow hi {}'
           defaultDocumentation='test docs'
           defaultSynopsis='test synopsis'
-          defaultSnapshotComment='test comment'
           postMethodProvider={successPostMethodProvider}
           onSuccess={mockOnSuccess}
           onDismiss={mockOnDismiss}
@@ -349,7 +348,6 @@ describe('CreateWorkflowModal', () => {
           defaultWdl='workflow hi {}'
           defaultDocumentation='test docs'
           defaultSynopsis='test synopsis'
-          defaultSnapshotComment='test comment'
           postMethodProvider={successPostMethodProvider}
           onSuccess={mockOnSuccess}
           onDismiss={mockOnDismiss}
@@ -363,7 +361,7 @@ describe('CreateWorkflowModal', () => {
     expect(screen.getByTestId('wdl editor')).toHaveDisplayValue('workflow hi {}');
     expect(screen.getByRole('textbox', { name: 'Documentation' })).toHaveDisplayValue('test docs');
     expect(screen.getByRole('textbox', { name: 'Synopsis (80 characters max)' })).toHaveDisplayValue('test synopsis');
-    expect(screen.getByRole('textbox', { name: 'Snapshot comment' })).toHaveDisplayValue('test comment');
+    expect(screen.getByRole('textbox', { name: 'Snapshot comment' })).toHaveDisplayValue('');
 
     // Act
     await user.click(screen.getByRole('button', { name: 'Upload' }));
@@ -376,7 +374,7 @@ describe('CreateWorkflowModal', () => {
       'workflow hi {}',
       'test docs',
       'test synopsis',
-      'test comment'
+      ''
     );
     expect(mockOnSuccess).toHaveBeenCalledWith('response-namespace', 'response-name', 1);
     expect(mockOnDismiss).not.toHaveBeenCalled();

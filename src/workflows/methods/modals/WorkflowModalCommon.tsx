@@ -32,12 +32,6 @@ export interface WorkflowModalCommonProps {
   defaultSynopsis?: string;
 
   /**
-   * The default value to be prefilled in the snapshot comment input. If not
-   * present, the input will initially be blank.
-   */
-  defaultSnapshotComment?: string;
-
-  /**
    * The function to be called with the namespace, name, and snapshot ID of the
    * created method snapshot after the user presses the primary modal button and
    * the triggered operation successfully completes.

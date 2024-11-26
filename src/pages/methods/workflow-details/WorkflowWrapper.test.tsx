@@ -1,4 +1,3 @@
-import { expect } from '@storybook/test';
 import { delay } from '@terra-ui-packages/core-utils';
 import { act, fireEvent, screen, within } from '@testing-library/react';
 import userEvent, { UserEvent } from '@testing-library/user-event';
@@ -640,7 +639,7 @@ describe('workflows container', () => {
     fireEvent.change(screen.getByRole('textbox', { name: 'Snapshot comment' }), {
       target: { value: "groot's new improved snapshot" },
     });
-    fireEvent.click(screen.getByRole('checkbox', { name: 'Delete snapshot 1' }));
+    await user.click(screen.getByRole('checkbox', { name: 'Delete snapshot 1' }));
 
     await user.click(screen.getByRole('button', { name: 'Create new snapshot' }));
 

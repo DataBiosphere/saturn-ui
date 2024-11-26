@@ -148,7 +148,6 @@ export const CreateWorkflowModal = (props: CreateWorkflowModalProps) => {
     defaultWdl,
     defaultDocumentation,
     defaultSynopsis,
-    defaultSnapshotComment,
     postMethodProvider,
     onSuccess,
     onDismiss,
@@ -159,7 +158,7 @@ export const CreateWorkflowModal = (props: CreateWorkflowModalProps) => {
   const [wdl, setWdl] = useState<string>(defaultWdl ?? '');
   const [documentation, setDocumentation] = useState<string>(defaultDocumentation ?? '');
   const [synopsis, setSynopsis] = useState<string>(defaultSynopsis ?? '');
-  const [snapshotComment, setSnapshotComment] = useState<string>(defaultSnapshotComment ?? '');
+  const [snapshotComment, setSnapshotComment] = useState<string>('');
 
   const [busy, setBusy] = useState<boolean>(false);
   const [submissionError, setSubmissionError] = useState<any>(null);
