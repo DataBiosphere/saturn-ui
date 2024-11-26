@@ -1,4 +1,3 @@
-import { expect } from '@storybook/test';
 import { act, fireEvent, screen, waitFor } from '@testing-library/react';
 import userEvent, { UserEvent } from '@testing-library/user-event';
 import _ from 'lodash/fp';
