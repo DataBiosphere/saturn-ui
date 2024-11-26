@@ -1,10 +1,12 @@
 import _ from 'lodash/fp';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { div, h } from 'react-hyperscript-helpers';
 import { AutoSizer, List } from 'react-virtualized';
 import ButtonBar from 'src/components/ButtonBar';
 import { ButtonPrimary, LabeledCheckbox, Link } from 'src/components/common';
 import IGVReferenceSelector, { addIgvRecentlyUsedReference, defaultIgvReference } from 'src/components/IGVReferenceSelector';
+import { Ajax } from 'src/libs/ajax';
+import { useCancellation } from 'src/libs/react-utils';
 import * as Style from 'src/libs/style';
 import * as Utils from 'src/libs/utils';
 
@@ -47,31 +49,64 @@ function indexMap(base) {
 }
 
 const findIndexForFile = (fileUrl, fileUrls) => {
-  if (!genomicFiles.some((extension) => fileUrl.endsWith(extension))) {
+  if (!genomicFiles.some((extension) => fileUrl.pathname.endsWith(extension))) {
     return undefined;
   }
 
-  if (isTdrUrl(fileUrl)) {
-    const parts = fileUrl.split('/').slice(2);
+  if (isTdrUrl(fileUrl.href)) {
+    const parts = fileUrl.href.split('/').slice(2);
     const bucket = parts[0];
     const datasetId = parts[1];
     // parts[2] is the fileRef. Skip it since the index file will have a different file ref.
     const otherPathSegments = parts.slice(3, -1);
-    const filename = parts.at(-1);
+    const filename = fileUrl.pathname;
     const [base, extension] = splitExtension(filename);
     const indexCandidates = indexMap(base)[extension].map(
       (candidate) => new RegExp([`gs://${bucket}`, datasetId, UUID_PATTERN, ...otherPathSegments, candidate].join('/'))
     );
-    return fileUrls.find((url) => indexCandidates.some((candidate) => candidate.test(url)));
+    return fileUrls.find((url) => indexCandidates.some((candidate) => candidate.test(url.href)));
   }
-  const [base, extension] = splitExtension(fileUrl);
+  const [base, extension] = splitExtension(fileUrl.pathname);
   const indexCandidates = indexMap(base)[extension];
 
-  return fileUrls.find((url) => indexCandidates.includes(url));
+  return fileUrls.find((url) => indexCandidates.includes(url.href));
 };
 
-export const getValidIgvFiles = (values) => {
-  const fileUrls = values.filter((value) => {
+// Determine whether filename has an IGV-eligible extension
+const hasValidIgvExtension = (filename) => {
+  const [base, extension] = splitExtension(filename);
+  return !!base && allFiles.includes(extension);
+};
+
+export const resolveValidIgvDrsUris = async (values, signal) => {
+  const igvDrsUris = [];
+
+  await Promise.all(
+    values.map(async (value) => {
+      if (value.startsWith('drs://')) {
+        const json = await Ajax(signal).DrsUriResolver.getDataObjectMetadata(value, ['fileName']);
+        const filename = json.fileName;
+        const isValid = hasValidIgvExtension(filename);
+        if (isValid) {
+          igvDrsUris.push(value);
+        }
+      }
+    })
+  );
+
+  const igvAccessUrls = [];
+  await Promise.all(
+    igvDrsUris.map(async (value) => {
+      const { accessUrl } = await Ajax(signal).DrsUriResolver.getDataObjectMetadata(value, ['accessUrl']);
+      igvAccessUrls.push(accessUrl.url);
+    })
+  );
+
+  return igvAccessUrls;
+};
+
+export const getValidIgvFiles = async (values, signal) => {
+  const basicFileUrls = values.filter((value) => {
     let url;
     try {
       // Filter to values containing URLs.
@@ -83,36 +118,56 @@ export const getValidIgvFiles = (values) => {
       }
 
       // Filter to URLs that point to a file with one of the relevant extensions.
-      const basename = url.pathname.split('/').at(-1);
-      const [base, extension] = splitExtension(basename);
-      return !!base && allFiles.includes(extension);
+      const filename = url.pathname.split('/').at(-1);
+      const isValid = hasValidIgvExtension(filename);
+      return isValid;
     } catch (err) {
       return false;
     }
   });
 
+  const accessUrls = await resolveValidIgvDrsUris(values, signal);
+  const fileUrlStrings = basicFileUrls.concat(accessUrls);
+  const fileUrls = fileUrlStrings.map((fus) => new URL(fus));
+
   return fileUrls.flatMap((fileUrl) => {
-    if (fileUrl.endsWith('.bed')) {
-      return [{ filePath: fileUrl, indexFilePath: false }];
+    if (fileUrl.pathname.endsWith('.bed')) {
+      return [{ filePath: fileUrl.href, indexFilePath: false }];
     }
     const indexFileUrl = findIndexForFile(fileUrl, fileUrls);
-    return indexFileUrl !== undefined ? [{ filePath: fileUrl, indexFilePath: indexFileUrl }] : [];
+    if (indexFileUrl !== undefined) {
+      return [{ filePath: fileUrl.href, indexFilePath: indexFileUrl }];
+    }
+    return [];
   });
 };
 
-export const getValidIgvFilesFromAttributeValues = (attributeValues) => {
+export const getValidIgvFilesFromAttributeValues = async (attributeValues, signal) => {
   const allAttributeStrings = _.flatMap(getStrings, attributeValues);
-  return getValidIgvFiles(allAttributeStrings);
+  const validIgvFiles = await getValidIgvFiles(allAttributeStrings, signal);
+  return validIgvFiles;
 };
 
 const IGVFileSelector = ({ selectedEntities, onSuccess }) => {
   const [refGenome, setRefGenome] = useState(defaultIgvReference);
   const isRefGenomeValid = Boolean(_.get('genome', refGenome) || _.get('reference.fastaURL', refGenome));
 
-  const [selections, setSelections] = useState(() => {
-    const allAttributeValues = _.flatMap(_.flow(_.get('attributes'), _.values), selectedEntities);
-    return getValidIgvFilesFromAttributeValues(allAttributeValues);
-  });
+  // const allAttributeValues = _.flatMap(_.flow(_.get('attributes'), _.values), selectedEntities);
+  // const defaultSelections = await getValidIgvFilesFromAttributeValues(allAttributeValues);
+
+  const [selections, setSelections] = useState([]);
+
+  const signal = useCancellation();
+
+  useEffect(() => {
+    async function fetchData() {
+      const allAttributeValues = _.flatMap(_.flow(_.get('attributes'), _.values), selectedEntities);
+      const selections = await getValidIgvFilesFromAttributeValues(allAttributeValues, signal);
+      setSelections(selections);
+    }
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const selections = fetchData();
+  }, [selectedEntities, setSelections, signal]);
 
   const toggleSelected = (index) => setSelections(_.update([index, 'isSelected'], (v) => !v));
   const numSelected = _.countBy('isSelected', selections).true;
