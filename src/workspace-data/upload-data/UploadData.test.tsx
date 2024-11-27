@@ -53,10 +53,6 @@ jest.mock('src/workspaces/common/state/useWorkspaces', () => ({
   }),
 }));
 
-jest.mock('src/libs/feature-previews', () => ({
-  isFeaturePreviewEnabled: jest.fn(),
-}));
-
 jest.mock('src/components/Dropzone', () => {
   const actual = jest.requireActual('src/components/Dropzone');
   return {
@@ -122,48 +118,58 @@ describe('UploadData Component', () => {
   };
 
   it('Renders data uploader', () => {
+    // Arrange
     renderWithAppContexts(<UploadData />);
+
+    // Act & Assert
     expect(screen.getByRole('main')).toBeInTheDocument();
     expect(screen.getByText('Data Uploader')).toBeInTheDocument();
   });
 
   it('Displays option to select a workspace', () => {
+    // Arrange
     renderWithAppContexts(<UploadData />);
+
+    // Act & Assert
     expect(screen.getByText('Select a Workspace')).toBeInTheDocument();
   });
 
   it('Allows selection of a workspace and move to the next step', async () => {
-    // Select workspace
+    // Arrange
     await selectOptionAndGoToNext({ workspace: 'mockWorkspaceId' });
+
+    // Act & Assert
     await expect(screen.getByText('Select a collection')).toBeInTheDocument();
   });
 
   it('Allows selection of a collection and move to the next step', async () => {
-    // Select workspace & collection
+    // Arrange
     await selectOptionAndGoToNext({ workspace: 'mockWorkspaceId', collection: 'collection1' });
+
+    // Act & Assert
     await expect(screen.getByText('Upload Your Data Files')).toBeInTheDocument();
   });
 
   it('Allows upload of files to dropzone', async () => {
-    // Select workspace & collection
+    // Arrange
     await selectOptionAndGoToNext({ workspace: 'mockWorkspaceId', collection: 'collection1' });
 
-    // Upload data file to Storage
+    // Act
     await uploadDataFileToStorage();
 
+    // Assert
     await expect(screen.findByText('test1.tsv')).toBeTruthy();
   });
 
   it('Can manually upload a metadata TSV file', async () => {
-    // Select workspace & collection
+    // Arrange
     await selectOptionAndGoToNext({ workspace: 'mockWorkspaceId', collection: 'collection1' });
 
-    // Upload data file to Storage
+    // Act
     await uploadDataFileToStorage();
-
-    // Go to next step [Upload Metadata]
     fireEvent.click(screen.getByText('Next >'));
 
+    // Assert
     await expect(screen.findByText('Upload Your Metadata Files')).toBeTruthy();
     await expect(screen.getByRole('table')).toBeInTheDocument();
     await expect(screen.findByText('Create Table')).toBeTruthy();
