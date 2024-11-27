@@ -118,35 +118,35 @@ describe('UploadData Component', () => {
   };
 
   it('Renders data uploader', () => {
-    // Arrange
+    // Arrange & Act
     renderWithAppContexts(<UploadData />);
 
-    // Act & Assert
+    // Assert
     expect(screen.getByRole('main')).toBeInTheDocument();
     expect(screen.getByText('Data Uploader')).toBeInTheDocument();
   });
 
   it('Displays option to select a workspace', () => {
-    // Arrange
+    // Arrange & Act
     renderWithAppContexts(<UploadData />);
 
-    // Act & Assert
+    // Assert
     expect(screen.getByText('Select a Workspace')).toBeInTheDocument();
   });
 
   it('Allows selection of a workspace and move to the next step', async () => {
-    // Arrange
+    // Arrange & Act
     await selectOptionAndGoToNext({ workspace: 'mockWorkspaceId' });
 
-    // Act & Assert
+    // Assert
     await expect(screen.getByText('Select a collection')).toBeInTheDocument();
   });
 
   it('Allows selection of a collection and move to the next step', async () => {
-    // Arrange
+    // Arrange & Act
     await selectOptionAndGoToNext({ workspace: 'mockWorkspaceId', collection: 'collection1' });
 
-    // Act & Assert
+    // Assert
     await expect(screen.getByText('Upload Your Data Files')).toBeInTheDocument();
   });
 
