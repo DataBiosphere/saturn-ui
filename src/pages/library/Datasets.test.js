@@ -6,6 +6,8 @@ import { dataCatalogStore } from 'src/libs/state';
 import { Datasets } from 'src/pages/library/Datasets';
 import { renderWithAppContexts as render } from 'src/testing/test-utils';
 
+jest.mock('src/libs/ajax/Metrics');
+
 jest.mock('src/libs/brand-utils', () => {
   const { brands } = jest.requireActual('src/libs/brands');
   return {

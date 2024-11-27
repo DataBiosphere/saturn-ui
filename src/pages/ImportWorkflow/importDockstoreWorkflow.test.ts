@@ -1,11 +1,11 @@
-import { DeepPartial } from '@terra-ui-packages/core-utils';
-import { Ajax, AjaxContract } from 'src/libs/ajax';
-import { WorkspacesAjaxContract } from 'src/libs/ajax/workspaces/Workspaces';
-import { asMockedFn } from 'src/testing/test-utils';
+import { Methods, MethodsAjaxContract } from 'src/libs/ajax/methods/Methods';
+import { WorkspaceContract, Workspaces, WorkspacesAjaxContract } from 'src/libs/ajax/workspaces/Workspaces';
+import { asMockedFn, MockedFn, partial } from 'src/testing/test-utils';
 
 import { importDockstoreWorkflow } from './importDockstoreWorkflow';
 
-jest.mock('src/libs/ajax');
+jest.mock('src/libs/ajax/methods/Methods');
+jest.mock('src/libs/ajax/workspaces/Workspaces');
 
 describe('importDockstoreWorkflow', () => {
   const testWorkspace = {
@@ -19,48 +19,48 @@ describe('importDockstoreWorkflow', () => {
     source: 'dockstore',
   };
 
-  let workspaceAjax;
-  let workspaceMethodConfigAjax;
-  let methodConfigInputsOutputs;
-  let importMethodConfig;
-  let deleteMethodConfig;
+  let workspaceMethodConfigAjax: MockedFn<WorkspaceContract['methodConfig']>;
+  let methodConfigInputsOutputs: MockedFn<MethodsAjaxContract['configInputsOutputs']>;
+  let importMethodConfig: MockedFn<WorkspaceContract['importMethodConfig']>;
+  let deleteMethodConfig: MockedFn<ReturnType<WorkspaceContract['methodConfig']>['delete']>;
+
+  type MethodConfigContract = ReturnType<WorkspaceContract['methodConfig']>;
 
   beforeEach(() => {
     // Arrange
-    importMethodConfig = jest.fn().mockResolvedValue(undefined);
-    deleteMethodConfig = jest.fn().mockResolvedValue(undefined);
+    importMethodConfig = jest.fn(async (_config) => partial<Response>({}));
+    deleteMethodConfig = jest.fn(async () => partial<Response>({}));
 
-    const mockWorkspaceMethodConfigAjax: Partial<ReturnType<WorkspacesAjaxContract['workspace']>['methodConfig']> = {
-      delete: deleteMethodConfig,
-    };
+    workspaceMethodConfigAjax = jest.fn((_namespace, _name) =>
+      partial<MethodConfigContract>({
+        delete: deleteMethodConfig,
+      })
+    );
 
-    workspaceMethodConfigAjax = jest.fn().mockReturnValue(mockWorkspaceMethodConfigAjax);
-
-    const mockWorkspaceAjax: DeepPartial<ReturnType<WorkspacesAjaxContract['workspace']>> = {
-      entityMetadata: () =>
-        Promise.resolve({
-          participant: { count: 1, idName: 'participant_id', attributeNames: [] },
-          sample: { count: 1, idName: 'sample_id', attributeNames: [] },
-        }),
-      importMethodConfig,
-      methodConfig: workspaceMethodConfigAjax,
-    };
-
-    workspaceAjax = jest.fn().mockReturnValue(mockWorkspaceAjax);
-
-    methodConfigInputsOutputs = jest.fn().mockResolvedValue({
+    methodConfigInputsOutputs = jest.fn(async (_configs) => ({
       inputs: [],
       outputs: [
         { name: 'taskA.output1', outputType: 'String' },
         { name: 'taskA.output2', outputType: 'String' },
       ],
-    });
+    }));
 
-    const mockAjax: DeepPartial<AjaxContract> = {
-      Workspaces: { workspace: workspaceAjax },
-      Methods: { configInputsOutputs: methodConfigInputsOutputs },
-    };
-    asMockedFn(Ajax).mockImplementation(() => mockAjax as AjaxContract);
+    asMockedFn(Workspaces).mockReturnValue(
+      partial<WorkspacesAjaxContract>({
+        workspace: () =>
+          partial<WorkspaceContract>({
+            entityMetadata: async () => ({
+              participant: { count: 1, idName: 'participant_id', attributeNames: [] },
+              sample: { count: 1, idName: 'sample_id', attributeNames: [] },
+            }),
+            importMethodConfig,
+            methodConfig: workspaceMethodConfigAjax,
+          }),
+      })
+    );
+    asMockedFn(Methods).mockReturnValue(
+      partial<MethodsAjaxContract>({ configInputsOutputs: methodConfigInputsOutputs })
+    );
   });
 
   it('imports workflow into workspace', async () => {
