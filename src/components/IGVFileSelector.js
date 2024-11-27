@@ -66,10 +66,11 @@ const findIndexForFile = (fileUrl, fileUrls) => {
     );
     return fileUrls.find((url) => indexCandidates.some((candidate) => candidate.test(url.href)));
   }
+
   const [base, extension] = splitExtension(fileUrl.pathname);
   const indexCandidates = indexMap(base)[extension];
 
-  return fileUrls.find((url) => indexCandidates.includes(url.href));
+  return fileUrls.find((url) => indexCandidates.includes(url.pathname));
 };
 
 // Determine whether filename has an IGV-eligible extension
@@ -136,7 +137,7 @@ export const getValidIgvFiles = async (values, signal) => {
     }
     const indexFileUrl = findIndexForFile(fileUrl, fileUrls);
     if (indexFileUrl !== undefined) {
-      return [{ filePath: fileUrl.href, indexFilePath: indexFileUrl }];
+      return [{ filePath: fileUrl.href, indexFilePath: indexFileUrl.href }];
     }
     return [];
   });
@@ -144,6 +145,7 @@ export const getValidIgvFiles = async (values, signal) => {
 
 export const getValidIgvFilesFromAttributeValues = async (attributeValues, signal) => {
   const allAttributeStrings = _.flatMap(getStrings, attributeValues);
+
   const validIgvFiles = await getValidIgvFiles(allAttributeStrings, signal);
   return validIgvFiles;
 };
@@ -165,8 +167,7 @@ const IGVFileSelector = ({ selectedEntities, onSuccess }) => {
       const selections = await getValidIgvFilesFromAttributeValues(allAttributeValues, signal);
       setSelections(selections);
     }
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const selections = fetchData();
+    fetchData();
   }, [selectedEntities, setSelections, signal]);
 
   const toggleSelected = (index) => setSelections(_.update([index, 'isSelected'], (v) => !v));

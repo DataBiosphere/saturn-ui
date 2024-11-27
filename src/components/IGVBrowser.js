@@ -5,8 +5,7 @@ import { ButtonOutline, Link } from 'src/components/common';
 import { getUserProjectForWorkspace, parseGsUri } from 'src/components/data/data-utils';
 import { centeredSpinner, icon } from 'src/components/icons';
 import IGVAddTrackModal from 'src/components/IGVAddTrackModal';
-import { GoogleStorage } from 'src/libs/ajax/GoogleStorage';
-import { saToken } from 'src/libs/ajax/GoogleStorage';
+import { GoogleStorage, saToken } from 'src/libs/ajax/GoogleStorage';
 import colors from 'src/libs/colors';
 import { reportError, withErrorReporting } from 'src/libs/error';
 import { useCancellation, useOnMount } from 'src/libs/react-utils';
@@ -38,6 +37,11 @@ const IGVBrowser = ({ selectedFiles, refGenome: { genome, reference }, workspace
     // Requesting a file will store its requester pays status in knownBucketRequesterPaysStatuses.
     const isRequesterPays = await Promise.all(
       _.map(async (url) => {
+        // As seen in requester-pays access URLs resolved from a DRS URI, e.g. AnVIL
+        if (url.startsWith('https') && url.includes('requestedBy=') && url.includes('userProject=')) {
+          return true;
+        }
+
         const [bucket, file] = parseGsUri(url);
 
         if (knownBucketRequesterPaysStatuses.get()[bucket] === undefined) {
