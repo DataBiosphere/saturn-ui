@@ -8,7 +8,9 @@ import { centeredSpinner } from 'src/components/icons';
 import { libraryTopMatter } from 'src/components/library-common';
 import broadSquare from 'src/images/library/code/broad-square.svg';
 import dockstoreLogo from 'src/images/library/code/dockstore.svg';
-import { Ajax } from 'src/libs/ajax';
+import { Dockstore } from 'src/libs/ajax/Dockstore';
+import { FirecloudBucket } from 'src/libs/ajax/firecloud/FirecloudBucket';
+import { Methods } from 'src/libs/ajax/methods/Methods';
 import { getEnabledBrand } from 'src/libs/brand-utils';
 import colors from 'src/libs/colors';
 import { getConfig } from 'src/libs/config';
@@ -118,9 +120,9 @@ export const MethodRepoTile = () => {
 
 const getFeaturedMethods = async (signal) => {
   const [featuredMethods, methodsRepoMethodsList, dockstoreMethodsList] = await Promise.all([
-    Ajax(signal).FirecloudBucket.getFeaturedMethods(),
-    Ajax(signal).Methods.list({ namespace: 'gatk' }),
-    Ajax(signal).Dockstore.listTools({ organization: 'gatk-workflows' }),
+    FirecloudBucket(signal).getFeaturedMethods(),
+    Methods(signal).list({ namespace: 'gatk' }),
+    Dockstore(signal).listTools({ organization: 'gatk-workflows' }),
   ]);
 
   const methodsRepoMethodDetails = _.flow(

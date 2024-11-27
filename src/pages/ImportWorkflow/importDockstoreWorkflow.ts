@@ -1,5 +1,6 @@
 import _ from 'lodash/fp';
-import { Ajax } from 'src/libs/ajax';
+import { Methods } from 'src/libs/ajax/methods/Methods';
+import { Workspaces } from 'src/libs/ajax/workspaces/Workspaces';
 
 type ImportDockstoreWorkflowArgs = {
   workspace: {
@@ -25,11 +26,11 @@ export const importDockstoreWorkflow = async (
   const { name, namespace } = workspace;
   const { path, version, source } = workflow;
 
-  const workspaceApi = Ajax().Workspaces.workspace(namespace, name);
+  const workspaceApi = Workspaces().workspace(namespace, name);
 
   const [entityMetadata, { outputs: workflowOutputs }] = await Promise.all([
     workspaceApi.entityMetadata(),
-    Ajax().Methods.configInputsOutputs({
+    Methods().configInputsOutputs({
       methodRepoMethod: {
         methodPath: path,
         methodVersion: version,
