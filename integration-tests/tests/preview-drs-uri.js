@@ -54,8 +54,6 @@ const testPreviewDrsUriFn = _.flow(
   await click(page, clickable({ textContains: testEntity.entityType }));
   console.log('opening preview for entity...');
   await click(page, elementInDataTableRow(testEntity.name, testEntity.attributes.file_uri));
-  console.log('waiting for no spinners in preview modal...');
-  await waitForNoSpinners(page);
   console.log('verifying text in preview modal...');
   await findText(page, 'Filename');
   await findText(page, 'File size');
