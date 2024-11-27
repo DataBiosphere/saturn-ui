@@ -53,20 +53,25 @@ export const BucketLocation = requesterPaysWrapper({ onDismiss: _.noop })((props
   }, [workspace, needsRequesterPaysProject, signal, storageDetails.fetchedGoogleBucketLocation]);
 
   useEffect(() => {
-    if (workspace?.workspaceInitialized) {
-      switch (storageDetails.fetchedGoogleBucketLocation) {
-        case 'SUCCESS':
-          setBucketLocation({
-            location: storageDetails.googleBucketLocation,
-            locationType: storageDetails.googleBucketType,
-          });
-          setLoading(false);
-          break;
-        default:
-          loadGoogleBucketLocation();
-          break;
-      }
+    // Check if the workspace is initialized
+    if (!workspace?.workspaceInitialized) {
+      return;
     }
+
+    // Handle the fetched Google Bucket location status
+    if (storageDetails.fetchedGoogleBucketLocation === 'SUCCESS') {
+      // If the location fetch was successful, set the bucket location and type
+      setBucketLocation({
+        location: storageDetails.googleBucketLocation,
+        locationType: storageDetails.googleBucketType,
+      });
+      // Set loading to false as the operation is complete
+      setLoading(false);
+      return;
+    }
+
+    // If the location fetch was not successful, load the Google Bucket location
+    loadGoogleBucketLocation();
   }, [
     loadGoogleBucketLocation,
     setBucketLocation,
