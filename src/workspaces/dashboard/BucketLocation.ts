@@ -54,25 +54,17 @@ export const BucketLocation = requesterPaysWrapper({ onDismiss: _.noop })((props
 
   useEffect(() => {
     if (workspace?.workspaceInitialized) {
-      if (storageDetails.fetchedGoogleBucketLocation === 'ERROR') {
-        // storageDetails.fetchedGoogleBucketLocation stores if an error was encountered from the server,
-        // while storageDetails.googleBucketLocation will contain the default value.
-        // In the case of requester pays workspaces, we wish to show the user more information in this case and allow them to link a workspace.
-        loadGoogleBucketLocation();
-      } else if (storageDetails.fetchedGoogleBucketLocation === 'RPERROR') {
-        // Immediately fetch location using user project if the requesterPaysProjectStore is already set
-        if (requesterPaysProjectStore.get()) {
-          loadGoogleBucketLocation();
-        } else {
-          setNeedsRequesterPaysProject(true);
+      switch (storageDetails.fetchedGoogleBucketLocation) {
+        case 'SUCCESS':
+          setBucketLocation({
+            location: storageDetails.googleBucketLocation,
+            locationType: storageDetails.googleBucketType,
+          });
           setLoading(false);
-        }
-      } else if (storageDetails.fetchedGoogleBucketLocation === 'SUCCESS') {
-        setBucketLocation({
-          location: storageDetails.googleBucketLocation,
-          locationType: storageDetails.googleBucketType,
-        });
-        setLoading(false);
+          break;
+        default:
+          loadGoogleBucketLocation();
+          break;
       }
     }
   }, [
