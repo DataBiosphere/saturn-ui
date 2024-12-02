@@ -7,7 +7,7 @@ import { icon } from 'src/components/icons';
 import { InfoBox } from 'src/components/InfoBox';
 import { ValidatedTextArea } from 'src/components/input';
 import { getRegionInfo } from 'src/components/region-common';
-import { Ajax } from 'src/libs/ajax';
+import { Workspaces } from 'src/libs/ajax/workspaces/Workspaces';
 import { launch } from 'src/libs/analysis';
 import colors from 'src/libs/colors';
 import { withErrorReporting } from 'src/libs/error';
@@ -50,7 +50,7 @@ const LaunchAnalysisModal = ({
 
   useOnMount(() => {
     const loadBucketLocation = withErrorReporting('Error loading bucket location')(async () => {
-      const { location, locationType } = await Ajax(signal).Workspaces.workspace(namespace, workspaceName).checkBucketLocation(googleProject);
+      const { location, locationType } = await Workspaces(signal).workspace(namespace, workspaceName).checkBucketLocation(googleProject);
       setBucketLocation({ location, locationType });
     });
 

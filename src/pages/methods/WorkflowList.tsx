@@ -9,7 +9,7 @@ import { DelayedSearchInput } from 'src/components/input';
 import { TabBar } from 'src/components/tabBars';
 import { FlexTable, HeaderCell, Paginator, Sortable, TooltipCell } from 'src/components/table';
 import { TopBar } from 'src/components/TopBar';
-import { Ajax } from 'src/libs/ajax';
+import { Methods } from 'src/libs/ajax/methods/Methods';
 import { MethodDefinition } from 'src/libs/ajax/methods/methods-models';
 import { postMethodProvider } from 'src/libs/ajax/methods/providers/PostMethodProvider';
 import * as Nav from 'src/libs/nav';
@@ -165,7 +165,7 @@ export const WorkflowList = (props: WorkflowListProps) => {
 
     const loadWorkflows = withBusyState(setBusy, async () => {
       try {
-        const allWorkflows: MethodDefinition[] = await Ajax(signal).Methods.definitions();
+        const allWorkflows: MethodDefinition[] = await Methods(signal).definitions();
 
         setWorkflows({
           mine: _.filter(isMine, allWorkflows),

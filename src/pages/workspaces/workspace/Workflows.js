@@ -11,8 +11,11 @@ import { MarkdownViewer } from 'src/components/markdown';
 import { MenuButton } from 'src/components/MenuButton';
 import { PageBox } from 'src/components/PageBox';
 import { makeMenuIcon, MenuTrigger } from 'src/components/PopupTrigger';
-import { Ajax } from 'src/libs/ajax';
+import { FirecloudBucket } from 'src/libs/ajax/firecloud/FirecloudBucket';
+import { Methods } from 'src/libs/ajax/methods/Methods';
+import { Metrics } from 'src/libs/ajax/Metrics';
 import { makeExportWorkflowFromWorkspaceProvider } from 'src/libs/ajax/workspaces/providers/ExportWorkflowToWorkspaceProvider';
+import { Workspaces } from 'src/libs/ajax/workspaces/Workspaces';
 import colors from 'src/libs/colors';
 import { reportError, withErrorReporting } from 'src/libs/error';
 import Events, { extractWorkspaceDetails } from 'src/libs/events';
@@ -205,10 +208,7 @@ export const FindWorkflowModal = ({ namespace, name, ws, onDismiss }) => {
   // Lifecycle
   useOnMount(() => {
     const load = async () => {
-      const [featuredList, methods] = await Promise.all([
-        Ajax(signal).FirecloudBucket.getFeaturedMethods(),
-        Ajax(signal).Methods.list({ namespace: 'gatk' }),
-      ]);
+      const [featuredList, methods] = await Promise.all([FirecloudBucket(signal).getFeaturedMethods(), Methods(signal).list({ namespace: 'gatk' })]);
 
       setFeaturedList(featuredList);
       setMethods(methods);
@@ -222,7 +222,7 @@ export const FindWorkflowModal = ({ namespace, name, ws, onDismiss }) => {
     setSelectedWorkflow(workflow);
     try {
       const { namespace, name, snapshotId } = workflow;
-      const details = await Ajax(signal).Methods.method(namespace, name, snapshotId).get();
+      const details = await Methods(signal).method(namespace, name, snapshotId).get();
       setSelectedWorkflowDetails(details);
     } catch (error) {
       reportError('Error loading workflow', error);
@@ -236,17 +236,17 @@ export const FindWorkflowModal = ({ namespace, name, ws, onDismiss }) => {
     const eventData = { source: 'repo', ...extractWorkspaceDetails(ws) };
 
     try {
-      const methodAjax = Ajax().Methods.method(selectedWorkflow.namespace, selectedWorkflow.name, selectedWorkflow.snapshotId);
+      const methodAjax = Methods().method(selectedWorkflow.namespace, selectedWorkflow.name, selectedWorkflow.snapshotId);
       const config = _.maxBy('snapshotId', await methodAjax.configs());
       const { namespace: workflowNamespace, name: workflowName } = config || selectedWorkflow;
 
       await methodAjax.toWorkspace({ namespace, name }, config);
 
-      Ajax().Metrics.captureEvent(Events.workflowImport, { ...eventData, success: true });
+      void Metrics().captureEvent(Events.workflowImport, { ...eventData, success: true });
       Nav.goToPath('workflow', { namespace, name, workflowNamespace, workflowName });
     } catch (error) {
       reportError('Error importing workflow', error);
-      Ajax().Metrics.captureEvent(Events.workflowImport, { ...eventData, success: false });
+      void Metrics().captureEvent(Events.workflowImport, { ...eventData, success: false });
       setExporting(false);
     }
   };
@@ -350,7 +350,7 @@ export const Workflows = _.flow(
     Utils.withBusyState(setLoading),
     withErrorReporting('Error loading configs')
   )(async () => {
-    const configs = await Ajax(signal).Workspaces.workspace(namespace, name).listMethodConfigs();
+    const configs = await Workspaces(signal).workspace(namespace, name).listMethodConfigs();
     setConfigs(configs);
   });
 
@@ -456,7 +456,7 @@ export const Workflows = _.flow(
           )(async () => {
             setWorkflowToDelete(undefined);
             const { namespace, name } = getConfig(workflowToDelete);
-            await Ajax().Workspaces.workspace(workspace.namespace, workspace.name).methodConfig(namespace, name).delete();
+            await Workspaces().workspace(workspace.namespace, workspace.name).methodConfig(namespace, name).delete();
             refresh();
           }),
         }),

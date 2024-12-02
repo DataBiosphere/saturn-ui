@@ -7,7 +7,7 @@ import { spinnerOverlay } from 'src/components/common';
 import FooterWrapper from 'src/components/FooterWrapper';
 import { TabBar } from 'src/components/tabBars';
 import { TopBar } from 'src/components/TopBar';
-import { Ajax } from 'src/libs/ajax';
+import { Methods } from 'src/libs/ajax/methods/Methods';
 import { Snapshot } from 'src/libs/ajax/methods/methods-models';
 import { editMethodProvider } from 'src/libs/ajax/methods/providers/EditMethodProvider';
 import { postMethodProvider } from 'src/libs/ajax/methods/providers/PostMethodProvider';
@@ -73,7 +73,7 @@ export const wrapWorkflows = (opts: WrapWorkflowOptions) => {
           : undefined;
 
       const doSnapshotsListLoad = async () => {
-        const loadedSnapshots: Snapshot[] = snapshotsList || (await Ajax(signal).Methods.list({ namespace, name }));
+        const loadedSnapshots: Snapshot[] = snapshotsList || (await Methods(signal).list({ namespace, name }));
         snapshotsListStore.set(loadedSnapshots);
         if (_.isEmpty(loadedSnapshots)) {
           setMethodNotFound(true);
@@ -146,7 +146,7 @@ export const WorkflowsContainer = (props: WorkflowContainerProps) => {
   );
 
   const doSnapshotLoad = async () => {
-    snapshotStore.set(await Ajax(signal).Methods.method(namespace, name, selectedSnapshot).get());
+    snapshotStore.set(await Methods(signal).method(namespace, name, selectedSnapshot).get());
   };
 
   const checkForSnapshotNotFound: ErrorCallback = (error: unknown) => {
@@ -178,7 +178,7 @@ export const WorkflowsContainer = (props: WorkflowContainerProps) => {
   });
 
   const deleteSnapshot = async () => {
-    await Ajax(signal).Methods.method(namespace, name, selectedSnapshot).delete();
+    await Methods(signal).method(namespace, name, selectedSnapshot).delete();
 
     // Replace the current history entry linking to the method details page of a
     // specific snapshot, like /#methods/sschu/echo-strings-test/29, with an

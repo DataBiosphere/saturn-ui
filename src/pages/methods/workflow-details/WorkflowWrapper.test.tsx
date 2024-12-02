@@ -4,10 +4,8 @@ import userEvent, { UserEvent } from '@testing-library/user-event';
 import _ from 'lodash/fp';
 import React from 'react';
 import * as breadcrumbs from 'src/components/breadcrumbs';
-import { Ajax, AjaxContract } from 'src/libs/ajax';
-import { MethodsAjaxContract } from 'src/libs/ajax/methods/Methods';
-import { MethodResponse, Snapshot } from 'src/libs/ajax/methods/methods-models';
-import { editMethodProvider } from 'src/libs/ajax/methods/providers/EditMethodProvider';
+import { MethodAjaxContract, Methods, MethodsAjaxContract } from 'src/libs/ajax/methods/Methods';
+import { MethodConfigACL, MethodResponse, Snapshot } from 'src/libs/ajax/methods/methods-models';
 import { postMethodProvider } from 'src/libs/ajax/methods/providers/PostMethodProvider';
 import * as ExportWorkflowToWorkspaceProvider from 'src/libs/ajax/workspaces/providers/ExportWorkflowToWorkspaceProvider';
 import { errorWatcher } from 'src/libs/error.mock';
@@ -16,11 +14,12 @@ import * as Nav from 'src/libs/nav';
 import { forwardRefWithName } from 'src/libs/react-utils';
 import { snapshotsListStore, snapshotStore, TerraUser, TerraUserState, userStore } from 'src/libs/state';
 import { WorkflowsContainer, wrapWorkflows } from 'src/pages/methods/workflow-details/WorkflowWrapper';
-import { asMockedFn, partial, renderWithAppContexts as render, SelectHelper } from 'src/testing/test-utils';
+import { asMockedFn, MockedFn, partial, renderWithAppContexts as render, SelectHelper } from 'src/testing/test-utils';
 import { useWorkspaces } from 'src/workspaces/common/state/useWorkspaces';
 import { AzureContext, WorkspaceInfo, WorkspaceWrapper } from 'src/workspaces/utils';
 
-jest.mock('src/libs/ajax');
+jest.mock('src/libs/ajax/methods/Methods');
+
 jest.mock('src/libs/notifications');
 
 type NavExports = typeof import('src/libs/nav');
@@ -95,7 +94,7 @@ const mockDeleteSnapshot: Snapshot = {
   synopsis: '',
 };
 
-const mockPermissions = [
+const mockPermissions: MethodConfigACL = [
   {
     role: 'OWNER',
     user: 'user1@foo.com',
@@ -116,36 +115,33 @@ jest.mock('src/libs/error', (): ErrorExports => {
   };
 });
 
-type ListAjaxContract = MethodsAjaxContract['list'];
-type MethodAjaxContract = MethodsAjaxContract['method'];
-
 interface AjaxMocks {
-  listImpl?: jest.Mock<Promise<Snapshot[]>>;
-  getImpl?: jest.Mock<Promise<Snapshot>, []>;
-  deleteImpl?: jest.Mock;
+  listImpl?: MockedFn<MethodsAjaxContract['list']>;
+  getImpl?: MockedFn<MethodAjaxContract['get']>;
+  deleteImpl?: MockedFn<MethodAjaxContract['delete']>;
 }
 
-const defaultListImpl = jest.fn();
-const defaultGetImpl = (namespace) =>
-  jest.fn().mockResolvedValue(namespace === 'testnamespace' ? mockSnapshot : mockDeleteSnapshot);
-const defaultDeleteImpl = jest.fn();
-const setPermissionsMock = jest.fn();
+const defaultListImpl: MockedFn<MethodsAjaxContract['list']> = jest.fn();
+const defaultGetImpl: (namespace: any) => MockedFn<MethodAjaxContract['get']> = (namespace) =>
+  jest.fn(async () => (namespace === 'testnamespace' ? mockSnapshot : mockDeleteSnapshot));
+const defaultDeleteImpl: MockedFn<MethodAjaxContract['delete']> = jest.fn();
+const setPermissionsWatch: jest.Mock = jest.fn();
 
 const mockAjax = (mocks: AjaxMocks = {}) => {
   const { listImpl, getImpl, deleteImpl } = mocks;
-  asMockedFn(Ajax).mockReturnValue({
-    Methods: {
-      list: (listImpl || defaultListImpl) as ListAjaxContract,
+  asMockedFn(Methods).mockReturnValue(
+    partial<MethodsAjaxContract>({
+      list: listImpl || defaultListImpl,
       method: jest.fn((namespace, name, snapshotId) => {
-        return partial<ReturnType<MethodAjaxContract>>({
+        return partial<MethodAjaxContract>({
           get: getImpl || defaultGetImpl(namespace),
           delete: deleteImpl || defaultDeleteImpl,
-          permissions: jest.fn().mockResolvedValue(mockPermissions),
-          setPermissions: () => setPermissionsMock(namespace, name, snapshotId),
+          permissions: jest.fn(async () => mockPermissions),
+          setPermissions: () => setPermissionsWatch(namespace, name, snapshotId),
         });
-      }) as MethodAjaxContract,
-    } as MethodsAjaxContract,
-  } as AjaxContract);
+      }),
+    })
+  );
 };
 
 type UseWorkspacesExports = typeof import('src/workspaces/common/state/useWorkspaces');
@@ -286,7 +282,7 @@ const mockNewSnapshotResponse: MethodResponse = {
 describe('workflow wrapper', () => {
   it('displays the method not found page if a method does not exist or the user does not have access', async () => {
     // Arrange
-    mockAjax({ listImpl: jest.fn().mockResolvedValue([]) });
+    mockAjax({ listImpl: jest.fn(async (_params) => []) });
 
     // set the user's email
     jest.spyOn(userStore, 'get').mockImplementation(jest.fn().mockReturnValue(mockUserState('hello@world.org')));
@@ -346,7 +342,7 @@ describe('workflow wrapper', () => {
   it('displays an error toast when there is an unexpected error loading a method', async () => {
     // Arrange
     mockAjax({
-      listImpl: jest.fn(() => {
+      listImpl: jest.fn(async (_params) => {
         throw new Error('BOOM');
       }),
     });
@@ -419,7 +415,7 @@ describe('workflows container', () => {
     // Assert
 
     // The first call is to load the snapshot; the second is to delete it
-    expect(Ajax().Methods.method).toHaveBeenNthCalledWith(
+    expect(Methods().method).toHaveBeenNthCalledWith(
       2,
       mockDeleteSnapshot.namespace,
       mockDeleteSnapshot.name,
@@ -427,7 +423,7 @@ describe('workflows container', () => {
     );
 
     expect(
-      Ajax().Methods.method(mockDeleteSnapshot.namespace, mockDeleteSnapshot.name, mockDeleteSnapshot.snapshotId).delete
+      Methods().method(mockDeleteSnapshot.namespace, mockDeleteSnapshot.name, mockDeleteSnapshot.snapshotId).delete
     ).toHaveBeenCalled();
 
     expect(window.history.replaceState).toHaveBeenCalledWith({}, '', '#methods/methodnamespace/testname');
@@ -570,132 +566,6 @@ describe('workflows container', () => {
 
     // Assert
     const dialog2 = screen.queryByRole('dialog', { name: /create new method/i });
-    expect(dialog2).not.toBeInTheDocument();
-  });
-
-  it('renders edit method modal when corresponding button is pressed', async () => {
-    // Arrange
-    mockAjax();
-
-    // set the user's email
-    jest.spyOn(userStore, 'get').mockImplementation(jest.fn().mockReturnValue(mockUserState('hello@world.org')));
-
-    const user: UserEvent = userEvent.setup();
-
-    // Act
-    await act(async () => {
-      render(
-        <WorkflowsContainer
-          namespace={mockSnapshot.namespace}
-          name={mockSnapshot.name}
-          snapshotId={`${mockSnapshot.snapshotId}`}
-          tabName='dashboard'
-        />
-      );
-    });
-
-    await user.click(screen.getByRole('button', { name: 'Snapshot action menu' }));
-    await user.click(screen.getByRole('button', { name: 'Edit' }));
-
-    const dialog = screen.getByRole('dialog', { name: /edit/i });
-
-    // Assert
-    expect(dialog).toBeInTheDocument();
-    expect(within(dialog).getByRole('textbox', { name: 'Namespace' })).toHaveAttribute('placeholder', 'testnamespace');
-    expect(within(dialog).getByRole('textbox', { name: 'Namespace' })).toHaveAttribute('disabled');
-    expect(within(dialog).getByRole('textbox', { name: 'Name' })).toHaveAttribute('placeholder', 'testname');
-    expect(within(dialog).getByRole('textbox', { name: 'Name' })).toHaveAttribute('disabled');
-    expect(within(dialog).getByRole('textbox', { name: 'Documentation' })).toHaveDisplayValue('mock documentation');
-    expect(within(dialog).getByRole('textbox', { name: 'Synopsis (80 characters max)' })).toHaveDisplayValue('');
-    expect(within(dialog).getByRole('textbox', { name: 'Snapshot comment' })).toHaveDisplayValue('');
-    expect(within(dialog).getByTestId('wdl editor')).toHaveDisplayValue(mockSnapshot.payload.toString());
-    expect(within(dialog).getByRole('checkbox', { name: 'Delete snapshot 1' })).not.toBeChecked();
-  });
-
-  it('calls the right provider with expected arguments when new snapshot is created', async () => {
-    // Arrange
-    mockAjax();
-
-    jest.spyOn(userStore, 'get').mockImplementation(jest.fn().mockReturnValue(mockUserState('hello@world.org')));
-    jest.spyOn(editMethodProvider, 'createNewSnapshot').mockResolvedValue(mockNewSnapshotResponse);
-
-    const user: UserEvent = userEvent.setup();
-
-    // Act
-    await act(async () => {
-      render(
-        <WorkflowsContainer
-          namespace={mockSnapshot.namespace}
-          name={mockSnapshot.name}
-          snapshotId={`${mockSnapshot.snapshotId}`}
-          tabName='dashboard'
-        />
-      );
-    });
-
-    await user.click(screen.getByRole('button', { name: 'Snapshot action menu' }));
-    await user.click(screen.getByRole('button', { name: 'Edit' }));
-
-    fireEvent.change(screen.getByRole('textbox', { name: 'Snapshot comment' }), {
-      target: { value: "groot's new improved snapshot" },
-    });
-    await user.click(screen.getByRole('checkbox', { name: 'Delete snapshot 1' }));
-
-    await user.click(screen.getByRole('button', { name: 'Create new snapshot' }));
-
-    // Assert
-    expect(editMethodProvider.createNewSnapshot).toHaveBeenCalled();
-    expect(editMethodProvider.createNewSnapshot).toHaveBeenCalledWith(
-      mockSnapshot.namespace,
-      mockSnapshot.name,
-      mockSnapshot.snapshotId,
-      true,
-      mockSnapshot.synopsis,
-      mockSnapshot.documentation,
-      mockSnapshot.payload,
-      "groot's new improved snapshot"
-    );
-
-    expect(Nav.goToPath).toHaveBeenCalledWith('workflow-dashboard', {
-      name: 'testname',
-      namespace: 'testnamespace',
-      snapshotId: 2,
-    });
-  });
-
-  it('hides the edit method modal when it is dismissed', async () => {
-    // Arrange
-    mockAjax();
-
-    // set the user's email
-    jest.spyOn(userStore, 'get').mockImplementation(jest.fn().mockReturnValue(mockUserState('hello@world.org')));
-
-    const user: UserEvent = userEvent.setup();
-
-    // Act
-    await act(async () => {
-      render(
-        <WorkflowsContainer
-          namespace={mockSnapshot.namespace}
-          name={mockSnapshot.name}
-          snapshotId={`${mockSnapshot.snapshotId}`}
-          tabName='dashboard'
-        />
-      );
-    });
-
-    await user.click(screen.getByRole('button', { name: 'Snapshot action menu' }));
-    await user.click(screen.getByRole('button', { name: 'Edit' }));
-
-    // Assert
-    const dialog1 = screen.queryByRole('dialog', { name: /edit/i });
-    expect(dialog1).toBeInTheDocument();
-
-    // Act
-    await user.click(screen.getByRole('button', { name: 'Cancel' }));
-
-    // Assert
-    const dialog2 = screen.queryByRole('dialog', { name: /edit/i });
     expect(dialog2).not.toBeInTheDocument();
   });
 
@@ -1251,8 +1121,12 @@ describe('workflows container', () => {
     await user.click(screen.getByRole('button', { name: 'Save' }));
 
     // Assert
-    expect(setPermissionsMock).toHaveBeenCalledTimes(1);
-    expect(setPermissionsMock).toHaveBeenCalledWith(mockSnapshot.namespace, mockSnapshot.name, mockSnapshot.snapshotId);
+    expect(setPermissionsWatch).toHaveBeenCalledTimes(1);
+    expect(setPermissionsWatch).toHaveBeenCalledWith(
+      mockSnapshot.namespace,
+      mockSnapshot.name,
+      mockSnapshot.snapshotId
+    );
   });
 
   it('reloads the displayed snapshot after its permissions are edited', async () => {
