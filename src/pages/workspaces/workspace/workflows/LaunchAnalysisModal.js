@@ -1,7 +1,7 @@
 import { Modal, Spinner } from '@terra-ui-packages/components';
 import _ from 'lodash/fp';
 import { Fragment, useState } from 'react';
-import { b, div, h, label, p, span } from 'react-hyperscript-helpers';
+import { b, div, h, label, li, p, span, ul } from 'react-hyperscript-helpers';
 import { ButtonPrimary, IdContainer, Link } from 'src/components/common';
 import { icon } from 'src/components/icons';
 import { InfoBox } from 'src/components/InfoBox';
@@ -11,6 +11,8 @@ import { Ajax } from 'src/libs/ajax';
 import { launch } from 'src/libs/analysis';
 import colors from 'src/libs/colors';
 import { withErrorReporting } from 'src/libs/error';
+import { isFeaturePreviewEnabled } from 'src/libs/feature-previews';
+import { PREVIEW_COST_CAPPING } from 'src/libs/feature-previews-config';
 import { useCancellation, useOnMount } from 'src/libs/react-utils';
 import { warningBoxStyle } from 'src/libs/style';
 import * as Utils from 'src/libs/utils';
@@ -195,6 +197,15 @@ const LaunchAnalysisModal = ({
           ['Set up budget alert', icon('pop-out', { size: 12, style: { marginLeft: '0.25rem' } })]
         ),
       ]),
+      isFeaturePreviewEnabled(PREVIEW_COST_CAPPING) &&
+        perWorkflowCostCap !== '' &&
+        div({ style: { marginTop: '0.25rem' } }, [
+          ul({ style: { paddingLeft: '1.5rem' } }, [
+            li([`Workflow run budget is set to ${Utils.formatUSD(perWorkflowCostCap)}.`]),
+            li([`You are launching ${entityCount} workflow `, entityCount === 1 ? 'run' : 'runs', ' in this submission.']),
+            li([b('Max possible'), ` submission cost is ${Utils.formatUSD(entityCount * perWorkflowCostCap)}.`]),
+          ]),
+        ]),
       h(IdContainer, [
         (id) =>
           div({ style: { margin: '1.5rem 0' } }, [

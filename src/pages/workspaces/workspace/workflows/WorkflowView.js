@@ -1270,12 +1270,15 @@ export const WorkflowView = _.flow(
                       'Set workflow run budget ',
                       h(InfoBox, ['Set workflow run budget tooltip. ']),
                     ]),
-                    h(TextInput, {
-                      id: 'workflow-run-budget',
-                      placeholder: 'Example: $1.00',
-                      onChange: (v) => this.setState({ perWorkflowCostCap: v }),
-                      style: { marginTop: '0.5rem', marginLeft: '1rem', width: '70%', marginRight: '0.5rem' },
-                    }),
+                    div({ style: { display: 'flex', alignItems: 'center', marginLeft: '0.5rem' } }, [
+                      span({ style: { marginRight: '0.5rem' } }, ['$']),
+                      h(TextInput, {
+                        id: 'workflow-run-budget',
+                        placeholder: 'Example: 1.00',
+                        onChange: (v) => this.setState({ perWorkflowCostCap: v }),
+                        style: { marginTop: '0.5rem', width: '70%', marginRight: '0.5rem' },
+                      }),
+                    ]),
                     span({ style: { ...styles.checkBoxSpanMargins, fontSize: '0.75rem' } }, [[' We recommend adding 20% room for variability']]),
                   ]),
               ]),
