@@ -6,6 +6,8 @@ import ButtonBar from 'src/components/ButtonBar';
 import { ButtonPrimary, LabeledCheckbox, Link } from 'src/components/common';
 import IGVReferenceSelector, { addIgvRecentlyUsedReference, defaultIgvReference } from 'src/components/IGVReferenceSelector';
 import { Ajax } from 'src/libs/ajax';
+import { isFeaturePreviewEnabled } from 'src/libs/feature-previews';
+import { IGV_ENHANCEMENTS } from 'src/libs/feature-previews-config';
 import { useCancellation } from 'src/libs/react-utils';
 import * as Style from 'src/libs/style';
 import * as Utils from 'src/libs/utils';
@@ -80,6 +82,8 @@ const hasValidIgvExtension = (filename) => {
 };
 
 export const resolveValidIgvDrsUris = async (values, signal) => {
+  if (!isFeaturePreviewEnabled(IGV_ENHANCEMENTS)) return [];
+
   const igvDrsUris = [];
 
   await Promise.all(
@@ -153,9 +157,6 @@ export const getValidIgvFilesFromAttributeValues = async (attributeValues, signa
 const IGVFileSelector = ({ selectedEntities, onSuccess }) => {
   const [refGenome, setRefGenome] = useState(defaultIgvReference);
   const isRefGenomeValid = Boolean(_.get('genome', refGenome) || _.get('reference.fastaURL', refGenome));
-
-  // const allAttributeValues = _.flatMap(_.flow(_.get('attributes'), _.values), selectedEntities);
-  // const defaultSelections = await getValidIgvFilesFromAttributeValues(allAttributeValues);
 
   const [selections, setSelections] = useState([]);
 
