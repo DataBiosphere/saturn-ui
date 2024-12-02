@@ -1,8 +1,8 @@
 import { ButtonPrimary, Icon, Link, Modal, useUniqueId } from '@terra-ui-packages/components';
 import _ from 'lodash/fp';
-import React from 'react';
-import { useState } from 'react';
+import React, { useState } from 'react';
 import * as Auth from 'src/auth/auth';
+import { ExternalLink } from 'src/billing/NewBillingProjectWizard/StepWizard/ExternalLink';
 import { accountLinkStyle } from 'src/billing/utils';
 import { GCPBillingProject, GoogleBillingAccount } from 'src/billing-core/models';
 import { VirtualizedSelect } from 'src/components/common';
@@ -277,6 +277,21 @@ export const BillingAccountControls = (props: BillingAccountControlsProps) => {
           <Link onClick={authorizeAndLoadAccounts}>View billing account</Link>
         </div>
       )}
+      <div
+        style={{
+          marginLeft: '1rem',
+          marginTop: '0.5rem',
+          fontSize: '0.8rem',
+          display: 'flex',
+          flexDirection: 'column',
+        }}
+      >
+        <ExternalLink
+          url='https://support.terra.bio/hc/en-us/articles/360057589931-How-to-set-up-and-use-Google-Cloud-budget-alerts'
+          text='Learn how to set up budget alerts to monitor cloud spend'
+          popoutSize={14}
+        />
+      </div>
     </>
   );
 };
