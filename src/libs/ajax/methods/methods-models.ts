@@ -42,6 +42,14 @@ export interface MethodQuery {
   entityType: string;
 }
 
+/** Type for Orchestration's create method snapshot schema */
+export interface CreateSnapshotRequest {
+  synopsis?: string;
+  snapshotComment?: string;
+  documentation?: string;
+  payload: string;
+}
+
 /**
  * Type for Orchestration's MethodResponse schema.
  *
