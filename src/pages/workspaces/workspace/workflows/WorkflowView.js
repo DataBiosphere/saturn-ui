@@ -36,7 +36,7 @@ import colors, { terraSpecial } from 'src/libs/colors';
 import { reportError, withErrorReporting } from 'src/libs/error';
 import Events, { extractWorkspaceDetails } from 'src/libs/events';
 import { isFeaturePreviewEnabled } from 'src/libs/feature-previews';
-import { FIRECLOUD_UI_MIGRATION } from 'src/libs/feature-previews-config';
+import { FIRECLOUD_UI_MIGRATION, PREVIEW_COST_CAPPING } from 'src/libs/feature-previews-config';
 import { HiddenLabel } from 'src/libs/forms';
 import * as Nav from 'src/libs/nav';
 import { getLocalPref, setLocalPref } from 'src/libs/prefs';
@@ -1264,19 +1264,20 @@ export const WorkflowView = _.flow(
                       ]),
                   ]),
                 ]),
-                div({ style: { display: 'flex', flexDirection: 'column', alignItems: 'flex-start', marginTop: '1rem', marginLeft: '1rem' } }, [
-                  span({ style: { ...styles.checkBoxSpanMargins, fontWeight: 'bold' } }, [
-                    'Set workflow run budget ',
-                    h(InfoBox, ['Set workflow run budget tooltip. ']),
+                isFeaturePreviewEnabled(PREVIEW_COST_CAPPING) &&
+                  div({ style: { display: 'flex', flexDirection: 'column', alignItems: 'flex-start', marginTop: '1rem', marginLeft: '1rem' } }, [
+                    span({ style: { ...styles.checkBoxSpanMargins, fontWeight: 'bold' } }, [
+                      'Set workflow run budget ',
+                      h(InfoBox, ['Set workflow run budget tooltip. ']),
+                    ]),
+                    h(TextInput, {
+                      id: 'workflow-run-budget',
+                      placeholder: 'Example: $1.00',
+                      onChange: (v) => this.setState({ perWorkflowCostCap: v }),
+                      style: { marginTop: '0.5rem', marginLeft: '1rem', width: '70%', marginRight: '0.5rem' },
+                    }),
+                    span({ style: { ...styles.checkBoxSpanMargins, fontSize: '0.75rem' } }, [[' We recommend adding 20% room for variability']]),
                   ]),
-                  h(TextInput, {
-                    id: 'workflow-run-budget',
-                    placeholder: 'Example: $1.00',
-                    onChange: (v) => this.setState({ perWorkflowCostCap: v }),
-                    style: { marginTop: '0.5rem', marginLeft: '1rem', width: '70%', marginRight: '0.5rem' },
-                  }),
-                  span({ style: { ...styles.checkBoxSpanMargins, fontSize: '0.75rem' } }, [[' We recommend adding 20% room for variability']]),
-                ]),
               ]),
               h(StepButtons, {
                 tabs: [

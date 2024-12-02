@@ -97,7 +97,7 @@ const LaunchAnalysisModal = ({
         monitoringScript: enableResourceMonitoring && monitoringScript ? monitoringScript : undefined,
         monitoringImage: enableResourceMonitoring && monitoringImage ? monitoringImage : undefined,
         monitoringImageScript: enableResourceMonitoring && monitoringImageScript ? monitoringImageScript : undefined,
-        perWorkflowCostCap: perWorkflowCostCap || undefined, // TODO use feature flag to determine if this should be sent
+        perWorkflowCostCap: perWorkflowCostCap || undefined,
         onProgress: (stage) => {
           setMessage({ createSet: 'Creating set...', launch: 'Launching analysis...', checkBucketAccess: 'Checking bucket access...' }[stage]);
         },
