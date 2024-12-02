@@ -402,6 +402,7 @@ export const WorkflowView = _.flow(
         monitoringScript: resourceMonitoringEnabledPref ? resourceMonitoringPref?.script : '',
         monitoringImage: resourceMonitoringEnabledPref ? resourceMonitoringPref?.image : '',
         monitoringImageScript: resourceMonitoringEnabledPref ? resourceMonitoringPref?.imageScript : '',
+        perWorkflowCostCap: workflowOptionsPref?.perWorkflowCostCap || '',
         includeOptionalInputs: true,
         filter: '',
         errors: { inputs: {}, outputs: {} },
@@ -471,6 +472,7 @@ export const WorkflowView = _.flow(
         updatingConfig,
         selectedSnapshotEntityMetadata,
         availableSnapshots,
+        perWorkflowCostCap,
       } = this.state;
       const { namespace, name, workspace } = this.props;
       const workspaceId = { namespace, name };
@@ -504,6 +506,7 @@ export const WorkflowView = _.flow(
                 monitoringScript,
                 monitoringImage,
                 monitoringImageScript,
+                perWorkflowCostCap,
                 onDismiss: () => this.setState({ launching: false }),
                 onSuccess: (submissionId) => {
                   const {
@@ -1260,6 +1263,19 @@ export const WorkflowView = _.flow(
                         ]),
                       ]),
                   ]),
+                ]),
+                div({ style: { display: 'flex', flexDirection: 'column', alignItems: 'flex-start', marginTop: '1rem', marginLeft: '1rem' } }, [
+                  span({ style: { ...styles.checkBoxSpanMargins, fontWeight: 'bold' } }, [
+                    'Set workflow run budget ',
+                    h(InfoBox, ['Set workflow run budget tooltip. ']),
+                  ]),
+                  h(TextInput, {
+                    id: 'workflow-run-budget',
+                    placeholder: 'Example: $1.00',
+                    onChange: (v) => this.setState({ perWorkflowCostCap: v }),
+                    style: { marginTop: '0.5rem', marginLeft: '1rem', width: '70%', marginRight: '0.5rem' },
+                  }),
+                  span({ style: { ...styles.checkBoxSpanMargins, fontSize: '0.75rem' } }, [[' We recommend adding 20% room for variability']]),
                 ]),
               ]),
               h(StepButtons, {
