@@ -6,7 +6,7 @@ import { HeroWrapper } from 'src/components/HeroWrapper';
 import { icon } from 'src/components/icons';
 import hexButton from 'src/images/hex-button.svg';
 import roadmapBgBanner from 'src/images/roadmap-bg-banner.png';
-import { Ajax } from 'src/libs/ajax';
+import { Billing } from 'src/libs/ajax/billing/Billing';
 import { getEnabledBrand, isFirecloud, isTerra } from 'src/libs/brand-utils';
 import { landingPageCardsDefault, roadMapCardDefault } from 'src/libs/brands';
 import colors from 'src/libs/colors';
@@ -100,7 +100,7 @@ export const LandingPage = () => {
       const errorObj = (await error) instanceof Response ? error.json() : error;
       console.log(`Unable to load billing projects due to: ${errorObj?.message}`); // eslint-disable-line no-console
     })(async () => {
-      const projects = await Ajax(signal).Billing.listProjects();
+      const projects = await Billing(signal).listProjects();
       setBillingProjects(projects);
     });
     if (signInStatus === 'authenticated') {

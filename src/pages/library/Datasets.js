@@ -20,7 +20,7 @@ import rareXLogo from 'src/images/library/datasets/rare-x-logo.svg';
 import targetLogo from 'src/images/library/datasets/target_logo.jpeg';
 import tcgaLogo from 'src/images/library/datasets/TCGALogo.jpg';
 import topMedLogo from 'src/images/library/datasets/TopMed@2x.png';
-import { Ajax } from 'src/libs/ajax';
+import { Metrics } from 'src/libs/ajax/Metrics';
 import { getEnabledBrand } from 'src/libs/brand-utils';
 import colors from 'src/libs/colors';
 import { getConfig } from 'src/libs/config';
@@ -135,7 +135,7 @@ const Participant = ({ logo, title, shortDescription, description, sizeText, mod
 
 const browseTooltip = 'Look for the Export to Terra icon to export data from this provider.';
 
-const captureBrowseDataEvent = (datasetName) => Ajax().Metrics.captureEvent(Events.datasetLibraryBrowseData, { datasetName });
+const captureBrowseDataEvent = (datasetName) => void Metrics().captureEvent(Events.datasetLibraryBrowseData, { datasetName });
 
 const thousandGenomesHighCoverage = () =>
   h(
@@ -654,7 +654,7 @@ export const Datasets = () => {
     h(DataBrowserPreviewToggler, {
       onChange: (value) => {
         setCatalogShowing(value);
-        Ajax().Metrics.captureEvent(Events.catalogToggle, { enabled: value });
+        void Metrics().captureEvent(Events.catalogToggle, { enabled: value });
         setLocalPref('catalog-toggle', value);
       },
       catalogShowing,
