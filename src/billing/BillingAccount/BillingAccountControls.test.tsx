@@ -59,7 +59,7 @@ describe('BillingAccountControls', () => {
     expect(mockAuthorizeAndLoadAccounts).toHaveBeenCalled();
   });
 
-  it('displays a link to set up budget alerts', async () => {
+  it('displays a link to set up budget alerts if user does not have billing scope', async () => {
     // Arrange
     asMockedFn(hasBillingScope).mockReturnValue(false);
     const mockAuthorizeAndLoadAccounts = jest.fn();
@@ -83,6 +83,29 @@ describe('BillingAccountControls', () => {
     expect(screen.queryByLabelText('Billing account menu')).toBeNull();
     expect(screen.queryByLabelText('Configure Spend Reporting')).toBeNull();
 
+    expect(screen.getByText('Learn how to set up budget alerts to monitor cloud spend')).not.toBeNull();
+  });
+
+  it('displays a link to set up budget alerts if user does have billing scope', async () => {
+    // Arrange
+    asMockedFn(hasBillingScope).mockReturnValue(true);
+    const mockAuthorizeAndLoadAccounts = jest.fn();
+
+    // Act
+    renderWithAppContexts(
+      <BillingAccountControls
+        authorizeAndLoadAccounts={mockAuthorizeAndLoadAccounts}
+        billingAccounts={{}}
+        billingProject={gcpBillingProject}
+        isOwner
+        getShowBillingModal={jest.fn()}
+        setShowBillingModal={jest.fn()}
+        reloadBillingProject={jest.fn()}
+        setUpdating={jest.fn()}
+      />
+    );
+
+    // Assert
     expect(screen.getByText('Learn how to set up budget alerts to monitor cloud spend')).not.toBeNull();
   });
 

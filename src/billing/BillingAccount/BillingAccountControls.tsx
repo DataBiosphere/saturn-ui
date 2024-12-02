@@ -272,28 +272,26 @@ export const BillingAccountControls = (props: BillingAccountControlsProps) => {
         </div>
       )}
       {!Auth.hasBillingScope() && (
-        <>
-          <div style={accountLinkStyle}>
-            {/* eslint-disable-next-line jsx-a11y/anchor-is-valid */}
-            <Link onClick={authorizeAndLoadAccounts}>View billing account</Link>
-          </div>
-          <div
-            style={{
-              marginLeft: '1rem',
-              marginTop: '0.5rem',
-              fontSize: '0.8rem',
-              display: 'flex',
-              flexDirection: 'column',
-            }}
-          >
-            <ExternalLink
-              url='https://support.terra.bio/hc/en-us/articles/360057589931-How-to-set-up-and-use-Google-Cloud-budget-alerts'
-              text='Learn how to set up budget alerts to monitor cloud spend'
-              popoutSize={14}
-            />
-          </div>
-        </>
+        <div style={accountLinkStyle}>
+          {/* eslint-disable-next-line jsx-a11y/anchor-is-valid */}
+          <Link onClick={authorizeAndLoadAccounts}>View billing account</Link>
+        </div>
       )}
+      <div
+        style={{
+          marginLeft: '1rem',
+          marginTop: '0.5rem',
+          fontSize: '0.8rem',
+          display: 'flex',
+          flexDirection: 'column',
+        }}
+      >
+        <ExternalLink
+          url='https://support.terra.bio/hc/en-us/articles/360057589931-How-to-set-up-and-use-Google-Cloud-budget-alerts'
+          text='Learn how to set up budget alerts to monitor cloud spend'
+          popoutSize={14}
+        />
+      </div>
     </>
   );
 };
