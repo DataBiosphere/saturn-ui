@@ -1,9 +1,10 @@
+import { asMockedFn, partial } from '@terra-ui-packages/test-utils';
 import { screen } from '@testing-library/react';
 import { act } from '@testing-library/react';
 import { h } from 'react-hyperscript-helpers';
-import { Apps } from 'src/libs/ajax/leonardo/Apps';
-import { Runtimes } from 'src/libs/ajax/leonardo/Runtimes';
-import { Workspaces } from 'src/libs/ajax/workspaces/Workspaces';
+import { Apps, AppsAjaxContract } from 'src/libs/ajax/leonardo/Apps';
+import { Runtimes, RuntimesAjaxContract } from 'src/libs/ajax/leonardo/Runtimes';
+import { WorkspaceContract, Workspaces, WorkspacesAjaxContract } from 'src/libs/ajax/workspaces/Workspaces';
 import { oidcStore } from 'src/libs/state';
 import { Workflows } from 'src/pages/workspaces/workspace/Workflows';
 import { renderWithAppContexts as render } from 'src/testing/test-utils';
@@ -63,18 +64,31 @@ describe('Workflows', () => {
   };
 
   const mockAjax = () => {
-    Workspaces.mockReturnValue({
-      workspace: (_namespace, _name) => ({
-        details: jest.fn().mockResolvedValue(mockGoogleWorkspace),
-        checkBucketReadAccess: jest.fn(),
-        storageCostEstimate: jest.fn(),
-        bucketUsage: jest.fn(),
-        checkBucketLocation: jest.fn().mockResolvedValue(mockStorageDetails),
-        listMethodConfigs: jest.fn(),
-      }),
-    });
-    Runtimes.mockReturnValue({ listV2: jest.fn() });
-    Apps.mockReturnValue({ list: jest.fn().mockReturnValue([]) });
+    asMockedFn(Workspaces).mockReturnValue(
+      partial<WorkspacesAjaxContract>({
+        workspace: (_namespace, _name) =>
+          partial<WorkspaceContract>({
+            details: jest.fn().mockResolvedValue(mockGoogleWorkspace),
+            checkBucketReadAccess: jest.fn(),
+            storageCostEstimate: jest.fn(),
+            bucketUsage: jest.fn(),
+            checkBucketLocation: jest.fn().mockResolvedValue(mockStorageDetails),
+            listMethodConfigs: jest.fn(),
+          }),
+      })
+    );
+
+    asMockedFn(Runtimes).mockReturnValue(
+      partial<RuntimesAjaxContract>({
+        listV2: jest.fn(),
+      })
+    );
+
+    asMockedFn(Apps).mockReturnValue(
+      partial<AppsAjaxContract>({
+        list: jest.fn().mockReturnValue([]),
+      })
+    );
   };
 
   it('loads Find Workflow card', async () => {
