@@ -8,9 +8,12 @@ import { oidcStore } from 'src/libs/state';
 import { Workflows } from 'src/pages/workspaces/workspace/Workflows';
 import { renderWithAppContexts as render } from 'src/testing/test-utils';
 
+jest.mock('src/libs/ajax/GoogleStorage');
 jest.mock('src/libs/ajax/leonardo/Apps');
 jest.mock('src/libs/ajax/leonardo/Runtimes');
 jest.mock('src/libs/ajax/workspaces/Workspaces');
+jest.mock('src/libs/ajax/leonardo/providers/LeoDiskProvider');
+
 jest.mock('src/libs/nav', () => ({
   getCurrentUrl: jest.fn().mockReturnValue(new URL('https://app.terra.bio')),
   getLink: jest.fn(),
