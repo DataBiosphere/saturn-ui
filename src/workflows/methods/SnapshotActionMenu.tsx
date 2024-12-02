@@ -25,18 +25,21 @@ export interface SnapshotActionMenuProps {
   /** The action to be performed if the "Delete snapshot" button is pressed. */
   onDelete: () => void;
 
-  /** The action to be performed if the "Clone snapshot" button is pressed. */
+  /** The action to be performed if the "Save as" button is pressed. */
   onClone: () => void;
+
+  /** The action to be performed if the "Edit" button is pressed. */
+  onEdit: () => void;
 }
 
 /**
  * A kebab (vertical three-dot) menu that displays buttons to perform actions on
  * a workflow snapshot.
  *
- * Currently supported actions: edit permissions, delete snapshot, clone snapshot
+ * Currently supported actions: edit permissions, delete snapshot, clone snapshot, edit method
  */
 const SnapshotActionMenu = (props: SnapshotActionMenuProps): ReactNode => {
-  const { disabled, isSnapshotOwner, onEditPermissions, onDelete, onClone } = props;
+  const { disabled, isSnapshotOwner, onEditPermissions, onDelete, onClone, onEdit } = props;
 
   const notSnapshotOwnerTooltip = 'You must be an owner of this snapshot';
 
@@ -45,6 +48,15 @@ const SnapshotActionMenu = (props: SnapshotActionMenuProps): ReactNode => {
       <MenuButton disabled={false} tooltipSide='left' onClick={onClone}>
         {makeMenuIcon('copy')}
         Save as
+      </MenuButton>
+      <MenuButton
+        disabled={!isSnapshotOwner}
+        tooltip={!isSnapshotOwner && notSnapshotOwnerTooltip}
+        tooltipSide='left'
+        onClick={onEdit}
+      >
+        {makeMenuIcon('edit')}
+        Edit
       </MenuButton>
       <MenuButton
         disabled={!isSnapshotOwner}

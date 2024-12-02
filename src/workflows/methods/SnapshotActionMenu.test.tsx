@@ -7,6 +7,7 @@ import SnapshotActionMenu from 'src/workflows/methods/SnapshotActionMenu';
 const mockOnDelete = jest.fn();
 const mockOnEditPermissions = jest.fn();
 const mockOnClone = jest.fn();
+const mockOnEdit = jest.fn();
 
 describe('snapshot action menu', () => {
   it('honors the disabled prop', async () => {
@@ -19,6 +20,7 @@ describe('snapshot action menu', () => {
           onEditPermissions={mockOnEditPermissions}
           onDelete={mockOnDelete}
           onClone={mockOnClone}
+          onEdit={mockOnEdit}
         />
       );
     });
@@ -42,6 +44,7 @@ describe('snapshot action menu', () => {
           onEditPermissions={mockOnEditPermissions}
           onDelete={mockOnDelete}
           onClone={mockOnClone}
+          onEdit={mockOnEdit}
         />
       );
     });
@@ -81,6 +84,16 @@ describe('snapshot action menu', () => {
     // clone option is always enabled irrespective of snapshot ownership
     expect(cloneSnapshotButton).toBeInTheDocument();
     expect(cloneSnapshotButton).toHaveAttribute('aria-disabled', 'false');
+
+    // Act
+    const editMethodButton = screen.getByRole('button', { name: 'Edit' });
+
+    await user.pointer({ target: editMethodButton });
+
+    // Assert
+    expect(editMethodButton).toBeInTheDocument();
+    expect(editMethodButton).toHaveAttribute('aria-disabled', 'false');
+    expect(screen.queryByRole('tooltip')).not.toBeInTheDocument();
   });
 
   it('renders and enables correct menu buttons if you are NOT the snapshot owner', async () => {
@@ -95,6 +108,7 @@ describe('snapshot action menu', () => {
           onEditPermissions={mockOnEditPermissions}
           onDelete={mockOnDelete}
           onClone={mockOnClone}
+          onEdit={mockOnEdit}
         />
       );
     });
@@ -135,6 +149,16 @@ describe('snapshot action menu', () => {
     // clone option is always enabled irrespective of snapshot ownership
     expect(cloneSnapshotButton).toBeInTheDocument();
     expect(cloneSnapshotButton).toHaveAttribute('aria-disabled', 'false');
+
+    // Act
+    const editMethodButton = screen.getByRole('button', { name: 'Edit' });
+
+    await user.pointer({ target: editMethodButton });
+
+    // Assert
+    expect(editMethodButton).toBeInTheDocument();
+    expect(editMethodButton).toHaveAttribute('aria-disabled', 'true');
+    expect(screen.queryByRole('tooltip')).toBeInTheDocument();
   });
 });
 
@@ -151,6 +175,7 @@ describe('snapshot action menu edit snapshot permissions button', () => {
           onEditPermissions={mockOnEditPermissions}
           onDelete={mockOnDelete}
           onClone={mockOnClone}
+          onEdit={mockOnEdit}
         />
       );
     });
@@ -177,6 +202,7 @@ describe('snapshot action menu delete snapshot button', () => {
           onEditPermissions={mockOnEditPermissions}
           onDelete={mockOnDelete}
           onClone={mockOnClone}
+          onEdit={mockOnEdit}
         />
       );
     });
@@ -204,6 +230,7 @@ describe('snapshot action menu save as button', () => {
           onEditPermissions={mockOnEditPermissions}
           onDelete={mockOnDelete}
           onClone={mockOnClone}
+          onEdit={mockOnEdit}
         />
       );
     });
@@ -214,5 +241,32 @@ describe('snapshot action menu save as button', () => {
     // Assert
     expect(screen.queryByRole('button', { name: 'Save as' })).not.toBeInTheDocument();
     expect(mockOnClone).toHaveBeenCalled();
+  });
+});
+
+describe('snapshot action menu edit button', () => {
+  it('closes and calls the onEdit callback when clicked', async () => {
+    // Arrange
+    const user: UserEvent = userEvent.setup();
+
+    // Act
+    await act(async () => {
+      render(
+        <SnapshotActionMenu
+          isSnapshotOwner
+          onEditPermissions={mockOnEditPermissions}
+          onDelete={mockOnDelete}
+          onClone={mockOnClone}
+          onEdit={mockOnEdit}
+        />
+      );
+    });
+
+    await user.click(screen.getByRole('button', { name: 'Snapshot action menu' }));
+    await user.click(screen.getByRole('button', { name: 'Edit' }));
+
+    // Assert
+    expect(screen.queryByRole('button', { name: 'Edit' })).not.toBeInTheDocument();
+    expect(mockOnEdit).toHaveBeenCalled();
   });
 });
