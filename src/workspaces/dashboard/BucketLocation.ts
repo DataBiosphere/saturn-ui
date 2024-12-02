@@ -7,6 +7,7 @@ import { getRegionInfo } from 'src/components/region-common';
 import { TooltipCell } from 'src/components/table';
 import { Metrics } from 'src/libs/ajax/Metrics';
 import { Workspaces } from 'src/libs/ajax/workspaces/Workspaces';
+import { reportErrorAndRethrow } from 'src/libs/error';
 import Events, { extractWorkspaceDetails } from 'src/libs/events';
 import { useCancellation } from 'src/libs/react-utils';
 import { requesterPaysProjectStore } from 'src/libs/state';
