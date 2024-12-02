@@ -61,7 +61,7 @@ const findIndexForFile = (fileUrl, fileUrls) => {
     const datasetId = parts[1];
     // parts[2] is the fileRef. Skip it since the index file will have a different file ref.
     const otherPathSegments = parts.slice(3, -1);
-    const filename = fileUrl.pathname;
+    const filename = parts.at(-1);
     const [base, extension] = splitExtension(filename);
     const indexCandidates = indexMap(base)[extension].map(
       (candidate) => new RegExp([`gs://${bucket}`, datasetId, UUID_PATTERN, ...otherPathSegments, candidate].join('/'))
