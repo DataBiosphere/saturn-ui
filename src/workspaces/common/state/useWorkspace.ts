@@ -149,7 +149,7 @@ export const useWorkspace = (namespace, name): WorkspaceDetails => {
       // text. Errors in checkGooglePermissions could come from many methods, including this one.
       // Because of checkGooglePermissions' needs, don't consume the response text here; only read
       // from a clone of the response so we can rethrow the original.
-      const errorText = error instanceof Response ? Error(await error.clone().text()) : `${error}`;
+      const errorText = error instanceof Response ? await error.clone().text() : `${error}`;
       if (responseContainsRequesterPaysError(errorText)) {
         setGoogleStorage({ fetchedLocation: 'RPERROR', location, locationType });
       } else {

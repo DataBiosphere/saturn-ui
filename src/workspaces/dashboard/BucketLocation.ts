@@ -7,7 +7,6 @@ import { getRegionInfo } from 'src/components/region-common';
 import { TooltipCell } from 'src/components/table';
 import { Metrics } from 'src/libs/ajax/Metrics';
 import { Workspaces } from 'src/libs/ajax/workspaces/Workspaces';
-import { reportErrorAndRethrow } from 'src/libs/error';
 import Events, { extractWorkspaceDetails } from 'src/libs/events';
 import { useCancellation } from 'src/libs/react-utils';
 import { requesterPaysProjectStore } from 'src/libs/state';
@@ -41,14 +40,19 @@ export const BucketLocation = requesterPaysWrapper({ onDismiss: _.noop })((props
       const project = needsRequesterPaysProject ? requesterPaysProjectStore.get() : undefined;
       const response = await Workspaces(signal).workspace(namespace, name).checkBucketLocation(project);
       setBucketLocation(response);
+      setLoading(false);
     } catch (error) {
       if (storageDetails.fetchedGoogleBucketLocation === 'RPERROR') {
         setNeedsRequesterPaysProject(true);
+        // If there is already a user project selected, keep displaying 'Loading' so that bucket location
+        // doesn't cycle through 'Unknown' and then 'Loading' when this callback is re-executed
+        if (!requesterPaysProjectStore.get()) {
+          setLoading(false);
+        }
       } else {
         reportErrorAndRethrow('Error loading bucket location');
+        setLoading(false);
       }
-    } finally {
-      setLoading(false);
     }
   }, [workspace, needsRequesterPaysProject, signal, storageDetails.fetchedGoogleBucketLocation]);
 
