@@ -524,15 +524,16 @@ export const WorkflowView = _.flow(
                   });
                   // TODO should this be done here or when the workflows are actually launched?
                   // What info needs to be included?
-                  void Metrics().captureEvent(Events.workflowSetCostCap, {
-                    ...extractWorkspaceDetails(workspace),
-                    snapshotId: snapshot?.reference.snapshot,
-                    referenceId: snapshot?.referenceId,
-                    methodVersion,
-                    sourceRepo,
-                    methodPath: sourceRepo === 'agora' ? `${methodNamespace}/${methodName}` : methodPath,
-                  });
-
+                  if (perWorkflowCostCap !== '') {
+                    void Metrics().captureEvent(Events.workflowSetCostCap, {
+                      ...extractWorkspaceDetails(workspace),
+                      snapshotId: snapshot?.reference.snapshot,
+                      referenceId: snapshot?.referenceId,
+                      methodVersion,
+                      sourceRepo,
+                      methodPath: sourceRepo === 'agora' ? `${methodNamespace}/${methodName}` : methodPath,
+                    });
+                  }
                   Nav.goToPath('workspace-submission-details', { submissionId, ...workspaceId });
                 },
               }),
