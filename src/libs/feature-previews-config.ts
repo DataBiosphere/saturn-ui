@@ -102,6 +102,7 @@ const featurePreviewsConfig: readonly FeaturePreview[] = [
     title: 'Cohort Builder Card',
     description:
       'Enabling this feature will show the card for the demo cohort builder in the Datasets tab in the Library.',
+    groups: ['CohortBuilderUsers'],
     feedbackUrl: `mailto:dsp-data-exploration@broadinstitute.org?subject=${encodeURIComponent(
       'Feedback on Cohort Builder Card'
     )}`,
