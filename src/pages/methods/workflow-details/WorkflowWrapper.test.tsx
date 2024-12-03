@@ -6,6 +6,7 @@ import React from 'react';
 import * as breadcrumbs from 'src/components/breadcrumbs';
 import { MethodAjaxContract, Methods, MethodsAjaxContract } from 'src/libs/ajax/methods/Methods';
 import { MethodConfigACL, MethodResponse, Snapshot } from 'src/libs/ajax/methods/methods-models';
+import { editMethodProvider } from 'src/libs/ajax/methods/providers/EditMethodProvider';
 import { postMethodProvider } from 'src/libs/ajax/methods/providers/PostMethodProvider';
 import * as ExportWorkflowToWorkspaceProvider from 'src/libs/ajax/workspaces/providers/ExportWorkflowToWorkspaceProvider';
 import { errorWatcher } from 'src/libs/error.mock';
@@ -271,6 +272,12 @@ const mockCloneSnapshotResponse: MethodResponse = {
     // eslint-disable-next-line no-template-curly-in-string
     'task echo_files {\\n  String? input1\\n  String? input2\\n  String? input3\\n  \\n  output {\\n    String out = read_string(stdout())\\n  }\\n\\n  command {\\n    echo \\"result: ${input1} ${input2} ${input3}\\"\\n  }\\n\\n  runtime {\\n    docker: \\"ubuntu:latest\\"\\n  }\\n}\\n\\nworkflow echo_strings {\\n  call echo_files\\n}',
   url: 'http://agora.dsde-dev.broadinstitute.org/api/v1/methods/groot-new-namespace/testname_copy/1',
+};
+
+const mockNewSnapshotResponse: MethodResponse = {
+  ...mockSnapshot,
+  snapshotComment: "groot's new snapshot",
+  snapshotId: 2,
 };
 
 describe('workflow wrapper', () => {
@@ -560,6 +567,132 @@ describe('workflows container', () => {
 
     // Assert
     const dialog2 = screen.queryByRole('dialog', { name: /create new method/i });
+    expect(dialog2).not.toBeInTheDocument();
+  });
+
+  it('renders edit method modal when corresponding button is pressed', async () => {
+    // Arrange
+    mockAjax();
+
+    // set the user's email
+    jest.spyOn(userStore, 'get').mockImplementation(jest.fn().mockReturnValue(mockUserState('hello@world.org')));
+
+    const user: UserEvent = userEvent.setup();
+
+    // Act
+    await act(async () => {
+      render(
+        <WorkflowsContainer
+          namespace={mockSnapshot.namespace}
+          name={mockSnapshot.name}
+          snapshotId={`${mockSnapshot.snapshotId}`}
+          tabName='dashboard'
+        />
+      );
+    });
+
+    await user.click(screen.getByRole('button', { name: 'Snapshot action menu' }));
+    await user.click(screen.getByRole('button', { name: 'Edit' }));
+
+    const dialog = screen.getByRole('dialog', { name: /edit/i });
+
+    // Assert
+    expect(dialog).toBeInTheDocument();
+    expect(within(dialog).getByRole('textbox', { name: 'Namespace' })).toHaveAttribute('placeholder', 'testnamespace');
+    expect(within(dialog).getByRole('textbox', { name: 'Namespace' })).toHaveAttribute('disabled');
+    expect(within(dialog).getByRole('textbox', { name: 'Name' })).toHaveAttribute('placeholder', 'testname');
+    expect(within(dialog).getByRole('textbox', { name: 'Name' })).toHaveAttribute('disabled');
+    expect(within(dialog).getByRole('textbox', { name: 'Documentation' })).toHaveDisplayValue('mock documentation');
+    expect(within(dialog).getByRole('textbox', { name: 'Synopsis (80 characters max)' })).toHaveDisplayValue('');
+    expect(within(dialog).getByRole('textbox', { name: 'Snapshot comment' })).toHaveDisplayValue('');
+    expect(within(dialog).getByTestId('wdl editor')).toHaveDisplayValue(mockSnapshot.payload.toString());
+    expect(within(dialog).getByRole('checkbox', { name: 'Delete snapshot 1' })).not.toBeChecked();
+  });
+
+  it('calls the right provider with expected arguments when new snapshot is created', async () => {
+    // Arrange
+    mockAjax();
+
+    jest.spyOn(userStore, 'get').mockImplementation(jest.fn().mockReturnValue(mockUserState('hello@world.org')));
+    jest.spyOn(editMethodProvider, 'createNewSnapshot').mockResolvedValue(mockNewSnapshotResponse);
+
+    const user: UserEvent = userEvent.setup();
+
+    // Act
+    await act(async () => {
+      render(
+        <WorkflowsContainer
+          namespace={mockSnapshot.namespace}
+          name={mockSnapshot.name}
+          snapshotId={`${mockSnapshot.snapshotId}`}
+          tabName='dashboard'
+        />
+      );
+    });
+
+    await user.click(screen.getByRole('button', { name: 'Snapshot action menu' }));
+    await user.click(screen.getByRole('button', { name: 'Edit' }));
+
+    fireEvent.change(screen.getByRole('textbox', { name: 'Snapshot comment' }), {
+      target: { value: "groot's new improved snapshot" },
+    });
+    await user.click(screen.getByRole('checkbox', { name: 'Delete snapshot 1' }));
+
+    await user.click(screen.getByRole('button', { name: 'Create new snapshot' }));
+
+    // Assert
+    expect(editMethodProvider.createNewSnapshot).toHaveBeenCalled();
+    expect(editMethodProvider.createNewSnapshot).toHaveBeenCalledWith(
+      mockSnapshot.namespace,
+      mockSnapshot.name,
+      mockSnapshot.snapshotId,
+      true,
+      mockSnapshot.synopsis,
+      mockSnapshot.documentation,
+      mockSnapshot.payload,
+      "groot's new improved snapshot"
+    );
+
+    expect(Nav.goToPath).toHaveBeenCalledWith('workflow-dashboard', {
+      name: 'testname',
+      namespace: 'testnamespace',
+      snapshotId: 2,
+    });
+  });
+
+  it('hides the edit method modal when it is dismissed', async () => {
+    // Arrange
+    mockAjax();
+
+    // set the user's email
+    jest.spyOn(userStore, 'get').mockImplementation(jest.fn().mockReturnValue(mockUserState('hello@world.org')));
+
+    const user: UserEvent = userEvent.setup();
+
+    // Act
+    await act(async () => {
+      render(
+        <WorkflowsContainer
+          namespace={mockSnapshot.namespace}
+          name={mockSnapshot.name}
+          snapshotId={`${mockSnapshot.snapshotId}`}
+          tabName='dashboard'
+        />
+      );
+    });
+
+    await user.click(screen.getByRole('button', { name: 'Snapshot action menu' }));
+    await user.click(screen.getByRole('button', { name: 'Edit' }));
+
+    // Assert
+    const dialog1 = screen.queryByRole('dialog', { name: /edit/i });
+    expect(dialog1).toBeInTheDocument();
+
+    // Act
+    await user.click(screen.getByRole('button', { name: 'Cancel' }));
+
+    // Assert
+    const dialog2 = screen.queryByRole('dialog', { name: /edit/i });
     expect(dialog2).not.toBeInTheDocument();
   });
 
