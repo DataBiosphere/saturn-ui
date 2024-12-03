@@ -1,6 +1,7 @@
 import { asMockedFn, partial } from '@terra-ui-packages/test-utils';
-import { screen } from '@testing-library/react';
+import { screen, within } from '@testing-library/react';
 import { act } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { h } from 'react-hyperscript-helpers';
 import { Apps, AppsAjaxContract } from 'src/libs/ajax/leonardo/Apps';
 import { Runtimes, RuntimesAjaxContract } from 'src/libs/ajax/leonardo/Runtimes';
@@ -31,7 +32,7 @@ jest.spyOn(oidcStore, 'get').mockImplementation(
   })
 );
 
-describe('Workflows', () => {
+describe('Find Workflow modal in Workflows view', () => {
   const mockGoogleWorkspace = {
     accessLevel: 'OWNER',
     owners: ['groot@gmail.com'],
@@ -91,7 +92,7 @@ describe('Workflows', () => {
     );
   };
 
-  it('loads Find Workflow card', async () => {
+  it('renders Find Workflow card', async () => {
     // Arrange
     const namespace = 'groot-namespace';
     const name = 'groot-scientific-workflow';
@@ -105,5 +106,35 @@ describe('Workflows', () => {
 
     // Assert
     expect(screen.getByRole('button', { name: /find a workflow/i })).toBeInTheDocument();
+  });
+
+  it('opens Find Workflow modal', async () => {
+    // Arrange
+    const namespace = 'groot-namespace';
+    const name = 'groot-scientific-workflow';
+    const user = userEvent.setup();
+
+    mockAjax();
+
+    // Act
+    await act(async () => {
+      render(h(Workflows, { name, namespace }));
+    });
+
+    await user.click(screen.getByRole('button', { name: /find a workflow/i }));
+
+    // Assert
+    const findWorkflowModal = screen.getByRole('dialog', { name: 'Find a workflow' });
+
+    expect(findWorkflowModal).toBeInTheDocument();
+    expect(within(findWorkflowModal).getByText('Find a workflow')).toBeInTheDocument();
+    // Dockstore and Broad Methods Repo cards
+    expect(within(findWorkflowModal).getByText('Dockstore.org')).toBeInTheDocument();
+    expect(within(findWorkflowModal).getByText('Broad Methods Repository')).toBeInTheDocument();
+    // curated workflows section
+    expect(within(findWorkflowModal).getByText('GATK Best Practices')).toBeInTheDocument();
+    expect(within(findWorkflowModal).getByText('Long Read Pipelines')).toBeInTheDocument();
+    expect(within(findWorkflowModal).getByText('WDL Analysis Research Pipelines')).toBeInTheDocument();
+    expect(within(findWorkflowModal).getByText('Viral Genomics')).toBeInTheDocument();
   });
 });
