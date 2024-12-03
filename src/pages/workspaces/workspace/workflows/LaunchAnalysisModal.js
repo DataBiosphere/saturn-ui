@@ -22,7 +22,7 @@ const LaunchAnalysisModal = ({
   entityMetadata,
   workspace,
   workspace: {
-    workspace: { namespace, name: workspaceName, bucketName, googleProject },
+    workspace: { namespace, name: workspaceName, googleProject },
   },
   processSingle,
   entitySelectionModel: { type, selectedEntities, newSetName },
@@ -50,9 +50,7 @@ const LaunchAnalysisModal = ({
 
   useOnMount(() => {
     const loadBucketLocation = withErrorReporting('Error loading bucket location')(async () => {
-      const { location, locationType } = await Ajax(signal)
-        .Workspaces.workspace(namespace, workspaceName)
-        .checkBucketLocation(googleProject, bucketName);
+      const { location, locationType } = await Ajax(signal).Workspaces.workspace(namespace, workspaceName).checkBucketLocation(googleProject);
       setBucketLocation({ location, locationType });
     });
 

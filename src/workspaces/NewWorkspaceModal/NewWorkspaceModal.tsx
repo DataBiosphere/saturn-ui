@@ -22,8 +22,7 @@ import { AzureStorage } from 'src/libs/ajax/AzureStorage';
 import { Billing } from 'src/libs/ajax/billing/Billing';
 import { resolveWdsApp } from 'src/libs/ajax/data-table-providers/WdsDataTableProvider';
 import { FirecloudBucket } from 'src/libs/ajax/firecloud/FirecloudBucket';
-import { Groups } from 'src/libs/ajax/Groups';
-import { CurrentUserGroupMembership } from 'src/libs/ajax/Groups';
+import { CurrentUserGroupMembership, Groups } from 'src/libs/ajax/Groups';
 import { Apps } from 'src/libs/ajax/leonardo/Apps';
 import { ListAppItem } from 'src/libs/ajax/leonardo/models/app-models';
 import { Metrics } from 'src/libs/ajax/Metrics';
@@ -290,7 +289,7 @@ export const NewWorkspaceModal = withDisplayName(
           isGoogleWorkspace(cloneWorkspace) &&
           Workspaces(signal)
             .workspace(namespace!, cloneWorkspace.workspace.name)
-            .checkBucketLocation(cloneWorkspace.workspace.googleProject, cloneWorkspace.workspace.bucketName)
+            .checkBucketLocation()
             .then(({ location }) => {
               // For current phased regionality release, we only allow US or NORTHAMERICA-NORTHEAST1 (Montreal) workspace buckets.
               setBucketLocation(isSupportedBucketLocation(location) ? location : defaultLocation);

@@ -466,13 +466,19 @@ describe('useWorkspace', () => {
     // remove workspaceInitialized because the server response does not include this information
     const { workspaceInitialized, ...serverWorkspaceResponse } = initializedGoogleWorkspace;
 
-    // Throw error from checkBucketReadAccess
+    const checkBucketLocationMock = jest.fn(() =>
+      Promise.reject(new Response('User must have access to user project', { status: 400 }))
+    );
+    // Throw error from checkBucketLocation
     asMockedFn(Workspaces).mockReturnValue(
       partial<WorkspacesAjaxContract>({
         workspace: () =>
           partial<WorkspaceContract>({
             details: jest.fn().mockResolvedValue(serverWorkspaceResponse),
-            checkBucketReadAccess: () => Promise.reject(new Response('Mock requester pays error', { status: 500 })),
+            checkBucketReadAccess: jest.fn(),
+            storageCostEstimate: jest.fn(),
+            bucketUsage: jest.fn(),
+            checkBucketLocation: checkBucketLocationMock,
           }),
       })
     );
@@ -482,13 +488,13 @@ describe('useWorkspace', () => {
       {
         googleBucketLocation: defaultGoogleBucketOptions.googleBucketLocation,
         googleBucketType: defaultGoogleBucketOptions.googleBucketType,
-        fetchedGoogleBucketLocation: 'ERROR',
+        fetchedGoogleBucketLocation: 'RPERROR',
       },
       defaultAzureStorageOptions
     );
 
     // Act
-    // Wait for the call to checkBucketReadAccess to execute
+    // Wait for the call to checkBucketLocation to execute
     const { result } = await renderHookInAct(() => useWorkspace('testNamespace', 'testName'));
 
     // Assert
@@ -497,7 +503,8 @@ describe('useWorkspace', () => {
     expect(recentlyViewedWorkspaces.updateRecentlyViewedWorkspaces).toHaveBeenCalledWith(
       initializedGoogleWorkspace.workspace.workspaceId
     );
-    expect(GoogleStorage.saToken).toHaveBeenCalled();
+    // Unless a specific user project is selected, checkBucketLocation should be called without a user project
+    expect(checkBucketLocationMock).toHaveBeenCalledWith();
   });
 
   it('can read workspace details from server, and poll WSM until the container exists', async () => {
