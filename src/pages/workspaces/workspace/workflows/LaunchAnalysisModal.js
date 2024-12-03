@@ -186,24 +186,19 @@ const LaunchAnalysisModal = ({
           ['How much does my workflow cost?', icon('pop-out', { size: 12, style: { marginLeft: '0.25rem' } })]
         ),
       ]),
-      div({ style: { marginTop: '0.25rem' } }, [
-        h(
-          Link,
-          {
-            style: { verticalAlign: 'top' },
-            href: 'https://support.terra.bio/hc/en-us/articles/360057589931',
-            ...Utils.newTabLinkProps,
-          },
-          ['Set up budget alert', icon('pop-out', { size: 12, style: { marginLeft: '0.25rem' } })]
-        ),
-      ]),
       isFeaturePreviewEnabled(PREVIEW_COST_CAPPING) &&
-        perWorkflowCostCap !== '' &&
         div({ style: { marginTop: '0.25rem' } }, [
           ul({ style: { paddingLeft: '1.5rem' } }, [
-            li([`Workflow run budget is set to ${Utils.formatUSD(perWorkflowCostCap)}.`]),
             li([`You are launching ${entityCount} workflow `, entityCount === 1 ? 'run' : 'runs', ' in this submission.']),
-            li([b('Max possible'), ` submission cost is ${Utils.formatUSD(entityCount * perWorkflowCostCap)}.`]),
+            perWorkflowCostCap !== ''
+              ? li([
+                  `You set a cost limit of ${Utils.formatUSD(perWorkflowCostCap)} per workflow run`,
+                  h('br'),
+                  `x ${entityCount} workflow runs = ${Utils.formatUSD(entityCount * perWorkflowCostCap)}`,
+                  b(' max possible'),
+                  ' submission cost.',
+                ])
+              : li(['You did not set a cost limit.']),
           ]),
         ]),
       h(IdContainer, [
@@ -222,24 +217,23 @@ const LaunchAnalysisModal = ({
             }),
           ]),
       ]),
-      warnDuplicateAnalyses
-        ? div(
-            {
-              style: { ...warningBoxStyle, fontSize: 14, display: 'flex', flexDirection: 'column' },
-            },
-            [
-              div({ style: { display: 'flex', flexDirection: 'row', alignItems: 'center' } }, [
-                icon('warning-standard', { size: 19, style: { color: colors.warning(), flex: 'none', marginRight: '0.5rem' } }),
-                'Duplicate Analysis Warning',
-              ]),
-              div({ style: { fontWeight: 'normal', marginTop: '0.5rem' } }, [
-                'This will launch ',
-                b([entityCount]),
-                ' analyses, but all of the inputs are constant. This is likely to result in re-calculation of the same result multiple times.',
-              ]),
-            ]
-          )
-        : div({ style: { margin: '1rem 0' } }, ['This will launch ', b([entityCount]), entityCount === 1 ? ' analysis.' : ' analyses.']),
+      warnDuplicateAnalyses &&
+        div(
+          {
+            style: { ...warningBoxStyle, fontSize: 14, display: 'flex', flexDirection: 'column' },
+          },
+          [
+            div({ style: { display: 'flex', flexDirection: 'row', alignItems: 'center' } }, [
+              icon('warning-standard', { size: 19, style: { color: colors.warning(), flex: 'none', marginRight: '0.5rem' } }),
+              'Duplicate Analysis Warning',
+            ]),
+            div({ style: { fontWeight: 'normal', marginTop: '0.5rem' } }, [
+              'This will launch ',
+              b([entityCount]),
+              ' analyses, but all of the inputs are constant. This is likely to result in re-calculation of the same result multiple times.',
+            ]),
+          ]
+        ),
       type === chooseSetType &&
         entityCount !== mergeSets(selectedEntities).length &&
         div(

@@ -1281,8 +1281,20 @@ export const WorkflowView = _.flow(
                 isFeaturePreviewEnabled(PREVIEW_COST_CAPPING) &&
                   div({ style: { display: 'flex', flexDirection: 'column', alignItems: 'flex-start', marginTop: '1rem', marginLeft: '1rem' } }, [
                     span({ style: { ...styles.checkBoxSpanMargins, fontWeight: 'bold' } }, [
-                      'Set workflow run budget ',
-                      h(InfoBox, ['Set workflow run budget tooltip. ']),
+                      'Set cost limit per workflow (BETA) ',
+                      h(InfoBox, { style: { whiteSpace: 'pre-line' } }, [
+                        'Important cost limit considerations:',
+                        h('br'),
+                        '1. Costs are in USD.',
+                        h('br'),
+                        '2. Based on GCP list prices  Discounts are not included.',
+                        h('br'),
+                        '3. GPU costs are not included (coming soon!).',
+                        h('br'),
+                        '4. Workflows may not terminate immediately upon hitting limit, plan for a margin of error.',
+                        h('br'),
+                        '5. Workflow costs vary by input. Set a limit that considers variability.',
+                      ]),
                     ]),
                     div({ style: { display: 'flex', alignItems: 'center', marginLeft: '0.5rem' } }, [
                       span({ style: { marginRight: '0.5rem' } }, ['$']),
