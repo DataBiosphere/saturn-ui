@@ -1287,7 +1287,7 @@ export const WorkflowView = _.flow(
                         h('br'),
                         '1. Costs are in USD.',
                         h('br'),
-                        '2. Based on GCP list prices  Discounts are not included.',
+                        '2. Based on GCP list prices. Discounts are not included.',
                         h('br'),
                         '3. GPU costs are not included (coming soon!).',
                         h('br'),

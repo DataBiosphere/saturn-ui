@@ -184,11 +184,12 @@ const LaunchAnalysisModal = ({
           ['How much does my workflow cost?', icon('pop-out', { size: 12, style: { marginLeft: '0.25rem' } })]
         ),
       ]),
-      isFeaturePreviewEnabled(PREVIEW_COST_CAPPING) &&
-        div({ style: { marginTop: '0.25rem' } }, [
-          ul({ style: { paddingLeft: '1.5rem' } }, [
-            li([`You are launching ${entityCount} workflow `, entityCount === 1 ? 'run' : 'runs', ' in this submission.']),
-            perWorkflowCostCap !== ''
+
+      div({ style: { marginTop: '0.25rem' } }, [
+        ul({ style: { paddingLeft: '1.5rem' } }, [
+          li([`You are launching ${entityCount} workflow `, entityCount === 1 ? 'run' : 'runs', ' in this submission.']),
+          isFeaturePreviewEnabled(PREVIEW_COST_CAPPING) &&
+            (perWorkflowCostCap !== ''
               ? li([
                   `You set a cost limit of ${Utils.formatUSD(perWorkflowCostCap)} per workflow run`,
                   h('br'),
@@ -196,9 +197,9 @@ const LaunchAnalysisModal = ({
                   b(' max possible'),
                   ' submission cost.',
                 ])
-              : li(['You did not set a cost limit.']),
-          ]),
+              : li(['You did not set a cost limit.'])),
         ]),
+      ]),
       h(IdContainer, [
         (id) =>
           div({ style: { margin: '1.5rem 0' } }, [
