@@ -87,8 +87,11 @@ const IGVBrowser = ({ selectedFiles, refGenome: { genome, reference }, workspace
       const [bucket] = parseGsUri(url);
       const userProjectParam = { userProject: knownBucketRequesterPaysStatuses.get()[bucket] ? userProject : undefined };
 
+      // Omit residual URL parameters from access URLs resolved via DRS Hub
+      const simpleUrl = _.last(url.split('/')).split('?')[0];
+
       igvBrowser.current.loadTrack({
-        name: name || `${_.last(url.split('/'))} (${url})`,
+        name: name || `${simpleUrl} (${url})`,
         url: Utils.mergeQueryParams(userProjectParam, url),
         indexURL: indexURL ? Utils.mergeQueryParams(userProjectParam, indexURL) : undefined,
       });
