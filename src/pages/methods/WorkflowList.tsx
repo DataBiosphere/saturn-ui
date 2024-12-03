@@ -18,7 +18,7 @@ import { useCancellation, useOnMount } from 'src/libs/react-utils';
 import { getTerraUser } from 'src/libs/state';
 import * as Utils from 'src/libs/utils';
 import { withBusyState } from 'src/libs/utils';
-import { WorkflowModal } from 'src/workflows/methods/modals/WorkflowModal';
+import { CreateWorkflowModal } from 'src/workflows/methods/modals/CreateWorkflowModal';
 
 // Note: The first tab key in this array will determine the default tab selected
 // if the tab query parameter is not present or has an invalid value (and when
@@ -288,7 +288,7 @@ export const WorkflowList = (props: WorkflowListProps) => {
           </div>
         )}
         {createWorkflowModalOpen && (
-          <WorkflowModal
+          <CreateWorkflowModal
             title='Create New Method'
             buttonActionName='Upload'
             postMethodProvider={postMethodProvider}

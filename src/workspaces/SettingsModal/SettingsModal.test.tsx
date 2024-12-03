@@ -7,8 +7,6 @@ import { Metrics, MetricsContract } from 'src/libs/ajax/Metrics';
 import { SeparateSubmissionFinalOutputsSetting } from 'src/libs/ajax/workspaces/workspace-models';
 import { Workspaces, WorkspacesAjaxContract, WorkspaceV2Contract } from 'src/libs/ajax/workspaces/Workspaces';
 import Events, { extractWorkspaceDetails } from 'src/libs/events';
-import { isFeaturePreviewEnabled } from 'src/libs/feature-previews';
-import { GCP_BUCKET_LIFECYCLE_RULES } from 'src/libs/feature-previews-config';
 import { asMockedFn, partial, renderWithAppContexts as render, SelectHelper } from 'src/testing/test-utils';
 import { defaultGoogleWorkspace, makeGoogleWorkspace } from 'src/testing/workspace-fixtures';
 import SettingsModal from 'src/workspaces/SettingsModal/SettingsModal';
@@ -24,14 +22,6 @@ import {
 
 jest.mock('src/libs/ajax/Metrics');
 jest.mock('src/libs/ajax/workspaces/Workspaces');
-
-type FeaturePreviewsExports = typeof import('src/libs/feature-previews');
-jest.mock('src/libs/feature-previews', (): FeaturePreviewsExports => {
-  return {
-    ...jest.requireActual<FeaturePreviewsExports>('src/libs/feature-previews'),
-    isFeaturePreviewEnabled: jest.fn(),
-  };
-});
 
 describe('SettingsModal', () => {
   const captureEvent = jest.fn();
@@ -135,7 +125,6 @@ describe('SettingsModal', () => {
           }),
       })
     );
-    asMockedFn(isFeaturePreviewEnabled).mockImplementation((id) => id === GCP_BUCKET_LIFECYCLE_RULES);
   };
 
   it('has no accessibility errors', async () => {
@@ -147,20 +136,6 @@ describe('SettingsModal', () => {
       const { container } = render(<SettingsModal workspace={defaultGoogleWorkspace} onDismiss={jest.fn()} />);
       expect(await axe(container)).toHaveNoViolations();
     });
-  });
-
-  it('does not show bucket lifecycle settings if the feature flag is disabled', async () => {
-    // Arrange
-    setup([], jest.fn());
-    asMockedFn(isFeaturePreviewEnabled).mockReturnValue(false);
-
-    // Act
-    await act(async () => {
-      render(<SettingsModal workspace={defaultGoogleWorkspace} onDismiss={jest.fn()} />);
-    });
-
-    // Assert
-    expect(screen.queryByText('Lifecycle Rules:')).toBeNull();
   });
 
   it('calls onDismiss on Save and does not event if there are no changes (no initial workspace settings)', async () => {

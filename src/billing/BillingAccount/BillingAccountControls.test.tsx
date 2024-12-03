@@ -54,9 +54,59 @@ describe('BillingAccountControls', () => {
     expect(screen.queryByLabelText('Billing account menu')).toBeNull();
     expect(screen.queryByLabelText('Configure Spend Reporting')).toBeNull();
     // Click option to view billing account information, which will require account elevation.
-    const addUserButton = screen.getByText('View billing account');
-    await user.click(addUserButton);
+    const viewBillingAccountButton = screen.getByText('View billing account');
+    await user.click(viewBillingAccountButton);
     expect(mockAuthorizeAndLoadAccounts).toHaveBeenCalled();
+  });
+
+  it('displays a link to set up budget alerts if user does not have billing scope', async () => {
+    // Arrange
+    asMockedFn(hasBillingScope).mockReturnValue(false);
+    const mockAuthorizeAndLoadAccounts = jest.fn();
+
+    // Act
+    renderWithAppContexts(
+      <BillingAccountControls
+        authorizeAndLoadAccounts={mockAuthorizeAndLoadAccounts}
+        billingAccounts={{}}
+        billingProject={gcpBillingProject}
+        isOwner
+        getShowBillingModal={jest.fn()}
+        setShowBillingModal={jest.fn()}
+        reloadBillingProject={jest.fn()}
+        setUpdating={jest.fn()}
+      />
+    );
+
+    // Assert
+    // No options to edit things because user does not have billing scope.
+    expect(screen.queryByLabelText('Billing account menu')).toBeNull();
+    expect(screen.queryByLabelText('Configure Spend Reporting')).toBeNull();
+
+    expect(screen.getByText('Learn how to set up budget alerts to monitor cloud spend')).not.toBeNull();
+  });
+
+  it('displays a link to set up budget alerts if user does have billing scope', async () => {
+    // Arrange
+    asMockedFn(hasBillingScope).mockReturnValue(true);
+    const mockAuthorizeAndLoadAccounts = jest.fn();
+
+    // Act
+    renderWithAppContexts(
+      <BillingAccountControls
+        authorizeAndLoadAccounts={mockAuthorizeAndLoadAccounts}
+        billingAccounts={{}}
+        billingProject={gcpBillingProject}
+        isOwner
+        getShowBillingModal={jest.fn()}
+        setShowBillingModal={jest.fn()}
+        reloadBillingProject={jest.fn()}
+        setUpdating={jest.fn()}
+      />
+    );
+
+    // Assert
+    expect(screen.getByText('Learn how to set up budget alerts to monitor cloud spend')).not.toBeNull();
   });
 
   it('shows "no billing account" message if user has billing scope but billing project does not have an account', async () => {
