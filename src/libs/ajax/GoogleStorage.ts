@@ -169,15 +169,6 @@ export const GoogleStorage = (signal?: AbortSignal) => ({
     return res.json();
   },
 
-  checkBucketLocation: async (googleProject, bucket) => {
-    const res = await fetchBuckets(
-      `storage/v1/b/${bucket}?fields=location%2ClocationType`,
-      _.merge(authOpts(await saToken(googleProject)), { signal })
-    );
-
-    return res.json();
-  },
-
   getObject: async (googleProject, bucket, object, params = {}) => {
     return fetchBuckets(
       `storage/v1/b/${bucket}/o/${encodeURIComponent(object)}${qs.stringify(params, { addQueryPrefix: true })}`,
