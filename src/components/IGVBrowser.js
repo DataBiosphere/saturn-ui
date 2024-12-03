@@ -90,10 +90,14 @@ const IGVBrowser = ({ selectedFiles, refGenome: { genome, reference }, workspace
       // Omit residual URL parameters from access URLs resolved via DRS Hub
       const simpleUrl = _.last(url.split('/')).split('?')[0];
 
+      // Enable viewing features upon searching most genes, without needing to zoom several times
+      const visibilityWindow = 75_000;
+
       igvBrowser.current.loadTrack({
         name: name || `${simpleUrl} (${url})`,
         url: Utils.mergeQueryParams(userProjectParam, url),
         indexURL: indexURL ? Utils.mergeQueryParams(userProjectParam, indexURL) : undefined,
+        visibilityWindow,
       });
     }, tracks);
   });
