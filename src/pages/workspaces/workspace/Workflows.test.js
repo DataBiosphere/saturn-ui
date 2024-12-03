@@ -2,12 +2,17 @@ import { screen } from '@testing-library/react';
 import { act } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { h } from 'react-hyperscript-helpers';
-import { Ajax } from 'src/libs/ajax';
+import { FirecloudBucket } from 'src/libs/ajax/firecloud/FirecloudBucket';
+import { Methods } from 'src/libs/ajax/methods/Methods';
+import { Metrics } from 'src/libs/ajax/Metrics';
 import { goToPath } from 'src/libs/nav';
 import { FindWorkflowModal } from 'src/pages/workspaces/workspace/Workflows';
 import { renderWithAppContexts as render } from 'src/testing/test-utils';
 
-jest.mock('src/libs/ajax');
+jest.mock('src/libs/ajax/firecloud/FirecloudBucket');
+jest.mock('src/libs/ajax/methods/Methods');
+jest.mock('src/libs/ajax/Metrics');
+jest.mock('src/libs/ajax/workspaces/Workspaces');
 
 jest.mock('src/libs/nav', () => ({
   getCurrentUrl: jest.fn().mockReturnValue(new URL('https://app.terra.bio')),
@@ -90,18 +95,12 @@ describe('Find Workflow Modal (GCP)', () => {
     configurations = jest.fn(() => Promise.resolve([methodConfiguration]));
     toWorkspace = jest.fn(() => Promise.resolve());
 
-    Ajax.mockImplementation(() => ({
-      FirecloudBucket: {
-        getFeaturedMethods,
-      },
-      Methods: {
-        list: getRuns,
-        method: methodApi,
-      },
-      Metrics: {
-        captureEvent: jest.fn(() => {}),
-      },
-    }));
+    FirecloudBucket.mockReturnValue({ getFeaturedMethods });
+    Methods.mockReturnValue({
+      list: getRuns,
+      method: methodApi,
+    });
+    Metrics.mockReturnValue({ captureEvent: jest.fn(() => {}) });
   });
 
   it('renders recommended workflows', async () => {

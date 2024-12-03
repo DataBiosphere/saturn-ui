@@ -22,7 +22,8 @@ import {
 } from 'src/components/job-common';
 import { SimpleTabBar } from 'src/components/tabBars';
 import { FlexTable, flexTableDefaultRowHeight, Sortable, TextCell, TooltipCell } from 'src/components/table';
-import { Ajax } from 'src/libs/ajax';
+import { Metrics } from 'src/libs/ajax/Metrics';
+import { Workspaces } from 'src/libs/ajax/workspaces/Workspaces';
 import colors from 'src/libs/colors';
 import { getConfig } from 'src/libs/config';
 import { withErrorReporting } from 'src/libs/error';
@@ -220,7 +221,7 @@ const SubmissionWorkflowsTable = ({ workspace, submission }) => {
                                 ...Utils.newTabLinkProps,
                                 href: `${getConfig().jobManagerUrlRoot}/${workflowId}`,
                                 onClick: () =>
-                                  Ajax().Metrics.captureEvent(Events.jobManagerOpenExternal, {
+                                  void Metrics().captureEvent(Events.jobManagerOpenExternal, {
                                     workflowId,
                                     from: 'workspace-submission-details',
                                     ...extractWorkspaceDetails(workspace.workspace),
@@ -393,18 +394,18 @@ const SubmissionDetails = _.flow(
 
             return _.set('asText', wfAsText, wf);
           }),
-          await Ajax(signal).Workspaces.workspace(namespace, name).submission(submissionId).get()
+          await Workspaces(signal).workspace(namespace, name).submission(submissionId).get()
         );
 
         setSubmission(sub);
         setUserComment(sub.userComment);
 
-        setConfiguration(await Ajax(signal).Workspaces.workspace(namespace, name).submission(submissionId).getConfiguration());
+        setConfiguration(await Workspaces(signal).workspace(namespace, name).submission(submissionId).getConfiguration());
 
         if (_.isEmpty(submission)) {
           try {
             const { methodConfigurationName: configName, methodConfigurationNamespace: configNamespace } = sub;
-            await Ajax(signal).Workspaces.workspace(namespace, name).methodConfig(configNamespace, configName).get();
+            await Workspaces(signal).workspace(namespace, name).methodConfig(configNamespace, configName).get();
             setMethodAccessible(true);
           } catch {
             setMethodAccessible(false);
