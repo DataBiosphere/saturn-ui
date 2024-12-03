@@ -159,12 +159,20 @@ const IGVFileSelector = ({ selectedEntities, onSuccess }) => {
   const isRefGenomeValid = Boolean(_.get('genome', refGenome) || _.get('reference.fastaURL', refGenome));
 
   const [selections, setSelections] = useState([]);
+  const [hasDrsCandidateFiles, setHasDrsCandidateFiles] = useState(false);
 
   const signal = useCancellation();
 
   useEffect(() => {
     async function fetchData() {
       const allAttributeValues = _.flatMap(_.flow(_.get('attributes'), _.values), selectedEntities);
+
+      // If there are 2 or more DRS URIs in this row, then IGV might be openable.
+      // This lets us know we need to show a loading message while awaiting DRS URI
+      // resolution to confirm if IGV is indeed openable for the selections.
+      const drsCandidateFiles = allAttributeValues.filter((value) => value.startsWith('drs://'));
+      setHasDrsCandidateFiles(drsCandidateFiles.length >= 2);
+
       const selections = await getValidIgvFilesFromAttributeValues(allAttributeValues, signal);
       setSelections(selections);
     }
@@ -174,6 +182,8 @@ const IGVFileSelector = ({ selectedEntities, onSuccess }) => {
   const toggleSelected = (index) => setSelections(_.update([index, 'isSelected'], (v) => !v));
   const numSelected = _.countBy('isSelected', selections).true;
   const isSelectionValid = !!numSelected;
+
+  const noRowsMessage = hasDrsCandidateFiles ? 'Searching for valid files with indices...' : 'No valid files with indices found';
 
   return div({ style: Style.modalDrawer.content }, [
     h(IGVReferenceSelector, {
@@ -194,7 +204,7 @@ const IGVFileSelector = ({ selectedEntities, onSuccess }) => {
             width,
             rowCount: selections.length,
             rowHeight: 30,
-            noRowsRenderer: () => 'No valid files with indices found',
+            noRowsRenderer: () => noRowsMessage,
             rowRenderer: ({ index, style, key }) => {
               const { filePath, isSelected } = selections[index];
               return div({ key, style: { ...style, display: 'flex' } }, [
