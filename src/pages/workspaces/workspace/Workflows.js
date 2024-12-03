@@ -9,8 +9,8 @@ import { DelayedSearchInput } from 'src/components/input';
 import { MenuButton } from 'src/components/MenuButton';
 import { PageBox } from 'src/components/PageBox';
 import { makeMenuIcon, MenuTrigger } from 'src/components/PopupTrigger';
-import { Ajax } from 'src/libs/ajax';
 import { makeExportWorkflowFromWorkspaceProvider } from 'src/libs/ajax/workspaces/providers/ExportWorkflowToWorkspaceProvider';
+import { Workspaces } from 'src/libs/ajax/workspaces/Workspaces';
 import colors from 'src/libs/colors';
 import { withErrorReporting } from 'src/libs/error';
 import * as Nav from 'src/libs/nav';
@@ -229,7 +229,7 @@ export const Workflows = _.flow(
     Utils.withBusyState(setLoading),
     withErrorReporting('Error loading configs')
   )(async () => {
-    const configs = await Ajax(signal).Workspaces.workspace(namespace, name).listMethodConfigs();
+    const configs = await Workspaces(signal).workspace(namespace, name).listMethodConfigs();
     setConfigs(configs);
   });
 
@@ -335,7 +335,7 @@ export const Workflows = _.flow(
           )(async () => {
             setWorkflowToDelete(undefined);
             const { namespace, name } = getConfig(workflowToDelete);
-            await Ajax().Workspaces.workspace(workspace.namespace, workspace.name).methodConfig(namespace, name).delete();
+            await Workspaces().workspace(workspace.namespace, workspace.name).methodConfig(namespace, name).delete();
             refresh();
           }),
         }),

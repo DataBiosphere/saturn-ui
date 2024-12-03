@@ -3,7 +3,8 @@ import { delay } from '@terra-ui-packages/core-utils';
 import _ from 'lodash/fp';
 import { div, h } from 'react-hyperscript-helpers';
 import { icon } from 'src/components/icons';
-import { Ajax } from 'src/libs/ajax';
+import { Metrics } from 'src/libs/ajax/Metrics';
+import { Workspaces } from 'src/libs/ajax/workspaces/Workspaces';
 import { launch } from 'src/libs/analysis';
 import colors from 'src/libs/colors';
 import { reportError } from 'src/libs/error';
@@ -40,8 +41,8 @@ export const rerunFailures = async ({
   try {
     const [{ workflows, useCallCache, deleteIntermediateOutputFiles, useReferenceDisks, memoryRetryMultiplier, userComment }, config] =
       await Promise.all([
-        Ajax().Workspaces.workspace(namespace, name).submission(submissionId).get(),
-        Ajax().Workspaces.workspace(namespace, name).methodConfig(configNamespace, configName).get(),
+        Workspaces().workspace(namespace, name).submission(submissionId).get(),
+        Workspaces().workspace(namespace, name).methodConfig(configNamespace, configName).get(),
       ]);
 
     await launch({
@@ -66,11 +67,11 @@ export const rerunFailures = async ({
     });
     rerunFailuresStatus.set({ text: 'Success!', done: true });
     onDone();
-    Ajax().Metrics.captureEvent(Events.workflowRerun, { ...eventData, success: true });
+    void Metrics().captureEvent(Events.workflowRerun, { ...eventData, success: true });
 
     await delay(2000);
   } catch (error) {
-    Ajax().Metrics.captureEvent(Events.workflowRerun, { ...eventData, success: false });
+    void Metrics().captureEvent(Events.workflowRerun, { ...eventData, success: false });
     reportError('Error rerunning failed workflows', error);
   } finally {
     clearNotification(id);

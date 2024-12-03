@@ -76,7 +76,10 @@ const checkRequesterPaysError = async (response): Promise<RequesterPaysErrorInfo
 };
 
 export const responseContainsRequesterPaysError = (responseText) => {
-  return _.includes('requester pays', responseText);
+  return _.some(
+    (msg) => _.includes(msg, responseText),
+    ['access to user project', 'user project to bill', 'requester pays bucket']
+  );
 };
 
 // requesterPaysError may be set on responses from requests to the GCS API that are wrapped in withRequesterPays.
@@ -163,15 +166,6 @@ export const GoogleStorage = (signal?: AbortSignal) => ({
       `storage/v1/b/${bucket}?fields=billing`,
       _.merge(authOpts(await saToken(googleProject)), { signal })
     );
-    return res.json();
-  },
-
-  checkBucketLocation: async (googleProject, bucket) => {
-    const res = await fetchBuckets(
-      `storage/v1/b/${bucket}?fields=location%2ClocationType`,
-      _.merge(authOpts(await saToken(googleProject)), { signal })
-    );
-
     return res.json();
   },
 
