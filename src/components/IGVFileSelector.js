@@ -207,6 +207,10 @@ const IGVFileSelector = ({ selectedEntities, onSuccess }) => {
             noRowsRenderer: () => noRowsMessage,
             rowRenderer: ({ index, style, key }) => {
               const { filePath, isSelected } = selections[index];
+
+              // Show the file name, i.e. the last URL path segment, without URL parameters
+              const fileName = _.last(filePath.split('/')).split('?')[0];
+
               return div({ key, style: { ...style, display: 'flex' } }, [
                 h(
                   LabeledCheckbox,
@@ -214,7 +218,7 @@ const IGVFileSelector = ({ selectedEntities, onSuccess }) => {
                     checked: isSelected,
                     onChange: () => toggleSelected(index),
                   },
-                  [div({ style: { paddingLeft: '0.25rem', flex: 1, ...Style.noWrapEllipsis } }, [_.last(filePath.split('/'))])]
+                  [div({ style: { paddingLeft: '0.25rem', flex: 1, ...Style.noWrapEllipsis } }, [fileName])]
                 ),
               ]);
             },
