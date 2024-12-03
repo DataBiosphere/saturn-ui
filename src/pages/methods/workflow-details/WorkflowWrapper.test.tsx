@@ -273,12 +273,6 @@ const mockCloneSnapshotResponse: MethodResponse = {
   url: 'http://agora.dsde-dev.broadinstitute.org/api/v1/methods/groot-new-namespace/testname_copy/1',
 };
 
-const mockNewSnapshotResponse: MethodResponse = {
-  ...mockSnapshot,
-  snapshotComment: "groot's new snapshot",
-  snapshotId: 2,
-};
-
 describe('workflow wrapper', () => {
   it('displays the method not found page if a method does not exist or the user does not have access', async () => {
     // Arrange
