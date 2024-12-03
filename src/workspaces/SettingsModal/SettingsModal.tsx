@@ -6,6 +6,8 @@ import { Workspaces } from 'src/libs/ajax/workspaces/Workspaces';
 import colors from 'src/libs/colors';
 import { withErrorReporting } from 'src/libs/error';
 import Events, { extractWorkspaceDetails } from 'src/libs/events';
+import { isFeaturePreviewEnabled } from 'src/libs/feature-previews';
+import { GCP_BUCKET_LIFECYCLE_RULES } from 'src/libs/feature-previews-config';
 import { useCancellation } from 'src/libs/react-utils';
 import * as Utils from 'src/libs/utils';
 import BucketLifecycleSettings from 'src/workspaces/SettingsModal/BucketLifecycleSettings';
@@ -255,17 +257,19 @@ const SettingsModal = (props: SettingsModalProps): ReactNode => {
         </ButtonPrimary>
       }
     >
-      <div style={{ paddingBottom: '1.0rem', borderBottom: `1px solid ${colors.accent()}` }}>
-        <BucketLifecycleSettings
-          lifecycleRulesEnabled={lifecycleRulesEnabled}
-          setLifecycleRulesEnabled={setLifecycleRulesEnabled}
-          lifecycleAge={lifecycleAge}
-          setLifecycleAge={setLifecycleAge}
-          prefixes={prefixes}
-          setPrefixes={setPrefixes}
-          isOwner={isOwner}
-        />
-      </div>
+      {isFeaturePreviewEnabled(GCP_BUCKET_LIFECYCLE_RULES) && (
+        <div style={{ paddingBottom: '1.0rem', borderBottom: `1px solid ${colors.accent()}` }}>
+          <BucketLifecycleSettings
+            lifecycleRulesEnabled={lifecycleRulesEnabled}
+            setLifecycleRulesEnabled={setLifecycleRulesEnabled}
+            lifecycleAge={lifecycleAge}
+            setLifecycleAge={setLifecycleAge}
+            prefixes={prefixes}
+            setPrefixes={setPrefixes}
+            isOwner={isOwner}
+          />
+        </div>
+      )}
       <div style={{ paddingBottom: '1.0rem', borderBottom: `1px solid ${colors.accent()}` }}>
         <SoftDelete
           softDeleteEnabled={softDeleteEnabled}
