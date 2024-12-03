@@ -47,7 +47,7 @@ describe('FindWorkflowModal', () => {
     await user.click(screen.getByLabelText('Close modal'));
 
     // Assert
-    expect(mockOnDismiss).toHaveBeenCalledOnce();
+    expect(mockOnDismiss).toHaveBeenCalledTimes(1);
   });
 
   it('clicking on cancel button dismisses the modal', async () => {
@@ -68,6 +68,6 @@ describe('FindWorkflowModal', () => {
     await user.click(screen.getByRole('button', { name: 'Cancel' }));
 
     // Assert
-    expect(mockOnDismiss).toHaveBeenCalledOnce();
+    expect(mockOnDismiss).toHaveBeenCalledTimes(1);
   });
 });
