@@ -527,11 +527,10 @@ export const WorkflowView = _.flow(
                   if (perWorkflowCostCap !== '') {
                     void Metrics().captureEvent(Events.workflowSetCostCap, {
                       ...extractWorkspaceDetails(workspace),
-                      snapshotId: snapshot?.reference.snapshot,
-                      referenceId: snapshot?.referenceId,
                       methodVersion,
                       sourceRepo,
                       methodPath: sourceRepo === 'agora' ? `${methodNamespace}/${methodName}` : methodPath,
+                      costCap: perWorkflowCostCap,
                     });
                   }
                   Nav.goToPath('workspace-submission-details', { submissionId, ...workspaceId });
@@ -685,6 +684,7 @@ export const WorkflowView = _.flow(
         monitoringScript,
         monitoringImage,
         monitoringImageScript,
+        perWorkflowCostCap,
       } = this.state;
 
       const updatedWfOptionsPref = {};
@@ -708,6 +708,7 @@ export const WorkflowView = _.flow(
           image: monitoringImage,
           imageScript: monitoringImageScript,
         };
+      if (perWorkflowCostCap) updatedWfOptionsPref.perWorkflowCostCap = perWorkflowCostCap;
 
       return updatedWfOptionsPref;
     }
@@ -843,6 +844,7 @@ export const WorkflowView = _.flow(
         monitoringScript,
         monitoringImage,
         monitoringImageScript,
+        perWorkflowCostCap,
         currentSnapRedacted,
         savedSnapRedacted,
         wdl,
@@ -1286,6 +1288,7 @@ export const WorkflowView = _.flow(
                       span({ style: { marginRight: '0.5rem' } }, ['$']),
                       h(TextInput, {
                         id: 'workflow-run-budget',
+                        value: perWorkflowCostCap || '',
                         placeholder: 'Example: 1.00',
                         onChange: (v) => this.setState({ perWorkflowCostCap: v }),
                         style: { marginTop: '0.5rem', width: '70%', marginRight: '0.5rem' },
