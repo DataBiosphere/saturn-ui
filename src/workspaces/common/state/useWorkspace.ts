@@ -22,7 +22,7 @@ export type { InitializedWorkspaceWrapper } from 'src/libs/state';
 export interface StorageDetails {
   googleBucketLocation: string; // historically returns defaultLocation if bucket location cannot be retrieved or Azure
   googleBucketType: string; // historically returns locationTypes.default if bucket type cannot be retrieved or Azure
-  fetchedGoogleBucketLocation: 'SUCCESS' | 'ERROR' | undefined; // undefined: still fetching
+  fetchedGoogleBucketLocation: 'SUCCESS' | 'ERROR' | 'RPERROR' | undefined; // undefined: still fetching
   azureContainerRegion?: string;
   azureContainerUrl?: string;
   azureContainerSasUrl?: string;
@@ -46,7 +46,7 @@ export const useWorkspace = (namespace, name): WorkspaceDetails => {
   const workspace = useStore(workspaceStore);
 
   const [{ location, locationType, fetchedLocation }, setGoogleStorage] = useState<{
-    fetchedLocation: 'SUCCESS' | 'ERROR' | undefined;
+    fetchedLocation: 'SUCCESS' | 'ERROR' | 'RPERROR' | undefined;
     location: string;
     locationType: string;
   }>({
@@ -86,9 +86,7 @@ export const useWorkspace = (namespace, name): WorkspaceDetails => {
     console.assert(!!workspace, 'initialization should not be called before workspace details are fetched');
 
     if (isGoogleWorkspace(workspace)) {
-      !workspaceInitialized
-        ? checkGooglePermissions(workspace, times)
-        : loadGoogleBucketLocationIgnoringError(workspace);
+      !workspaceInitialized ? checkGooglePermissions(workspace, times) : loadGoogleBucketLocationIgnoringError();
     } else if (isAzureWorkspace(workspace)) {
       !workspaceInitialized ? checkAzureStorageExists(workspace) : loadAzureStorageDetails(workspace);
     }
@@ -108,14 +106,14 @@ export const useWorkspace = (namespace, name): WorkspaceDetails => {
         await Workspaces(signal).workspace(namespace, name).storageCostEstimate();
         await Workspaces(signal).workspace(namespace, name).bucketUsage();
       }
-      await loadGoogleBucketLocation(workspace);
+      await loadGoogleBucketLocation();
       updateWorkspaceInStore(workspace, true);
     } catch (error: any) {
       const errorText = await error.text();
       if (responseContainsRequesterPaysError(errorText)) {
         // loadGoogleBucketLocation will not get called in this case because checkBucketReadAccess fails first,
         // but it would also fail with the requester pays error.
-        setGoogleStorage({ fetchedLocation: 'ERROR', location, locationType });
+        setGoogleStorage({ fetchedLocation: 'RPERROR', location, locationType });
         updateWorkspaceInStore(workspace, true);
       } else {
         updateWorkspaceInStore(workspace, false);
@@ -137,19 +135,26 @@ export const useWorkspace = (namespace, name): WorkspaceDetails => {
   };
 
   // Note that withErrorIgnoring is used because checkBucketLocation will error for requester pays workspaces.
-  const loadGoogleBucketLocationIgnoringError = withErrorIgnoring(async (workspace) => {
-    await loadGoogleBucketLocation(workspace);
+  const loadGoogleBucketLocationIgnoringError = withErrorIgnoring(async () => {
+    await loadGoogleBucketLocation();
   });
 
-  const loadGoogleBucketLocation = async (workspace) => {
+  const loadGoogleBucketLocation = async () => {
     try {
-      const storageDetails = await Workspaces(signal)
-        .workspace(namespace, name)
-        .checkBucketLocation(workspace.workspace.googleProject, workspace.workspace.bucketName);
+      const storageDetails = await Workspaces(signal).workspace(namespace, name).checkBucketLocation();
       storageDetails.fetchedLocation = 'SUCCESS';
       setGoogleStorage(storageDetails);
     } catch (error) {
-      setGoogleStorage({ fetchedLocation: 'ERROR', location, locationType });
+      // checkGooglePermissions, which calls loadGoogleBucketLocation, also tries to read the response
+      // text. Errors in checkGooglePermissions could come from many methods, including this one.
+      // Because of checkGooglePermissions' needs, don't consume the response text here; only read
+      // from a clone of the response so we can rethrow the original.
+      const errorText = error instanceof Response ? await error.clone().text() : `${error}`;
+      if (responseContainsRequesterPaysError(errorText)) {
+        setGoogleStorage({ fetchedLocation: 'RPERROR', location, locationType });
+      } else {
+        setGoogleStorage({ fetchedLocation: 'ERROR', location, locationType });
+      }
       throw error;
     }
   };
