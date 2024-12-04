@@ -1,10 +1,9 @@
-import { DeepPartial } from '@terra-ui-packages/core-utils';
 import { fireEvent, waitFor } from '@testing-library/react';
 import { userEvent } from '@testing-library/user-event';
 import React from 'react';
 import { NewGroupModal } from 'src/groups/NewGroupModal';
-import { Ajax } from 'src/libs/ajax';
-import { asMockedFn, renderWithAppContexts as render } from 'src/testing/test-utils';
+import { GroupContract, Groups, GroupsContract } from 'src/libs/ajax/Groups';
+import { asMockedFn, MockedFn, partial, renderWithAppContexts as render } from 'src/testing/test-utils';
 
 type ErrorExports = typeof import('src/libs/error');
 const mockReportError = jest.fn();
@@ -17,8 +16,7 @@ jest.mock(
   })
 );
 
-type AjaxContract = ReturnType<typeof Ajax>;
-jest.mock('src/libs/ajax');
+jest.mock('src/libs/ajax/Groups');
 
 describe('NewGroupModal', () => {
   it('renders correctly', () => {
@@ -102,18 +100,16 @@ describe('NewGroupModal', () => {
   it('calls submit function on form submission with valid data', async () => {
     // Arrange
     const user = userEvent.setup();
-    const mockCreateFn = jest.fn().mockReturnValue(Promise.resolve());
-    const mockSetPolicyFn = jest.fn().mockReturnValue(Promise.resolve());
-    asMockedFn(Ajax).mockImplementation(
-      () =>
-        ({
-          Groups: {
-            group: jest.fn().mockImplementation(() => ({
-              create: mockCreateFn,
-              setPolicy: mockSetPolicyFn,
-            })),
-          },
-        } as DeepPartial<AjaxContract> as AjaxContract)
+    const mockCreateFn: MockedFn<GroupContract['create']> = jest.fn(async () => undefined);
+    const mockSetPolicyFn: MockedFn<GroupContract['setPolicy']> = jest.fn(async (_name, _value) => undefined);
+    asMockedFn(Groups).mockReturnValue(
+      partial<GroupsContract>({
+        group: () =>
+          partial<GroupContract>({
+            create: mockCreateFn,
+            setPolicy: mockSetPolicyFn,
+          }),
+      })
     );
     const mockOnSuccessFn = jest.fn();
     const { getByText, getByLabelText } = render(
