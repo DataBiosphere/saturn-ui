@@ -33,7 +33,13 @@ export const getSuggestedTableName = (tsv) => {
     return undefined;
   }
   const firstColumnHeading = tsv.slice(0, indexOfFirstSpace);
-  return firstColumnHeading.replace(/_id$/, '').replace(/^(membership|entity):/, '');
+  return firstColumnHeading.replace(/_id$/, '').replace(/^(membership|entity|update):/, '');
+};
+
+/** Validates that the suggested table name is legal syntax for Terra */
+export const validateSuggestedTableName = (tableName) => {
+  const match = /^([a-zA-Z0-9_-]+)$/.exec(tableName);
+  return match?.[1];
 };
 
 export const EntityUploader = ({ onSuccess, onDismiss, namespace, name, entityTypes, workspaceId, dataProvider, isGoogleWorkspace, region }) => {
@@ -97,24 +103,7 @@ export const EntityUploader = ({ onSuccess, onDismiss, namespace, name, entityTy
     },
   });
 
-  const extractEntityType = (text) => {
-    // get the first line
-    const firstLine = text.split(/\r?\n/)[0];
-    // get the first column header
-    const header = firstLine.split(/\t/)[0];
-    // strip legal prefixes
-    const unprefixed =
-      header.startsWith('entity:') || header.startsWith('membership:') || header.startsWith('update:')
-        ? header.substring(header.indexOf(':') + 1)
-        : header;
-    // strip legal suffixes
-    const unsuffixed = unprefixed.endsWith('_id') ? unprefixed.slice(0, -3) : unprefixed;
-    // validate legality
-    const match = /^([a-zA-Z_-]+)$/.exec(unsuffixed);
-    return match?.[1];
-  };
-
-  const newEntityType = extractEntityType(fileContents);
+  const newEntityType = validateSuggestedTableName(getSuggestedTableName(fileContents));
   const isInvalid = dataProvider.tsvFeatures.isInvalid({
     fileImportModeMatches: isFileImportCurrMode === isFileImportLastUsedMode,
     match: !newEntityType,
