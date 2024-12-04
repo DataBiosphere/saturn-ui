@@ -30,9 +30,7 @@ const WorkflowSourceCard = (props: WorkflowSourceCardProps) => {
         <h4>
           <Link href={props.url} {...(props.openInNewTab ? Utils.newTabLinkProps : {})}>
             {props.title}
-            {props.openInNewTab
-              ? icon('pop-out', { size: 12, style: { marginLeft: '0.25rem', marginBottom: '1px' } })
-              : ''}
+            {props.openInNewTab && icon('pop-out', { size: 12, style: { marginLeft: '0.25rem', marginBottom: '1px' } })}
           </Link>
         </h4>
         <p>{props.description}</p>
