@@ -522,8 +522,6 @@ export const WorkflowView = _.flow(
                     sourceRepo,
                     methodPath: sourceRepo === 'agora' ? `${methodNamespace}/${methodName}` : methodPath,
                   });
-                  // TODO should this be done here or when the workflows are actually launched?
-                  // What info needs to be included?
                   if (perWorkflowCostCap !== '') {
                     void Metrics().captureEvent(Events.workflowSetCostCap, {
                       ...extractWorkspaceDetails(workspace),
@@ -1279,35 +1277,45 @@ export const WorkflowView = _.flow(
                   ]),
                 ]),
                 isFeaturePreviewEnabled(PREVIEW_COST_CAPPING) &&
-                  div({ style: { display: 'flex', flexDirection: 'column', alignItems: 'flex-start', marginTop: '1rem', marginLeft: '1rem' } }, [
-                    span({ style: { ...styles.checkBoxSpanMargins, fontWeight: 'bold' } }, [
-                      'Set cost limit per workflow (BETA) ',
-                      h(InfoBox, { style: { whiteSpace: 'pre-line' } }, [
-                        'Important cost limit considerations:',
-                        h('br'),
-                        '1. Costs are in USD.',
-                        h('br'),
-                        '2. Based on GCP list prices. Discounts are not included.',
-                        h('br'),
-                        '3. GPU costs are not included (coming soon!).',
-                        h('br'),
-                        '4. Workflows may not terminate immediately upon hitting limit, plan for a margin of error.',
-                        h('br'),
-                        '5. Workflow costs vary by input. Set a limit that considers variability.',
+                  div(
+                    {
+                      style: {
+                        display: 'flex',
+                        flexDirection: 'column',
+                        marginLeft: '2rem',
+                        alignSelf: 'flex-start',
+                        marginBottom: '-2rem',
+                      },
+                    },
+                    [
+                      span({ style: { fontWeight: 'bold' } }, [
+                        'Set cost limit per workflow (BETA) ',
+                        h(InfoBox, { style: { marginLeft: '0.1rem', whiteSpace: 'pre-line' } }, [
+                          'Important cost limit considerations:',
+                          h('br'),
+                          '1. Costs are in USD.',
+                          h('br'),
+                          '2. Based on GCP list prices. Discounts are not included.',
+                          h('br'),
+                          '3. GPU costs are not included (coming soon!).',
+                          h('br'),
+                          '4. Workflows may not terminate immediately upon hitting limit, plan for a margin of error.',
+                          h('br'),
+                          '5. Workflow costs vary by input. Set a limit that considers variability.',
+                        ]),
                       ]),
-                    ]),
-                    div({ style: { display: 'flex', alignItems: 'center', marginLeft: '0.5rem' } }, [
-                      span({ style: { marginRight: '0.5rem' } }, ['$']),
-                      h(TextInput, {
-                        id: 'workflow-run-budget',
-                        value: perWorkflowCostCap || '',
-                        placeholder: 'Example: 1.00',
-                        onChange: (v) => this.setState({ perWorkflowCostCap: v }),
-                        style: { marginTop: '0.5rem', width: '70%', marginRight: '0.5rem' },
-                      }),
-                    ]),
-                    span({ style: { ...styles.checkBoxSpanMargins, fontSize: '0.75rem' } }, [[' We recommend adding 20% room for variability']]),
-                  ]),
+                      div({ style: { display: 'flex', alignItems: 'center', marginLeft: '0rem' } }, [
+                        span({ style: { marginRight: '0.5rem' } }, ['$']),
+                        h(TextInput, {
+                          id: 'workflow-run-budget',
+                          value: perWorkflowCostCap || '',
+                          placeholder: 'Example: 1.00',
+                          onChange: (v) => this.setState({ perWorkflowCostCap: v }),
+                          style: { marginTop: '0.5rem', width: '70%', marginLeft: '0.1rem' },
+                        }),
+                      ]),
+                    ]
+                  ),
               ]),
               h(StepButtons, {
                 tabs: [
