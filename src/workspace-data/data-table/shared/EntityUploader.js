@@ -97,13 +97,30 @@ export const EntityUploader = ({ onSuccess, onDismiss, namespace, name, entityTy
     },
   });
 
-  const match = /(?:membership|entity):([^\s]+)_id/.exec(fileContents); // Specific to Google Workspaces -- Azure workspaces do not have this requirement for TSV headers
+  const extractEntityType = (text) => {
+    // get the first line
+    const firstLine = text.split(/\r?\n/)[0];
+    // get the first column header
+    const header = firstLine.split(/\t/)[0];
+    // strip legal prefixes
+    const unprefixed =
+      header.startsWith('entity:') || header.startsWith('membership:') || header.startsWith('update:')
+        ? header.substring(header.indexOf(':') + 1)
+        : header;
+    // strip legal suffixes
+    const unsuffixed = unprefixed.endsWith('_id') ? unprefixed.slice(0, -3) : unprefixed;
+    // validate legality
+    const match = /^([a-zA-Z_-]+)$/.exec(unsuffixed);
+    return match?.[1];
+  };
+
+  const newEntityType = extractEntityType(fileContents);
   const isInvalid = dataProvider.tsvFeatures.isInvalid({
     fileImportModeMatches: isFileImportCurrMode === isFileImportLastUsedMode,
-    match: !match,
+    match: !newEntityType,
     filePresent: file,
   });
-  const newEntityType = match?.[1];
+
   const entityTypeAlreadyExists = _.includes(_.toLower(newEntityType), entityTypes);
   const currentFile = isFileImportCurrMode === isFileImportLastUsedMode ? file : undefined;
   const containsNullValues = fileContents.match(/^\t|\t\t+|\t$|\n\n+/gm);
