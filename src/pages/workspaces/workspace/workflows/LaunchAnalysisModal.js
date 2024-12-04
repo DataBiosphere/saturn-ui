@@ -194,7 +194,7 @@ const LaunchAnalysisModal = ({
                   `You set a cost limit of ${Utils.formatUSD(perWorkflowCostCap)} per workflow run`,
                   h('br'),
                   `x ${entityCount} workflow runs = ${Utils.formatUSD(entityCount * perWorkflowCostCap)}`,
-                  b(' max possible'),
+                  b(' approximate maximum'),
                   ' submission cost.',
                 ])
               : li(['You did not set a cost limit.'])),
