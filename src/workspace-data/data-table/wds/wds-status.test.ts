@@ -145,10 +145,7 @@ describe('useWdsStatus', () => {
 
       asMockedFn(WorkspaceData).mockReturnValue(
         partial<WorkspaceDataAjaxContract>({
-          getVersion: jest.fn(() => abandonedPromise()),
-          getStatus: jest.fn(() => abandonedPromise()),
-          listCollections: jest.fn(() => abandonedPromise()),
-          getCloneStatus: jest.fn(() => abandonedPromise()),
+          ...getWorkspaceDataMocks(),
         })
       );
 
