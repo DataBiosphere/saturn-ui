@@ -5,7 +5,7 @@ import { div, h, label, p, span } from 'react-hyperscript-helpers';
 import { ButtonPrimary, IdContainer, spinnerOverlay } from 'src/components/common';
 import { icon } from 'src/components/icons';
 import { TextInput } from 'src/components/input';
-import { Ajax } from 'src/libs/ajax';
+import { Workspaces } from 'src/libs/ajax/workspaces/Workspaces';
 import colors from 'src/libs/colors';
 import { reportError } from 'src/libs/error';
 import * as Utils from 'src/libs/utils';
@@ -31,7 +31,7 @@ export const AddColumnModal = ({ entityType, entityMetadata, workspaceId: { name
     try {
       setIsBusy(true);
 
-      const queryResults = await Ajax().Workspaces.workspace(namespace, name).paginatedEntitiesOfType(entityType, {
+      const queryResults = await Workspaces().workspace(namespace, name).paginatedEntitiesOfType(entityType, {
         pageSize: entityMetadata[entityType].count,
         fields: '',
       });
@@ -52,7 +52,7 @@ export const AddColumnModal = ({ entityType, entityMetadata, workspaceId: { name
         allEntityNames
       );
 
-      await Ajax().Workspaces.workspace(namespace, name).upsertEntities(entityUpdates);
+      await Workspaces().workspace(namespace, name).upsertEntities(entityUpdates);
       onSuccess();
     } catch (e) {
       onDismiss();

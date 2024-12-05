@@ -1,30 +1,34 @@
-import { abandonedPromise, DeepPartial } from '@terra-ui-packages/core-utils';
-import { Ajax } from 'src/libs/ajax';
+import { abandonedPromise } from '@terra-ui-packages/core-utils';
+import { Apps, AppsAjaxContract } from 'src/libs/ajax/leonardo/Apps';
 import { ListAppItem } from 'src/libs/ajax/leonardo/models/app-models';
+import { WorkspaceData, WorkspaceDataAjaxContract } from 'src/libs/ajax/WorkspaceDataService';
 import { WDSCloneStatusResponse } from 'src/libs/ajax/WorkspaceDataService';
-import { asMockedFn, renderHookInAct } from 'src/testing/test-utils';
+import { asMockedFn, MockedFn, partial, renderHookInAct } from 'src/testing/test-utils';
 
 import { useWdsStatus } from './wds-status';
 
-type AjaxExports = typeof import('src/libs/ajax');
-jest.mock('src/libs/ajax', (): Partial<AjaxExports> => {
-  return { Ajax: jest.fn() };
-});
+jest.mock('src/libs/ajax/leonardo/Apps');
+jest.mock('src/libs/ajax/WorkspaceDataService');
 
-type AjaxContract = ReturnType<typeof Ajax>;
+const getWorkspaceDataMocks = () => {
+  const getVersion: MockedFn<WorkspaceDataAjaxContract['getVersion']> = jest.fn((_root) => abandonedPromise());
+  const getStatus: MockedFn<WorkspaceDataAjaxContract['getStatus']> = jest.fn((_root) => abandonedPromise());
+  const listCollections: MockedFn<WorkspaceDataAjaxContract['listCollections']> = jest.fn((_root, _workspaceId) =>
+    abandonedPromise()
+  );
+  const getCloneStatus: MockedFn<WorkspaceDataAjaxContract['getCloneStatus']> = jest.fn((_root) => abandonedPromise());
+
+  return { getVersion, getStatus, listCollections, getCloneStatus };
+};
 
 describe('useWdsStatus', () => {
   const workspaceId = '6601fdbb-4b53-41da-87b2-81385f4a760e';
 
   it('fetches Leo apps', async () => {
     // Arrange
-    const listAppsV2 = jest.fn().mockResolvedValue([]);
-    const mockAjax: DeepPartial<AjaxContract> = {
-      Apps: {
-        listAppsV2,
-      },
-    };
-    asMockedFn(Ajax).mockReturnValue(mockAjax as AjaxContract);
+    const listAppsV2: MockedFn<AppsAjaxContract['listAppsV2']> = jest.fn();
+    listAppsV2.mockResolvedValue([]);
+    asMockedFn(Apps).mockReturnValue(partial<AppsAjaxContract>({ listAppsV2 }));
 
     // Act
     await renderHookInAct(() => useWdsStatus({ workspaceId }));
@@ -36,12 +40,9 @@ describe('useWdsStatus', () => {
   describe('if fetching Leo apps fails', () => {
     it('returns unknown for all fields', async () => {
       // Arrange
-      const mockAjax: DeepPartial<AjaxContract> = {
-        Apps: {
-          listAppsV2: jest.fn().mockRejectedValue(new Error('Something went wrong')),
-        },
-      };
-      asMockedFn(Ajax).mockReturnValue(mockAjax as AjaxContract);
+      const listAppsV2: MockedFn<AppsAjaxContract['listAppsV2']> = jest.fn();
+      listAppsV2.mockRejectedValue(new Error('Something went wrong'));
+      asMockedFn(Apps).mockReturnValue(partial<AppsAjaxContract>({ listAppsV2 }));
 
       // Act
       const { result: hookReturnRef } = await renderHookInAct(() => useWdsStatus({ workspaceId }));
@@ -73,12 +74,9 @@ describe('useWdsStatus', () => {
     describe('if no WDS app is present', () => {
       it('returns number of apps and unknown for other fields', async () => {
         // Arrange
-        const mockAjax: DeepPartial<AjaxContract> = {
-          Apps: {
-            listAppsV2: jest.fn().mockResolvedValue([]),
-          },
-        };
-        asMockedFn(Ajax).mockReturnValue(mockAjax as AjaxContract);
+        const listAppsV2: MockedFn<AppsAjaxContract['listAppsV2']> = jest.fn();
+        listAppsV2.mockResolvedValue([]);
+        asMockedFn(Apps).mockReturnValue(partial<AppsAjaxContract>({ listAppsV2 }));
 
         // Act
         const { result: hookReturnRef } = await renderHookInAct(() => useWdsStatus({ workspaceId }));
@@ -141,18 +139,18 @@ describe('useWdsStatus', () => {
 
     it('updates status with app name and status', async () => {
       // Arrange
-      const mockAjax: DeepPartial<AjaxContract> = {
-        Apps: {
-          listAppsV2: jest.fn().mockResolvedValue([wdsApp]),
-        },
-        WorkspaceData: {
-          getVersion: jest.fn().mockReturnValue(abandonedPromise()),
-          getStatus: jest.fn().mockReturnValue(abandonedPromise()),
-          listCollections: jest.fn().mockReturnValue(abandonedPromise()),
-          getCloneStatus: jest.fn().mockReturnValue(abandonedPromise()),
-        },
-      };
-      asMockedFn(Ajax).mockReturnValue(mockAjax as AjaxContract);
+      const listAppsV2: MockedFn<AppsAjaxContract['listAppsV2']> = jest.fn();
+      listAppsV2.mockResolvedValue([wdsApp]);
+      asMockedFn(Apps).mockReturnValue(partial<AppsAjaxContract>({ listAppsV2 }));
+
+      asMockedFn(WorkspaceData).mockReturnValue(
+        partial<WorkspaceDataAjaxContract>({
+          getVersion: jest.fn(() => abandonedPromise()),
+          getStatus: jest.fn(() => abandonedPromise()),
+          listCollections: jest.fn(() => abandonedPromise()),
+          getCloneStatus: jest.fn(() => abandonedPromise()),
+        })
+      );
 
       // Act
       const { result: hookReturnRef } = await renderHookInAct(() => useWdsStatus({ workspaceId }));
@@ -182,23 +180,20 @@ describe('useWdsStatus', () => {
 
     it('requests WDS app version, status, instances, and clone status if app is running', async () => {
       // Arrange
-      const getVersion = jest.fn().mockReturnValue(abandonedPromise());
-      const getStatus = jest.fn().mockReturnValue(abandonedPromise());
-      const listCollections = jest.fn().mockReturnValue(abandonedPromise());
-      const getCloneStatus = jest.fn().mockReturnValue(abandonedPromise());
+      const { getVersion, getStatus, listCollections, getCloneStatus } = getWorkspaceDataMocks();
 
-      const mockAjax: DeepPartial<AjaxContract> = {
-        Apps: {
-          listAppsV2: jest.fn().mockResolvedValue([wdsApp]),
-        },
-        WorkspaceData: {
+      const listAppsV2: MockedFn<AppsAjaxContract['listAppsV2']> = jest.fn();
+      listAppsV2.mockResolvedValue([wdsApp]);
+      asMockedFn(Apps).mockReturnValue(partial<AppsAjaxContract>({ listAppsV2 }));
+
+      asMockedFn(WorkspaceData).mockReturnValue(
+        partial<WorkspaceDataAjaxContract>({
           getVersion,
           getStatus,
           listCollections,
           getCloneStatus,
-        },
-      };
-      asMockedFn(Ajax).mockReturnValue(mockAjax as AjaxContract);
+        })
+      );
 
       // Act
       await renderHookInAct(() => useWdsStatus({ workspaceId }));
@@ -212,23 +207,21 @@ describe('useWdsStatus', () => {
 
     it('does not request WDS app version, status, instances, and clone status if app is not running', async () => {
       // Arrange
-      const getVersion = jest.fn().mockReturnValue(abandonedPromise());
-      const getStatus = jest.fn().mockReturnValue(abandonedPromise());
-      const listCollections = jest.fn().mockReturnValue(abandonedPromise());
-      const getCloneStatus = jest.fn().mockReturnValue(abandonedPromise());
+      const { getVersion, getStatus, listCollections, getCloneStatus } = getWorkspaceDataMocks();
 
-      const mockAjax: DeepPartial<AjaxContract> = {
-        Apps: {
-          listAppsV2: jest.fn().mockResolvedValue([{ ...wdsApp, status: 'ERROR' }]),
-        },
-        WorkspaceData: {
+      asMockedFn(Apps).mockReturnValue(
+        partial<AppsAjaxContract>({
+          listAppsV2: jest.fn(async () => [{ ...wdsApp, status: 'ERROR' } satisfies ListAppItem]),
+        })
+      );
+      asMockedFn(WorkspaceData).mockReturnValue(
+        partial<WorkspaceDataAjaxContract>({
           getVersion,
           getStatus,
           listCollections,
           getCloneStatus,
-        },
-      };
-      asMockedFn(Ajax).mockReturnValue(mockAjax as AjaxContract);
+        })
+      );
 
       // Act
       const { result: hookReturnRef } = await renderHookInAct(() => useWdsStatus({ workspaceId }));
@@ -263,14 +256,11 @@ describe('useWdsStatus', () => {
 
     it('returns error message if app is in error state', async () => {
       // Arrange
-      const getVersion = jest.fn().mockReturnValue(abandonedPromise());
-      const getStatus = jest.fn().mockReturnValue(abandonedPromise());
-      const listCollections = jest.fn().mockReturnValue(abandonedPromise());
-      const getCloneStatus = jest.fn().mockReturnValue(abandonedPromise());
+      const { getVersion, getStatus, listCollections, getCloneStatus } = getWorkspaceDataMocks();
 
-      const mockAjax: DeepPartial<AjaxContract> = {
-        Apps: {
-          listAppsV2: jest.fn().mockResolvedValue([
+      asMockedFn(Apps).mockReturnValue(
+        partial<AppsAjaxContract>({
+          listAppsV2: jest.fn(async () => [
             {
               ...wdsApp,
               status: 'ERROR',
@@ -286,15 +276,16 @@ describe('useWdsStatus', () => {
               ],
             } satisfies ListAppItem,
           ]),
-        },
-        WorkspaceData: {
+        })
+      );
+      asMockedFn(WorkspaceData).mockReturnValue(
+        partial<WorkspaceDataAjaxContract>({
           getVersion,
           getStatus,
           listCollections,
           getCloneStatus,
-        },
-      };
-      asMockedFn(Ajax).mockReturnValue(mockAjax as AjaxContract);
+        })
+      );
 
       // Act
       const { result: hookReturnRef } = await renderHookInAct(() => useWdsStatus({ workspaceId }));
@@ -330,18 +321,17 @@ describe('useWdsStatus', () => {
     describe('version request', () => {
       describe('if version request fails', () => {
         it('updates status with unknown for version fields', async () => {
-          const mockAjax: DeepPartial<AjaxContract> = {
-            Apps: {
-              listAppsV2: jest.fn().mockResolvedValue([wdsApp]),
-            },
-            WorkspaceData: {
+          asMockedFn(Apps).mockReturnValue(
+            partial<AppsAjaxContract>({
+              listAppsV2: jest.fn(async () => [wdsApp]),
+            })
+          );
+          asMockedFn(WorkspaceData).mockReturnValue(
+            partial<WorkspaceDataAjaxContract>({
+              ...getWorkspaceDataMocks(),
               getVersion: jest.fn().mockRejectedValue(new Error('Something went wrong')),
-              getStatus: jest.fn().mockReturnValue(abandonedPromise()),
-              listCollections: jest.fn().mockReturnValue(abandonedPromise()),
-              getCloneStatus: jest.fn().mockReturnValue(abandonedPromise()),
-            },
-          };
-          asMockedFn(Ajax).mockReturnValue(mockAjax as AjaxContract);
+            })
+          );
 
           // Act
           const { result: renderHookRef } = await renderHookInAct(() => useWdsStatus({ workspaceId }));
@@ -374,18 +364,17 @@ describe('useWdsStatus', () => {
               group: 'org.databiosphere',
             },
           };
-          const mockAjax: DeepPartial<AjaxContract> = {
-            Apps: {
-              listAppsV2: jest.fn().mockResolvedValue([wdsApp]),
-            },
-            WorkspaceData: {
-              getVersion: jest.fn().mockResolvedValue(mockVersion),
-              getStatus: jest.fn().mockReturnValue(abandonedPromise()),
-              listCollections: jest.fn().mockReturnValue(abandonedPromise()),
-              getCloneStatus: jest.fn().mockReturnValue(abandonedPromise()),
-            },
-          };
-          asMockedFn(Ajax).mockReturnValue(mockAjax as AjaxContract);
+          asMockedFn(Apps).mockReturnValue(
+            partial<AppsAjaxContract>({
+              listAppsV2: jest.fn(async () => [wdsApp]),
+            })
+          );
+          asMockedFn(WorkspaceData).mockReturnValue(
+            partial<WorkspaceDataAjaxContract>({
+              ...getWorkspaceDataMocks(),
+              getVersion: jest.fn(async () => mockVersion),
+            })
+          );
 
           // Act
           const { result: renderHookRef } = await renderHookInAct(() => useWdsStatus({ workspaceId }));
@@ -412,18 +401,17 @@ describe('useWdsStatus', () => {
               group: 'org.databiosphere',
             },
           };
-          const mockAjax: DeepPartial<AjaxContract> = {
-            Apps: {
+          asMockedFn(Apps).mockReturnValue(
+            partial<AppsAjaxContract>({
               listAppsV2: jest.fn().mockResolvedValue([wdsApp]),
-            },
-            WorkspaceData: {
-              getVersion: jest.fn().mockResolvedValue(mockVersion),
-              getStatus: jest.fn().mockReturnValue(abandonedPromise()),
-              listCollections: jest.fn().mockReturnValue(abandonedPromise()),
-              getCloneStatus: jest.fn().mockReturnValue(abandonedPromise()),
-            },
-          };
-          asMockedFn(Ajax).mockReturnValue(mockAjax as AjaxContract);
+            })
+          );
+          asMockedFn(WorkspaceData).mockReturnValue(
+            partial<WorkspaceDataAjaxContract>({
+              ...getWorkspaceDataMocks(),
+              getVersion: jest.fn(async () => mockVersion),
+            })
+          );
 
           // Act
           const { result: renderHookRef } = await renderHookInAct(() => useWdsStatus({ workspaceId }));
@@ -444,18 +432,17 @@ describe('useWdsStatus', () => {
     describe('status request', () => {
       describe('if status request fails', () => {
         it('updates status with unknown for status fields', async () => {
-          const mockAjax: DeepPartial<AjaxContract> = {
-            Apps: {
-              listAppsV2: jest.fn().mockResolvedValue([wdsApp]),
-            },
-            WorkspaceData: {
-              getVersion: jest.fn().mockReturnValue(abandonedPromise()),
+          asMockedFn(Apps).mockReturnValue(
+            partial<AppsAjaxContract>({
+              listAppsV2: jest.fn(async () => [wdsApp]),
+            })
+          );
+          asMockedFn(WorkspaceData).mockReturnValue(
+            partial<WorkspaceDataAjaxContract>({
+              ...getWorkspaceDataMocks(),
               getStatus: jest.fn().mockRejectedValue(new Error('Something went wrong')),
-              listCollections: jest.fn().mockReturnValue(abandonedPromise()),
-              getCloneStatus: jest.fn().mockReturnValue(abandonedPromise()),
-            },
-          };
-          asMockedFn(Ajax).mockReturnValue(mockAjax as AjaxContract);
+            })
+          );
 
           // Act
           const { result: renderHookRef } = await renderHookInAct(() => useWdsStatus({ workspaceId }));
@@ -495,18 +482,17 @@ describe('useWdsStatus', () => {
             },
             groups: ['liveness', 'readiness'],
           };
-          const mockAjax: DeepPartial<AjaxContract> = {
-            Apps: {
-              listAppsV2: jest.fn().mockResolvedValue([wdsApp]),
-            },
-            WorkspaceData: {
-              getVersion: jest.fn().mockReturnValue(abandonedPromise()),
-              getStatus: jest.fn().mockResolvedValue(mockStatus),
-              listCollections: jest.fn().mockReturnValue(abandonedPromise()),
-              getCloneStatus: jest.fn().mockReturnValue(abandonedPromise()),
-            },
-          };
-          asMockedFn(Ajax).mockReturnValue(mockAjax as AjaxContract);
+          asMockedFn(Apps).mockReturnValue(
+            partial<AppsAjaxContract>({
+              listAppsV2: jest.fn(async () => [wdsApp]),
+            })
+          );
+          asMockedFn(WorkspaceData).mockReturnValue(
+            partial<WorkspaceDataAjaxContract>({
+              ...getWorkspaceDataMocks(),
+              getStatus: jest.fn(async () => mockStatus),
+            })
+          );
 
           // Act
           const { result: renderHookRef } = await renderHookInAct(() => useWdsStatus({ workspaceId }));
@@ -543,18 +529,17 @@ describe('useWdsStatus', () => {
             },
             groups: ['liveness', 'readiness'],
           };
-          const mockAjax: DeepPartial<AjaxContract> = {
-            Apps: {
-              listAppsV2: jest.fn().mockResolvedValue([wdsApp]),
-            },
-            WorkspaceData: {
-              getVersion: jest.fn().mockReturnValue(abandonedPromise()),
-              getStatus: jest.fn().mockResolvedValue(mockStatus),
-              listCollections: jest.fn().mockReturnValue(abandonedPromise()),
-              getCloneStatus: jest.fn().mockReturnValue(abandonedPromise()),
-            },
-          };
-          asMockedFn(Ajax).mockReturnValue(mockAjax as AjaxContract);
+          asMockedFn(Apps).mockReturnValue(
+            partial<AppsAjaxContract>({
+              listAppsV2: jest.fn(async () => [wdsApp]),
+            })
+          );
+          asMockedFn(WorkspaceData).mockReturnValue(
+            partial<WorkspaceDataAjaxContract>({
+              ...getWorkspaceDataMocks(),
+              getStatus: jest.fn(async () => mockStatus),
+            })
+          );
 
           // Act
           const { result: renderHookRef } = await renderHookInAct(() => useWdsStatus({ workspaceId }));
@@ -575,18 +560,17 @@ describe('useWdsStatus', () => {
     describe('instances request', () => {
       describe('if instances request fails', () => {
         it('updates status with unknown for instances', async () => {
-          const mockAjax: DeepPartial<AjaxContract> = {
-            Apps: {
+          asMockedFn(Apps).mockReturnValue(
+            partial<AppsAjaxContract>({
               listAppsV2: jest.fn().mockResolvedValue([wdsApp]),
-            },
-            WorkspaceData: {
-              getVersion: jest.fn().mockReturnValue(abandonedPromise()),
-              getStatus: jest.fn().mockReturnValue(abandonedPromise()),
+            })
+          );
+          asMockedFn(WorkspaceData).mockReturnValue(
+            partial<WorkspaceDataAjaxContract>({
+              ...getWorkspaceDataMocks(),
               listCollections: jest.fn().mockRejectedValue(new Error('Something went wrong')),
-              getCloneStatus: jest.fn().mockReturnValue(abandonedPromise()),
-            },
-          };
-          asMockedFn(Ajax).mockReturnValue(mockAjax as AjaxContract);
+            })
+          );
 
           // Act
           const { result: renderHookRef } = await renderHookInAct(() => useWdsStatus({ workspaceId }));
@@ -603,18 +587,17 @@ describe('useWdsStatus', () => {
       describe('if instances request succeeds', () => {
         it('updates status with defaultInstanceExists field', async () => {
           const mockInstances = ['6601fdbb-4b53-41da-87b2-81385f4a760e'];
-          const mockAjax: DeepPartial<AjaxContract> = {
-            Apps: {
+          asMockedFn(Apps).mockReturnValue(
+            partial<AppsAjaxContract>({
               listAppsV2: jest.fn().mockResolvedValue([wdsApp]),
-            },
-            WorkspaceData: {
-              getVersion: jest.fn().mockReturnValue(abandonedPromise()),
-              getStatus: jest.fn().mockReturnValue(abandonedPromise()),
-              listCollections: jest.fn().mockResolvedValue(mockInstances),
-              getCloneStatus: jest.fn().mockReturnValue(abandonedPromise()),
-            },
-          };
-          asMockedFn(Ajax).mockReturnValue(mockAjax as AjaxContract);
+            })
+          );
+          asMockedFn(WorkspaceData).mockReturnValue(
+            partial<WorkspaceDataAjaxContract>({
+              ...getWorkspaceDataMocks(),
+              listCollections: jest.fn(async () => mockInstances),
+            })
+          );
 
           // Act
           const { result: renderHookRef } = await renderHookInAct(() => useWdsStatus({ workspaceId }));
@@ -632,18 +615,17 @@ describe('useWdsStatus', () => {
     describe('clone status request', () => {
       describe('if clone status request fails', () => {
         it('does not update status on a 404 response', async () => {
-          const mockAjax: DeepPartial<AjaxContract> = {
-            Apps: {
+          asMockedFn(Apps).mockReturnValue(
+            partial<AppsAjaxContract>({
               listAppsV2: jest.fn().mockResolvedValue([wdsApp]),
-            },
-            WorkspaceData: {
-              getVersion: jest.fn().mockReturnValue(abandonedPromise()),
-              getStatus: jest.fn().mockReturnValue(abandonedPromise()),
-              listCollections: jest.fn().mockReturnValue(abandonedPromise()),
+            })
+          );
+          asMockedFn(WorkspaceData).mockReturnValue(
+            partial<WorkspaceDataAjaxContract>({
+              ...getWorkspaceDataMocks(),
               getCloneStatus: jest.fn().mockRejectedValue(new Response('', { status: 404 })),
-            },
-          };
-          asMockedFn(Ajax).mockReturnValue(mockAjax as AjaxContract);
+            })
+          );
 
           // Act
           const { result: renderHookRef } = await renderHookInAct(() => useWdsStatus({ workspaceId }));
@@ -658,18 +640,17 @@ describe('useWdsStatus', () => {
         });
 
         it('updates status with unknown for clone status for other error responses', async () => {
-          const mockAjax: DeepPartial<AjaxContract> = {
-            Apps: {
+          asMockedFn(Apps).mockReturnValue(
+            partial<AppsAjaxContract>({
               listAppsV2: jest.fn().mockResolvedValue([wdsApp]),
-            },
-            WorkspaceData: {
-              getVersion: jest.fn().mockReturnValue(abandonedPromise()),
-              getStatus: jest.fn().mockReturnValue(abandonedPromise()),
+            })
+          );
+          asMockedFn(WorkspaceData).mockReturnValue(
+            partial<WorkspaceDataAjaxContract>({
+              ...getWorkspaceDataMocks(),
               listCollections: jest.fn().mockRejectedValue(new Error('Something went wrong')),
-              getCloneStatus: jest.fn().mockReturnValue(abandonedPromise()),
-            },
-          };
-          asMockedFn(Ajax).mockReturnValue(mockAjax as AjaxContract);
+            })
+          );
 
           // Act
           const { result: renderHookRef } = await renderHookInAct(() => useWdsStatus({ workspaceId }));
@@ -692,18 +673,17 @@ describe('useWdsStatus', () => {
             status: 'SUCCEEDED',
             updated: '2023-07-20T18:50:28.264989',
           };
-          const mockAjax: DeepPartial<AjaxContract> = {
-            Apps: {
+          asMockedFn(Apps).mockReturnValue(
+            partial<AppsAjaxContract>({
               listAppsV2: jest.fn().mockResolvedValue([wdsApp]),
-            },
-            WorkspaceData: {
-              getVersion: jest.fn().mockReturnValue(abandonedPromise()),
-              getStatus: jest.fn().mockReturnValue(abandonedPromise()),
-              listCollections: jest.fn().mockReturnValue(abandonedPromise()),
+            })
+          );
+          asMockedFn(WorkspaceData).mockReturnValue(
+            partial<WorkspaceDataAjaxContract>({
+              ...getWorkspaceDataMocks(),
               getCloneStatus: jest.fn().mockResolvedValue(mockCloneStatus),
-            },
-          };
-          asMockedFn(Ajax).mockReturnValue(mockAjax as AjaxContract);
+            })
+          );
 
           // Act
           const { result: renderHookRef } = await renderHookInAct(() => useWdsStatus({ workspaceId }));
@@ -724,12 +704,7 @@ describe('useWdsStatus', () => {
   it('resets status and reloads data when re-rendered for a different workspace', async () => {
     // Arrange
     const listAppsV2 = jest.fn().mockResolvedValue([]);
-    const mockAjax: DeepPartial<AjaxContract> = {
-      Apps: {
-        listAppsV2,
-      },
-    };
-    asMockedFn(Ajax).mockReturnValue(mockAjax as AjaxContract);
+    asMockedFn(Apps).mockReturnValue(partial<AppsAjaxContract>({ listAppsV2 }));
 
     // Arrange
     const { result: renderHookRef, rerender } = await renderHookInAct(useWdsStatus, { initialProps: { workspaceId } });

@@ -3,7 +3,9 @@ import JSZip from 'jszip';
 import _ from 'lodash/fp';
 import { useState } from 'react';
 import { parseGsUri } from 'src/components/data/data-utils';
-import { Ajax } from 'src/libs/ajax';
+import { GoogleStorage } from 'src/libs/ajax/GoogleStorage';
+import { Metrics } from 'src/libs/ajax/Metrics';
+import { Workspaces } from 'src/libs/ajax/workspaces/Workspaces';
 import Events, { extractWorkspaceDetails } from 'src/libs/events';
 import { notify } from 'src/libs/notifications';
 import { useCancellation } from 'src/libs/react-utils';
@@ -18,13 +20,13 @@ const getAllEntities = async (workspace, entityType) => {
   } = workspace;
 
   const pageSize = 100_000;
-  const firstPageResponse = await Ajax().Workspaces.workspace(namespace, name).paginatedEntitiesOfType(entityType, { page: 1, pageSize });
+  const firstPageResponse = await Workspaces().workspace(namespace, name).paginatedEntitiesOfType(entityType, { page: 1, pageSize });
 
   let entities = firstPageResponse.results;
   const numPages = firstPageResponse.resultMetadata.filteredPageCount;
 
   for (let page = 2; page <= numPages; page += 1) {
-    const pageResponse = await Ajax().Workspaces.workspace(namespace, name).paginatedEntitiesOfType(entityType, { page, pageSize });
+    const pageResponse = await Workspaces().workspace(namespace, name).paginatedEntitiesOfType(entityType, { page, pageSize });
     entities = _.concat(entities, pageResponse.results);
   }
 
@@ -32,7 +34,7 @@ const getAllEntities = async (workspace, entityType) => {
 };
 
 export const saveDataTableVersion = async (workspace, entityType, { description = null, includedSetEntityTypes = [] } = {}) => {
-  Ajax().Metrics.captureEvent(Events.dataTableVersioningSaveVersion, {
+  void Metrics().captureEvent(Events.dataTableVersioningSaveVersion, {
     ...extractWorkspaceDetails(workspace.workspace),
     tableName: entityType,
   });
@@ -55,11 +57,11 @@ export const saveDataTableVersion = async (workspace, entityType, { description 
   const zipContent = await zip.generateAsync({ type: 'blob' });
 
   const zipFile = new File([zipContent], `${versionName}.zip`, { type: 'application/zip' });
-  await Ajax().Buckets.upload(googleProject, bucketName, `${dataTableVersionsPathRoot}/${entityType}/`, zipFile);
+  await GoogleStorage().upload(googleProject, bucketName, `${dataTableVersionsPathRoot}/${entityType}/`, zipFile);
 
   const objectName = `${dataTableVersionsPathRoot}/${entityType}/${versionName}.zip`;
   const createdBy = getTerraUser().email;
-  await Ajax().Buckets.patch(googleProject, bucketName, objectName, {
+  await GoogleStorage().patch(googleProject, bucketName, objectName, {
     metadata: {
       createdBy,
       entityType,
@@ -85,7 +87,7 @@ export const listDataTableVersions = async (workspace, entityType, { signal } = 
   } = workspace;
 
   const prefix = `${dataTableVersionsPathRoot}/${entityType}/`;
-  const { items } = await Ajax(signal).Buckets.listAll(googleProject, bucketName, { prefix });
+  const { items } = await GoogleStorage(signal).listAll(googleProject, bucketName, { prefix });
 
   return _.flow(
     _.filter((item) => item.name.endsWith('.zip') && item.metadata?.entityType && item.metadata?.timestamp),
@@ -102,7 +104,7 @@ export const listDataTableVersions = async (workspace, entityType, { signal } = 
 };
 
 export const deleteDataTableVersion = async (workspace, version) => {
-  Ajax().Metrics.captureEvent(Events.dataTableVersioningDeleteVersion, {
+  void Metrics().captureEvent(Events.dataTableVersioningDeleteVersion, {
     ...extractWorkspaceDetails(workspace.workspace),
     tableName: version.entityType,
   });
@@ -112,7 +114,7 @@ export const deleteDataTableVersion = async (workspace, version) => {
   } = workspace;
 
   const [, objectName] = parseGsUri(version.url);
-  await Ajax().Buckets.delete(googleProject, bucketName, objectName);
+  await GoogleStorage().delete(googleProject, bucketName, objectName);
 };
 
 export const tableNameForImport = (version) => {
@@ -121,7 +123,7 @@ export const tableNameForImport = (version) => {
 };
 
 export const importDataTableVersion = async (workspace, version) => {
-  Ajax().Metrics.captureEvent(Events.dataTableVersioningImportVersion, {
+  void Metrics().captureEvent(Events.dataTableVersioningImportVersion, {
     ...extractWorkspaceDetails(workspace.workspace),
     tableName: version.entityType,
   });
@@ -131,8 +133,8 @@ export const importDataTableVersion = async (workspace, version) => {
   } = workspace;
 
   const [, objectName] = parseGsUri(version.url);
-  const zipData = await Ajax()
-    .Buckets.getObjectPreview(googleProject, bucketName, objectName, true)
+  const zipData = await GoogleStorage()
+    .getObjectPreview(googleProject, bucketName, objectName, true)
     .then((r) => r.blob());
 
   const zip = await JSZip.loadAsync(zipData);
@@ -148,7 +150,7 @@ export const importDataTableVersion = async (workspace, version) => {
     entities
   );
 
-  await Ajax().Workspaces.workspace(namespace, name).upsertEntities(entityUpdates);
+  await Workspaces().workspace(namespace, name).upsertEntities(entityUpdates);
 
   for (const setTableName of _.sortBy(_.identity, version.includedSetEntityTypes)) {
     const originalSetTableMemberType = setTableName.slice(0, -4);
@@ -173,7 +175,7 @@ export const importDataTableVersion = async (workspace, version) => {
       setTableEntities
     );
 
-    await Ajax().Workspaces.workspace(namespace, name).upsertEntities(setTableEntityUpdates);
+    await Workspaces().workspace(namespace, name).upsertEntities(setTableEntityUpdates);
   }
 
   return { tableName: importedTableName };

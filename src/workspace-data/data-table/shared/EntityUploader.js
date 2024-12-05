@@ -10,8 +10,8 @@ import { icon } from 'src/components/icons';
 import { PasteOnlyInput, ValidatedInput } from 'src/components/input';
 import { getRegionInfo, locationTypes } from 'src/components/region-common';
 import { SimpleTabBar } from 'src/components/tabBars';
-import { Ajax } from 'src/libs/ajax';
 import { wdsProviderName } from 'src/libs/ajax/data-table-providers/WdsDataTableProvider';
+import { Metrics } from 'src/libs/ajax/Metrics';
 import { getRegionFlag, getRegionLabel } from 'src/libs/azure-utils';
 import colors from 'src/libs/colors';
 import { reportError } from 'src/libs/error';
@@ -79,7 +79,7 @@ export const EntityUploader = ({ onSuccess, onDismiss, namespace, name, entityTy
           id: `${recordType}_success`,
         });
       clearNotification(recordType);
-      Ajax().Metrics.captureEvent(Events.workspaceDataUpload, {
+      void Metrics().captureEvent(Events.workspaceDataUpload, {
         workspaceNamespace: namespace,
         workspaceName: name,
         providerName: dataProvider.providerName,
@@ -363,7 +363,7 @@ export const EntityUploader = ({ onSuccess, onDismiss, namespace, name, entityTy
                         href: dataProvider.tsvFeatures.sampleTSVLink,
                         ...Utils.newTabLinkProps,
                         onClick: () =>
-                          Ajax().Metrics.captureEvent(Events.workspaceSampleTsvDownload, {
+                          void Metrics().captureEvent(Events.workspaceSampleTsvDownload, {
                             workspaceNamespace: namespace,
                             workspaceName: name,
                             providerName: dataProvider.providerName,

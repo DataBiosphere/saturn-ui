@@ -9,7 +9,9 @@ import { ClipboardButton } from 'src/components/ClipboardButton';
 import Collapse from 'src/components/Collapse';
 import { Link } from 'src/components/common';
 import { parseGsUri } from 'src/components/data/data-utils';
-import { Ajax } from 'src/libs/ajax';
+import { AzureStorage } from 'src/libs/ajax/AzureStorage';
+import { DrsUriResolver } from 'src/libs/ajax/drs/DrsUriResolver';
+import { GoogleStorage } from 'src/libs/ajax/GoogleStorage';
 import colors from 'src/libs/colors';
 import { useCancellation, useOnMount, withDisplayName } from 'src/libs/react-utils';
 import * as Utils from 'src/libs/utils';
@@ -43,12 +45,12 @@ export const UriViewer = _.flow(
       if (isGsUri(uri)) {
         const [bucket, name] = parseGsUri(uri);
         const loadObject = withRequesterPaysHandler(onRequesterPaysError, () => {
-          return Ajax(signal).Buckets.getObject(googleProject, bucket, name);
+          return GoogleStorage(signal).getObject(googleProject, bucket, name);
         });
         const metadata = await loadObject(googleProject, bucket, name);
         setMetadata(metadata);
       } else if (isAzureUri(uri)) {
-        const azureMetadata = await Ajax(signal).AzureStorage.blobByUri(uri).getMetadata();
+        const azureMetadata = await AzureStorage(signal).blobByUri(uri).getMetadata();
         setMetadata(azureMetadata);
         setLoadingError(false);
       } else {
@@ -64,7 +66,7 @@ export const UriViewer = _.flow(
           timeUpdated: updated,
           fileName,
           accessUrl,
-        } = await Ajax(signal).DrsUriResolver.getDataObjectMetadata(uri, [
+        } = await DrsUriResolver(signal).getDataObjectMetadata(uri, [
           'bucket',
           'name',
           'size',
