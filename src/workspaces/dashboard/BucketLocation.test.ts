@@ -64,18 +64,26 @@ describe('BucketLocation', () => {
     expect(await axe(container)).toHaveNoViolations();
   });
 
-  it('shows Loading initially when initialized', () => {
+  it('fetches bucket location when workspace is initialized', async () => {
     // Arrange
     const props = {
-      workspace,
-      storageDetails: _.merge(defaultGoogleBucketOptions, defaultAzureStorageOptions),
+      workspace: { ...workspace, workspaceInitialized: true },
+      storageDetails: {
+        ...defaultGoogleBucketOptions,
+        fetchedGoogleBucketLocation: 'SUCCESS',
+        googleBucketLocation: 'us-central1',
+        googleBucketType: 'region',
+      },
     };
 
     // Act
-    render(h(BucketLocation, props));
+    await act(async () => {
+      render(h(BucketLocation, props));
+    });
 
     // Assert
-    expect(screen.queryByText('Loading')).not.toBeNull();
+    expect(screen.queryByText('Loading')).toBeNull();
+    expect(screen.findByText(/us-central1/)).toBeTruthy();
   });
 
   it('renders the bucket location if available, and has no accessibility errors', async () => {
@@ -135,7 +143,7 @@ describe('BucketLocation', () => {
       workspace,
       storageDetails: _.mergeAll([
         defaultGoogleBucketOptions,
-        { fetchedGoogleBucketLocation: 'ERROR' },
+        { fetchedGoogleBucketLocation: 'RPERROR' },
         defaultAzureStorageOptions,
       ]),
     };

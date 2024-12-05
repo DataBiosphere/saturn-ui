@@ -1,6 +1,6 @@
 import ReactJson from '@microlink/react-json-view';
 import React, { useEffect, useState } from 'react';
-import { Ajax } from 'src/libs/ajax';
+import { SamResources } from 'src/libs/ajax/SamResources';
 import colors from 'src/libs/colors';
 import { reportError } from 'src/libs/error';
 import { ResourceTypeSummaryProps } from 'src/support/SupportResourceType';
@@ -19,7 +19,7 @@ export const ResourcePolicies = (props: ResourceTypeSummaryProps) => {
       clear();
       if (props.fqResourceId.resourceId) {
         try {
-          const policies = await Ajax().SamResources.getResourcePolicies(props.fqResourceId);
+          const policies = await SamResources().getResourcePolicies(props.fqResourceId);
           Array.isArray(policies) && policies.length === 0
             ? setErrorMessage('No policies found')
             : setResourcePolicies(policies);

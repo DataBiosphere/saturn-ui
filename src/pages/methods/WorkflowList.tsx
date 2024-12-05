@@ -9,7 +9,7 @@ import { DelayedSearchInput } from 'src/components/input';
 import { TabBar } from 'src/components/tabBars';
 import { FlexTable, HeaderCell, Paginator, Sortable, TooltipCell } from 'src/components/table';
 import { TopBar } from 'src/components/TopBar';
-import { Ajax } from 'src/libs/ajax';
+import { Methods } from 'src/libs/ajax/methods/Methods';
 import { MethodDefinition } from 'src/libs/ajax/methods/methods-models';
 import { postMethodProvider } from 'src/libs/ajax/methods/providers/PostMethodProvider';
 import * as Nav from 'src/libs/nav';
@@ -18,7 +18,7 @@ import { useCancellation, useOnMount } from 'src/libs/react-utils';
 import { getTerraUser } from 'src/libs/state';
 import * as Utils from 'src/libs/utils';
 import { withBusyState } from 'src/libs/utils';
-import { WorkflowModal } from 'src/workflows/methods/modals/WorkflowModal';
+import { CreateWorkflowModal } from 'src/workflows/methods/modals/CreateWorkflowModal';
 
 // Note: The first tab key in this array will determine the default tab selected
 // if the tab query parameter is not present or has an invalid value (and when
@@ -165,7 +165,7 @@ export const WorkflowList = (props: WorkflowListProps) => {
 
     const loadWorkflows = withBusyState(setBusy, async () => {
       try {
-        const allWorkflows: MethodDefinition[] = await Ajax(signal).Methods.definitions();
+        const allWorkflows: MethodDefinition[] = await Methods(signal).definitions();
 
         setWorkflows({
           mine: _.filter(isMine, allWorkflows),
@@ -288,7 +288,7 @@ export const WorkflowList = (props: WorkflowListProps) => {
           </div>
         )}
         {createWorkflowModalOpen && (
-          <WorkflowModal
+          <CreateWorkflowModal
             title='Create New Method'
             buttonActionName='Upload'
             postMethodProvider={postMethodProvider}

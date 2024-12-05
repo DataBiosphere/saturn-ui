@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { h } from 'react-hyperscript-helpers';
 import { ButtonPrimary } from 'src/components/common';
 import { ValidatedTextArea } from 'src/components/input';
-import { Ajax } from 'src/libs/ajax';
+import { Workspaces } from 'src/libs/ajax/workspaces/Workspaces';
 
 /**
  * Stores the new comment, validating its length.
@@ -33,7 +33,7 @@ const UpdateUserCommentModal = ({ onDismiss, onSuccess, workspace: { namespace, 
   const doUpdate = async () => {
     try {
       const trimComment = _.trim(updateComment);
-      await Ajax().Workspaces.workspace(namespace, name).submission(submissionId).updateUserComment(trimComment);
+      await Workspaces().workspace(namespace, name).submission(submissionId).updateUserComment(trimComment);
       onSuccess(trimComment);
       onDismiss();
     } catch (error) {

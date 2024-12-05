@@ -7,8 +7,9 @@ import { spinnerOverlay } from 'src/components/common';
 import FooterWrapper from 'src/components/FooterWrapper';
 import { TabBar } from 'src/components/tabBars';
 import { TopBar } from 'src/components/TopBar';
-import { Ajax } from 'src/libs/ajax';
+import { Methods } from 'src/libs/ajax/methods/Methods';
 import { Snapshot } from 'src/libs/ajax/methods/methods-models';
+import { editMethodProvider } from 'src/libs/ajax/methods/providers/EditMethodProvider';
 import { postMethodProvider } from 'src/libs/ajax/methods/providers/PostMethodProvider';
 import { makeExportWorkflowFromMethodsRepoProvider } from 'src/libs/ajax/workspaces/providers/ExportWorkflowToWorkspaceProvider';
 import { ErrorCallback, withErrorReporting } from 'src/libs/error';
@@ -18,9 +19,10 @@ import { getTerraUser, snapshotsListStore, snapshotStore } from 'src/libs/state'
 import * as Style from 'src/libs/style';
 import * as Utils from 'src/libs/utils';
 import { withBusyState } from 'src/libs/utils';
+import { CreateWorkflowModal } from 'src/workflows/methods/modals/CreateWorkflowModal';
 import DeleteSnapshotModal from 'src/workflows/methods/modals/DeleteSnapshotModal';
+import { EditWorkflowModal } from 'src/workflows/methods/modals/EditWorkflowModal';
 import { PermissionsModal } from 'src/workflows/methods/modals/PermissionsModal';
-import { WorkflowModal } from 'src/workflows/methods/modals/WorkflowModal';
 import SnapshotActionMenu from 'src/workflows/methods/SnapshotActionMenu';
 import ExportWorkflowModal from 'src/workflows/modals/ExportWorkflowModal';
 import { isGoogleWorkspace, WorkspaceInfo, WorkspaceWrapper } from 'src/workspaces/utils';
@@ -71,7 +73,7 @@ export const wrapWorkflows = (opts: WrapWorkflowOptions) => {
           : undefined;
 
       const doSnapshotsListLoad = async () => {
-        const loadedSnapshots: Snapshot[] = snapshotsList || (await Ajax(signal).Methods.list({ namespace, name }));
+        const loadedSnapshots: Snapshot[] = snapshotsList || (await Methods(signal).list({ namespace, name }));
         snapshotsListStore.set(loadedSnapshots);
         if (_.isEmpty(loadedSnapshots)) {
           setMethodNotFound(true);
@@ -125,6 +127,7 @@ export const WorkflowsContainer = (props: WorkflowContainerProps) => {
   const [exportingWorkflow, setExportingWorkflow] = useState<boolean>(false);
   const [showDeleteModal, setShowDeleteModal] = useState<boolean>(false);
   const [showCloneModal, setShowCloneModal] = useState<boolean>(false);
+  const [showEditWorkflowModal, setShowEditWorkflowModal] = useState<boolean>(false);
   const [busy, setBusy] = useState<boolean>(false);
   const [permissionsModalOpen, setPermissionsModalOpen] = useState<boolean>(false);
 
@@ -143,7 +146,7 @@ export const WorkflowsContainer = (props: WorkflowContainerProps) => {
   );
 
   const doSnapshotLoad = async () => {
-    snapshotStore.set(await Ajax(signal).Methods.method(namespace, name, selectedSnapshot).get());
+    snapshotStore.set(await Methods(signal).method(namespace, name, selectedSnapshot).get());
   };
 
   const checkForSnapshotNotFound: ErrorCallback = (error: unknown) => {
@@ -175,7 +178,7 @@ export const WorkflowsContainer = (props: WorkflowContainerProps) => {
   });
 
   const deleteSnapshot = async () => {
-    await Ajax(signal).Methods.method(namespace, name, selectedSnapshot).delete();
+    await Methods(signal).method(namespace, name, selectedSnapshot).delete();
 
     // Replace the current history entry linking to the method details page of a
     // specific snapshot, like /#methods/sschu/echo-strings-test/29, with an
@@ -243,6 +246,7 @@ export const WorkflowsContainer = (props: WorkflowContainerProps) => {
               onEditPermissions: () => setPermissionsModalOpen(true),
               onDelete: () => setShowDeleteModal(true),
               onClone: () => setShowCloneModal(true),
+              onEdit: () => setShowEditWorkflowModal(true),
             }),
           ]),
         ]
@@ -294,7 +298,7 @@ export const WorkflowsContainer = (props: WorkflowContainerProps) => {
         refresh: loadSnapshot,
       }),
     showCloneModal &&
-      h(WorkflowModal, {
+      h(CreateWorkflowModal, {
         title: 'Create new method',
         defaultName: name.concat('_copy'),
         defaultWdl: snapshot!.payload,
@@ -316,6 +320,26 @@ export const WorkflowsContainer = (props: WorkflowContainerProps) => {
           });
         },
         onDismiss: () => setShowCloneModal(false),
+      }),
+    showEditWorkflowModal &&
+      h(EditWorkflowModal, {
+        title: 'Edit',
+        namespace,
+        name,
+        snapshotId: snapshot!.snapshotId,
+        defaultWdl: snapshot!.payload,
+        defaultDocumentation: snapshot!.documentation,
+        defaultSynopsis: snapshot!.synopsis,
+        editMethodProvider,
+        onSuccess: (namespace: string, name: string, snapshotId: number) => {
+          snapshotsListStore.reset();
+          Nav.goToPath('workflow-dashboard', {
+            namespace,
+            name,
+            snapshotId,
+          });
+        },
+        onDismiss: () => setShowEditWorkflowModal(false),
       }),
     busy && spinnerOverlay,
     snapshotNotFound && h(NotFoundMessage, { subject: 'snapshot' }),

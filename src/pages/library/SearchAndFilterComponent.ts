@@ -8,7 +8,7 @@ import Collapse from 'src/components/Collapse';
 import { ButtonPrimary, Clickable, IdContainer, LabeledCheckbox, Link, Select } from 'src/components/common';
 import { icon } from 'src/components/icons';
 import { DelayedAutoCompleteInput, DelayedSearchInput } from 'src/components/input';
-import { Ajax } from 'src/libs/ajax';
+import { Metrics } from 'src/libs/ajax/Metrics';
 import colors from 'src/libs/colors';
 import Events from 'src/libs/events';
 import * as Nav from 'src/libs/nav';
@@ -378,7 +378,7 @@ const getContextualSuggestion = ([leftContext, match, rightContext]) => {
   ];
 };
 
-const sendSearchEvent = (term) => Ajax().Metrics.captureEvent(Events.catalogFilterSearch, { term });
+const sendSearchEvent = (term) => void Metrics().captureEvent(Events.catalogFilterSearch, { term });
 const debounceSearchEvent = _.debounce(5000, sendSearchEvent);
 
 /**
@@ -759,7 +759,7 @@ export const SearchAndFilterComponent = <ListItem>({
               const sectionToAlter = selectedSections[sectionSelected];
               const valuesSelected = _.xor(sectionEntries, sectionToAlter.values);
               _.forEach(
-                (sectionEntry) => Ajax().Metrics.captureEvent(Events.catalogFilterSidebar, { tag: sectionEntry }),
+                (sectionEntry) => void Metrics().captureEvent(Events.catalogFilterSidebar, { tag: sectionEntry }),
                 sectionEntries
               );
               valuesSelected.length > 0

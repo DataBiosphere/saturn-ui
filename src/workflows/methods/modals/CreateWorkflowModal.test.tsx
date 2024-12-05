@@ -5,7 +5,7 @@ import React from 'react';
 import { MethodResponse } from 'src/libs/ajax/methods/methods-models';
 import { PostMethodProvider } from 'src/libs/ajax/methods/providers/PostMethodProvider';
 import { renderWithAppContexts as render } from 'src/testing/test-utils';
-import { WorkflowModal } from 'src/workflows/methods/modals/WorkflowModal';
+import { CreateWorkflowModal } from 'src/workflows/methods/modals/CreateWorkflowModal';
 
 type WDLEditorExports = typeof import('src/workflows/methods/WDLEditor');
 jest.mock('src/workflows/methods/WDLEditor', (): WDLEditorExports => {
@@ -44,12 +44,12 @@ const successPostMethodProvider: PostMethodProvider = {
   postMethod: jest.fn().mockResolvedValue(mockCreateMethodResponse),
 };
 
-describe('WorkflowModal', () => {
+describe('CreateWorkflowModal', () => {
   it('renders key elements with blank default input values', async () => {
     // Act
     await act(async () => {
       render(
-        <WorkflowModal
+        <CreateWorkflowModal
           title='Create New Method'
           buttonActionName='Upload'
           postMethodProvider={successPostMethodProvider}
@@ -83,7 +83,7 @@ describe('WorkflowModal', () => {
     // Act
     await act(async () => {
       render(
-        <WorkflowModal
+        <CreateWorkflowModal
           title='Create New Method'
           buttonActionName='Upload'
           defaultWdl='a'
@@ -124,7 +124,7 @@ describe('WorkflowModal', () => {
     // Act
     await act(async () => {
       render(
-        <WorkflowModal
+        <CreateWorkflowModal
           title='Create New Method'
           buttonActionName='Upload'
           defaultNamespace=','
@@ -159,7 +159,7 @@ describe('WorkflowModal', () => {
     // Act
     await act(async () => {
       render(
-        <WorkflowModal
+        <CreateWorkflowModal
           title='Create New Method'
           buttonActionName='Upload'
           defaultNamespace={longStringNamespace}
@@ -188,7 +188,7 @@ describe('WorkflowModal', () => {
     // Act
     await act(async () => {
       render(
-        <WorkflowModal
+        <CreateWorkflowModal
           title='Create New Method'
           buttonActionName='Upload'
           defaultNamespace='a'
@@ -219,7 +219,7 @@ describe('WorkflowModal', () => {
     // Act
     await act(async () => {
       render(
-        <WorkflowModal
+        <CreateWorkflowModal
           title='Create New Method'
           buttonActionName='Upload'
           defaultNamespace='a'
@@ -254,7 +254,7 @@ describe('WorkflowModal', () => {
     // Act
     await act(async () => {
       render(
-        <WorkflowModal
+        <CreateWorkflowModal
           title='Create New Method'
           buttonActionName='Upload'
           defaultNamespace='namespace'
@@ -290,7 +290,7 @@ describe('WorkflowModal', () => {
     // Act
     await act(async () => {
       render(
-        <WorkflowModal
+        <CreateWorkflowModal
           title='Create New Method'
           buttonActionName='Upload'
           defaultNamespace='testnamespace'
@@ -298,7 +298,6 @@ describe('WorkflowModal', () => {
           defaultWdl='workflow hi {}'
           defaultDocumentation='test docs'
           defaultSynopsis='test synopsis'
-          defaultSnapshotComment='test comment'
           postMethodProvider={successPostMethodProvider}
           onSuccess={mockOnSuccess}
           onDismiss={mockOnDismiss}
@@ -341,7 +340,7 @@ describe('WorkflowModal', () => {
     // Act
     await act(async () => {
       render(
-        <WorkflowModal
+        <CreateWorkflowModal
           title='Create New Method'
           buttonActionName='Upload'
           defaultNamespace='testnamespace'
@@ -349,7 +348,6 @@ describe('WorkflowModal', () => {
           defaultWdl='workflow hi {}'
           defaultDocumentation='test docs'
           defaultSynopsis='test synopsis'
-          defaultSnapshotComment='test comment'
           postMethodProvider={successPostMethodProvider}
           onSuccess={mockOnSuccess}
           onDismiss={mockOnDismiss}
@@ -363,7 +361,7 @@ describe('WorkflowModal', () => {
     expect(screen.getByTestId('wdl editor')).toHaveDisplayValue('workflow hi {}');
     expect(screen.getByRole('textbox', { name: 'Documentation' })).toHaveDisplayValue('test docs');
     expect(screen.getByRole('textbox', { name: 'Synopsis (80 characters max)' })).toHaveDisplayValue('test synopsis');
-    expect(screen.getByRole('textbox', { name: 'Snapshot comment' })).toHaveDisplayValue('test comment');
+    expect(screen.getByRole('textbox', { name: 'Snapshot comment' })).toHaveDisplayValue('');
 
     // Act
     await user.click(screen.getByRole('button', { name: 'Upload' }));
@@ -376,7 +374,7 @@ describe('WorkflowModal', () => {
       'workflow hi {}',
       'test docs',
       'test synopsis',
-      'test comment'
+      ''
     );
     expect(mockOnSuccess).toHaveBeenCalledWith('response-namespace', 'response-name', 1);
     expect(mockOnDismiss).not.toHaveBeenCalled();
@@ -392,7 +390,7 @@ describe('WorkflowModal', () => {
     // Act
     await act(async () => {
       render(
-        <WorkflowModal
+        <CreateWorkflowModal
           title='Create New Method'
           buttonActionName='Upload'
           defaultNamespace='namespace'
@@ -425,7 +423,7 @@ describe('WorkflowModal', () => {
     // Act
     await act(async () => {
       render(
-        <WorkflowModal
+        <CreateWorkflowModal
           title='Create New Method'
           buttonActionName='Upload'
           defaultNamespace='namespace'
@@ -458,7 +456,7 @@ describe('WorkflowModal', () => {
     // Act
     await act(async () => {
       render(
-        <WorkflowModal
+        <CreateWorkflowModal
           title='Create New Method'
           buttonActionName='Upload'
           defaultNamespace='namespace'
@@ -489,7 +487,7 @@ describe('WorkflowModal', () => {
     // Act
     await act(async () => {
       render(
-        <WorkflowModal
+        <CreateWorkflowModal
           title='Create new method'
           defaultName='groot-scientific-workflow_copy'
           defaultWdl='workflow do-great-stuff {}'

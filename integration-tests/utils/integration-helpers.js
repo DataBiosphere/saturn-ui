@@ -54,14 +54,14 @@ const waitForAccessToWorkspaceBucket = async ({ page, billingProject, workspaceN
     async ({ billingProject, workspaceName, timeout }) => {
       console.info('waitForAccessToWorkspaceBucket ...');
       const {
-        workspace: { googleProject, bucketName },
+        workspace: { googleProject },
       } = await window.Ajax().Workspaces.workspace(billingProject, workspaceName).details(['workspace', 'azureContext']);
 
       const startTime = Date.now();
 
       const checks = [
         // Get bucket metadata
-        () => window.Ajax().Buckets.checkBucketLocation(googleProject, bucketName),
+        () => window.Ajax().Workspaces.workspace(billingProject, workspaceName).checkBucketLocation(googleProject),
         // https://rawls.dsde-dev.broadinstitute.org/#/workspaces/readBucket
         // Checks if user has bucket access, 403 if not.
         // This API checks if user has all expected permissions. `read` on API name does not accurately describe APIs functionality.
@@ -210,7 +210,12 @@ const withWorkspace = (test) => async (options) => {
     await test({ ...options, workspaceName });
   } finally {
     console.log('withWorkspace cleanup ...');
-    const didDelete = await withSignedInPage(deleteWorkspaceInUi)({ ...options, workspaceName });
+    let didDelete = false;
+    try {
+      didDelete = await withSignedInPage(deleteWorkspaceInUi)({ ...options, workspaceName });
+    } catch (err) {
+      console.error(`Error during workspace cleanup: ${err}`);
+    }
     if (!didDelete) {
       // Pass test on a failed cleanup - expect leaked resources to be cleaned up by the test `delete-orphaned-workspaces`
       console.error(`Unable to delete workspace ${workspaceName} via the UI. The resource will be leaked!`);

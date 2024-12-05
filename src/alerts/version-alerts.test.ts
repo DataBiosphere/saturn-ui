@@ -1,11 +1,10 @@
-import { DeepPartial } from '@terra-ui-packages/core-utils';
-import { asMockedFn, withFakeTimers } from '@terra-ui-packages/test-utils';
+import { asMockedFn, partial, withFakeTimers } from '@terra-ui-packages/test-utils';
 import { act, renderHook } from '@testing-library/react';
-import { Ajax, AjaxContract } from 'src/libs/ajax';
+import { FirecloudBucket, FirecloudBucketAjaxContract } from 'src/libs/ajax/firecloud/FirecloudBucket';
 
 import { getBadVersions, useTimeUntilRequiredUpdate, useVersionAlerts, versionStore } from './version-alerts';
 
-jest.mock('src/libs/ajax');
+jest.mock('src/libs/ajax/firecloud/FirecloudBucket');
 
 describe('useVersionAlerts', () => {
   it('returns an empty list if current version and latest version match', () => {
@@ -56,9 +55,9 @@ describe('getBadVersions', () => {
   }[])('parses list of bad versions from firecloud-alerts bucket', async ({ responseText, expectedVersions }) => {
     // Arrange
     const ajaxGetBadVersions = jest.fn().mockResolvedValue(responseText);
-    asMockedFn(Ajax).mockReturnValue({
-      FirecloudBucket: { getBadVersions: ajaxGetBadVersions },
-    } as DeepPartial<AjaxContract> as AjaxContract);
+    asMockedFn(FirecloudBucket).mockReturnValue(
+      partial<FirecloudBucketAjaxContract>({ getBadVersions: ajaxGetBadVersions })
+    );
 
     // Act
     const badVersions = await getBadVersions();
@@ -71,9 +70,9 @@ describe('getBadVersions', () => {
   it('returns empty list if bad versions file does not exist', async () => {
     // Arrange
     const ajaxGetBadVersions = jest.fn().mockRejectedValue(new Response('Not found', { status: 404 }));
-    asMockedFn(Ajax).mockReturnValue({
-      FirecloudBucket: { getBadVersions: ajaxGetBadVersions },
-    } as DeepPartial<AjaxContract> as AjaxContract);
+    asMockedFn(FirecloudBucket).mockReturnValue(
+      partial<FirecloudBucketAjaxContract>({ getBadVersions: ajaxGetBadVersions })
+    );
 
     // Act
     const badVersions = await getBadVersions();

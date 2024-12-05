@@ -8,7 +8,7 @@ import { FirstParagraphMarkdownViewer } from 'src/components/markdown';
 import covidBg from 'src/images/library/showcase/covid-19.jpg';
 import featuredBg from 'src/images/library/showcase/featured-workspace.svg';
 import gatkLogo from 'src/images/library/showcase/gatk-logo-light.svg';
-import { Ajax } from 'src/libs/ajax';
+import { FirecloudBucket } from 'src/libs/ajax/firecloud/FirecloudBucket';
 import colors from 'src/libs/colors';
 import { withErrorReporting } from 'src/libs/error';
 import * as Nav from 'src/libs/nav';
@@ -153,7 +153,7 @@ export const Showcase = () => {
 
   useOnMount(() => {
     const loadData = withErrorReporting('Error loading showcase')(async () => {
-      const showcase = await Ajax().FirecloudBucket.getShowcaseWorkspaces();
+      const showcase = await FirecloudBucket().getShowcaseWorkspaces();
 
       const featuredWorkspaces = _.map((workspace) => {
         // SearchAndFilterComponent compares lowercased filters from the sidebar to

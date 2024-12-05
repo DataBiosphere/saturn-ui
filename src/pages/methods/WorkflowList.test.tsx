@@ -3,8 +3,7 @@ import { act, fireEvent, screen, within } from '@testing-library/react';
 import userEvent, { UserEvent } from '@testing-library/user-event';
 import _ from 'lodash/fp';
 import React from 'react';
-import { Ajax, AjaxContract } from 'src/libs/ajax';
-import { MethodsAjaxContract } from 'src/libs/ajax/methods/Methods';
+import { Methods, MethodsAjaxContract } from 'src/libs/ajax/methods/Methods';
 import { MethodResponse } from 'src/libs/ajax/methods/methods-models';
 import { MethodDefinition } from 'src/libs/ajax/methods/methods-models';
 import { postMethodProvider } from 'src/libs/ajax/methods/providers/PostMethodProvider';
@@ -13,9 +12,10 @@ import { getLink } from 'src/libs/nav';
 import { notify } from 'src/libs/notifications';
 import { TerraUser, TerraUserState, userStore } from 'src/libs/state';
 import { WorkflowList } from 'src/pages/methods/WorkflowList';
-import { asMockedFn, renderWithAppContexts as render } from 'src/testing/test-utils';
+import { asMockedFn, partial, renderWithAppContexts as render } from 'src/testing/test-utils';
 
-jest.mock('src/libs/ajax');
+jest.mock('src/libs/ajax/methods/Methods');
+
 jest.mock('src/libs/notifications');
 jest.mock('src/libs/nav', () => ({
   ...jest.requireActual('src/libs/nav'),
@@ -52,14 +52,10 @@ jest.mock('react-virtualized', () => {
   };
 });
 
-const mockMethods = (methods: MethodDefinition[]): Partial<MethodsAjaxContract> => {
-  return {
-    definitions: jest.fn().mockResolvedValue(methods),
-  };
-};
-
-const mockAjax = (methods: MethodDefinition[]): Partial<AjaxContract> => {
-  return { Methods: mockMethods(methods) as MethodsAjaxContract };
+const mockMethods = (methods: MethodDefinition[]): MethodsAjaxContract => {
+  return partial<MethodsAjaxContract>({
+    definitions: jest.fn(async () => methods),
+  });
 };
 
 const mockUser = (email: string): Partial<TerraUser> => ({ email });
@@ -203,7 +199,7 @@ const tabMethodCountsTestCases: { methods: MethodDefinition[]; myMethodsCount: n
 describe('workflows table', () => {
   it('renders the search bar and tabs', async () => {
     // Arrange
-    asMockedFn(Ajax).mockImplementation(() => mockAjax([]) as AjaxContract);
+    asMockedFn(Methods).mockReturnValue(mockMethods([]));
 
     // Act
     await act(async () => {
@@ -220,7 +216,7 @@ describe('workflows table', () => {
 
   it('renders the workflows table with method information', async () => {
     // Arrange
-    asMockedFn(Ajax).mockImplementation(() => mockAjax([revaliMethod2]) as AjaxContract);
+    asMockedFn(Methods).mockReturnValue(mockMethods([revaliMethod2]));
 
     // Act
     await act(async () => {
@@ -254,7 +250,7 @@ describe('workflows table', () => {
 
   it('displays a message with no my workflows', async () => {
     // Arrange
-    asMockedFn(Ajax).mockImplementation(() => mockAjax([darukMethod]) as AjaxContract);
+    asMockedFn(Methods).mockReturnValue(mockMethods([darukMethod]));
 
     // set the user's email
     jest.spyOn(userStore, 'get').mockImplementation(jest.fn().mockReturnValue(mockUserState('revali@gale.com')));
@@ -271,9 +267,7 @@ describe('workflows table', () => {
 
   it('displays only my workflows in the my methods tab', async () => {
     // Arrange
-    asMockedFn(Ajax).mockImplementation(
-      () => mockAjax([darukMethod, revaliMethod, revaliPrivateMethod]) as AjaxContract
-    );
+    asMockedFn(Methods).mockReturnValue(mockMethods([darukMethod, revaliMethod, revaliPrivateMethod]));
 
     // set the user's email
     jest.spyOn(userStore, 'get').mockImplementation(jest.fn().mockReturnValue(mockUserState('revali@gale.com')));
@@ -292,7 +286,7 @@ describe('workflows table', () => {
 
   it('displays a message with no public workflows', async () => {
     // Arrange
-    asMockedFn(Ajax).mockImplementation(() => mockAjax([ganonPrivateMethod]) as AjaxContract);
+    asMockedFn(Methods).mockReturnValue(mockMethods([ganonPrivateMethod]));
 
     // set the user's email
     jest.spyOn(userStore, 'get').mockImplementation(jest.fn().mockReturnValue(mockUserState('ganon@ganon.com')));
@@ -309,9 +303,7 @@ describe('workflows table', () => {
 
   it('displays only public workflows in the public methods tab', async () => {
     // Arrange
-    asMockedFn(Ajax).mockImplementation(
-      () => mockAjax([darukMethod, revaliMethod, ganonPrivateMethod]) as AjaxContract
-    );
+    asMockedFn(Methods).mockReturnValue(mockMethods([darukMethod, revaliMethod, ganonPrivateMethod]));
 
     // set the user's email
     jest.spyOn(userStore, 'get').mockImplementation(jest.fn().mockReturnValue(mockUserState('ganon@ganon.com')));
@@ -332,7 +324,7 @@ describe('workflows table', () => {
     'provides accurate method counts in the tab display names',
     async ({ methods, myMethodsCount, publicMethodsCount }) => {
       // Arrange
-      asMockedFn(Ajax).mockImplementation(() => mockAjax(methods) as AjaxContract);
+      asMockedFn(Methods).mockReturnValue(mockMethods(methods));
 
       // set the user's email
       jest.spyOn(userStore, 'get').mockImplementation(jest.fn().mockReturnValue(mockUserState('revali@gale.com')));
@@ -350,9 +342,7 @@ describe('workflows table', () => {
 
   it("updates only the current tab's method count based on the filter", async () => {
     // Arrange
-    asMockedFn(Ajax).mockImplementation(
-      () => mockAjax([revaliMethod, darukMethod, revaliMethod2, revaliPrivateMethod]) as AjaxContract
-    );
+    asMockedFn(Methods).mockReturnValue(mockMethods([revaliMethod, darukMethod, revaliMethod2, revaliPrivateMethod]));
 
     // set the user's email
     jest.spyOn(userStore, 'get').mockImplementation(jest.fn().mockReturnValue(mockUserState('revali@gale.com')));
@@ -373,7 +363,7 @@ describe('workflows table', () => {
 
   it('filters workflows by namespace', async () => {
     // Arrange
-    asMockedFn(Ajax).mockImplementation(() => mockAjax([darukMethod, revaliMethod]) as AjaxContract);
+    asMockedFn(Methods).mockReturnValue(mockMethods([darukMethod, revaliMethod]));
 
     // Act
     await act(async () => {
@@ -388,7 +378,7 @@ describe('workflows table', () => {
 
   it('filters workflows by name', async () => {
     // Arrange
-    asMockedFn(Ajax).mockImplementation(() => mockAjax([darukMethod, revaliMethod, revaliMethod2]) as AjaxContract);
+    asMockedFn(Methods).mockReturnValue(mockMethods([darukMethod, revaliMethod, revaliMethod2]));
 
     // Act
     await act(async () => {
@@ -404,7 +394,7 @@ describe('workflows table', () => {
 
   it('filters workflows by namespace and name simultaneously', async () => {
     // Arrange
-    asMockedFn(Ajax).mockImplementation(() => mockAjax([darukMethod, revaliMethod, revaliMethod2]) as AjaxContract);
+    asMockedFn(Methods).mockReturnValue(mockMethods([darukMethod, revaliMethod, revaliMethod2]));
 
     // Act
     await act(async () => {
@@ -420,7 +410,7 @@ describe('workflows table', () => {
 
   it('updates the query parameters when you click a tab', async () => {
     // Arrange
-    asMockedFn(Ajax).mockImplementation(() => mockAjax([darukMethod, revaliMethod]) as AjaxContract);
+    asMockedFn(Methods).mockReturnValue(mockMethods([darukMethod, revaliMethod]));
 
     // set the user's email to ensure there are no my methods
     jest.spyOn(userStore, 'get').mockImplementation(jest.fn().mockReturnValue(mockUserState('test@test.com')));
@@ -447,7 +437,7 @@ describe('workflows table', () => {
 
   it('updates the query parameters when you type in the search bar', async () => {
     // Arrange
-    asMockedFn(Ajax).mockImplementation(() => mockAjax([darukMethod, revaliMethod]) as AjaxContract);
+    asMockedFn(Methods).mockReturnValue(mockMethods([darukMethod, revaliMethod]));
 
     // should be called after the user types in the search bar
     const navHistoryReplace = jest.spyOn(Nav.history, 'replace');
@@ -467,7 +457,7 @@ describe('workflows table', () => {
 
   it('displays the search filter in the search bar', async () => {
     // Arrange
-    asMockedFn(Ajax).mockImplementation(() => mockAjax([darukMethod]) as AjaxContract);
+    asMockedFn(Methods).mockReturnValue(mockMethods([darukMethod]));
 
     // Act
     await act(async () => {
@@ -480,9 +470,7 @@ describe('workflows table', () => {
 
   it('sorts by method ascending by default', async () => {
     // Arrange
-    asMockedFn(Ajax).mockImplementation(
-      () => mockAjax([sortingMethod, darukMethod, revaliMethod, revaliMethod2]) as AjaxContract
-    );
+    asMockedFn(Methods).mockReturnValue(mockMethods([sortingMethod, darukMethod, revaliMethod, revaliMethod2]));
 
     // Act
     await act(async () => {
@@ -495,9 +483,7 @@ describe('workflows table', () => {
 
   it('sorts by method descending', async () => {
     // Arrange
-    asMockedFn(Ajax).mockImplementation(
-      () => mockAjax([sortingMethod, darukMethod, revaliMethod, revaliMethod2]) as AjaxContract
-    );
+    asMockedFn(Methods).mockReturnValue(mockMethods([sortingMethod, darukMethod, revaliMethod, revaliMethod2]));
 
     const user: UserEvent = userEvent.setup();
 
@@ -514,9 +500,7 @@ describe('workflows table', () => {
 
   it('sorts by synopsis ascending', async () => {
     // Arrange
-    asMockedFn(Ajax).mockImplementation(
-      () => mockAjax([sortingMethod, darukMethod, revaliMethod, revaliMethod2]) as AjaxContract
-    );
+    asMockedFn(Methods).mockReturnValue(mockMethods([sortingMethod, darukMethod, revaliMethod, revaliMethod2]));
 
     const user: UserEvent = userEvent.setup();
 
@@ -533,9 +517,7 @@ describe('workflows table', () => {
 
   it('sorts by synopsis descending', async () => {
     // Arrange
-    asMockedFn(Ajax).mockImplementation(
-      () => mockAjax([sortingMethod, darukMethod, revaliMethod, revaliMethod2]) as AjaxContract
-    );
+    asMockedFn(Methods).mockReturnValue(mockMethods([sortingMethod, darukMethod, revaliMethod, revaliMethod2]));
 
     const user: UserEvent = userEvent.setup();
 
@@ -553,9 +535,7 @@ describe('workflows table', () => {
 
   it('sorts by owners ascending', async () => {
     // Arrange
-    asMockedFn(Ajax).mockImplementation(
-      () => mockAjax([sortingMethod, darukMethod, revaliMethod, revaliMethod2]) as AjaxContract
-    );
+    asMockedFn(Methods).mockReturnValue(mockMethods([sortingMethod, darukMethod, revaliMethod, revaliMethod2]));
 
     const user: UserEvent = userEvent.setup();
 
@@ -572,9 +552,7 @@ describe('workflows table', () => {
 
   it('sorts by owners descending', async () => {
     // Arrange
-    asMockedFn(Ajax).mockImplementation(
-      () => mockAjax([sortingMethod, darukMethod, revaliMethod, revaliMethod2]) as AjaxContract
-    );
+    asMockedFn(Methods).mockReturnValue(mockMethods([sortingMethod, darukMethod, revaliMethod, revaliMethod2]));
 
     const user: UserEvent = userEvent.setup();
 
@@ -592,9 +570,7 @@ describe('workflows table', () => {
 
   it('sorts by snapshots ascending', async () => {
     // Arrange
-    asMockedFn(Ajax).mockImplementation(
-      () => mockAjax([sortingMethod, darukMethod, revaliMethod, revaliMethod2]) as AjaxContract
-    );
+    asMockedFn(Methods).mockReturnValue(mockMethods([sortingMethod, darukMethod, revaliMethod, revaliMethod2]));
 
     const user: UserEvent = userEvent.setup();
 
@@ -611,9 +587,7 @@ describe('workflows table', () => {
 
   it('sorts by snapshots descending', async () => {
     // Arrange
-    asMockedFn(Ajax).mockImplementation(
-      () => mockAjax([sortingMethod, darukMethod, revaliMethod, revaliMethod2]) as AjaxContract
-    );
+    asMockedFn(Methods).mockReturnValue(mockMethods([sortingMethod, darukMethod, revaliMethod, revaliMethod2]));
 
     const user: UserEvent = userEvent.setup();
 
@@ -631,7 +605,7 @@ describe('workflows table', () => {
 
   it('displays a paginator with at least one displayed workflow', async () => {
     // Arrange
-    asMockedFn(Ajax).mockImplementation(() => mockAjax([darukMethod]) as AjaxContract);
+    asMockedFn(Methods).mockReturnValue(mockMethods([darukMethod]));
 
     // Act
     await act(async () => {
@@ -644,7 +618,7 @@ describe('workflows table', () => {
 
   it('correctly uses the paginator to paginate workflows', async () => {
     // Arrange
-    asMockedFn(Ajax).mockImplementation(() => mockAjax(paginationMethods) as AjaxContract);
+    asMockedFn(Methods).mockReturnValue(mockMethods(paginationMethods));
 
     const user: UserEvent = userEvent.setup();
 
@@ -678,7 +652,7 @@ describe('workflows table', () => {
 
   it('resets the table page when sorting', async () => {
     // Arrange
-    asMockedFn(Ajax).mockImplementation(() => mockAjax(paginationMethods) as AjaxContract);
+    asMockedFn(Methods).mockReturnValue(mockMethods(paginationMethods));
 
     const user: UserEvent = userEvent.setup();
 
@@ -702,7 +676,7 @@ describe('workflows table', () => {
 
   it('resets the table page when switching tabs', async () => {
     // Arrange
-    asMockedFn(Ajax).mockImplementation(() => mockAjax(paginationMethods) as AjaxContract);
+    asMockedFn(Methods).mockReturnValue(mockMethods(paginationMethods));
 
     // set the user's email
     jest.spyOn(userStore, 'get').mockImplementation(jest.fn().mockReturnValue(mockUserState('me@me.com')));
@@ -734,7 +708,7 @@ describe('workflows table', () => {
 
   it('resets the table page when typing in the search bar', async () => {
     // Arrange
-    asMockedFn(Ajax).mockImplementation(() => mockAjax(paginationMethods) as AjaxContract);
+    asMockedFn(Methods).mockReturnValue(mockMethods(paginationMethods));
 
     // set the user's email
     jest.spyOn(userStore, 'get').mockImplementation(jest.fn().mockReturnValue(mockUserState('me@me.com')));
@@ -767,7 +741,7 @@ describe('workflows table', () => {
 
   it('displays a tooltip for namespace and method names', async () => {
     // Arrange
-    asMockedFn(Ajax).mockImplementation(() => mockAjax([revaliMethod]) as AjaxContract);
+    asMockedFn(Methods).mockReturnValue(mockMethods([revaliMethod]));
 
     // set the user's email
     jest.spyOn(userStore, 'get').mockImplementation(jest.fn().mockReturnValue(mockUserState('revali@gale.com')));
@@ -787,7 +761,7 @@ describe('workflows table', () => {
 
   it('displays a tooltip for method synopsis', async () => {
     // Arrange
-    asMockedFn(Ajax).mockImplementation(() => mockAjax([revaliMethod]) as AjaxContract);
+    asMockedFn(Methods).mockReturnValue(mockMethods([revaliMethod]));
 
     // set the user's email
     jest.spyOn(userStore, 'get').mockImplementation(jest.fn().mockReturnValue(mockUserState('revali@gale.com')));
@@ -812,7 +786,7 @@ describe('workflows table', () => {
 
   it('displays a tooltip for method owners', async () => {
     // Arrange
-    asMockedFn(Ajax).mockImplementation(() => mockAjax([revaliMethod2]) as AjaxContract);
+    asMockedFn(Methods).mockReturnValue(mockMethods([revaliMethod2]));
 
     // set the user's email
     jest.spyOn(userStore, 'get').mockImplementation(jest.fn().mockReturnValue(mockUserState('revali@gale.com')));
@@ -837,7 +811,7 @@ describe('workflows table', () => {
 
   it('links on the method name to additional workflow details', async () => {
     // Arrange
-    asMockedFn(Ajax).mockImplementation(() => mockAjax([noSpacesMethod]) as AjaxContract);
+    asMockedFn(Methods).mockReturnValue(mockMethods([noSpacesMethod]));
 
     asMockedFn(getLink).mockImplementation(
       (routeName: string, { namespace, name }: { namespace?: string; name?: string } = {}) =>
@@ -859,16 +833,14 @@ describe('workflows table', () => {
 
   it('shows a loading spinner while the workflows are loading', async () => {
     // Arrange
-    asMockedFn(Ajax).mockImplementation(() => {
-      return {
-        Methods: {
-          definitions: jest.fn(async () => {
-            await delay(100);
-            return Promise.resolve([]);
-          }) as Partial<MethodsAjaxContract>,
-        } as MethodsAjaxContract,
-      } as AjaxContract;
-    });
+    asMockedFn(Methods).mockReturnValue(
+      partial<MethodsAjaxContract>({
+        definitions: jest.fn(async () => {
+          await delay(100);
+          return [];
+        }),
+      })
+    );
 
     // Act
     await act(async () => {
@@ -888,15 +860,13 @@ describe('workflows table', () => {
 
   it('handles errors loading workflows', async () => {
     // Arrange
-    asMockedFn(Ajax).mockImplementation(() => {
-      return {
-        Methods: {
-          definitions: jest.fn(() => {
-            throw new Error('BOOM');
-          }) as Partial<MethodsAjaxContract>,
-        } as MethodsAjaxContract,
-      } as AjaxContract;
-    });
+    asMockedFn(Methods).mockReturnValue(
+      partial<MethodsAjaxContract>({
+        definitions: jest.fn(async () => {
+          throw new Error('BOOM');
+        }),
+      })
+    );
 
     // Act
     await act(async () => {
@@ -918,7 +888,7 @@ describe('workflows table', () => {
 describe('create workflow modal', () => {
   it('appears with the correct text and blank inputs when you press the create new method button', async () => {
     // Arrange
-    asMockedFn(Ajax).mockImplementation(() => mockAjax([]) as AjaxContract);
+    asMockedFn(Methods).mockReturnValue(mockMethods([]));
 
     const user: UserEvent = userEvent.setup();
 
@@ -948,7 +918,7 @@ describe('create workflow modal', () => {
 
   it('uploads a new workflow and navigates to its workflow details page', async () => {
     // Arrange
-    asMockedFn(Ajax).mockImplementation(() => mockAjax([]) as AjaxContract);
+    asMockedFn(Methods).mockReturnValue(mockMethods([]));
 
     jest.spyOn(postMethodProvider, 'postMethod').mockResolvedValue(mockCreateMethodResponse);
 
@@ -984,7 +954,7 @@ describe('create workflow modal', () => {
 
   it('closes when you press the cancel button', async () => {
     // Arrange
-    asMockedFn(Ajax).mockImplementation(() => mockAjax([]) as AjaxContract);
+    asMockedFn(Methods).mockReturnValue(mockMethods([]));
 
     const user: UserEvent = userEvent.setup();
 
