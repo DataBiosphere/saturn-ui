@@ -146,7 +146,7 @@ const featurePreviewsConfig: readonly FeaturePreview[] = [
     feedbackUrl: `mailto:dsp-analysis@broadinstitute.org?subject=${encodeURIComponent(
       'Feedback on enhancements to IGV genome browser integration'
     )}`,
-    lastUpdated: '12/16/2024',
+    lastUpdated: '12/5/2024',
   },
 ];
 

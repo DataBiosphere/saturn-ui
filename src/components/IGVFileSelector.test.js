@@ -9,13 +9,6 @@ jest.mock('src/libs/feature-previews', () => ({
   isFeaturePreviewEnabled: jest.fn(),
 }));
 
-// jest.mock('src/libs/ajax/drs/DrsUriResolver', () => ({
-//   ...jest.requireActual('src/libs/ajax/drs/DrsUriResolver'),
-//   DrsUriResolver: {
-//     getDataObjectMetadata: jest.fn(),
-//   },
-// }));
-
 describe('getValidIgvFiles', () => {
   it('allows BAM files with indices', async () => {
     expect(
@@ -208,23 +201,24 @@ describe('getValidIgvFilesFromAttributeValues', () => {
     ).toEqual([]);
   });
 
-  it.only('calls to resolve access URLs when two DRS URIs are found', async () => {
-    // This is a DRS URI with a data GUID namespace, from
-    // https://support.terra.bio/hc/en-us/articles/360039330211-Overview-Interoperable-data-GA4GH-DRS-URIs
+  it('calls to resolve access URLs when two DRS URIs are found', async () => {
+    // An IGV selection must have a file (e.g. VCF) and an index file (TBI)
     const fileDrsUri = 'drs://dg.4503:2802a94d-f540-499f-950a-db3c2a9f2dc4';
     const indexFileDrsUri = 'drs://dg.4503:2802a94d-f540-499f-950a-11111111111';
-
     const fileName = 'foo.vcf.gz';
     const indexFileName = 'foo.vcf.gz.tbi';
 
     const fileNameJson = { fileName };
     const indexFileNameJson = { fileName: indexFileName };
 
+    // The access URL (aka signed URL) can have various parameters to track requester-pay features
     const accessUrlParams = 'requestedBy=user@domain.tls&userProject=my-billing-project&signature=secret';
     const fileAccessUrl = `https://bucket/${fileName}?${accessUrlParams}`;
     const fileIndexAccessUrl = `https://bucket/${indexFileName}?${accessUrlParams}`;
 
     Ajax.mockImplementation(() => ({
+      // DRS URIs get resolved via DRS Hub.
+      // API docs: https://drshub.dsde-prod.broadinstitute.org/#/drsHub/resolveDrs
       DrsUriResolver: {
         getDataObjectMetadata: jest.fn((value, fields) => {
           if (fields.includes('fileName')) {
@@ -240,7 +234,6 @@ describe('getValidIgvFilesFromAttributeValues', () => {
       },
     }));
 
-    // Mock the return value of isFeaturePreviewEnabled
     isFeaturePreviewEnabled.mockReturnValue(true);
 
     expect(
