@@ -174,6 +174,7 @@ const IGVFileSelector = ({ selectedEntities, onSuccess }) => {
       setHasDrsCandidateFiles(drsCandidateFiles.length >= 2);
 
       const selections = await getValidIgvFilesFromAttributeValues(allAttributeValues, signal);
+      setHasDrsCandidateFiles(selections.length >= 1);
       setSelections(selections);
     }
     fetchData();
