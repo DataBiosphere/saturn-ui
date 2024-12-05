@@ -1,4 +1,4 @@
-import { SpinnerOverlay } from '@terra-ui-packages/components';
+import { Clickable, SpinnerOverlay } from '@terra-ui-packages/components';
 import { withHandlers } from '@terra-ui-packages/core-utils';
 import _ from 'lodash/fp';
 import * as qs from 'qs';
@@ -10,8 +10,7 @@ import { ProjectListItem, ProjectListItemProps } from 'src/billing/List/ProjectL
 import { AzureBillingProjectWizard } from 'src/billing/NewBillingProjectWizard/AzureBillingProjectWizard/AzureBillingProjectWizard';
 import { GCPBillingProjectWizard } from 'src/billing/NewBillingProjectWizard/GCPBillingProjectWizard/GCPBillingProjectWizard';
 import ProjectDetail from 'src/billing/Project';
-import { isCreating, isDeleting } from 'src/billing/utils';
-import { billingRoles } from 'src/billing/utils';
+import { billingRoles, isCreating, isDeleting } from 'src/billing/utils';
 import { BillingProject, GoogleBillingAccount } from 'src/billing-core/models';
 import Collapse from 'src/components/Collapse';
 import { Billing } from 'src/libs/ajax/billing/Billing';
@@ -26,6 +25,8 @@ import * as Style from 'src/libs/style';
 import * as Utils from 'src/libs/utils';
 import { useWorkspaces } from 'src/workspaces/common/state/useWorkspaces';
 import { CloudProvider, cloudProviderTypes, WorkspaceWrapper } from 'src/workspaces/utils';
+
+import { CrossBillingSpendReport } from '../CrossBillingSpendReport';
 
 const BillingProjectSubheader: React.FC<{ title: string; children: ReactNode }> = ({ title, children }) => (
   <Collapse
@@ -51,6 +52,7 @@ interface RightHandContentProps {
   authorizeAndLoadAccounts: () => Promise<void>;
   setCreatingBillingProjectType: (type: CloudProvider | null) => void;
   reloadBillingProject: (billingProject: BillingProject) => Promise<unknown>;
+  type: string | undefined;
 }
 
 // This is the view of the Billing Project details, or the wizard to create a new billing project.
@@ -68,6 +70,7 @@ const RightHandContent = (props: RightHandContentProps): ReactNode => {
     authorizeAndLoadAccounts,
     setCreatingBillingProjectType,
     reloadBillingProject,
+    type,
   } = props;
   if (!!selectedName && !_.some({ projectName: selectedName }, billingProjects)) {
     return (
@@ -133,7 +136,26 @@ const RightHandContent = (props: RightHandContentProps): ReactNode => {
       />
     );
   }
-  if (!_.isEmpty(projectsOwned) && !selectedName) {
+  if (type === 'crossBillingProjectSpend' && !_.isEmpty(projectsOwned) && !selectedName) {
+    const billingProject = billingProjects.find(({ projectName }) => projectName === selectedName);
+    return (
+      <CrossBillingSpendReport
+        key={type}
+        // We know from the condition that the billingProject does exist.
+        // @ts-ignore
+        billingProject={billingProject}
+        billingAccounts={billingAccounts}
+        authorizeAndLoadAccounts={authorizeAndLoadAccounts}
+        // We know from the condition that the billingProject does exist.
+        // @ts-ignore
+        reloadBillingProject={() => reloadBillingProject(billingProject).catch(loadProjects)}
+        isOwner={projectsOwned.some(({ projectName }) => projectName === selectedName)}
+        workspaces={allWorkspaces}
+        refreshWorkspaces={refreshWorkspaces}
+      />
+    );
+  }
+  if (type !== 'crossBillingProjectSpend' && !_.isEmpty(projectsOwned) && !selectedName) {
     return <div style={{ margin: '1rem auto 0 auto' } as CSSProperties}>Select a Billing Project</div>;
   }
 };
@@ -141,6 +163,7 @@ const RightHandContent = (props: RightHandContentProps): ReactNode => {
 interface BillingListProps {
   queryParams: {
     selectedName: string | undefined;
+    type: string | undefined;
   };
 }
 
@@ -158,6 +181,7 @@ export const BillingList = (props: BillingListProps) => {
   const interval = useRef<number>();
   const selectedName = props.queryParams.selectedName;
   const billingProjectListWidth = 350;
+  const type = props.queryParams.type;
 
   // Helpers
   const loadProjects = _.flow(
@@ -291,6 +315,19 @@ export const BillingList = (props: BillingListProps) => {
           <h2 style={{ fontSize: 16 }}>Billing Projects</h2>
           <CreateBillingProjectControl showCreateProjectModal={showCreateProjectModal} />
         </div>
+        <Clickable
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            color: colors.accent(1.1),
+          }}
+          href={`${Nav.getLink('billing')}?${qs.stringify({
+            type: 'crossBillingProjectSpend',
+          })}`}
+          aria-current={false}
+        >
+          <span style={{ wordBreak: 'break-all' }}>Cross Billing Project Spend Report</span>
+        </Clickable>
         <BillingProjectSubheader title='Owned by You'>
           <div role='list'>
             {projectsOwned.map((project) => (
@@ -335,6 +372,7 @@ export const BillingList = (props: BillingListProps) => {
           showAzureBillingProjectWizard={azureUserWithNoBillingProjects || creatingAzureBillingProject}
           setCreatingBillingProjectType={setCreatingBillingProjectType}
           reloadBillingProject={reloadBillingProject}
+          type={type}
         />
       </div>
       {(isLoadingProjects || isAuthorizing || isLoadingAccounts) && <SpinnerOverlay mode='FullScreen' />}
