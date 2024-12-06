@@ -2,7 +2,7 @@ import { ButtonPrimary, Modal, SpinnerOverlay, useUniqueId } from '@terra-ui-pac
 import React, { ReactNode, useState } from 'react';
 import { ValidatedInput } from 'src/components/input';
 import { AdminNotifierCheckbox } from 'src/groups/AdminNotifierCheckbox';
-import { Ajax } from 'src/libs/ajax';
+import { Groups } from 'src/libs/ajax/Groups';
 import { reportError } from 'src/libs/error';
 import { formHint, FormLabel } from 'src/libs/forms';
 import { summarizeErrors } from 'src/libs/utils';
@@ -35,7 +35,7 @@ export const NewGroupModal = (props: NewGroupModalProps): ReactNode => {
   const submit = async () => {
     setSubmitting(true);
     try {
-      const groupAjax = Ajax().Groups.group(groupName ?? '');
+      const groupAjax = Groups().group(groupName ?? '');
       await groupAjax.create();
       await groupAjax.setPolicy('admin-notifier', allowAccessRequests);
       props.onSuccess();

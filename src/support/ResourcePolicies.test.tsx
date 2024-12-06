@@ -1,14 +1,15 @@
-import { asMockedFn } from '@terra-ui-packages/test-utils';
+import { asMockedFn, partial } from '@terra-ui-packages/test-utils';
 import { act, render, screen } from '@testing-library/react';
 import React from 'react';
-import { Ajax } from 'src/libs/ajax';
+import { SamResources, SamResourcesContract } from 'src/libs/ajax/SamResources';
 import { FullyQualifiedResourceId } from 'src/libs/ajax/SamResources';
 import { reportError } from 'src/libs/error';
 import { ResourcePolicies } from 'src/support/ResourcePolicies';
 import { ResourceTypeSummaryProps } from 'src/support/SupportResourceType';
 import { v4 as uuidv4 } from 'uuid';
 
-jest.mock('src/libs/ajax');
+jest.mock('src/libs/ajax/SamResources');
+
 type ErrorExports = typeof import('src/libs/error');
 jest.mock(
   'src/libs/error',
@@ -20,11 +21,7 @@ jest.mock(
 
 describe('ResourcePolicies', () => {
   function setGetResourcePoliciesMock(getResourcePolicies: jest.Mock<Promise<Awaited<object>>, []>) {
-    asMockedFn(Ajax).mockImplementation(() => {
-      return {
-        SamResources: { getResourcePolicies } as Partial<ReturnType<typeof Ajax>['SamResources']>,
-      } as ReturnType<typeof Ajax>;
-    });
+    asMockedFn(SamResources).mockReturnValue(partial<SamResourcesContract>({ getResourcePolicies }));
   }
 
   it('calls Ajax().SamResources.getResourcePolicies and displays the result', async () => {
