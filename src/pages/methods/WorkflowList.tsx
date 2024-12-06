@@ -1,4 +1,4 @@
-import { SpinnerOverlay } from '@terra-ui-packages/components';
+import { Clickable, Icon, SpinnerOverlay } from '@terra-ui-packages/components';
 import _ from 'lodash/fp';
 import * as qs from 'qs';
 import React, { useState } from 'react';
@@ -6,11 +6,14 @@ import { AutoSizer } from 'react-virtualized';
 import { ButtonPrimary, Link } from 'src/components/common';
 import FooterWrapper from 'src/components/FooterWrapper';
 import { DelayedSearchInput } from 'src/components/input';
+import { MenuButton } from 'src/components/MenuButton';
+import { makeMenuIcon, MenuTrigger } from 'src/components/PopupTrigger';
 import { TabBar } from 'src/components/tabBars';
 import { FlexTable, HeaderCell, Paginator, Sortable, TooltipCell } from 'src/components/table';
 import { TopBar } from 'src/components/TopBar';
 import { Methods } from 'src/libs/ajax/methods/Methods';
 import { MethodDefinition } from 'src/libs/ajax/methods/methods-models';
+import { namespacePermissionsProvider } from 'src/libs/ajax/methods/providers/PermissionsProvider';
 import { postMethodProvider } from 'src/libs/ajax/methods/providers/PostMethodProvider';
 import * as Nav from 'src/libs/nav';
 import { notify } from 'src/libs/notifications';
@@ -19,6 +22,7 @@ import { getTerraUser } from 'src/libs/state';
 import * as Utils from 'src/libs/utils';
 import { withBusyState } from 'src/libs/utils';
 import { CreateWorkflowModal } from 'src/workflows/methods/modals/CreateWorkflowModal';
+import { PermissionsModal } from 'src/workflows/methods/modals/PermissionsModal';
 
 // Note: The first tab key in this array will determine the default tab selected
 // if the tab query parameter is not present or has an invalid value (and when
@@ -105,6 +109,8 @@ export const WorkflowList = (props: WorkflowListProps) => {
   const [sort, setSort] = useState<SortProperties>({ field: 'name', direction: 'asc' });
 
   const [createWorkflowModalOpen, setCreateWorkflowModalOpen] = useState<boolean>(false);
+  const [editNamespacePermissionsModalOpen, setEditNamespacePermissionsModalOpen] = useState<boolean>(false);
+  const [namespacePermissionsToEdit, setNamespacePermissionsToEdit] = useState<string>('');
 
   const [pageNumber, setPageNumber] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(25);
@@ -261,7 +267,15 @@ export const WorkflowList = (props: WorkflowListProps) => {
                 height={height}
                 sort={sort as any /* necessary until FlexTable is converted to TS */}
                 rowCount={paginatedWorkflows.length}
-                columns={getColumns(sort, onSort, paginatedWorkflows)}
+                columns={getColumns(
+                  sort,
+                  onSort,
+                  (namespace) => {
+                    setEditNamespacePermissionsModalOpen(true);
+                    setNamespacePermissionsToEdit(namespace);
+                  },
+                  paginatedWorkflows
+                )}
                 variant={null}
                 noContentMessage={workflows === undefined ? ' ' : 'Nothing to display'}
                 tabIndex={-1}
@@ -269,6 +283,15 @@ export const WorkflowList = (props: WorkflowListProps) => {
             )}
           </AutoSizer>
         </div>
+        {editNamespacePermissionsModalOpen && (
+          <PermissionsModal
+            snapshotOrNamespace='Namespace'
+            namespace={namespacePermissionsToEdit}
+            setPermissionsModalOpen={setEditNamespacePermissionsModalOpen}
+            refresh={() => {}} // there is no need to refresh the page as permissions are always fetched when opening PermissionsModal
+            permissionsProvider={namespacePermissionsProvider}
+          />
+        )}
         {!_.isEmpty(sortedWorkflows) && (
           <div style={{ marginBottom: '0.5rem' }}>
             {
@@ -305,74 +328,114 @@ export const WorkflowList = (props: WorkflowListProps) => {
 const getColumns = (
   sort: SortProperties,
   onSort: (newSort: SortProperties) => void,
+  onEditNamespacePermissions: (namespace: string) => void,
   paginatedWorkflows: MethodDefinition[]
-) => [
-  // Note: 'field' values should be MethodDefinition property names for sorting
-  // to work properly
-  {
-    field: 'name',
-    headerRenderer: () => (
-      <WorkflowTableHeader sort={sort} field='name' onSort={onSort}>
-        Method
-      </WorkflowTableHeader>
-    ),
-    cellRenderer: ({ rowIndex }) => {
-      const { namespace, name } = paginatedWorkflows[rowIndex];
+) => {
+  return [
+    // Note: 'field' values should be MethodDefinition property names for sorting
+    // to work properly
+    {
+      field: 'actions',
+      headerRenderer: () => <HeaderCell>Actions</HeaderCell>,
+      cellRenderer: ({ rowIndex }) => {
+        const { namespace, managers } = paginatedWorkflows[rowIndex];
+        const isNamespaceOwner = _.includes(getTerraUser().email?.toLowerCase(), _.map(_.toLower, managers));
+        const notNamespaceOwnerTooltip = 'You must be an owner of this namespace';
 
-      return (
-        <TooltipCell tooltip={`${namespace}/${name}`}>
-          <div style={{ fontSize: 12 }}>{namespace}</div>
-          <Link style={{ fontWeight: 600 }} href={Nav.getLink('workflow-dashboard', { namespace, name })}>
-            {name}
-          </Link>
-        </TooltipCell>
-      );
+        return (
+          <MenuTrigger
+            side='bottom'
+            closeOnClick
+            content={
+              <MenuButton
+                disabled={!isNamespaceOwner}
+                tooltipSide='right'
+                tooltip={!isNamespaceOwner && notNamespaceOwnerTooltip}
+                onClick={() => onEditNamespacePermissions(namespace)}
+              >
+                {makeMenuIcon('edit')}
+                Edit namespace permissions
+              </MenuButton>
+            }
+          >
+            <Clickable
+              aria-label='Actions menu'
+              aria-haspopup='menu'
+              style={{ opacity: 0.8, height: 27, marginLeft: '15px' }}
+              disabled={false}
+            >
+              <Icon icon='cardMenuIcon' size={25} />
+            </Clickable>
+          </MenuTrigger>
+        );
+      },
+      size: { basis: 100, grow: 0 },
     },
-    size: { basis: 300 },
-  },
-  {
-    field: 'synopsis',
-    headerRenderer: () => (
-      <WorkflowTableHeader sort={sort} field='synopsis' onSort={onSort}>
-        Synopsis
-      </WorkflowTableHeader>
-    ),
-    cellRenderer: ({ rowIndex }) => {
-      const { synopsis } = paginatedWorkflows[rowIndex];
+    {
+      field: 'name',
+      headerRenderer: () => (
+        <WorkflowTableHeader sort={sort} field='name' onSort={onSort}>
+          Method
+        </WorkflowTableHeader>
+      ),
+      cellRenderer: ({ rowIndex }) => {
+        const { namespace, name } = paginatedWorkflows[rowIndex];
 
-      return <TooltipCell tooltip={null}>{synopsis}</TooltipCell>;
+        return (
+          <TooltipCell tooltip={`${namespace}/${name}`}>
+            <div style={{ fontSize: 12 }}>{namespace}</div>
+            <Link style={{ fontWeight: 600 }} href={Nav.getLink('workflow-dashboard', { namespace, name })}>
+              {name}
+            </Link>
+          </TooltipCell>
+        );
+      },
+      size: { basis: 300 },
     },
-    size: { basis: 475 },
-  },
-  {
-    field: 'managers',
-    headerRenderer: () => (
-      <WorkflowTableHeader sort={sort} field='managers' onSort={onSort}>
-        Owners
-      </WorkflowTableHeader>
-    ),
-    cellRenderer: ({ rowIndex }) => {
-      const { managers } = paginatedWorkflows[rowIndex];
+    {
+      field: 'synopsis',
+      headerRenderer: () => (
+        <WorkflowTableHeader sort={sort} field='synopsis' onSort={onSort}>
+          Synopsis
+        </WorkflowTableHeader>
+      ),
+      cellRenderer: ({ rowIndex }) => {
+        const { synopsis } = paginatedWorkflows[rowIndex];
 
-      return <TooltipCell tooltip={null}>{managers?.join(', ')}</TooltipCell>;
+        return <TooltipCell tooltip={null}>{synopsis}</TooltipCell>;
+      },
+      size: { basis: 475 },
     },
-    size: { basis: 225 },
-  },
-  {
-    field: 'numSnapshots',
-    headerRenderer: () => (
-      <WorkflowTableHeader sort={sort} field='numSnapshots' onSort={onSort}>
-        Snapshots
-      </WorkflowTableHeader>
-    ),
-    cellRenderer: ({ rowIndex }) => {
-      const { numSnapshots } = paginatedWorkflows[rowIndex];
+    {
+      field: 'managers',
+      headerRenderer: () => (
+        <WorkflowTableHeader sort={sort} field='managers' onSort={onSort}>
+          Owners
+        </WorkflowTableHeader>
+      ),
+      cellRenderer: ({ rowIndex }) => {
+        const { managers } = paginatedWorkflows[rowIndex];
 
-      return <div style={{ textAlign: 'end', flex: 1 }}>{numSnapshots}</div>;
+        return <TooltipCell tooltip={null}>{managers?.join(', ')}</TooltipCell>;
+      },
+      size: { basis: 225 },
     },
-    size: { basis: 115, grow: 0, shrink: 0 },
-  },
-];
+    {
+      field: 'numSnapshots',
+      headerRenderer: () => (
+        <WorkflowTableHeader sort={sort} field='numSnapshots' onSort={onSort}>
+          Snapshots
+        </WorkflowTableHeader>
+      ),
+      cellRenderer: ({ rowIndex }) => {
+        const { numSnapshots } = paginatedWorkflows[rowIndex];
+
+        return <div style={{ textAlign: 'end', flex: 1 }}>{numSnapshots}</div>;
+      },
+      size: { basis: 115, grow: 0, shrink: 0 },
+    },
+  ];
+};
 
 export const navPaths = [
   {

@@ -13,7 +13,7 @@ import React, { CSSProperties, Dispatch, SetStateAction, useRef, useState } from
 import { IdContainer, LabeledCheckbox } from 'src/components/common';
 import { ValidatedInput } from 'src/components/input';
 import { getPopupRoot } from 'src/components/popup-utils';
-import { Ajax } from 'src/libs/ajax';
+import { PermissionsProvider } from 'src/libs/ajax/methods/providers/PermissionsProvider';
 import colors from 'src/libs/colors';
 import { reportError } from 'src/libs/error';
 import { FormLabel } from 'src/libs/forms';
@@ -33,10 +33,11 @@ import validate from 'validate.js';
 type WorkflowPermissionsModalProps = {
   snapshotOrNamespace: 'Snapshot' | 'Namespace';
   namespace: string;
-  name: string;
-  selectedSnapshot: number;
+  name?: string | undefined;
+  selectedSnapshot?: number | undefined;
   setPermissionsModalOpen: (b: boolean) => void;
   refresh: () => void;
+  permissionsProvider: PermissionsProvider;
 };
 
 type UserProps = {
@@ -83,7 +84,7 @@ const UserSelectInput = (props: UserSelectProps) => {
 
   return (
     <div style={{ display: 'flex', marginTop: '0.25rem' }}>
-      <div style={{ width: 200 }}>
+      <div style={{ width: 300 }}>
         <Select<WorkflowAccessLevel>
           aria-label={`selected role ${role}`}
           value={role}
@@ -167,7 +168,15 @@ const CurrentUsers = (props: CurrentUsersProps) => {
 };
 
 export const PermissionsModal = (props: WorkflowPermissionsModalProps) => {
-  const { snapshotOrNamespace, namespace, name, selectedSnapshot, setPermissionsModalOpen, refresh } = props;
+  const {
+    snapshotOrNamespace,
+    namespace,
+    name,
+    selectedSnapshot,
+    setPermissionsModalOpen,
+    refresh,
+    permissionsProvider,
+  } = props;
   const signal: AbortSignal = useCancellation();
   const [searchValue, setSearchValue] = useState<string>('');
   const [permissions, setPermissions] = useState<WorkflowsPermissions>([]);
@@ -183,9 +192,12 @@ export const PermissionsModal = (props: WorkflowPermissionsModalProps) => {
   useOnMount(() => {
     const loadWorkflowPermissions = withBusyState(setWorking, async () => {
       try {
-        const workflowPermissions: WorkflowsPermissions = await Ajax(signal)
-          .Methods.method(namespace, name, selectedSnapshot)
-          .permissions();
+        const workflowPermissions: WorkflowsPermissions = await permissionsProvider.getPermissions(
+          namespace,
+          name,
+          selectedSnapshot,
+          { signal }
+        );
         setPermissions(workflowPermissions);
         setOriginalPermissions(workflowPermissions);
       } catch (error) {
@@ -223,7 +235,7 @@ export const PermissionsModal = (props: WorkflowPermissionsModalProps) => {
     const permissionUpdates: WorkflowsPermissions = [...permissions, ...toBeDeletedPermissionUpdates];
 
     try {
-      await Ajax(signal).Methods.method(namespace, name, selectedSnapshot).setPermissions(permissionUpdates);
+      await permissionsProvider.updatePermissions(namespace, permissionUpdates, name, selectedSnapshot, { signal });
       refresh();
       setPermissionsModalOpen(false);
     } catch (error) {
@@ -232,13 +244,13 @@ export const PermissionsModal = (props: WorkflowPermissionsModalProps) => {
     }
   });
 
+  const modalTitle =
+    snapshotOrNamespace === 'Snapshot'
+      ? `Edit permissions for snapshot ${selectedSnapshot}`
+      : `Edit permissions for namespace ${namespace}`;
+
   return (
-    <Modal
-      title={`Edit ${snapshotOrNamespace} Permissions`}
-      onDismiss={() => setPermissionsModalOpen(false)}
-      width='30rem'
-      showButtons={false}
-    >
+    <Modal title={modalTitle} onDismiss={() => setPermissionsModalOpen(false)} width='600px' showButtons={false}>
       <div>
         <span style={{ display: 'flex', alignItems: 'center' }}>
           <Icon size={19} color={colors.warning()} icon='warning-standard' />
