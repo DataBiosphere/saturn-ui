@@ -33,7 +33,13 @@ export const getSuggestedTableName = (tsv) => {
     return undefined;
   }
   const firstColumnHeading = tsv.slice(0, indexOfFirstSpace);
-  return firstColumnHeading.replace(/_id$/, '').replace(/^(membership|entity):/, '');
+  return firstColumnHeading.replace(/_id$/, '').replace(/^(membership|entity|update):/, '');
+};
+
+/** Validates that the suggested table name is legal syntax for Terra */
+export const validateSuggestedTableName = (tableName) => {
+  const match = /^([a-zA-Z0-9_-]+)$/.exec(tableName);
+  return match?.[1];
 };
 
 export const EntityUploader = ({ onSuccess, onDismiss, namespace, name, entityTypes, workspaceId, dataProvider, isGoogleWorkspace, region }) => {
@@ -97,13 +103,13 @@ export const EntityUploader = ({ onSuccess, onDismiss, namespace, name, entityTy
     },
   });
 
-  const match = /(?:membership|entity):([^\s]+)_id/.exec(fileContents); // Specific to Google Workspaces -- Azure workspaces do not have this requirement for TSV headers
+  const newEntityType = validateSuggestedTableName(getSuggestedTableName(fileContents));
   const isInvalid = dataProvider.tsvFeatures.isInvalid({
     fileImportModeMatches: isFileImportCurrMode === isFileImportLastUsedMode,
-    match: !match,
+    match: !newEntityType,
     filePresent: file,
   });
-  const newEntityType = match?.[1];
+
   const entityTypeAlreadyExists = _.includes(_.toLower(newEntityType), entityTypes);
   const currentFile = isFileImportCurrMode === isFileImportLastUsedMode ? file : undefined;
   const containsNullValues = fileContents.match(/^\t|\t\t+|\t$|\n\n+/gm);
