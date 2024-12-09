@@ -1,10 +1,9 @@
-import { DeepPartial } from '@terra-ui-packages/core-utils';
-import { asMockedFn } from '@terra-ui-packages/test-utils';
-import { Ajax, AjaxContract } from 'src/libs/ajax';
+import { asMockedFn, partial } from '@terra-ui-packages/test-utils';
+import { FirecloudBucket, FirecloudBucketAjaxContract } from 'src/libs/ajax/firecloud/FirecloudBucket';
 
 import { getServiceAlerts } from './service-alerts';
 
-jest.mock('src/libs/ajax');
+jest.mock('src/libs/ajax/firecloud/FirecloudBucket');
 
 type UtilsExports = typeof import('src/libs/utils');
 jest.mock('src/libs/utils', (): UtilsExports => {
@@ -26,9 +25,11 @@ describe('getServiceAlerts', () => {
   it('fetches service alerts from GCS', async () => {
     // Arrange
     const mockGetServiceAlerts = jest.fn().mockReturnValue(Promise.resolve([]));
-    asMockedFn(Ajax).mockReturnValue({
-      FirecloudBucket: { getServiceAlerts: mockGetServiceAlerts },
-    } as DeepPartial<AjaxContract> as AjaxContract);
+    asMockedFn(FirecloudBucket).mockReturnValue(
+      partial<FirecloudBucketAjaxContract>({
+        getServiceAlerts: mockGetServiceAlerts,
+      })
+    );
 
     // Act
     await getServiceAlerts();
@@ -39,21 +40,20 @@ describe('getServiceAlerts', () => {
 
   it('adds IDs to alerts using hashes of alert content', async () => {
     // Arrange
-    asMockedFn(Ajax).mockReturnValue({
-      FirecloudBucket: {
-        getServiceAlerts: () =>
-          Promise.resolve([
-            {
-              title: 'The systems are down!',
-              message: 'Something is terribly wrong',
-            },
-            {
-              title: 'Scheduled maintenance',
-              message: 'Offline tomorrow',
-            },
-          ]),
-      },
-    } as AjaxContract);
+    asMockedFn(FirecloudBucket).mockReturnValue(
+      partial<FirecloudBucketAjaxContract>({
+        getServiceAlerts: async () => [
+          {
+            title: 'The systems are down!',
+            message: 'Something is terribly wrong',
+          },
+          {
+            title: 'Scheduled maintenance',
+            message: 'Offline tomorrow',
+          },
+        ],
+      })
+    );
 
     // Act
     const serviceAlerts = await getServiceAlerts();
@@ -67,22 +67,21 @@ describe('getServiceAlerts', () => {
 
   it('defaults severity to warning', async () => {
     // Arrange
-    asMockedFn(Ajax).mockReturnValue({
-      FirecloudBucket: {
-        getServiceAlerts: () =>
-          Promise.resolve([
-            {
-              title: 'The systems are down!',
-              message: 'Something is terribly wrong',
-            },
-            {
-              title: 'Scheduled maintenance',
-              message: 'Offline tomorrow',
-              severity: 'info',
-            },
-          ]),
-      },
-    } as AjaxContract);
+    asMockedFn(FirecloudBucket).mockReturnValue(
+      partial<FirecloudBucketAjaxContract>({
+        getServiceAlerts: async () => [
+          {
+            title: 'The systems are down!',
+            message: 'Something is terribly wrong',
+          },
+          {
+            title: 'Scheduled maintenance',
+            message: 'Offline tomorrow',
+            severity: 'info',
+          },
+        ],
+      })
+    );
 
     // Act
     const serviceAlerts = await getServiceAlerts();

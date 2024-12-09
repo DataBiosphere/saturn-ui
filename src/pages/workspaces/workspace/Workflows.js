@@ -1,27 +1,24 @@
-import { Modal } from '@terra-ui-packages/components';
 import _ from 'lodash/fp';
 import { Fragment, useEffect, useImperativeHandle, useState } from 'react';
 import { a, div, h, label, span } from 'react-hyperscript-helpers';
 import * as breadcrumbs from 'src/components/breadcrumbs';
 import { useViewToggle, ViewToggleButtons } from 'src/components/CardsListToggle';
-import { ButtonOutline, ButtonPrimary, Clickable, IdContainer, Link, Select, spinnerOverlay } from 'src/components/common';
-import { centeredSpinner, icon } from 'src/components/icons';
+import { Clickable, IdContainer, Link, Select, spinnerOverlay } from 'src/components/common';
+import { icon } from 'src/components/icons';
 import { DelayedSearchInput } from 'src/components/input';
-import { MarkdownViewer } from 'src/components/markdown';
 import { MenuButton } from 'src/components/MenuButton';
 import { PageBox } from 'src/components/PageBox';
 import { makeMenuIcon, MenuTrigger } from 'src/components/PopupTrigger';
-import { Ajax } from 'src/libs/ajax';
 import { makeExportWorkflowFromWorkspaceProvider } from 'src/libs/ajax/workspaces/providers/ExportWorkflowToWorkspaceProvider';
+import { Workspaces } from 'src/libs/ajax/workspaces/Workspaces';
 import colors from 'src/libs/colors';
-import { reportError, withErrorReporting } from 'src/libs/error';
-import Events, { extractWorkspaceDetails } from 'src/libs/events';
+import { withErrorReporting } from 'src/libs/error';
 import * as Nav from 'src/libs/nav';
 import { forwardRefWithName, memoWithName, useCancellation, useOnMount } from 'src/libs/react-utils';
 import * as StateHistory from 'src/libs/state-history';
 import * as Style from 'src/libs/style';
 import * as Utils from 'src/libs/utils';
-import { DockstoreTile, MethodCard, MethodRepoTile } from 'src/pages/library/Code';
+import { FindWorkflowModal } from 'src/pages/workspaces/workspace/modals/FindWorkflowModal';
 import DeleteWorkflowConfirmationModal from 'src/pages/workspaces/workspace/workflows/DeleteWorkflowConfirmationModal';
 import { methodLink } from 'src/pages/workspaces/workspace/workflows/methodLink';
 import ExportWorkflowModal from 'src/workflows/modals/ExportWorkflowModal';
@@ -192,124 +189,6 @@ const WorkflowCard = memoWithName('WorkflowCard', ({ listView, name, namespace, 
       ]);
 });
 
-export const FindWorkflowModal = ({ namespace, name, ws, onDismiss }) => {
-  // State
-  const [selectedWorkflow, setSelectedWorkflow] = useState(undefined);
-  const [featuredList, setFeaturedList] = useState(undefined);
-  const [methods, setMethods] = useState(undefined);
-  const [selectedWorkflowDetails, setSelectedWorkflowDetails] = useState(undefined);
-  const [exporting, setExporting] = useState(undefined);
-
-  const signal = useCancellation();
-
-  // Lifecycle
-  useOnMount(() => {
-    const load = async () => {
-      const [featuredList, methods] = await Promise.all([
-        Ajax(signal).FirecloudBucket.getFeaturedMethods(),
-        Ajax(signal).Methods.list({ namespace: 'gatk' }),
-      ]);
-
-      setFeaturedList(featuredList);
-      setMethods(methods);
-    };
-
-    load();
-  });
-
-  // Helpers
-  const loadMethod = async (workflow) => {
-    setSelectedWorkflow(workflow);
-    try {
-      const { namespace, name, snapshotId } = workflow;
-      const details = await Ajax(signal).Methods.method(namespace, name, snapshotId).get();
-      setSelectedWorkflowDetails(details);
-    } catch (error) {
-      reportError('Error loading workflow', error);
-      setSelectedWorkflow(undefined);
-    }
-  };
-
-  const exportMethod = async () => {
-    setExporting(true);
-
-    const eventData = { source: 'repo', ...extractWorkspaceDetails(ws) };
-
-    try {
-      const methodAjax = Ajax().Methods.method(selectedWorkflow.namespace, selectedWorkflow.name, selectedWorkflow.snapshotId);
-      const config = _.maxBy('snapshotId', await methodAjax.configs());
-      const { namespace: workflowNamespace, name: workflowName } = config || selectedWorkflow;
-
-      await methodAjax.toWorkspace({ namespace, name }, config);
-
-      Ajax().Metrics.captureEvent(Events.workflowImport, { ...eventData, success: true });
-      Nav.goToPath('workflow', { namespace, name, workflowNamespace, workflowName });
-    } catch (error) {
-      reportError('Error importing workflow', error);
-      Ajax().Metrics.captureEvent(Events.workflowImport, { ...eventData, success: false });
-      setExporting(false);
-    }
-  };
-
-  // Render
-  const featuredMethods = _.compact(_.map(({ namespace, name }) => _.maxBy('snapshotId', _.filter({ namespace, name }, methods)), featuredList));
-
-  const renderDetails = () => {
-    const { synopsis, managers, documentation } = selectedWorkflowDetails || {};
-
-    return h(Fragment, [
-      div({ style: { display: 'flex' } }, [
-        div({ style: { flexGrow: 1 } }, [
-          div({ style: { fontSize: 18, fontWeight: 600, margin: '1rem 0 0.5rem' } }, ['Synopsis']),
-          div([synopsis || (selectedWorkflowDetails && 'None')]),
-          div({ style: { fontSize: 18, fontWeight: 600, margin: '1rem 0 0.5rem' } }, ['Method Owner']),
-          div([_.join(',', managers)]),
-        ]),
-        div({ style: { margin: '0 1rem', display: 'flex', flexDirection: 'column' } }, [
-          h(ButtonPrimary, { style: { marginBottom: '0.5rem' }, onClick: exportMethod }, ['Add to Workspace']),
-          h(
-            ButtonOutline,
-            {
-              onClick: () => {
-                setSelectedWorkflow(undefined);
-                setSelectedWorkflowDetails(undefined);
-              },
-            },
-            ['Return to List']
-          ),
-        ]),
-      ]),
-      div({ style: { fontSize: 18, fontWeight: 600, margin: '1rem 0 0.5rem' } }, ['Documentation']),
-      documentation && h(MarkdownViewer, { style: { maxHeight: 600, overflowY: 'auto' } }, [documentation]),
-      (!selectedWorkflowDetails || exporting) && spinnerOverlay,
-    ]);
-  };
-
-  const renderList = () =>
-    h(Fragment, [
-      div({ style: { display: 'flex', flexWrap: 'wrap', overflowY: 'auto', height: 400, paddingTop: 5, paddingLeft: 5 } }, [
-        ...(featuredMethods ? _.map((method) => h(MethodCard, { method, onClick: () => loadMethod(method) }), featuredMethods) : [centeredSpinner()]),
-      ]),
-      div({ style: { fontSize: 18, fontWeight: 600, marginTop: '1rem' } }, ['Find Additional Workflows']),
-      div({ style: { display: 'flex', padding: '0.5rem' } }, [
-        div({ style: { flex: 1, marginRight: 10 } }, [h(DockstoreTile)]),
-        div({ style: { flex: 1, marginLeft: 10 } }, [h(MethodRepoTile)]),
-      ]),
-    ]);
-
-  return h(
-    Modal,
-    {
-      onDismiss,
-      showButtons: false,
-      title: selectedWorkflow ? `Workflow: ${selectedWorkflow.name}` : 'Suggested Workflows',
-      showX: true,
-      width: 900,
-    },
-    [selectedWorkflow ? renderDetails() : renderList()]
-  );
-};
-
 const noWorkflowsMessage = div({ style: { fontSize: 20, margin: '1rem' } }, [
   div(['To get started, click ', span({ style: { fontWeight: 600 } }, ['Find a Workflow'])]),
   div({ style: { marginTop: '1rem', fontSize: 16 } }, [
@@ -350,7 +229,7 @@ export const Workflows = _.flow(
     Utils.withBusyState(setLoading),
     withErrorReporting('Error loading configs')
   )(async () => {
-    const configs = await Ajax(signal).Workspaces.workspace(namespace, name).listMethodConfigs();
+    const configs = await Workspaces(signal).workspace(namespace, name).listMethodConfigs();
     setConfigs(configs);
   });
 
@@ -456,7 +335,7 @@ export const Workflows = _.flow(
           )(async () => {
             setWorkflowToDelete(undefined);
             const { namespace, name } = getConfig(workflowToDelete);
-            await Ajax().Workspaces.workspace(workspace.namespace, workspace.name).methodConfig(namespace, name).delete();
+            await Workspaces().workspace(workspace.namespace, workspace.name).methodConfig(namespace, name).delete();
             refresh();
           }),
         }),
@@ -485,9 +364,6 @@ export const Workflows = _.flow(
       ),
       findingWorkflow &&
         h(FindWorkflowModal, {
-          namespace,
-          name,
-          ws,
           onDismiss: () => setFindingWorkflow(false),
         }),
       loading && spinnerOverlay,

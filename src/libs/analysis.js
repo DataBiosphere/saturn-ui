@@ -21,6 +21,7 @@ export const launch = async ({
   monitoringScript,
   monitoringImage,
   monitoringImageScript,
+  perWorkflowCostCap,
   onProgress,
 }) => {
   const createSet = () => {
@@ -92,5 +93,6 @@ export const launch = async ({
       monitoringScript,
       monitoringImage,
       monitoringImageScript,
+      perWorkflowCostCap,
     });
 };

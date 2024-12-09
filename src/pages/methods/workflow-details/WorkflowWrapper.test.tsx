@@ -4,9 +4,8 @@ import userEvent, { UserEvent } from '@testing-library/user-event';
 import _ from 'lodash/fp';
 import React from 'react';
 import * as breadcrumbs from 'src/components/breadcrumbs';
-import { Ajax, AjaxContract } from 'src/libs/ajax';
-import { MethodsAjaxContract } from 'src/libs/ajax/methods/Methods';
-import { MethodResponse, Snapshot } from 'src/libs/ajax/methods/methods-models';
+import { MethodAjaxContract, Methods, MethodsAjaxContract } from 'src/libs/ajax/methods/Methods';
+import { MethodConfigACL, MethodResponse, Snapshot } from 'src/libs/ajax/methods/methods-models';
 import { editMethodProvider } from 'src/libs/ajax/methods/providers/EditMethodProvider';
 import { postMethodProvider } from 'src/libs/ajax/methods/providers/PostMethodProvider';
 import * as ExportWorkflowToWorkspaceProvider from 'src/libs/ajax/workspaces/providers/ExportWorkflowToWorkspaceProvider';
@@ -16,11 +15,12 @@ import * as Nav from 'src/libs/nav';
 import { forwardRefWithName } from 'src/libs/react-utils';
 import { snapshotsListStore, snapshotStore, TerraUser, TerraUserState, userStore } from 'src/libs/state';
 import { WorkflowsContainer, wrapWorkflows } from 'src/pages/methods/workflow-details/WorkflowWrapper';
-import { asMockedFn, partial, renderWithAppContexts as render, SelectHelper } from 'src/testing/test-utils';
+import { asMockedFn, MockedFn, partial, renderWithAppContexts as render, SelectHelper } from 'src/testing/test-utils';
 import { useWorkspaces } from 'src/workspaces/common/state/useWorkspaces';
 import { AzureContext, WorkspaceInfo, WorkspaceWrapper } from 'src/workspaces/utils';
 
-jest.mock('src/libs/ajax');
+jest.mock('src/libs/ajax/methods/Methods');
+
 jest.mock('src/libs/notifications');
 
 type NavExports = typeof import('src/libs/nav');
@@ -95,7 +95,7 @@ const mockDeleteSnapshot: Snapshot = {
   synopsis: '',
 };
 
-const mockPermissions = [
+const mockPermissions: MethodConfigACL = [
   {
     role: 'OWNER',
     user: 'user1@foo.com',
@@ -116,36 +116,33 @@ jest.mock('src/libs/error', (): ErrorExports => {
   };
 });
 
-type ListAjaxContract = MethodsAjaxContract['list'];
-type MethodAjaxContract = MethodsAjaxContract['method'];
-
 interface AjaxMocks {
-  listImpl?: jest.Mock<Promise<Snapshot[]>>;
-  getImpl?: jest.Mock<Promise<Snapshot>, []>;
-  deleteImpl?: jest.Mock;
+  listImpl?: MockedFn<MethodsAjaxContract['list']>;
+  getImpl?: MockedFn<MethodAjaxContract['get']>;
+  deleteImpl?: MockedFn<MethodAjaxContract['delete']>;
 }
 
-const defaultListImpl = jest.fn();
-const defaultGetImpl = (namespace) =>
-  jest.fn().mockResolvedValue(namespace === 'testnamespace' ? mockSnapshot : mockDeleteSnapshot);
-const defaultDeleteImpl = jest.fn();
-const setPermissionsMock = jest.fn();
+const defaultListImpl: MockedFn<MethodsAjaxContract['list']> = jest.fn();
+const defaultGetImpl: (namespace: any) => MockedFn<MethodAjaxContract['get']> = (namespace) =>
+  jest.fn(async () => (namespace === 'testnamespace' ? mockSnapshot : mockDeleteSnapshot));
+const defaultDeleteImpl: MockedFn<MethodAjaxContract['delete']> = jest.fn();
+const setPermissionsWatch: jest.Mock = jest.fn();
 
 const mockAjax = (mocks: AjaxMocks = {}) => {
   const { listImpl, getImpl, deleteImpl } = mocks;
-  asMockedFn(Ajax).mockReturnValue({
-    Methods: {
-      list: (listImpl || defaultListImpl) as ListAjaxContract,
+  asMockedFn(Methods).mockReturnValue(
+    partial<MethodsAjaxContract>({
+      list: listImpl || defaultListImpl,
       method: jest.fn((namespace, name, snapshotId) => {
-        return partial<ReturnType<MethodAjaxContract>>({
+        return partial<MethodAjaxContract>({
           get: getImpl || defaultGetImpl(namespace),
           delete: deleteImpl || defaultDeleteImpl,
-          permissions: jest.fn().mockResolvedValue(mockPermissions),
-          setPermissions: () => setPermissionsMock(namespace, name, snapshotId),
+          permissions: jest.fn(async () => mockPermissions),
+          setPermissions: () => setPermissionsWatch(namespace, name, snapshotId),
         });
-      }) as MethodAjaxContract,
-    } as MethodsAjaxContract,
-  } as AjaxContract);
+      }),
+    })
+  );
 };
 
 type UseWorkspacesExports = typeof import('src/workspaces/common/state/useWorkspaces');
@@ -286,7 +283,7 @@ const mockNewSnapshotResponse: MethodResponse = {
 describe('workflow wrapper', () => {
   it('displays the method not found page if a method does not exist or the user does not have access', async () => {
     // Arrange
-    mockAjax({ listImpl: jest.fn().mockResolvedValue([]) });
+    mockAjax({ listImpl: jest.fn(async (_params) => []) });
 
     // set the user's email
     jest.spyOn(userStore, 'get').mockImplementation(jest.fn().mockReturnValue(mockUserState('hello@world.org')));
@@ -346,7 +343,7 @@ describe('workflow wrapper', () => {
   it('displays an error toast when there is an unexpected error loading a method', async () => {
     // Arrange
     mockAjax({
-      listImpl: jest.fn(() => {
+      listImpl: jest.fn(async (_params) => {
         throw new Error('BOOM');
       }),
     });
@@ -419,7 +416,7 @@ describe('workflows container', () => {
     // Assert
 
     // The first call is to load the snapshot; the second is to delete it
-    expect(Ajax().Methods.method).toHaveBeenNthCalledWith(
+    expect(Methods().method).toHaveBeenNthCalledWith(
       2,
       mockDeleteSnapshot.namespace,
       mockDeleteSnapshot.name,
@@ -427,7 +424,7 @@ describe('workflows container', () => {
     );
 
     expect(
-      Ajax().Methods.method(mockDeleteSnapshot.namespace, mockDeleteSnapshot.name, mockDeleteSnapshot.snapshotId).delete
+      Methods().method(mockDeleteSnapshot.namespace, mockDeleteSnapshot.name, mockDeleteSnapshot.snapshotId).delete
     ).toHaveBeenCalled();
 
     expect(window.history.replaceState).toHaveBeenCalledWith({}, '', '#methods/methodnamespace/testname');
@@ -1251,8 +1248,12 @@ describe('workflows container', () => {
     await user.click(screen.getByRole('button', { name: 'Save' }));
 
     // Assert
-    expect(setPermissionsMock).toHaveBeenCalledTimes(1);
-    expect(setPermissionsMock).toHaveBeenCalledWith(mockSnapshot.namespace, mockSnapshot.name, mockSnapshot.snapshotId);
+    expect(setPermissionsWatch).toHaveBeenCalledTimes(1);
+    expect(setPermissionsWatch).toHaveBeenCalledWith(
+      mockSnapshot.namespace,
+      mockSnapshot.name,
+      mockSnapshot.snapshotId
+    );
   });
 
   it('reloads the displayed snapshot after its permissions are edited', async () => {

@@ -12,7 +12,7 @@ import { collapseStatus, statusType } from 'src/components/job-common';
 import { MenuButton } from 'src/components/MenuButton';
 import { MenuTrigger } from 'src/components/PopupTrigger';
 import { FlexTable, HeaderRenderer, TextCell, TooltipCell } from 'src/components/table';
-import { Ajax } from 'src/libs/ajax';
+import { Workspaces } from 'src/libs/ajax/workspaces/Workspaces';
 import colors from 'src/libs/colors';
 import { reportError } from 'src/libs/error';
 import * as Nav from 'src/libs/nav';
@@ -174,7 +174,7 @@ const JobHistory = _.flow(
 
           return _.set('asText', subAsText, sub);
         })
-      )(await Ajax(signal).Workspaces.workspace(namespace, name).listSubmissions());
+      )(await Workspaces(signal).workspace(namespace, name).listSubmissions());
       setSubmissions(submissions);
 
       if (_.some(({ status }) => !isTerminal(status), submissions)) {
@@ -465,7 +465,7 @@ const JobHistory = _.flow(
               try {
                 setAbortingId(undefined);
                 setLoading(true);
-                await Ajax().Workspaces.workspace(namespace, name).submission(abortingId).abort();
+                await Workspaces().workspace(namespace, name).submission(abortingId).abort();
                 refresh();
               } catch (e) {
                 setLoading(false);

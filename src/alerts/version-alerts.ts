@@ -1,6 +1,6 @@
 import { atom } from '@terra-ui-packages/core-utils';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Ajax } from 'src/libs/ajax';
+import { FirecloudBucket } from 'src/libs/ajax/firecloud/FirecloudBucket';
 import { getConfig } from 'src/libs/config';
 import { useStore } from 'src/libs/react-utils';
 
@@ -42,7 +42,7 @@ export const useVersionAlerts = (): Alert[] => {
 
 export const getBadVersions = async (): Promise<string[]> => {
   try {
-    const versionsText = await Ajax().FirecloudBucket.getBadVersions();
+    const versionsText = await FirecloudBucket().getBadVersions();
     return versionsText
       .split('\n')
       .map((line) => line.trim())

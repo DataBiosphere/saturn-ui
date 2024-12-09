@@ -1,16 +1,18 @@
 import { Modal, Spinner } from '@terra-ui-packages/components';
 import _ from 'lodash/fp';
 import { Fragment, useState } from 'react';
-import { b, div, h, label, p, span } from 'react-hyperscript-helpers';
+import { b, div, h, label, li, p, span, ul } from 'react-hyperscript-helpers';
 import { ButtonPrimary, IdContainer, Link } from 'src/components/common';
 import { icon } from 'src/components/icons';
 import { InfoBox } from 'src/components/InfoBox';
 import { ValidatedTextArea } from 'src/components/input';
 import { getRegionInfo } from 'src/components/region-common';
-import { Ajax } from 'src/libs/ajax';
+import { Workspaces } from 'src/libs/ajax/workspaces/Workspaces';
 import { launch } from 'src/libs/analysis';
 import colors from 'src/libs/colors';
 import { withErrorReporting } from 'src/libs/error';
+import { isFeaturePreviewEnabled } from 'src/libs/feature-previews';
+import { PREVIEW_COST_CAPPING } from 'src/libs/feature-previews-config';
 import { useCancellation, useOnMount } from 'src/libs/react-utils';
 import { warningBoxStyle } from 'src/libs/style';
 import * as Utils from 'src/libs/utils';
@@ -38,6 +40,7 @@ const LaunchAnalysisModal = ({
   monitoringScript,
   monitoringImage,
   monitoringImageScript,
+  perWorkflowCostCap,
   onSuccess,
 }) => {
   const [launching, setLaunching] = useState(undefined);
@@ -50,7 +53,7 @@ const LaunchAnalysisModal = ({
 
   useOnMount(() => {
     const loadBucketLocation = withErrorReporting('Error loading bucket location')(async () => {
-      const { location, locationType } = await Ajax(signal).Workspaces.workspace(namespace, workspaceName).checkBucketLocation(googleProject);
+      const { location, locationType } = await Workspaces(signal).workspace(namespace, workspaceName).checkBucketLocation(googleProject);
       setBucketLocation({ location, locationType });
     });
 
@@ -94,6 +97,7 @@ const LaunchAnalysisModal = ({
         monitoringScript: enableResourceMonitoring && monitoringScript ? monitoringScript : undefined,
         monitoringImage: enableResourceMonitoring && monitoringImage ? monitoringImage : undefined,
         monitoringImageScript: enableResourceMonitoring && monitoringImageScript ? monitoringImageScript : undefined,
+        perWorkflowCostCap: perWorkflowCostCap || undefined,
         onProgress: (stage) => {
           setMessage({ createSet: 'Creating set...', launch: 'Launching analysis...', checkBucketAccess: 'Checking bucket access...' }[stage]);
         },
@@ -180,16 +184,21 @@ const LaunchAnalysisModal = ({
           ['How much does my workflow cost?', icon('pop-out', { size: 12, style: { marginLeft: '0.25rem' } })]
         ),
       ]),
+
       div({ style: { marginTop: '0.25rem' } }, [
-        h(
-          Link,
-          {
-            style: { verticalAlign: 'top' },
-            href: 'https://support.terra.bio/hc/en-us/articles/360057589931',
-            ...Utils.newTabLinkProps,
-          },
-          ['Set up budget alert', icon('pop-out', { size: 12, style: { marginLeft: '0.25rem' } })]
-        ),
+        ul({ style: { paddingLeft: '1.5rem' } }, [
+          li([`You are launching ${entityCount} workflow `, entityCount === 1 ? 'run' : 'runs', ' in this submission.']),
+          isFeaturePreviewEnabled(PREVIEW_COST_CAPPING) &&
+            (perWorkflowCostCap !== ''
+              ? li([
+                  `You set a cost limit of ${Utils.formatUSD(perWorkflowCostCap)} per workflow run`,
+                  h('br'),
+                  `x ${entityCount} workflow runs = ${Utils.formatUSD(entityCount * perWorkflowCostCap)}`,
+                  b(' approximate maximum'),
+                  ' submission cost.',
+                ])
+              : li(['You did not set a cost limit.'])),
+        ]),
       ]),
       h(IdContainer, [
         (id) =>
@@ -207,24 +216,23 @@ const LaunchAnalysisModal = ({
             }),
           ]),
       ]),
-      warnDuplicateAnalyses
-        ? div(
-            {
-              style: { ...warningBoxStyle, fontSize: 14, display: 'flex', flexDirection: 'column' },
-            },
-            [
-              div({ style: { display: 'flex', flexDirection: 'row', alignItems: 'center' } }, [
-                icon('warning-standard', { size: 19, style: { color: colors.warning(), flex: 'none', marginRight: '0.5rem' } }),
-                'Duplicate Analysis Warning',
-              ]),
-              div({ style: { fontWeight: 'normal', marginTop: '0.5rem' } }, [
-                'This will launch ',
-                b([entityCount]),
-                ' analyses, but all of the inputs are constant. This is likely to result in re-calculation of the same result multiple times.',
-              ]),
-            ]
-          )
-        : div({ style: { margin: '1rem 0' } }, ['This will launch ', b([entityCount]), entityCount === 1 ? ' analysis.' : ' analyses.']),
+      warnDuplicateAnalyses &&
+        div(
+          {
+            style: { ...warningBoxStyle, fontSize: 14, display: 'flex', flexDirection: 'column' },
+          },
+          [
+            div({ style: { display: 'flex', flexDirection: 'row', alignItems: 'center' } }, [
+              icon('warning-standard', { size: 19, style: { color: colors.warning(), flex: 'none', marginRight: '0.5rem' } }),
+              'Duplicate Analysis Warning',
+            ]),
+            div({ style: { fontWeight: 'normal', marginTop: '0.5rem' } }, [
+              'This will launch ',
+              b([entityCount]),
+              ' analyses, but all of the inputs are constant. This is likely to result in re-calculation of the same result multiple times.',
+            ]),
+          ]
+        ),
       type === chooseSetType &&
         entityCount !== mergeSets(selectedEntities).length &&
         div(

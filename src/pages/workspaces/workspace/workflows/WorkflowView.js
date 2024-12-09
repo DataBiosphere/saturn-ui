@@ -36,7 +36,7 @@ import colors, { terraSpecial } from 'src/libs/colors';
 import { reportError, withErrorReporting } from 'src/libs/error';
 import Events, { extractWorkspaceDetails } from 'src/libs/events';
 import { isFeaturePreviewEnabled } from 'src/libs/feature-previews';
-import { FIRECLOUD_UI_MIGRATION } from 'src/libs/feature-previews-config';
+import { FIRECLOUD_UI_MIGRATION, PREVIEW_COST_CAPPING } from 'src/libs/feature-previews-config';
 import { HiddenLabel } from 'src/libs/forms';
 import * as Nav from 'src/libs/nav';
 import { getLocalPref, setLocalPref } from 'src/libs/prefs';
@@ -402,6 +402,7 @@ export const WorkflowView = _.flow(
         monitoringScript: resourceMonitoringEnabledPref ? resourceMonitoringPref?.script : '',
         monitoringImage: resourceMonitoringEnabledPref ? resourceMonitoringPref?.image : '',
         monitoringImageScript: resourceMonitoringEnabledPref ? resourceMonitoringPref?.imageScript : '',
+        perWorkflowCostCap: workflowOptionsPref?.perWorkflowCostCap || '',
         includeOptionalInputs: true,
         filter: '',
         errors: { inputs: {}, outputs: {} },
@@ -471,6 +472,7 @@ export const WorkflowView = _.flow(
         updatingConfig,
         selectedSnapshotEntityMetadata,
         availableSnapshots,
+        perWorkflowCostCap,
       } = this.state;
       const { namespace, name, workspace } = this.props;
       const workspaceId = { namespace, name };
@@ -504,6 +506,7 @@ export const WorkflowView = _.flow(
                 monitoringScript,
                 monitoringImage,
                 monitoringImageScript,
+                perWorkflowCostCap,
                 onDismiss: () => this.setState({ launching: false }),
                 onSuccess: (submissionId) => {
                   const {
@@ -519,6 +522,15 @@ export const WorkflowView = _.flow(
                     sourceRepo,
                     methodPath: sourceRepo === 'agora' ? `${methodNamespace}/${methodName}` : methodPath,
                   });
+                  if (perWorkflowCostCap !== '') {
+                    void Metrics().captureEvent(Events.workflowSetCostCap, {
+                      ...extractWorkspaceDetails(workspace),
+                      methodVersion,
+                      sourceRepo,
+                      methodPath: sourceRepo === 'agora' ? `${methodNamespace}/${methodName}` : methodPath,
+                      costCap: perWorkflowCostCap,
+                    });
+                  }
                   Nav.goToPath('workspace-submission-details', { submissionId, ...workspaceId });
                 },
               }),
@@ -670,6 +682,7 @@ export const WorkflowView = _.flow(
         monitoringScript,
         monitoringImage,
         monitoringImageScript,
+        perWorkflowCostCap,
       } = this.state;
 
       const updatedWfOptionsPref = {};
@@ -693,6 +706,7 @@ export const WorkflowView = _.flow(
           image: monitoringImage,
           imageScript: monitoringImageScript,
         };
+      if (perWorkflowCostCap) updatedWfOptionsPref.perWorkflowCostCap = perWorkflowCostCap;
 
       return updatedWfOptionsPref;
     }
@@ -828,6 +842,7 @@ export const WorkflowView = _.flow(
         monitoringScript,
         monitoringImage,
         monitoringImageScript,
+        perWorkflowCostCap,
         currentSnapRedacted,
         savedSnapRedacted,
         wdl,
@@ -1261,6 +1276,46 @@ export const WorkflowView = _.flow(
                       ]),
                   ]),
                 ]),
+                isFeaturePreviewEnabled(PREVIEW_COST_CAPPING) &&
+                  div(
+                    {
+                      style: {
+                        display: 'flex',
+                        flexDirection: 'column',
+                        marginLeft: '2rem',
+                        alignSelf: 'flex-start',
+                        marginBottom: '-2rem',
+                      },
+                    },
+                    [
+                      span({ style: { fontWeight: 'bold' } }, [
+                        'Set cost limit per workflow (BETA) ',
+                        h(InfoBox, { style: { marginLeft: '0.1rem', whiteSpace: 'pre-line' } }, [
+                          'Important cost limit considerations:',
+                          h('br'),
+                          '1. Costs are in USD.',
+                          h('br'),
+                          '2. Based on GCP list prices. Discounts are not included.',
+                          h('br'),
+                          '3. GPU costs are not included (coming soon!).',
+                          h('br'),
+                          '4. Workflows may not terminate immediately upon hitting limit, plan for a margin of error.',
+                          h('br'),
+                          '5. Workflow costs vary by input. Set a limit that considers variability.',
+                        ]),
+                      ]),
+                      div({ style: { display: 'flex', alignItems: 'center', marginLeft: '0rem' } }, [
+                        span({ style: { marginRight: '0.5rem' } }, ['$']),
+                        h(TextInput, {
+                          id: 'workflow-run-budget',
+                          value: perWorkflowCostCap || '',
+                          placeholder: 'Example: 1.00',
+                          onChange: (v) => this.setState({ perWorkflowCostCap: v }),
+                          style: { marginTop: '0.5rem', width: '70%', marginLeft: '0.1rem' },
+                        }),
+                      ]),
+                    ]
+                  ),
               ]),
               h(StepButtons, {
                 tabs: [
