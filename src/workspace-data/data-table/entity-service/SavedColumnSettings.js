@@ -8,7 +8,8 @@ import { AutocompleteTextInput } from 'src/components/input';
 import { MenuButton } from 'src/components/MenuButton';
 import { MenuTrigger } from 'src/components/PopupTrigger';
 import { ColumnSettings } from 'src/components/table';
-import { Ajax } from 'src/libs/ajax';
+import { Metrics } from 'src/libs/ajax/Metrics';
+import { Workspaces } from 'src/libs/ajax/workspaces/Workspaces';
 import colors from 'src/libs/colors';
 import { withErrorReporting } from 'src/libs/error';
 import Events from 'src/libs/events';
@@ -77,7 +78,7 @@ export const useSavedColumnSettings = ({ workspaceId, snapshotName, entityMetada
 
   const getAllSavedColumnSettings = async () => {
     const { namespace, name } = workspaceId;
-    const workspace = await Ajax(signal).Workspaces.workspace(namespace, name).details(['workspace.attributes']);
+    const workspace = await Workspaces(signal).workspace(namespace, name).details(['workspace.attributes']);
     return _.flow(
       allSavedColumnSettingsInWorkspace,
       // Drop any column settings for entity types that no longer exist
@@ -87,8 +88,8 @@ export const useSavedColumnSettings = ({ workspaceId, snapshotName, entityMetada
 
   const updateAllSavedColumnSettings = async (allColumnSettings) => {
     const { namespace, name } = workspaceId;
-    await Ajax()
-      .Workspaces.workspace(namespace, name)
+    await Workspaces()
+      .workspace(namespace, name)
       .shallowMergeNewAttributes({
         [savedColumnSettingsWorkspaceAttributeName]: allColumnSettings,
       });
@@ -181,13 +182,13 @@ const SavedColumnSettings = ({ workspace, snapshotName, entityType, entityMetada
   )(async (settingsName) => {
     await saveColumnSettings(settingsName, columnSettings);
     setSavedColumnSettings(_.set(settingsName, columnSettings));
-    Ajax().Metrics.captureEvent(Events.dataTableSaveColumnSettings);
+    void Metrics().captureEvent(Events.dataTableSaveColumnSettings);
   });
 
   const load = (settingsName) => {
     onLoad(savedColumnSettings[settingsName]);
     setSelectedSettingsName(settingsName);
-    Ajax().Metrics.captureEvent(Events.dataTableLoadColumnSettings);
+    void Metrics().captureEvent(Events.dataTableLoadColumnSettings);
   };
 
   const del = _.flow(

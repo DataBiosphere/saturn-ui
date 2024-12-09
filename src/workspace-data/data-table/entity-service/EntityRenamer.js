@@ -4,7 +4,7 @@ import { Fragment, useState } from 'react';
 import { h } from 'react-hyperscript-helpers';
 import { ButtonPrimary, IdContainer, spinnerOverlay } from 'src/components/common';
 import { ValidatedInput } from 'src/components/input';
-import { Ajax } from 'src/libs/ajax';
+import { Workspaces } from 'src/libs/ajax/workspaces/Workspaces';
 import { reportError } from 'src/libs/error';
 import { FormLabel } from 'src/libs/forms';
 import * as Utils from 'src/libs/utils';
@@ -23,7 +23,7 @@ export const EntityRenamer = ({ entityType, entityName, workspaceId: { namespace
   const doRename = async () => {
     try {
       setIsBusy(true);
-      await Ajax().Workspaces.workspace(namespace, name).renameEntity(entityType, entityName, _.trim(newName));
+      await Workspaces().workspace(namespace, name).renameEntity(entityType, entityName, _.trim(newName));
       onSuccess();
     } catch (e) {
       if (e.status === 409) {

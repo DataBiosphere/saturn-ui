@@ -5,7 +5,8 @@ import { div, h } from 'react-hyperscript-helpers';
 import { ButtonPrimary, IdContainer, RadioButton, spinnerOverlay } from 'src/components/common';
 import { icon } from 'src/components/icons';
 import { ValidatedInput } from 'src/components/input';
-import { Ajax } from 'src/libs/ajax';
+import { Metrics } from 'src/libs/ajax/Metrics';
+import { Workspaces } from 'src/libs/ajax/workspaces/Workspaces';
 import colors from 'src/libs/colors';
 import { withErrorReporting } from 'src/libs/error';
 import Events from 'src/libs/events';
@@ -31,8 +32,8 @@ export const RenameTableModal = ({
   const [renameSetTables, setRenameSetTables] = useState(false);
 
   const handleTableRename = async ({ oldName, newName }) => {
-    Ajax().Metrics.captureEvent(Events.workspaceDataRenameTable, { oldName, newName });
-    await Ajax().Workspaces.workspace(namespace, name).renameEntityType(oldName, newName);
+    void Metrics().captureEvent(Events.workspaceDataRenameTable, { oldName, newName });
+    await Workspaces().workspace(namespace, name).renameEntityType(oldName, newName);
   };
 
   const moveTableColumnSettings = async (tableNames) => {
