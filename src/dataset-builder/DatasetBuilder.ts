@@ -470,10 +470,7 @@ export const DatasetBuilderContents = ({
     div({ style: { display: 'flex', flexDirection: 'column', justifyContent: 'space-between' } }, [
       h(BuilderPageHeaderWrapper, [
         h2(['Data Snapshots']),
-        div(['Build a snapshot by selecting the participants and data for one or more of your cohorts.']),
-        div({ style: { marginTop: '5px', whiteSpace: 'pre-line' } }, [
-          'Then, request access in order to export the data snapshot to a Terra Workspace, where you can perform your analysis.',
-        ]),
+        div(['Subset your data by choosing participants and data then importing to a Terra workspace']),
         h(IdContainer, [
           (id) =>
             div({ style: { height: '4rem', paddingBottom: '1rem', width: '30rem' } }, [
@@ -529,7 +526,7 @@ export const DatasetBuilderContents = ({
           ]),
           disabled: !!errors,
           tooltip: !!errors && _.map((error) => div({ key: error }, [error]), errors),
-          actionText: 'Request this data snapshot',
+          actionText: 'Import to workspace',
           onClick: () => {
             setSnapshotAccessRequest(
               withErrorReporting('Error creating dataset request')(
