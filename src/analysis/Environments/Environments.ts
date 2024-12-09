@@ -328,7 +328,7 @@ export const Environments = (props: EnvironmentsProps): ReactNode => {
     : 0;
 
   const runtimesByProject = _.groupBy('googleProject', runtimes);
-  const disksByProject = _.groupBy('googleProject', filteredDisks);
+  const disksByProject = _.groupBy('googleProject', disks);
 
   // We start the first output string with an empty space because empty space would
   // not apply to the case where appType is not defined (e.g. Jupyter, RStudio).
