@@ -226,26 +226,27 @@ describe('workflows table', () => {
     const table: HTMLElement = await screen.findByRole('table');
 
     // Assert
-    expect(table).toHaveAttribute('aria-colcount', '4');
+    expect(table).toHaveAttribute('aria-colcount', '5');
     expect(table).toHaveAttribute('aria-rowcount', '2');
 
     const headers: HTMLElement[] = within(table).getAllByRole('columnheader');
-    expect(headers).toHaveLength(4);
-    expect(headers[0]).toHaveTextContent('Method');
-    expect(headers[1]).toHaveTextContent('Synopsis');
-    expect(headers[2]).toHaveTextContent('Owners');
-    expect(headers[3]).toHaveTextContent('Snapshots');
+    expect(headers).toHaveLength(5);
+    expect(headers[0]).toHaveTextContent('Actions');
+    expect(headers[1]).toHaveTextContent('Method');
+    expect(headers[2]).toHaveTextContent('Synopsis');
+    expect(headers[3]).toHaveTextContent('Owners');
+    expect(headers[4]).toHaveTextContent('Snapshots');
 
     const rows: HTMLElement[] = within(table).getAllByRole('row');
     expect(rows).toHaveLength(2);
 
     const methodCells: HTMLElement[] = within(rows[1]).getAllByRole('cell');
-    expect(methodCells).toHaveLength(4);
-    within(methodCells[0]).getByText('revali bird namespace');
-    within(methodCells[0]).getByText('revali method 2');
-    expect(methodCells[1]).toHaveTextContent('another revali description');
-    expect(methodCells[2]).toHaveTextContent('revali@gale.com, revali@champions.com');
-    expect(methodCells[3]).toHaveTextContent('1');
+    expect(methodCells).toHaveLength(5);
+    within(methodCells[1]).getByText('revali bird namespace');
+    within(methodCells[1]).getByText('revali method 2');
+    expect(methodCells[2]).toHaveTextContent('another revali description');
+    expect(methodCells[3]).toHaveTextContent('revali@gale.com, revali@champions.com');
+    expect(methodCells[4]).toHaveTextContent('1');
   });
 
   it('displays a message with no my workflows', async () => {
