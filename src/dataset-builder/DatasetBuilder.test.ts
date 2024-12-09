@@ -314,7 +314,7 @@ describe('DatasetBuilder', () => {
     initializeValidDatasetRequest();
     // Assert
     expect(await screen.findByText('100 participants in this dataset')).toBeTruthy();
-    expect(await screen.findByText('Request this data snapshot')).toBeTruthy();
+    expect(await screen.findByText('Import to workspace')).toBeTruthy();
   });
 
   it('shows the participant count and disabled request button when request is valid but no name', async () => {
@@ -336,7 +336,7 @@ describe('DatasetBuilder', () => {
     });
     // Assert
     expect(await screen.findByText('100 participants in this dataset')).toBeTruthy();
-    const requestButton = await screen.findByText('Request this data snapshot');
+    const requestButton = await screen.findByText('Import to workspace');
     expect(requestButton).toBeTruthy();
     expect(requestButton.hasAttribute('disabled')).toBeTruthy();
   });
@@ -368,7 +368,7 @@ describe('DatasetBuilder', () => {
     initializeValidDatasetRequest();
     // Assert
     expect(await screen.findByText('Less than 20 participants in this dataset')).toBeTruthy();
-    expect(await screen.findByText('Request this data snapshot')).toBeTruthy();
+    expect(await screen.findByText('Import to workspace')).toBeTruthy();
   });
 
   it('Handles request snapshot operation', async () => {
@@ -389,7 +389,7 @@ describe('DatasetBuilder', () => {
     // Arrange
     const user = userEvent.setup();
     initializeValidDatasetRequest();
-    await user.click(await screen.findByText('Request this data snapshot'));
+    await user.click(await screen.findByText('Import to workspace'));
     // Assert
     // createSnapshotAccessRequest is called with the correct parameters
     expect(mockCreateSnapshotAccessRequest).toBeCalledWith({
@@ -423,7 +423,7 @@ describe('DatasetBuilder', () => {
     // Arrange
     const user = userEvent.setup();
     initializeValidDatasetRequest();
-    await user.click(await screen.findByText('Request this data snapshot'));
+    await user.click(await screen.findByText('Import to workspace'));
     // Wait for the modal to open so we can verify all calls are finished
     await screen.findByText('Access request created in Terra');
     // Assert
