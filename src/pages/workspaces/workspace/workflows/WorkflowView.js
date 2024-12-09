@@ -1306,12 +1306,14 @@ export const WorkflowView = _.flow(
                       ]),
                       div({ style: { display: 'flex', alignItems: 'center', marginLeft: '0rem' } }, [
                         span({ style: { marginRight: '0.5rem' } }, ['$']),
-                        h(TextInput, {
+                        h(NumberInput, {
                           id: 'workflow-run-budget',
                           value: perWorkflowCostCap || '',
+                          min: 0.01,
+                          max: 9999999999.99,
                           placeholder: 'Example: 1.00',
-                          onChange: (v) => this.setState({ perWorkflowCostCap: v }),
-                          style: { marginTop: '0.5rem', width: '70%', marginLeft: '0.1rem' },
+                          onChange: (v) => this.setState({ perWorkflowCostCap: v.toFixed(2) }),
+                          style: { marginTop: '0.5rem', width: '100%', marginLeft: '0.1rem' },
                         }),
                       ]),
                     ]
