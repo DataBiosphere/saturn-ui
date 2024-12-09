@@ -6,6 +6,8 @@ import { leoDiskProvider } from 'src/libs/ajax/leonardo/providers/LeoDiskProvide
 import { Runtimes } from 'src/libs/ajax/leonardo/Runtimes';
 import { Methods } from 'src/libs/ajax/methods/Methods';
 import { Workspaces } from 'src/libs/ajax/workspaces/Workspaces';
+import { isFeaturePreviewEnabled } from 'src/libs/feature-previews';
+import { PREVIEW_COST_CAPPING } from 'src/libs/feature-previews-config';
 import { getLocalPref, setLocalPref } from 'src/libs/prefs';
 import DataStepContent from 'src/pages/workspaces/workspace/workflows/DataStepContent';
 import { chooseRootType } from 'src/pages/workspaces/workspace/workflows/EntitySelectionType';
@@ -53,6 +55,11 @@ jest.mock('react-virtualized', () => {
     AutoSizer: MockAutoSizer,
   };
 });
+
+jest.mock('src/libs/feature-previews', () => ({
+  ...jest.requireActual('src/libs/feature-previews'),
+  isFeaturePreviewEnabled: jest.fn(),
+}));
 
 describe('Workflow View (GCP)', () => {
   const initializedGoogleWorkspace = {
@@ -450,7 +457,10 @@ describe('Workflow View (GCP)', () => {
     // Assert
     // check both 'useReferenceDisks' and 'ignoreEmptyOutputs' were saved to local storage
     expect(ignoreOutputsCheckbox).toBeChecked();
-    expect(setLocalPref).toHaveBeenCalledWith(`${namespace}/${name}/workflow_options`, { useReferenceDisks: true, ignoreEmptyOutputs: true });
+    expect(setLocalPref).toHaveBeenCalledWith(`${namespace}/${name}/workflow_options`, {
+      useReferenceDisks: true,
+      ignoreEmptyOutputs: true,
+    });
   });
 
   it('reads workflow options from local storage', async () => {
@@ -644,5 +654,45 @@ describe('Workflow View (GCP)', () => {
         monitoringImageScript: undefined,
       })
     );
+  });
+
+  asMockedFn(isFeaturePreviewEnabled).mockImplementation((id) => id === PREVIEW_COST_CAPPING);
+
+  it('does not show cost capping input if the feature flag is disabled', async () => {
+    // Arrange
+    asMockedFn(isFeaturePreviewEnabled).mockReturnValue(false);
+
+    const namespace = 'gatk';
+    const name = 'echo_to_file-configured';
+
+    mockDefaultAjax();
+
+    // Act
+    await act(async () => {
+      render(h(WorkflowView, { name, namespace, queryParams: { selectionKey } }));
+    });
+
+    // Assert
+    // check that workflow cost capping is not shown
+    expect(screen.queryByText('Set cost limit per workflow (BETA)')).toBeNull();
+  });
+
+  it('does show cost capping input if the feature flag is enabled', async () => {
+    // Arrange
+    asMockedFn(isFeaturePreviewEnabled).mockReturnValue(true);
+
+    const namespace = 'gatk';
+    const name = 'echo_to_file-configured';
+
+    mockDefaultAjax();
+
+    // Act
+    await act(async () => {
+      render(h(WorkflowView, { name, namespace, queryParams: { selectionKey } }));
+    });
+
+    // Assert
+    // check that workflow cost capping is shown
+    expect(screen.queryByText('Set cost limit per workflow (BETA)')).not.toBeNull();
   });
 });

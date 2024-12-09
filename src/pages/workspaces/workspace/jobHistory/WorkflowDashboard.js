@@ -17,7 +17,9 @@ import {
   workflowDetailsBreadcrumbSubtitle,
 } from 'src/components/job-common';
 import WDLViewer from 'src/components/WDLViewer';
-import { Ajax } from 'src/libs/ajax';
+import { Metrics } from 'src/libs/ajax/Metrics';
+import { CromIAM } from 'src/libs/ajax/workflows-app/CromIAM';
+import { Workspaces } from 'src/libs/ajax/workspaces/Workspaces';
 import { getConfig } from 'src/libs/config';
 import Events, { extractWorkspaceDetails } from 'src/libs/events';
 import { forwardRefWithName, useCancellation, useOnMount } from 'src/libs/react-utils';
@@ -113,7 +115,7 @@ const WorkflowDashboard = _.flow(
       const excludeKey = [];
 
       const timeBefore = Date.now();
-      const wf = await Ajax(signal).Workspaces.workspace(namespace, name).submission(submissionId).workflow(workflowId);
+      const wf = await Workspaces(signal).workspace(namespace, name).submission(submissionId).workflow(workflowId);
       const metadata = await wf.metadata({ includeKey, excludeKey });
       setWorkflow(metadata);
       setFetchTime(Date.now() - timeBefore);
@@ -133,14 +135,14 @@ const WorkflowDashboard = _.flow(
   // here so we can easily use the cloud context (we're in GCP).
   const loadCallCacheDiff = useCallback(
     async (thisWorkflow, thatWorkflow) => {
-      return Ajax(signal).CromIAM.callCacheDiff(thisWorkflow, thatWorkflow);
+      return CromIAM(signal).callCacheDiff(thisWorkflow, thatWorkflow);
     },
     [signal]
   );
 
   const loadCallCacheMetadata = useCallback(
     async (wfId, includeKey, excludeKey) => {
-      return Ajax(signal).CromIAM.workflowMetadata(wfId, includeKey, excludeKey);
+      return CromIAM(signal).workflowMetadata(wfId, includeKey, excludeKey);
     },
     [signal]
   );
@@ -223,7 +225,7 @@ const WorkflowDashboard = _.flow(
                     ...Utils.newTabLinkProps,
                     href: `${getConfig().jobManagerUrlRoot}/${workflowId}`,
                     onClick: () =>
-                      Ajax().Metrics.captureEvent(Events.jobManagerOpenExternal, {
+                      void Metrics().captureEvent(Events.jobManagerOpenExternal, {
                         workflowId,
                         from: 'workspace-workflow-dashboard',
                         ...extractWorkspaceDetails(workspace.workspace),

@@ -54,7 +54,8 @@ export class EntityServiceDataTableProvider implements DataTableProvider {
     dataImportSupportLink: 'https://support.terra.bio/hc/en-us/articles/360059242671',
     dataTableSupportLink: 'https://support.terra.bio/hc/en-us/articles/360025758392',
     textImportPlaceholder: 'entity:participant_id(tab)column1(tab)column2...',
-    invalidFormatWarning: 'Invalid format: Data does not start with entity or membership definition.',
+    invalidFormatWarning:
+      'Invalid format: First column header must be an identifier or have the prefix "entity:", "membership:", or "update:"',
     isInvalid: (options: InvalidTsvOptions): boolean => {
       return options.fileImportModeMatches && options.filePresent && options.match;
     },
