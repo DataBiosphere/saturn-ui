@@ -5,7 +5,7 @@ import { AutoSizer, List } from 'react-virtualized';
 import ButtonBar from 'src/components/ButtonBar';
 import { ButtonPrimary, LabeledCheckbox, Link } from 'src/components/common';
 import IGVReferenceSelector, { addIgvRecentlyUsedReference, defaultIgvReference } from 'src/components/IGVReferenceSelector';
-import { Ajax } from 'src/libs/ajax';
+import { DrsUriResolver } from 'src/libs/ajax/drs/DrsUriResolver';
 import { isFeaturePreviewEnabled } from 'src/libs/feature-previews';
 import { IGV_ENHANCEMENTS } from 'src/libs/feature-previews-config';
 import { useCancellation } from 'src/libs/react-utils';
@@ -89,7 +89,7 @@ export const resolveValidIgvDrsUris = async (values, signal) => {
   await Promise.all(
     values.map(async (value) => {
       if (value.startsWith('drs://')) {
-        const json = await Ajax(signal).DrsUriResolver.getDataObjectMetadata(value, ['fileName']);
+        const json = await DrsUriResolver(signal).getDataObjectMetadata(value, ['fileName']);
         const filename = json.fileName;
         const isValid = hasValidIgvExtension(filename);
         if (isValid) {
@@ -102,7 +102,7 @@ export const resolveValidIgvDrsUris = async (values, signal) => {
   const igvAccessUrls = [];
   await Promise.all(
     igvDrsUris.map(async (value) => {
-      const { accessUrl } = await Ajax(signal).DrsUriResolver.getDataObjectMetadata(value, ['accessUrl']);
+      const { accessUrl } = await DrsUriResolver(signal).getDataObjectMetadata(value, ['accessUrl']);
       igvAccessUrls.push(accessUrl.url);
     })
   );

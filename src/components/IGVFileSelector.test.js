@@ -1,8 +1,8 @@
 import { getValidIgvFiles, getValidIgvFilesFromAttributeValues } from 'src/components/IGVFileSelector';
-import { Ajax } from 'src/libs/ajax';
+import { DrsUriResolver } from 'src/libs/ajax/drs/DrsUriResolver';
 import { isFeaturePreviewEnabled } from 'src/libs/feature-previews';
 
-jest.mock('src/libs/ajax');
+jest.mock('src/libs/ajax/drs/DrsUriResolver');
 
 jest.mock('src/libs/feature-previews', () => ({
   ...jest.requireActual('src/libs/feature-previews'),
@@ -216,22 +216,20 @@ describe('getValidIgvFilesFromAttributeValues', () => {
     const fileAccessUrl = `https://bucket/${fileName}?${accessUrlParams}`;
     const fileIndexAccessUrl = `https://bucket/${indexFileName}?${accessUrlParams}`;
 
-    Ajax.mockImplementation(() => ({
-      // DRS URIs get resolved via DRS Hub.
-      // API docs: https://drshub.dsde-prod.broadinstitute.org/#/drsHub/resolveDrs
-      DrsUriResolver: {
-        getDataObjectMetadata: jest.fn((value, fields) => {
-          if (fields.includes('fileName')) {
-            const mockJson = value === fileDrsUri ? fileNameJson : indexFileNameJson;
-            return Promise.resolve(mockJson);
-          }
-          if (fields.includes('accessUrl')) {
-            const mockAccessUrl = value === fileDrsUri ? fileAccessUrl : fileIndexAccessUrl;
-            const mockAccessUrlJson = { accessUrl: { url: mockAccessUrl } };
-            return Promise.resolve(mockAccessUrlJson);
-          }
-        }),
-      },
+    // DRS URIs get resolved via DRS Hub.
+    // API docs: https://drshub.dsde-prod.broadinstitute.org/#/drsHub/resolveDrs
+    DrsUriResolver.mockImplementation(() => ({
+      getDataObjectMetadata: jest.fn((value, fields) => {
+        if (fields.includes('fileName')) {
+          const mockJson = value === fileDrsUri ? fileNameJson : indexFileNameJson;
+          return Promise.resolve(mockJson);
+        }
+        if (fields.includes('accessUrl')) {
+          const mockAccessUrl = value === fileDrsUri ? fileAccessUrl : fileIndexAccessUrl;
+          const mockAccessUrlJson = { accessUrl: { url: mockAccessUrl } };
+          return Promise.resolve(mockAccessUrlJson);
+        }
+      }),
     }));
 
     isFeaturePreviewEnabled.mockReturnValue(true);
