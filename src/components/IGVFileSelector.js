@@ -124,8 +124,7 @@ export const getValidIgvFiles = async (values, signal) => {
 
       // Filter to URLs that point to a file with one of the relevant extensions.
       const filename = url.pathname.split('/').at(-1);
-      const isValid = hasValidIgvExtension(filename);
-      return isValid;
+      return hasValidIgvExtension(filename);
     } catch (err) {
       return false;
     }

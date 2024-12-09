@@ -38,6 +38,7 @@ const IGVBrowser = ({ selectedFiles, refGenome: { genome, reference }, workspace
     const isRequesterPays = await Promise.all(
       _.map(async (url) => {
         // As seen in requester-pays access URLs resolved from a DRS URI, e.g. AnVIL
+        // `userProject` is required to know who to bill
         if (url.startsWith('https') && url.includes('requestedBy=') && url.includes('userProject=')) {
           return true;
         }
