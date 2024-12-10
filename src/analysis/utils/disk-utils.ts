@@ -27,7 +27,16 @@ export const getCurrentAttachedDataDisk = (
   return currentDisk;
 };
 
-export const workspaceHasMultipleDisks = (disks: PersistentDisk[], diskAppType: AppToolLabel): boolean => {
+export const multipleDisksError = (disks: PersistentDisk[], creator: string, appType: AppToolLabel | undefined) => {
+  // appType is undefined for runtimes (ie Jupyter, RStudio) so the first part of the ternary is for processing app
+  // disks. the second part is for processing runtime disks so it filters out app disks
+  const disksForUser: PersistentDisk[] = _.filter((disk) => disk.auditInfo.creator === creator, disks);
+  return appType
+    ? workspaceUserHasMultipleDisks(disksForUser, appType)
+    : _.remove((disk) => getDiskAppType(disk) !== appType || disk.status === 'Deleting', disksForUser).length > 1;
+};
+
+export const workspaceUserHasMultipleDisks = (disks: PersistentDisk[], diskAppType: AppToolLabel): boolean => {
   const appTypeDisks = _.filter((disk) => getDiskAppType(disk) === diskAppType && disk.status !== 'Deleting', disks);
   const diskWorkspaces = _.map((currentDisk) => currentDisk.labels.saturnWorkspaceName, appTypeDisks);
   return _.uniq(diskWorkspaces).length < diskWorkspaces.length;

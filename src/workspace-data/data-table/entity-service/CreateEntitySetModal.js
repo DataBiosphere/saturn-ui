@@ -5,7 +5,7 @@ import { div, h, label } from 'react-hyperscript-helpers';
 import { ButtonPrimary, IdContainer, spinnerOverlay } from 'src/components/common';
 import { icon } from 'src/components/icons';
 import { TextInput } from 'src/components/input';
-import { Ajax } from 'src/libs/ajax';
+import { Workspaces } from 'src/libs/ajax/workspaces/Workspaces';
 import colors from 'src/libs/colors';
 import { reportError } from 'src/libs/error';
 import * as Utils from 'src/libs/utils';
@@ -25,8 +25,8 @@ export const CreateEntitySetModal = ({ entityType, entityNames, workspaceId: { n
   const createSet = async () => {
     setIsBusy(true);
     try {
-      await Ajax()
-        .Workspaces.workspace(namespace, workspaceName)
+      await Workspaces()
+        .workspace(namespace, workspaceName)
         .createEntity({
           name,
           entityType: `${entityType}_set`,

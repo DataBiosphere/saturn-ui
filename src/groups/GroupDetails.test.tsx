@@ -1,9 +1,8 @@
-import { DeepPartial } from '@terra-ui-packages/core-utils';
 import { waitFor } from '@testing-library/react';
 import React from 'react';
 import { GroupDetails } from 'src/groups/GroupDetails';
-import { Ajax } from 'src/libs/ajax';
-import { asMockedFn, renderWithAppContexts as render } from 'src/testing/test-utils';
+import { GroupContract, Groups, GroupsContract } from 'src/libs/ajax/Groups';
+import { asMockedFn, partial, renderWithAppContexts as render } from 'src/testing/test-utils';
 
 jest.mock('src/libs/nav', (): typeof import('src/libs/nav') => ({
   ...jest.requireActual('src/libs/nav'),
@@ -21,8 +20,7 @@ jest.mock(
   })
 );
 
-type AjaxContract = ReturnType<typeof Ajax>;
-jest.mock('src/libs/ajax');
+jest.mock('src/libs/ajax/Groups');
 
 jest.mock('src/libs/state-history', (): typeof import('src/libs/state-history') => ({
   ...jest.requireActual('src/libs/state-history'),
@@ -35,18 +33,17 @@ describe('GroupDetails', () => {
     // Arrange
     const userEmails = ['testUser@email.com'];
     const adminEmails = [];
-    asMockedFn(Ajax).mockImplementation(
-      () =>
-        ({
-          Groups: {
-            group: () => ({
-              listMembers: jest.fn().mockResolvedValue(userEmails),
-              listAdmins: jest.fn().mockResolvedValue(adminEmails),
-              getPolicy: jest.fn().mockResolvedValue(false),
-            }),
-          },
-        } as DeepPartial<AjaxContract> as AjaxContract)
+    asMockedFn(Groups).mockReturnValue(
+      partial<GroupsContract>({
+        group: () =>
+          partial<GroupContract>({
+            listMembers: jest.fn().mockResolvedValue(userEmails),
+            listAdmins: jest.fn().mockResolvedValue(adminEmails),
+            getPolicy: jest.fn().mockResolvedValue(false),
+          }),
+      })
     );
+
     // Act
     const { getByText, queryByText } = render(<GroupDetails groupName='test-group-name' />);
     // Assert
@@ -59,18 +56,17 @@ describe('GroupDetails', () => {
     // Arrange
     const userEmails = [];
     const adminEmails = ['testAdmin@email.com'];
-    asMockedFn(Ajax).mockImplementation(
-      () =>
-        ({
-          Groups: {
-            group: () => ({
-              listMembers: jest.fn().mockResolvedValue(userEmails),
-              listAdmins: jest.fn().mockResolvedValue(adminEmails),
-              getPolicy: jest.fn().mockResolvedValue(false),
-            }),
-          },
-        } as DeepPartial<AjaxContract> as AjaxContract)
+    asMockedFn(Groups).mockReturnValue(
+      partial<GroupsContract>({
+        group: () =>
+          partial<GroupContract>({
+            listMembers: jest.fn().mockResolvedValue(userEmails),
+            listAdmins: jest.fn().mockResolvedValue(adminEmails),
+            getPolicy: jest.fn().mockResolvedValue(false),
+          }),
+      })
     );
+
     // Act
     const { getByText, queryByText } = render(<GroupDetails groupName='test-group-name' />);
     // Assert

@@ -6,7 +6,7 @@ import { div, fieldset, h, label, legend, p, span } from 'react-hyperscript-help
 import { ButtonOutline, ButtonPrimary, ButtonSecondary, IdContainer, RadioButton, spinnerOverlay } from 'src/components/common';
 import { icon } from 'src/components/icons';
 import { AutocompleteTextInput } from 'src/components/input';
-import { Ajax } from 'src/libs/ajax';
+import { Workspaces } from 'src/libs/ajax/workspaces/Workspaces';
 import colors from 'src/libs/colors';
 import { reportError } from 'src/libs/error';
 import * as Utils from 'src/libs/utils';
@@ -75,10 +75,10 @@ export const MultipleEntityEditor = ({
       entities
     );
 
-    return Ajax().Workspaces.workspace(namespace, name).upsertEntities(entityUpdates);
+    return Workspaces().workspace(namespace, name).upsertEntities(entityUpdates);
   });
   const deleteAttributes = withBusyStateAndErrorHandling(() =>
-    Ajax().Workspaces.workspace(namespace, name).deleteAttributeFromEntities(entityType, attributeToEdit, _.map('name', entities))
+    Workspaces().workspace(namespace, name).deleteAttributeFromEntities(entityType, attributeToEdit, _.map('name', entities))
   );
 
   const boldish = (text) => span({ style: { fontWeight: 600 } }, [text]);

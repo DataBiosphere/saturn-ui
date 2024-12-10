@@ -4,7 +4,9 @@ import { Fragment, useState } from 'react';
 import { div, h } from 'react-hyperscript-helpers';
 import { ButtonPrimary } from 'src/components/common';
 import { getUserProjectForWorkspace } from 'src/components/data/data-utils';
-import { Ajax } from 'src/libs/ajax';
+import { DrsUriResolver } from 'src/libs/ajax/drs/DrsUriResolver';
+import { Metrics } from 'src/libs/ajax/Metrics';
+import { SamResources } from 'src/libs/ajax/SamResources';
 import Events, { extractWorkspaceDetails } from 'src/libs/events';
 import { useCancellation, useOnMount } from 'src/libs/react-utils';
 import { knownBucketRequesterPaysStatuses, workspaceStore } from 'src/libs/state';
@@ -26,7 +28,7 @@ export const UriDownloadButton = ({ uri, metadata: { bucket, name, fileName, siz
   const signal = useCancellation();
   const [url, setUrl] = useState<string | null>();
   const getUrlFromDrsProvider = async (userProject: string) => {
-    const { url } = await Ajax(signal).DrsUriResolver.getSignedUrl({
+    const { url } = await DrsUriResolver(signal).getSignedUrl({
       bucket,
       object: name,
       googleProject: workspace.workspace.googleProject,
@@ -36,7 +38,7 @@ export const UriDownloadButton = ({ uri, metadata: { bucket, name, fileName, siz
   };
   const getUrlFromSam = async (userProject: string) => {
     const requesterPaysProject = knownBucketRequesterPaysStatuses.get()[bucket] ? userProject : undefined;
-    return await Ajax(signal).SamResources.getRequesterPaysSignedUrl(uri, requesterPaysProject);
+    return await SamResources(signal).getRequesterPaysSignedUrl(uri, requesterPaysProject);
   };
   const getUrl = async () => {
     if (accessUrl?.url) {
@@ -91,7 +93,7 @@ export const UriDownloadButton = ({ uri, metadata: { bucket, name, fileName, siz
       {
         disabled: !url,
         onClick: () => {
-          Ajax().Metrics.captureEvent(Events.workspaceDataDownload, {
+          void Metrics().captureEvent(Events.workspaceDataDownload, {
             ...extractWorkspaceDetails(workspaceStore.get()!.workspace),
             fileType: _.head(/\.\w+$/.exec(uri)),
             downloadFrom: 'file direct',

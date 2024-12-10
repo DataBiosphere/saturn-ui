@@ -3,7 +3,7 @@ import _ from 'lodash/fp';
 import { Fragment, useState } from 'react';
 import { div, h, span } from 'react-hyperscript-helpers';
 import { ButtonOutline, ButtonPrimary, ButtonSecondary, spinnerOverlay } from 'src/components/common';
-import { Ajax } from 'src/libs/ajax';
+import { Workspaces } from 'src/libs/ajax/workspaces/Workspaces';
 import { reportError } from 'src/libs/error';
 
 import { getAttributeType, prepareAttributeForUpload } from './attribute-utils';
@@ -30,8 +30,8 @@ export const SingleEntityEditor = ({
     try {
       setIsBusy(true);
 
-      await Ajax()
-        .Workspaces.workspace(namespace, name)
+      await Workspaces()
+        .workspace(namespace, name)
         .upsertEntities([
           {
             entityType,
@@ -55,7 +55,7 @@ export const SingleEntityEditor = ({
   const doDelete = async () => {
     try {
       setIsBusy(true);
-      await Ajax().Workspaces.workspace(namespace, name).deleteEntityAttribute(entityType, entityName, attributeName);
+      await Workspaces().workspace(namespace, name).deleteEntityAttribute(entityType, entityName, attributeName);
       onSuccess();
     } catch (e) {
       onDismiss();

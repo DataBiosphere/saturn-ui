@@ -5,8 +5,7 @@ import { ButtonOutline, Link } from 'src/components/common';
 import { getUserProjectForWorkspace, parseGsUri } from 'src/components/data/data-utils';
 import { centeredSpinner, icon } from 'src/components/icons';
 import IGVAddTrackModal from 'src/components/IGVAddTrackModal';
-import { GoogleStorage } from 'src/libs/ajax/GoogleStorage';
-import { saToken } from 'src/libs/ajax/GoogleStorage';
+import { GoogleStorage, saToken } from 'src/libs/ajax/GoogleStorage';
 import colors from 'src/libs/colors';
 import { reportError, withErrorReporting } from 'src/libs/error';
 import { useCancellation, useOnMount } from 'src/libs/react-utils';
@@ -38,6 +37,12 @@ const IGVBrowser = ({ selectedFiles, refGenome: { genome, reference }, workspace
     // Requesting a file will store its requester pays status in knownBucketRequesterPaysStatuses.
     const isRequesterPays = await Promise.all(
       _.map(async (url) => {
+        // As seen in requester-pays access URLs resolved from a DRS URI, e.g. AnVIL
+        // `userProject` is required to know who to bill
+        if (url.startsWith('https') && url.includes('requestedBy=') && url.includes('userProject=')) {
+          return true;
+        }
+
         const [bucket, file] = parseGsUri(url);
 
         if (knownBucketRequesterPaysStatuses.get()[bucket] === undefined) {
@@ -83,10 +88,17 @@ const IGVBrowser = ({ selectedFiles, refGenome: { genome, reference }, workspace
       const [bucket] = parseGsUri(url);
       const userProjectParam = { userProject: knownBucketRequesterPaysStatuses.get()[bucket] ? userProject : undefined };
 
+      // Omit residual URL parameters from access URLs resolved via DRS Hub
+      const simpleUrl = _.last(url.split('/')).split('?')[0];
+
+      // Enable viewing features upon searching most genes, without needing to zoom several times
+      const visibilityWindow = 75_000;
+
       igvBrowser.current.loadTrack({
-        name: name || `${_.last(url.split('/'))} (${url})`,
+        name: name || `${simpleUrl} (${url})`,
         url: Utils.mergeQueryParams(userProjectParam, url),
         indexURL: indexURL ? Utils.mergeQueryParams(userProjectParam, indexURL) : undefined,
+        visibilityWindow,
       });
     }, tracks);
   });

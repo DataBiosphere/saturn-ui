@@ -1,18 +1,17 @@
 import { act, getByTestId, screen } from '@testing-library/react';
 import React from 'react';
 import AuthContainer from 'src/auth/AuthContainer';
-import { Ajax } from 'src/libs/ajax';
-import { Groups } from 'src/libs/ajax/Groups';
-import { Metrics } from 'src/libs/ajax/Metrics';
-import { TermsOfService } from 'src/libs/ajax/TermsOfService';
-import { User } from 'src/libs/ajax/User';
+import { Groups, GroupsContract } from 'src/libs/ajax/Groups';
+import { Metrics, MetricsContract } from 'src/libs/ajax/Metrics';
+import { TermsOfService, TermsOfServiceContract } from 'src/libs/ajax/TermsOfService';
+import { User, UserContract } from 'src/libs/ajax/User';
 import { useRoute } from 'src/libs/nav';
 import { AuthState, authStore, oidcStore } from 'src/libs/state';
 import { Disabled } from 'src/pages/Disabled';
 import SignIn from 'src/pages/SignIn';
 import { Register } from 'src/registration/Register';
 import { TermsOfServicePage } from 'src/registration/terms-of-service/TermsOfServicePage';
-import { asMockedFn, renderWithAppContexts as render } from 'src/testing/test-utils';
+import { asMockedFn, partial, renderWithAppContexts as render } from 'src/testing/test-utils';
 
 jest.mock('react-notifications-component', () => {
   return {
@@ -29,7 +28,10 @@ jest.spyOn(oidcStore, 'get').mockImplementation(
   })
 );
 
-jest.mock('src/libs/ajax');
+jest.mock('src/libs/ajax/Groups');
+jest.mock('src/libs/ajax/Metrics');
+jest.mock('src/libs/ajax/TermsOfService');
+jest.mock('src/libs/ajax/User');
 
 type AuthExports = typeof import('src/auth/auth');
 jest.mock(
@@ -196,27 +198,11 @@ describe('AuthContainer', () => {
         },
       };
 
-      type AjaxContract = ReturnType<typeof Ajax>;
-      type UserContract = ReturnType<typeof User>;
-      type MetricsContract = ReturnType<typeof Metrics>;
-      type GroupsContract = ReturnType<typeof Groups>;
-      type TermsOfServiceContract = ReturnType<typeof TermsOfService>;
-      asMockedFn(Ajax).mockImplementation(
-        () =>
-          ({
-            Metrics: {
-              captureEvent: jest.fn(),
-            } as Partial<MetricsContract>,
-            Groups: {
-              list: jest.fn(),
-            } as Partial<GroupsContract>,
-            User: {
-              getNihStatus: jest.fn(),
-            } as Partial<UserContract>,
-            TermsOfService: {
-              getUserTermsOfServiceDetails: jest.fn(),
-            } as Partial<TermsOfServiceContract>,
-          } as Partial<AjaxContract> as AjaxContract)
+      asMockedFn(Metrics).mockReturnValue(partial<MetricsContract>({ captureEvent: jest.fn() }));
+      asMockedFn(Groups).mockReturnValue(partial<GroupsContract>({ list: jest.fn() }));
+      asMockedFn(User).mockReturnValue(partial<UserContract>({ getNihStatus: jest.fn() }));
+      asMockedFn(TermsOfService).mockReturnValue(
+        partial<TermsOfServiceContract>({ getUserTermsOfServiceDetails: jest.fn() })
       );
 
       await act(async () => {
