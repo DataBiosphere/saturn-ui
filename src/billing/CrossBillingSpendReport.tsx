@@ -1,17 +1,14 @@
-import { Icon, Link } from '@terra-ui-packages/components';
+import { Link } from '@terra-ui-packages/components';
 import { subDays } from 'date-fns/fp';
 import _ from 'lodash/fp';
-import { React, ReactNode, useEffect, useState } from 'react';
+import React, { ReactNode, useEffect, useState } from 'react';
 import { DateRangeFilter } from 'src/billing/Filter/DateRangeFilter';
 import { SearchFilter } from 'src/billing/Filter/SearchFilter';
-import {
-  billingAccountIconSize,
-  BillingAccountStatus,
-  getBillingAccountIconProps,
-  parseCurrencyIfNeeded,
-} from 'src/billing/utils';
+import { BillingAccountStatus, parseCurrencyIfNeeded } from 'src/billing/utils';
 import { BillingProject } from 'src/billing-core/models';
-import { ariaSort, HeaderRenderer } from 'src/components/table';
+import { fixedSpinnerOverlay } from 'src/components/common';
+import { ariaSort, HeaderRenderer, Paginator } from 'src/components/table';
+import { Ajax } from 'src/libs/ajax';
 import { Billing } from 'src/libs/ajax/billing/Billing';
 import {
   AggregatedWorkspaceSpendData,
@@ -23,22 +20,21 @@ import * as Nav from 'src/libs/nav';
 import { memoWithName, useCancellation } from 'src/libs/react-utils';
 import * as Style from 'src/libs/style';
 import * as Utils from 'src/libs/utils';
-import { BaseWorkspaceInfo, WorkspaceInfo } from 'src/workspaces/utils';
+import { GoogleWorkspaceInfo } from 'src/workspaces/utils';
 
 // Copied and slightly altered from WorkspaceCard and WorkspaceCardHeaders in Workspaces,
 // May want to instead extend them
 const workspaceLastModifiedWidth = 150;
 
-export interface CrossBillingWorkspaceCardHeadersProps {
-  needsStatusColumn: boolean;
+interface CrossBillingWorkspaceCardHeadersProps {
   sort: { field: string; direction: 'asc' | 'desc' };
   onSort: (sort: { field: string; direction: 'asc' | 'desc' }) => void;
 }
 
-export const CrossBillingWorkspaceCardHeaders: React.FC<CrossBillingWorkspaceCardHeadersProps> = memoWithName(
+const CrossBillingWorkspaceCardHeaders: React.FC<CrossBillingWorkspaceCardHeadersProps> = memoWithName(
   'CrossBillingWorkspaceCardHeaders',
   (props: CrossBillingWorkspaceCardHeadersProps) => {
-    const { needsStatusColumn, sort, onSort } = props;
+    const { sort, onSort } = props;
     return (
       <div
         role='row'
@@ -50,19 +46,10 @@ export const CrossBillingWorkspaceCardHeaders: React.FC<CrossBillingWorkspaceCar
           marginBottom: '0.5rem',
         }}
       >
-        {needsStatusColumn && (
-          <div role='columnheader' style={{ width: billingAccountIconSize }}>
-            <div className='sr-only'>Status</div>
-          </div>
-        )}
-        <div role='columnheader' aria-sort={ariaSort(sort, 'billingAccount')} style={{ flex: 1 }}>
+        <div role='columnheader' aria-sort={ariaSort(sort, 'billingAccount')} style={{ flex: 1, paddingLeft: '2rem' }}>
           <HeaderRenderer sort={sort} onSort={onSort} name='billingAccount' />
         </div>
-        <div
-          role='columnheader'
-          aria-sort={ariaSort(sort, 'workspaceName')}
-          // style={{ flex: 1, paddingLeft: needsStatusColumn ? '1rem' : '2rem' }}
-        >
+        <div role='columnheader' aria-sort={ariaSort(sort, 'workspaceName')} style={{ flex: 1 }}>
           <HeaderRenderer sort={sort} onSort={onSort} name='workspaceName' />
         </div>
         <div role='columnheader' aria-sort={ariaSort(sort, 'totalSpend')} style={{ flex: 1 }}>
@@ -93,16 +80,16 @@ export const CrossBillingWorkspaceCardHeaders: React.FC<CrossBillingWorkspaceCar
 );
 
 interface CrossBillingWorkspaceCardProps {
-  workspace: WorkspaceInfo;
+  workspace: GoogleWorkspaceInfo;
   billingAccountDisplayName: string | undefined;
   billingProject: BillingProject;
   billingAccountStatus: false | BillingAccountStatus;
 }
 
-export const CrossBillingWorkspaceCard: React.FC<CrossBillingWorkspaceCardProps> = memoWithName(
+const CrossBillingWorkspaceCard: React.FC<CrossBillingWorkspaceCardProps> = memoWithName(
   'CrossBillingWorkspaceCard',
   (props: CrossBillingWorkspaceCardProps) => {
-    const { workspace, billingProject, billingAccountStatus } = props;
+    const { workspace, billingAccountDisplayName, billingProject, billingAccountStatus } = props;
     const { namespace, name, createdBy, lastModified, totalSpend, totalCompute, totalStorage } = workspace;
     const workspaceCardStyles = {
       field: {
@@ -118,13 +105,8 @@ export const CrossBillingWorkspaceCard: React.FC<CrossBillingWorkspaceCardProps>
     return (
       <div role='row' style={{ ...Style.cardList.longCardShadowless, padding: 0, flexDirection: 'column' }}>
         <div style={workspaceCardStyles.row}>
-          {billingAccountStatus && (
-            <div role='cell'>
-              <Icon {...getBillingAccountIconProps(billingAccountStatus)} />
-            </div>
-          )}
           <div role='cell' style={workspaceCardStyles.field}>
-            {billingProject.projectName ?? '...'}
+            {billingAccountDisplayName ?? '...'}
           </div>
           <div
             role='rowheader'
@@ -174,30 +156,42 @@ export const CrossBillingWorkspaceCard: React.FC<CrossBillingWorkspaceCardProps>
 /// ///
 
 export const CrossBillingSpendReport = (): ReactNode => {
-  // const [spendReportLengthInDays, setSpendReportLengthInDays] = useState(30); // todo set this up
+  const [spendReportLengthInDays, setSpendReportLengthInDays] = useState(30);
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [updating, setUpdating] = useState(false);
-  const [selectedDays, setSelectedDays] = useState<number>(30);
-  // const [searchValue, setSearchValue] = useState<string>('');
-  const [ownedWorkspaces, setOwnedWorkspaces] = useState<BaseWorkspaceInfo[]>([]);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [searchValue, setSearchValue] = useState<string>('');
+  const [ownedWorkspaces, setOwnedWorkspaces] = useState<GoogleWorkspaceInfo[]>([]);
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [workspaceSort, setWorkspaceSort] = useState<{ field: string; direction: 'asc' | 'desc' }>({
     field: 'totalSpend',
     direction: 'desc',
   });
 
-  const signal = useCancellation();
-  useEffect(() => {
-    const getWorkspaceSpendData = async (
-      selectedDays: number,
-      signal: AbortSignal,
-      workspaces: BaseWorkspaceInfo[]
-    ) => {
-      // Define start and end dates
-      const startDate = subDays(selectedDays, new Date()).toISOString().slice(0, 10);
-      const endDate = new Date().toISOString().slice(0, 10);
+  // BIG TODO - paginate without making too many BQ calls but also knowing how many pages there are???
+  const [pageNumber, setPageNumber] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(25);
 
-      const setDefaultSpendValues = (workspace: BaseWorkspaceInfo) => ({
+  const signal = useCancellation();
+
+  // Apply filters to ownedWorkspaces
+  const searchValueLower = searchValue.toLowerCase();
+  const filteredOwnedWorkspaces = _.filter(
+    (workspace: GoogleWorkspaceInfo) =>
+      workspace.name.toLowerCase().includes(searchValueLower) ||
+      workspace.googleProject?.toLowerCase().includes(searchValueLower) ||
+      workspace.bucketName?.toLowerCase().includes(searchValueLower) ||
+      workspace.namespace.toLowerCase().includes(searchValueLower),
+    ownedWorkspaces
+  );
+
+  useEffect(() => {
+    const getWorkspaceSpendData = async (signal: AbortSignal) => {
+      // Define start and end dates
+      const endDate = new Date().toISOString().slice(0, 10);
+      const startDate = subDays(spendReportLengthInDays, new Date()).toISOString().slice(0, 10);
+
+      const setDefaultSpendValues = (workspace: GoogleWorkspaceInfo) => ({
         ...workspace,
         totalSpend: 'N/A',
         totalCompute: 'N/A',
@@ -208,14 +202,29 @@ export const CrossBillingSpendReport = (): ReactNode => {
 
       try {
         // Fetch the spend report for the billing project
+        // TODO Cache the result so it doesn't get called on every page change
         const crossBillingSpendReport: SpendReportServerResponse = await Billing(signal).getCrossBillingSpendReport({
           startDate,
           endDate,
-          pageSize: 10, // TODO pass these in
-          offset: 0, // TODO pass these in
+          pageSize: itemsPerPage,
+          offset: itemsPerPage * (pageNumber - 1),
         });
         const spendDataItems = (crossBillingSpendReport.spendDetails as AggregatedWorkspaceSpendData[]).map(
           (detail) => detail.spendData[0]
+        );
+
+        const allWorkspaces = await Ajax(signal).Workspaces.list(
+          [
+            'workspace.billingAccount',
+            'workspace.bucketName',
+            'workspace.createdBy',
+            'workspace.createdDate',
+            'workspace.googleProject',
+            'workspace.lastModified',
+            'workspace.name',
+            'workspace.namespace',
+          ],
+          250 // TODO what to do here
         );
 
         // Update each workspace with spend data or default values
@@ -225,13 +234,23 @@ export const CrossBillingSpendReport = (): ReactNode => {
             currency: spendItem.currency,
           });
 
+          // TODO what if it's not found
+          const workspaceDetails = allWorkspaces.find(
+            (ws) =>
+              ws.workspace.name === spendItem.workspace.name && ws.workspace.namespace === spendItem.workspace.namespace
+          );
+
           return {
             ...spendItem.workspace,
-            workspaceId: 'temp',
+            workspaceId: `${spendItem.workspace.namespace}-${spendItem.workspace.name}`,
             authorizationDomain: [],
-            createdDate: '2024-12-01',
-            createdBy: 'temp',
-            lastModified: '2024-12-01',
+            createdDate: workspaceDetails?.workspace.createdDate,
+            createdBy: workspaceDetails?.workspace.createdBy,
+            lastModified: workspaceDetails?.workspace.lastModified,
+
+            billingAccount: workspaceDetails?.workspace.billingAccount,
+            projectName: workspaceDetails?.workspace.projectName,
+
             totalSpend: costFormatter.format(parseFloat(spendItem.cost ?? '0.00')),
             totalCompute: costFormatter.format(
               parseFloat(_.find({ category: 'Compute' }, spendItem.subAggregation.spendData)?.cost ?? '0.00')
@@ -246,18 +265,20 @@ export const CrossBillingSpendReport = (): ReactNode => {
         });
       } catch {
         // Return default values for each workspace in case of an error
-        return workspaces.map(setDefaultSpendValues);
+        return ownedWorkspaces.map(setDefaultSpendValues);
       } finally {
         // Ensure updating state is reset regardless of success or failure
         setUpdating(false);
       }
     };
-    getWorkspaceSpendData(selectedDays, signal, []).then((updatedWorkspaceInProject) => {
-      if (updatedWorkspaceInProject) {
-        setOwnedWorkspaces(updatedWorkspaceInProject);
+    getWorkspaceSpendData(signal).then((updatedWorkspaces) => {
+      if (updatedWorkspaces) {
+        setOwnedWorkspaces(updatedWorkspaces);
       }
+      setUpdating(false);
     });
-  }, [selectedDays, signal]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [signal, spendReportLengthInDays]);
 
   return (
     <>
@@ -273,9 +294,13 @@ export const CrossBillingSpendReport = (): ReactNode => {
           <DateRangeFilter
             label='Date range'
             rangeOptions={[7, 30, 90]}
-            defaultValue={7}
+            defaultValue={spendReportLengthInDays}
             style={{ gridRowStart: 1, gridColumnStart: 1 }}
-            onChange={setSelectedDays}
+            onChange={(selectedOption) => {
+              if (selectedOption !== spendReportLengthInDays) {
+                setSpendReportLengthInDays(selectedOption);
+              }
+            }}
           />
           <SearchFilter
             placeholder='Search by name, project or bucket'
@@ -288,7 +313,7 @@ export const CrossBillingSpendReport = (): ReactNode => {
           Total spend includes infrastructure or query costs related to the general operations of Terra.
         </div>
       </>
-      {_.isEmpty(ownedWorkspaces) ? (
+      {_.isEmpty(filteredOwnedWorkspaces) ? (
         <div
           style={{
             marginTop: '2rem',
@@ -306,28 +331,24 @@ export const CrossBillingSpendReport = (): ReactNode => {
           </div>
         </div>
       ) : (
-        !_.isEmpty(ownedWorkspaces) && (
+        !_.isEmpty(filteredOwnedWorkspaces) && (
           <div role='table' aria-label='owned workspaces'>
-            <CrossBillingWorkspaceCardHeaders
-              needsStatusColumn={false}
-              onSort={() => {}}
-              sort={{ field: 'name', direction: 'asc' }}
-            />
+            <CrossBillingWorkspaceCardHeaders onSort={setWorkspaceSort} sort={{ field: 'name', direction: 'asc' }} />
             <div style={{ position: 'relative' }}>
               {_.flow(
                 _.orderBy(
                   [(workspace) => parseCurrencyIfNeeded(workspaceSort.field, _.get(workspaceSort.field, workspace))],
                   [workspaceSort.direction]
                 ),
-                _.map((workspace: WorkspaceInfo) => {
+                _.map((workspace: GoogleWorkspaceInfo) => {
                   return (
                     <CrossBillingWorkspaceCard
                       workspace={workspace}
                       billingAccountDisplayName={workspace.namespace}
                       billingProject={{
                         cloudPlatform: 'GCP',
-                        billingAccount: 'account',
-                        projectName: workspace.namespace,
+                        billingAccount: workspace.billingAccount,
+                        projectName: workspace.googleProject,
                         invalidBillingAccount: false,
                         roles: ['Owner'],
                         status: 'Ready',
@@ -337,8 +358,24 @@ export const CrossBillingSpendReport = (): ReactNode => {
                     />
                   );
                 })
-              )(ownedWorkspaces)}
-              {/* {updating && fixedSpinnerOverlay} */}
+              )(filteredOwnedWorkspaces)}
+              <div style={{ marginBottom: '0.5rem' }}>
+                {
+                  // @ts-expect-error
+                  <Paginator
+                    filteredDataLength={filteredOwnedWorkspaces.length}
+                    unfilteredDataLength={ownedWorkspaces.length}
+                    pageNumber={pageNumber}
+                    setPageNumber={setPageNumber}
+                    itemsPerPage={itemsPerPage}
+                    setItemsPerPage={(v) => {
+                      setPageNumber(1);
+                      setItemsPerPage(v);
+                    }}
+                  />
+                }
+              </div>
+              {updating && fixedSpinnerOverlay}
             </div>
           </div>
         )
