@@ -26,14 +26,14 @@ import { GoogleWorkspaceInfo } from 'src/workspaces/utils';
 // May want to instead extend them
 const workspaceLastModifiedWidth = 150;
 
-interface CrossBillingWorkspaceCardHeadersProps {
+interface ConsolidatedSpendWorkspaceCardHeadersProps {
   sort: { field: string; direction: 'asc' | 'desc' };
   onSort: (sort: { field: string; direction: 'asc' | 'desc' }) => void;
 }
 
-const CrossBillingWorkspaceCardHeaders: React.FC<CrossBillingWorkspaceCardHeadersProps> = memoWithName(
-  'CrossBillingWorkspaceCardHeaders',
-  (props: CrossBillingWorkspaceCardHeadersProps) => {
+const ConsolidatedSpendWorkspaceCardHeaders: React.FC<ConsolidatedSpendWorkspaceCardHeaders> = memoWithName(
+  'ConsolidatedSpendWorkspaceCardHeaders',
+  (props: ConsolidatedSpendWorkspaceCardHeadersProps) => {
     const { sort, onSort } = props;
     return (
       <div
@@ -79,18 +79,19 @@ const CrossBillingWorkspaceCardHeaders: React.FC<CrossBillingWorkspaceCardHeader
   }
 );
 
-interface CrossBillingWorkspaceCardProps {
+interface ConsolidatedSpendWorkspaceCardProps {
   workspace: GoogleWorkspaceInfo;
   billingAccountDisplayName: string | undefined;
   billingProject: BillingProject;
   billingAccountStatus: false | BillingAccountStatus;
 }
 
-const CrossBillingWorkspaceCard: React.FC<CrossBillingWorkspaceCardProps> = memoWithName(
-  'CrossBillingWorkspaceCard',
-  (props: CrossBillingWorkspaceCardProps) => {
+const ConsolidatedSpendWorkspaceCard: React.FC<ConsolidatedSpendWorkspaceCardProps> = memoWithName(
+  'ConsolidatedSpendWorkspaceCard',
+  (props: ConsolidatedSpendWorkspaceCardProps) => {
     const { workspace, billingAccountDisplayName, billingProject, billingAccountStatus } = props;
     const { namespace, name, createdBy, lastModified, totalSpend, totalCompute, totalStorage } = workspace;
+
     const workspaceCardStyles = {
       field: {
         ...Style.noWrapEllipsis,
@@ -155,7 +156,7 @@ const CrossBillingWorkspaceCard: React.FC<CrossBillingWorkspaceCardProps> = memo
 );
 /// ///
 
-export const CrossBillingSpendReport = (): ReactNode => {
+export const ConsolidatedSpendReport = (): ReactNode => {
   const [spendReportLengthInDays, setSpendReportLengthInDays] = useState(30);
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [updating, setUpdating] = useState(false);
@@ -187,6 +188,8 @@ export const CrossBillingSpendReport = (): ReactNode => {
 
   useEffect(() => {
     const getWorkspaceSpendData = async (signal: AbortSignal) => {
+      setUpdating(true);
+
       // Define start and end dates
       const endDate = new Date().toISOString().slice(0, 10);
       const startDate = subDays(spendReportLengthInDays, new Date()).toISOString().slice(0, 10);
@@ -198,18 +201,16 @@ export const CrossBillingSpendReport = (): ReactNode => {
         totalStorage: 'N/A',
       });
 
-      setUpdating(true);
-
       try {
         // Fetch the spend report for the billing project
         // TODO Cache the result so it doesn't get called on every page change
-        const crossBillingSpendReport: SpendReportServerResponse = await Billing(signal).getCrossBillingSpendReport({
+        const consolidatedSpendReport: SpendReportServerResponse = await Billing(signal).getCrossBillingSpendReport({
           startDate,
           endDate,
           pageSize: itemsPerPage,
           offset: itemsPerPage * (pageNumber - 1),
         });
-        const spendDataItems = (crossBillingSpendReport.spendDetails as AggregatedWorkspaceSpendData[]).map(
+        const spendDataItems = (consolidatedSpendReport.spendDetails as AggregatedWorkspaceSpendData[]).map(
           (detail) => detail.spendData[0]
         );
 
@@ -275,14 +276,26 @@ export const CrossBillingSpendReport = (): ReactNode => {
       if (updatedWorkspaces) {
         setOwnedWorkspaces(updatedWorkspaces);
       }
-      setUpdating(false);
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [signal, spendReportLengthInDays]);
 
   return (
     <>
-      <>
+      <div
+        style={{
+          // color: colors.dark(),
+          fontSize: 18,
+          fontWeight: 600,
+          display: 'flex',
+          alignItems: 'center',
+          marginLeft: '1rem',
+          marginTop: '1rem',
+        }}
+      >
+        Consolidated Spend Report
+      </div>
+      <div style={{ padding: '1.5rem 0 0', flexGrow: 1, display: 'flex', flexDirection: 'column', marginLeft: '1rem' }}>
         <div
           style={{
             display: 'grid',
@@ -312,28 +325,12 @@ export const CrossBillingSpendReport = (): ReactNode => {
           <span aria-hidden>*</span>
           Total spend includes infrastructure or query costs related to the general operations of Terra.
         </div>
-      </>
-      {_.isEmpty(filteredOwnedWorkspaces) ? (
-        <div
-          style={{
-            marginTop: '2rem',
-          }}
-        >
-          <div style={{ ...Style.cardList.longCardShadowless, width: 'fit-content' }}>
-            <span aria-hidden='true'>Use this Terra billing project to create</span>
-            <Link
-              aria-label='Use this Terra billing project to create workspaces'
-              style={{ marginLeft: '0.3em', textDecoration: 'underline' }}
-              href={Nav.getLink('workspaces')}
-            >
-              Workspaces
-            </Link>
-          </div>
-        </div>
-      ) : (
-        !_.isEmpty(filteredOwnedWorkspaces) && (
+        {!_.isEmpty(filteredOwnedWorkspaces) && (
           <div role='table' aria-label='owned workspaces'>
-            <CrossBillingWorkspaceCardHeaders onSort={setWorkspaceSort} sort={{ field: 'name', direction: 'asc' }} />
+            <ConsolidatedSpendWorkspaceCardHeaders
+              onSort={setWorkspaceSort}
+              sort={{ field: 'name', direction: 'asc' }}
+            />
             <div style={{ position: 'relative' }}>
               {_.flow(
                 _.orderBy(
@@ -342,7 +339,7 @@ export const CrossBillingSpendReport = (): ReactNode => {
                 ),
                 _.map((workspace: GoogleWorkspaceInfo) => {
                   return (
-                    <CrossBillingWorkspaceCard
+                    <ConsolidatedSpendWorkspaceCard
                       workspace={workspace}
                       billingAccountDisplayName={workspace.namespace}
                       billingProject={{
@@ -375,11 +372,11 @@ export const CrossBillingSpendReport = (): ReactNode => {
                   />
                 }
               </div>
-              {updating && fixedSpinnerOverlay}
             </div>
           </div>
-        )
-      )}
+        )}
+        {updating && fixedSpinnerOverlay}
+      </div>
     </>
   );
 };

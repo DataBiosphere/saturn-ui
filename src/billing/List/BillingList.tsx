@@ -18,6 +18,8 @@ import { Metrics } from 'src/libs/ajax/Metrics';
 import colors from 'src/libs/colors';
 import { reportErrorAndRethrow } from 'src/libs/error';
 import Events from 'src/libs/events';
+import { isFeaturePreviewEnabled } from 'src/libs/feature-previews';
+import { CONSOLIDATED_SPEND_REPORT } from 'src/libs/feature-previews-config';
 import * as Nav from 'src/libs/nav';
 import { useCancellation, useOnMount } from 'src/libs/react-utils';
 import * as StateHistory from 'src/libs/state-history';
@@ -26,7 +28,7 @@ import * as Utils from 'src/libs/utils';
 import { useWorkspaces } from 'src/workspaces/common/state/useWorkspaces';
 import { CloudProvider, cloudProviderTypes, WorkspaceWrapper } from 'src/workspaces/utils';
 
-import { CrossBillingSpendReport } from '../CrossBillingSpendReport';
+import { ConsolidatedSpendReport } from '../ConsolidatedSpendReport';
 
 const BillingProjectSubheader: React.FC<{ title: string; children: ReactNode }> = ({ title, children }) => (
   <Collapse
@@ -136,10 +138,10 @@ const RightHandContent = (props: RightHandContentProps): ReactNode => {
       />
     );
   }
-  if (type === 'crossBillingProjectSpend' && !_.isEmpty(projectsOwned) && !selectedName) {
+  if (type === 'consolidatedSpendReport' && !_.isEmpty(projectsOwned) && !selectedName) {
     const billingProject = billingProjects.find(({ projectName }) => projectName === selectedName);
     return (
-      <CrossBillingSpendReport
+      <ConsolidatedSpendReport
         key={type}
         // We know from the condition that the billingProject does exist.
         // @ts-ignore
@@ -155,7 +157,7 @@ const RightHandContent = (props: RightHandContentProps): ReactNode => {
       />
     );
   }
-  if (type !== 'crossBillingProjectSpend' && !_.isEmpty(projectsOwned) && !selectedName) {
+  if (type !== 'consolidatedSpendReport' && !_.isEmpty(projectsOwned) && !selectedName) {
     return <div style={{ margin: '1rem auto 0 auto' } as CSSProperties}>Select a Billing Project</div>;
   }
 };
@@ -315,19 +317,26 @@ export const BillingList = (props: BillingListProps) => {
           <h2 style={{ fontSize: 16 }}>Billing Projects</h2>
           <CreateBillingProjectControl showCreateProjectModal={showCreateProjectModal} />
         </div>
-        <Clickable
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            color: colors.accent(1.1),
-          }}
-          href={`${Nav.getLink('billing')}?${qs.stringify({
-            type: 'crossBillingProjectSpend',
-          })}`}
-          aria-current={false}
-        >
-          <span style={{ wordBreak: 'break-all' }}>Cross Billing Project Spend Report</span>
-        </Clickable>
+        {isFeaturePreviewEnabled(CONSOLIDATED_SPEND_REPORT) && (
+          <Clickable
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              color: colors.accent(1.1),
+              ...(type === 'consolidatedSpendReport' ? { backgroundColor: colors.dark(0.1) } : {}),
+              ...(type === 'consolidatedSpendReport' ? { fontWeight: 'bold' } : {}),
+              marginLeft: '2rem',
+              marginRight: '2rem',
+              padding: '.5rem .5rem .5rem',
+            }}
+            href={`${Nav.getLink('billing')}?${qs.stringify({
+              type: 'consolidatedSpendReport',
+            })}`}
+            aria-current={false}
+          >
+            <span style={{ wordBreak: 'break-all' }}>Consolidated Spend Report</span>
+          </Clickable>
+        )}
         <BillingProjectSubheader title='Owned by You'>
           <div role='list'>
             {projectsOwned.map((project) => (
