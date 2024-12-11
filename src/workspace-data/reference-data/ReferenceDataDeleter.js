@@ -2,7 +2,7 @@ import _ from 'lodash/fp';
 import { useState } from 'react';
 import { b, div, h } from 'react-hyperscript-helpers';
 import { absoluteSpinnerOverlay, DeleteConfirmationModal } from 'src/components/common';
-import { Ajax } from 'src/libs/ajax';
+import { Workspaces } from 'src/libs/ajax/workspaces/Workspaces';
 import { reportError } from 'src/libs/error';
 
 import { getReferenceLabel } from './reference-data-utils';
@@ -19,8 +19,8 @@ export const ReferenceDataDeleter = ({ onSuccess, onDismiss, namespace, name, re
       onConfirm: async () => {
         setDeleting(true);
         try {
-          await Ajax()
-            .Workspaces.workspace(namespace, name)
+          await Workspaces()
+            .workspace(namespace, name)
             .deleteAttributes(_.map((key) => `referenceData_${referenceDataType}_${key}`, _.keys(ReferenceData[referenceDataType])));
           onSuccess(referenceDataType);
         } catch (error) {
