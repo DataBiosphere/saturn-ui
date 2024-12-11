@@ -208,6 +208,11 @@ describe('getValidIgvFilesFromAttributeValues', () => {
     const nonDrsUriString = 'gs://bucket/object';
     expect(isDrsUri(nonDrsUriString)).toEqual(false);
 
+    // This assertion confirms no regression in
+    // https://github.com/DataBiosphere/terra-ui/pull/5199
+    const numericValue = 5;
+    expect(isDrsUri(numericValue)).toEqual(false);
+
     const listValue = ['test'];
     expect(isDrsUri(listValue)).toEqual(false);
 
