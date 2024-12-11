@@ -75,8 +75,12 @@ export const Workspaces = (signal?: AbortSignal) => ({
   },
 
   getShareLog: async (): Promise<string[]> => {
-    const res = await fetchOrchestration('api/sharelog/sharees?shareType=workspace', _.merge(authOpts(), { signal }));
-    return res.json();
+    try {
+      const res = await fetchOrchestration('api/sharelog/sharees?shareType=workspace', _.merge(authOpts(), { signal }));
+      return res.json();
+    } catch (e) {
+     return [];
+    }
   },
 
   getTags: async (tag: string, limit: number): Promise<WorkspaceTag[]> => {
