@@ -88,7 +88,7 @@ export const resolveValidIgvDrsUris = async (values, signal) => {
 
   await Promise.all(
     values.map(async (value) => {
-      if (value.startsWith('drs://')) {
+      if (isDrsUri(value)) {
         const json = await DrsUriResolver(signal).getDataObjectMetadata(value, ['fileName']);
         const filename = json.fileName;
         const isValid = hasValidIgvExtension(filename);
@@ -153,6 +153,10 @@ export const getValidIgvFilesFromAttributeValues = async (attributeValues, signa
   return validIgvFiles;
 };
 
+export const isDrsUri = (value) => {
+  return !!value?.toString().startsWith('drs://');
+};
+
 const IGVFileSelector = ({ selectedEntities, onSuccess }) => {
   const [refGenome, setRefGenome] = useState(defaultIgvReference);
   const isRefGenomeValid = Boolean(_.get('genome', refGenome) || _.get('reference.fastaURL', refGenome));
@@ -169,7 +173,7 @@ const IGVFileSelector = ({ selectedEntities, onSuccess }) => {
       // If there are 2 or more DRS URIs in this row, then IGV might be openable.
       // This lets us know we need to show a loading message while awaiting DRS URI
       // resolution to confirm if IGV is indeed openable for the selections.
-      const drsCandidateFiles = allAttributeValues.filter((value) => value.startsWith('drs://'));
+      const drsCandidateFiles = allAttributeValues.filter((value) => isDrsUri(value));
       setHasDrsCandidateFiles(drsCandidateFiles.length >= 2);
 
       const selections = await getValidIgvFilesFromAttributeValues(allAttributeValues, signal);
