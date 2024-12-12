@@ -113,7 +113,10 @@ export const AclInput: React.FC<AclInputProps> = (props: AclInputProps) => {
               ...Utils.switchCase(
                 o?.value,
                 ['READER', () => ({ canCompute: false, canShare: false })],
-                ['WRITER', () => ({ canCompute: hasAccessLevel('OWNER', maxAccessLevel), canShare: false })],
+                [
+                  'WRITER',
+                  () => ({ canCompute: !isAzureWorkspace && hasAccessLevel('OWNER', maxAccessLevel), canShare: false }),
+                ],
                 ['OWNER', () => ({ canCompute: true, canShare: true })]
               ),
             })
