@@ -3,7 +3,7 @@ import _ from 'lodash/fp';
 import { useState } from 'react';
 import { h } from 'react-hyperscript-helpers';
 import { ButtonPrimary, Select, spinnerOverlay } from 'src/components/common';
-import { Ajax } from 'src/libs/ajax';
+import { Workspaces } from 'src/libs/ajax/workspaces/Workspaces';
 import { reportError } from 'src/libs/error';
 
 import { getReferenceLabel } from './reference-data-utils';
@@ -26,8 +26,8 @@ export const ReferenceDataImporter = ({ onSuccess, onDismiss, namespace, name })
           onClick: async () => {
             setLoading(true);
             try {
-              await Ajax()
-                .Workspaces.workspace(namespace, name)
+              await Workspaces()
+                .workspace(namespace, name)
                 .shallowMergeNewAttributes(_.mapKeys((k) => `referenceData_${selectedReference}_${k}`, ReferenceData[selectedReference]));
               onSuccess(selectedReference);
             } catch (error) {

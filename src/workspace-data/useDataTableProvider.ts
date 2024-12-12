@@ -2,14 +2,15 @@ import { LoadedState } from '@terra-ui-packages/core-utils';
 import _ from 'lodash';
 import { Dispatch, SetStateAction, useCallback, useEffect, useMemo, useState } from 'react';
 import { authOpts } from 'src/auth/auth-session';
-import { Ajax } from 'src/libs/ajax';
 import { fetchWDS } from 'src/libs/ajax/ajax-common';
 import {
   RecordTypeSchema,
   resolveWdsApp,
   WdsDataTableProvider,
 } from 'src/libs/ajax/data-table-providers/WdsDataTableProvider';
+import { Apps } from 'src/libs/ajax/leonardo/Apps';
 import { appStatuses, ListAppItem } from 'src/libs/ajax/leonardo/models/app-models';
+import { WorkspaceData } from 'src/libs/ajax/WorkspaceDataService';
 import { Capabilities } from 'src/libs/ajax/WorkspaceDataService';
 import { getConfig } from 'src/libs/config';
 import { reportError } from 'src/libs/error';
@@ -57,8 +58,8 @@ export const useDataTableProvider = (
   }, [workspaceId, wdsCapabilities, wdsUrl]);
 
   const loadWdsApp = useCallback(() => {
-    return Ajax()
-      .Apps.listAppsV2(workspaceId)
+    return Apps()
+      .listAppsV2(workspaceId)
       .then((apps) => {
         const foundApp = resolveWdsApp(apps);
         switch (foundApp?.status) {
@@ -88,8 +89,8 @@ export const useDataTableProvider = (
 
   const loadWdsTypes = useCallback(() => {
     if (wdsUrl.status === 'Ready') {
-      return Ajax(signal)
-        .WorkspaceData.getSchema(wdsUrl.state, workspaceId)
+      return WorkspaceData(signal)
+        .getSchema(wdsUrl.state, workspaceId)
         .then((typesResult) => {
           setWdsTypes({ status: 'Ready', state: typesResult });
         })
@@ -103,7 +104,7 @@ export const useDataTableProvider = (
   const loadWdsCapabilities = useCallback(async () => {
     if (wdsUrl.status === 'Ready') {
       try {
-        const capabilitiesResult = await Ajax(signal).WorkspaceData.getCapabilities(wdsUrl.state);
+        const capabilitiesResult = await WorkspaceData(signal).getCapabilities(wdsUrl.state);
         setWdsCapabilities({ status: 'Ready', state: capabilitiesResult });
       } catch (error) {
         setWdsCapabilities({ status: 'Error', state: null, error: 'Error loading WDS capabilities' });

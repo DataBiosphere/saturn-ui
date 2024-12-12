@@ -7,7 +7,7 @@ import { ButtonPrimary, ButtonSecondary, fixedSpinnerOverlay } from 'src/compone
 import { icon } from 'src/components/icons';
 import { NameModal } from 'src/components/NameModal';
 import { GridTable, HeaderCell, Resizable, Sortable } from 'src/components/table';
-import { Ajax } from 'src/libs/ajax';
+import { Workspaces } from 'src/libs/ajax/workspaces/Workspaces';
 import colors from 'src/libs/colors';
 import { withErrorReporting } from 'src/libs/error';
 import { getLocalPref } from 'src/libs/prefs';
@@ -51,7 +51,7 @@ const UploadDataTable = (props) => {
       withErrorReporting('Error loading entity data'),
       Utils.withBusyState(setMetadataLoading)
     )(async () => {
-      setEntityMetadata(await Ajax(signal).Workspaces.workspace(namespace, name).entityMetadata());
+      setEntityMetadata(await Workspaces(signal).workspace(namespace, name).entityMetadata());
     });
 
     loadMetadata();
