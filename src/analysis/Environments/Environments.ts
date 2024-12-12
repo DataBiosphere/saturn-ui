@@ -26,7 +26,7 @@ import {
   getPersistentDiskCostMonthly,
   getRuntimeCost,
 } from 'src/analysis/utils/cost-utils';
-import { workspaceHasMultipleDisks } from 'src/analysis/utils/disk-utils';
+import { multipleDisksError } from 'src/analysis/utils/disk-utils';
 import { getCreatorForCompute } from 'src/analysis/utils/resource-utils';
 import { getDisplayRuntimeStatus, isGcpContext } from 'src/analysis/utils/runtime-utils';
 import { AppToolLabel } from 'src/analysis/utils/tool-utils';
@@ -501,14 +501,6 @@ export const Environments = (props: EnvironmentsProps): ReactNode => {
     });
   };
 
-  const multipleDisksError = (disks: PersistentDisk[], appType: AppToolLabel | undefined) => {
-    // appType is undefined for runtimes (ie Jupyter, RStudio) so the first part of the ternary is for processing app
-    // disks. the second part is for processing runtime disks so it filters out app disks
-    return appType
-      ? workspaceHasMultipleDisks(disks, appType)
-      : _.remove((disk) => getDiskAppType(disk) !== appType || disk.status === 'Deleting', disks).length > 1;
-  };
-
   const runtimeToDelete: RuntimeWithWorkspace | undefined = _.find({ id: deleteRuntimeId }, runtimes);
   const appWithErrors: AppWithWorkspace | undefined = _.find({ appName: errorAppId }, apps);
 
@@ -684,7 +676,11 @@ export const Environments = (props: EnvironmentsProps): ReactNode => {
                   const namespace = workspace?.namespace;
                   const name = workspace?.name;
                   const appType: AppToolLabel | undefined = getDiskAppType(filteredDisks[rowIndex]);
-                  const multipleDisks = multipleDisksError(disksByProject[cloudContext.cloudResource], appType);
+                  const multipleDisks = multipleDisksError(
+                    disksByProject[cloudContext.cloudResource],
+                    rowDisk.auditInfo.creator,
+                    appType
+                  );
                   return !!namespace && !!name
                     ? h(Fragment, [
                         h(

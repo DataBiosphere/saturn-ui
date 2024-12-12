@@ -5,7 +5,7 @@ import { div, h, label, li, p, ul } from 'react-hyperscript-helpers';
 import Collapse from 'src/components/Collapse';
 import { ButtonPrimary, spinnerOverlay } from 'src/components/common';
 import { ValidatedInput } from 'src/components/input';
-import { Ajax } from 'src/libs/ajax';
+import { Workspaces } from 'src/libs/ajax/workspaces/Workspaces';
 import colors from 'src/libs/colors';
 import { reportError } from 'src/libs/error';
 import * as Utils from 'src/libs/utils';
@@ -45,8 +45,8 @@ export const AddEntityModal = ({ workspaceId: { namespace, name }, entityType, a
   const createEntity = async () => {
     setIsBusy(true);
     try {
-      await Ajax()
-        .Workspaces.workspace(namespace, name)
+      await Workspaces()
+        .workspace(namespace, name)
         .createEntity({
           entityType,
           name: _.trim(entityName),

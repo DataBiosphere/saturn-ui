@@ -10,7 +10,7 @@ import { DeleteMemberModal } from 'src/groups/Members/DeleteMemberModal';
 import { EditMemberModal } from 'src/groups/Members/EditMemberModal';
 import { Member, MemberTable } from 'src/groups/Members/MemberTable';
 import { NewMemberModal } from 'src/groups/Members/NewMemberModal';
-import { Ajax } from 'src/libs/ajax';
+import { Groups } from 'src/libs/ajax/Groups';
 import { GroupRole } from 'src/libs/ajax/Groups';
 import { reportError } from 'src/libs/error';
 import { getLink } from 'src/libs/nav';
@@ -34,7 +34,7 @@ export const GroupDetails = (props: GroupDetailsProps) => {
   const signal = useCancellation();
 
   const loadDetails = async (): Promise<GroupDetailsData> => {
-    const groupAjax = Ajax(signal).Groups.group(groupName);
+    const groupAjax = Groups(signal).group(groupName);
     const [membersEmails, adminsEmails, allowAccessRequests] = await Promise.all([
       groupAjax.listMembers(),
       groupAjax.listAdmins(),
@@ -73,7 +73,7 @@ export const GroupDetails = (props: GroupDetailsProps) => {
   const updateAllowAccessRequests = (allowAccessRequests: boolean) =>
     updateDetails(async () => {
       try {
-        await Ajax().Groups.group(groupName).setPolicy('admin-notifier', allowAccessRequests);
+        await Groups().group(groupName).setPolicy('admin-notifier', allowAccessRequests);
       } catch (e) {
         reportError('Error changing access request permission', e);
       }
@@ -85,7 +85,7 @@ export const GroupDetails = (props: GroupDetailsProps) => {
     updateDetails(async () => {
       setDeletingUser(undefined);
       try {
-        await Ajax().Groups.group(groupName).removeUser(getGroupRoles(deletingUser), deletingUser.email);
+        await Groups().group(groupName).removeUser(getGroupRoles(deletingUser), deletingUser.email);
       } catch (e) {
         reportError('Error removing member from group', e);
       }
@@ -146,8 +146,8 @@ export const GroupDetails = (props: GroupDetailsProps) => {
             title='Add users to Terra Group'
             addUnregisteredUser
             addFunction={(roles: string[], email: string) =>
-              Ajax()
-                .Groups.group(groupName)
+              Groups()
+                .group(groupName)
                 .addUser(roles as GroupRole[], email)
             }
             onDismiss={() => setAddingNewMember(false)}
@@ -160,8 +160,8 @@ export const GroupDetails = (props: GroupDetailsProps) => {
             memberLabel='member'
             member={editingUser}
             saveFunction={(email: string, roles: string[], newRoles: string[]) =>
-              Ajax()
-                .Groups.group(groupName)
+              Groups()
+                .group(groupName)
                 .changeUserRoles(email, roles as GroupRole[], newRoles as GroupRole[])
             }
             onDismiss={() => setEditingUser(undefined)}

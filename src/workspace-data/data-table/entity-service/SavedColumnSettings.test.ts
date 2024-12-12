@@ -1,9 +1,10 @@
-import { DeepPartial } from '@terra-ui-packages/core-utils';
-import { asMockedFn } from '@terra-ui-packages/test-utils';
+import { asMockedFn, MockedFn, partial } from '@terra-ui-packages/test-utils';
 import { act, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { h } from 'react-hyperscript-helpers';
-import { Ajax, AjaxContract } from 'src/libs/ajax';
+import { Metrics, MetricsContract } from 'src/libs/ajax/Metrics';
+import { GoogleWorkspace, GoogleWorkspaceInfo } from 'src/libs/ajax/workspaces/workspace-models';
+import { WorkspaceContract, Workspaces, WorkspacesAjaxContract } from 'src/libs/ajax/workspaces/Workspaces';
 import { renderWithAppContexts as render } from 'src/testing/test-utils';
 import { defaultGoogleWorkspace } from 'src/testing/workspace-fixtures';
 
@@ -11,26 +12,8 @@ import { ColumnSettingsWithSavedColumnSettings } from './SavedColumnSettings';
 
 const onChange = jest.fn();
 
-jest.mock('src/libs/ajax');
-
-const workspaceDetails = jest.fn().mockResolvedValue({
-  workspace: {
-    attributes: {
-      'system:columnSettings': {
-        tables: { sample: { saved: ['Column A', true, 'Column B', false, 'Column C', true] } },
-      },
-    },
-  },
-});
-const workspace = jest.fn(() => ({ details: workspaceDetails }));
-
-asMockedFn(Ajax).mockImplementation(
-  () =>
-    ({
-      Workspaces: { workspace },
-      Metrics: { captureEvent: jest.fn() },
-    } as DeepPartial<AjaxContract> as AjaxContract)
-);
+jest.mock('src/libs/ajax/Metrics');
+jest.mock('src/libs/ajax/workspaces/Workspaces');
 
 // ColumnSettingsList uses react-virtualized's AutoSizer to size the table.
 // This makes the virtualized window large enough for all rows to be rendered in tests
@@ -42,6 +25,26 @@ jest.mock('react-virtualized', () => ({
 describe('ColumnSettingsWithSavedColumnSettings', () => {
   beforeEach(() => {
     jest.restoreAllMocks();
+
+    const workspaceDetails: MockedFn<WorkspaceContract['details']> = jest.fn();
+    workspaceDetails.mockResolvedValue(
+      partial<GoogleWorkspace>({
+        workspace: partial<GoogleWorkspaceInfo>({
+          attributes: {
+            'system:columnSettings': {
+              tables: { sample: { saved: ['Column A', true, 'Column B', false, 'Column C', true] } },
+            },
+          },
+        }),
+      })
+    );
+
+    asMockedFn(Workspaces).mockReturnValue(
+      partial<WorkspacesAjaxContract>({
+        workspace: () => partial<WorkspaceContract>({ details: workspaceDetails }),
+      })
+    );
+    asMockedFn(Metrics).mockReturnValue(partial<MetricsContract>({ captureEvent: jest.fn() }));
   });
 
   it('loads saved column settings', async () => {

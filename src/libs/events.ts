@@ -128,6 +128,7 @@ const eventsList = {
   workflowRerun: 'workflow:rerun',
   workflowUploadIO: 'workflow:uploadIO',
   workflowUseDefaultOutputs: 'workflow:useDefaultOutputs',
+  workflowSetCostCap: 'workflow:setCostCap',
   workflowsAppImport: 'workflowsApp:import',
   workflowsAppLaunchWorkflow: 'workflowsApp:launchWorkflow',
   workflowsAppCloseLogViewer: 'workflowsApp:closeLogViewer',

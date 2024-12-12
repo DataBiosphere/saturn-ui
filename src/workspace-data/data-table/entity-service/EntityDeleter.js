@@ -2,7 +2,7 @@ import _ from 'lodash/fp';
 import { useState } from 'react';
 import { b, div, h } from 'react-hyperscript-helpers';
 import { absoluteSpinnerOverlay, DeleteConfirmationModal } from 'src/components/common';
-import { Ajax } from 'src/libs/ajax';
+import { Workspaces } from 'src/libs/ajax/workspaces/Workspaces';
 import colors from 'src/libs/colors';
 import { reportError } from 'src/libs/error';
 import * as Utils from 'src/libs/utils';
@@ -22,7 +22,7 @@ export const EntityDeleter = ({ onDismiss, onSuccess, namespace, name, selectedE
     setDeleting(true);
 
     try {
-      await Ajax().Workspaces.workspace(namespace, name).deleteEntities(entitiesToDelete);
+      await Workspaces().workspace(namespace, name).deleteEntities(entitiesToDelete);
       onSuccess();
     } catch (error) {
       switch (error.status) {
