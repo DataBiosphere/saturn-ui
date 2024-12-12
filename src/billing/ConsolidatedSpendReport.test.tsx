@@ -4,6 +4,7 @@ import userEvent from '@testing-library/user-event';
 import React from 'react';
 import { Billing, BillingContract } from 'src/libs/ajax/billing/Billing';
 import { renderWithAppContexts } from 'src/testing/test-utils';
+import { WorkspaceWrapper } from 'src/workspaces/utils';
 
 import { ConsolidatedSpendReport } from './ConsolidatedSpendReport';
 
@@ -147,7 +148,7 @@ const workspaces = [
       workspaceType: 'rawls',
       workspaceVersion: 'v2',
     },
-  },
+  } as WorkspaceWrapper,
   {
     canShare: true,
     canCompute: true,
@@ -180,7 +181,7 @@ const workspaces = [
       workspaceType: 'rawls',
       workspaceVersion: 'v2',
     },
-  },
+  } as WorkspaceWrapper,
   {
     canShare: true,
     canCompute: true,
@@ -213,7 +214,7 @@ const workspaces = [
       workspaceType: 'rawls',
       workspaceVersion: 'v2',
     },
-  },
+  } as WorkspaceWrapper,
 ];
 
 describe('ConsolidatedSpendReport', () => {

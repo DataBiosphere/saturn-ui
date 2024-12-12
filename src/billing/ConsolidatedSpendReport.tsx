@@ -17,6 +17,7 @@ import { Metrics } from 'src/libs/ajax/Metrics';
 import Events, { extractBillingDetails } from 'src/libs/events';
 import * as Nav from 'src/libs/nav';
 import { memoWithName, useCancellation } from 'src/libs/react-utils';
+import { SpendReportStore, spendReportStore } from 'src/libs/state';
 import * as Style from 'src/libs/style';
 import * as Utils from 'src/libs/utils';
 import { GoogleWorkspace, GoogleWorkspaceInfo, WorkspaceWrapper } from 'src/workspaces/utils';
@@ -181,6 +182,7 @@ export const ConsolidatedSpendReport = (props: ConsolidatedSpendReportProps): Re
 
   // Apply filters to ownedWorkspaces
   const searchValueLower = searchValue.toLowerCase();
+
   const filteredOwnedWorkspaces = _.filter(
     (workspace: GoogleWorkspaceInfo) =>
       workspace.name.toLowerCase().includes(searchValueLower) ||
@@ -191,82 +193,94 @@ export const ConsolidatedSpendReport = (props: ConsolidatedSpendReportProps): Re
   );
 
   useEffect(() => {
-    const getWorkspaceSpendData = async (signal: AbortSignal) => {
+    // Define start and end dates
+    const endDate = new Date().toISOString().slice(0, 10);
+    const startDate = subDays(spendReportLengthInDays, new Date()).toISOString().slice(0, 10);
+    const getWorkspaceSpendData = async (signal: AbortSignal): Promise<GoogleWorkspaceInfo[]> => {
       setUpdating(true);
 
-      // Define start and end dates
-      const endDate = new Date().toISOString().slice(0, 10);
-      const startDate = subDays(spendReportLengthInDays, new Date()).toISOString().slice(0, 10);
-
-      const setDefaultSpendValues = (workspace: GoogleWorkspaceInfo) => ({
-        ...workspace,
-        totalSpend: 'N/A',
-        totalCompute: 'N/A',
-        totalStorage: 'N/A',
-      });
-
-      try {
-        // Fetch the spend report for the billing project
-        // TODO Cache the result so it doesn't get called on every page change
-        const consolidatedSpendReport: SpendReportServerResponse = await Billing(signal).getCrossBillingSpendReport({
-          startDate,
-          endDate,
-          pageSize: itemsPerPage,
-          offset: itemsPerPage * (pageNumber - 1),
+      const spendReportStoreLocal = spendReportStore.get();
+      const storedSpendReport = spendReportStoreLocal?.[spendReportLengthInDays];
+      if (!storedSpendReport || storedSpendReport.startDate !== startDate || storedSpendReport.endDate !== endDate) {
+        const setDefaultSpendValues = (workspace: GoogleWorkspaceInfo) => ({
+          ...workspace,
+          totalSpend: 'N/A',
+          totalCompute: 'N/A',
+          totalStorage: 'N/A',
         });
 
-        const spendDataItems = (consolidatedSpendReport.spendDetails as AggregatedWorkspaceSpendData[]).map(
-          (detail) => detail.spendData[0]
-        );
-
-        // Update each workspace with spend data or default values
-        return spendDataItems.map((spendItem) => {
-          const costFormatter = new Intl.NumberFormat(navigator.language, {
-            style: 'currency',
-            currency: spendItem.currency,
+        try {
+          // Fetch the spend report for the billing project
+          // TODO Cache the result so it doesn't get called on every page change
+          const consolidatedSpendReport: SpendReportServerResponse = await Billing(signal).getCrossBillingSpendReport({
+            startDate,
+            endDate,
+            pageSize: itemsPerPage,
+            offset: itemsPerPage * (pageNumber - 1),
           });
 
-          // TODO what if it's not found
-          const workspaceDetails = allWorkspaces.find(
-            (ws): ws is GoogleWorkspace =>
-              ws.workspace.name === spendItem.workspace.name && ws.workspace.namespace === spendItem.workspace.namespace
+          const spendDataItems = (consolidatedSpendReport.spendDetails as AggregatedWorkspaceSpendData[]).map(
+            (detail) => detail.spendData[0]
           );
 
-          return {
-            ...spendItem.workspace,
-            workspaceId: `${spendItem.workspace.namespace}-${spendItem.workspace.name}`,
-            authorizationDomain: [],
-            createdDate: workspaceDetails?.workspace.createdDate,
-            createdBy: workspaceDetails?.workspace.createdBy,
-            lastModified: workspaceDetails?.workspace.lastModified,
+          // Update each workspace with spend data or default values
+          return spendDataItems.map((spendItem) => {
+            const costFormatter = new Intl.NumberFormat(navigator.language, {
+              style: 'currency',
+              currency: spendItem.currency,
+            });
 
-            billingAccount: workspaceDetails?.workspace.billingAccount,
-            googleProject: workspaceDetails?.workspace.googleProject,
-            cloudPlatform: 'Gcp',
-            bucketName: workspaceDetails?.workspace.bucketName,
+            // TODO what if it's not found
+            const workspaceDetails = allWorkspaces.find(
+              (ws): ws is GoogleWorkspace =>
+                ws.workspace.name === spendItem.workspace.name &&
+                ws.workspace.namespace === spendItem.workspace.namespace
+            );
 
-            totalSpend: costFormatter.format(parseFloat(spendItem.cost ?? '0.00')),
-            totalCompute: costFormatter.format(
-              parseFloat(_.find({ category: 'Compute' }, spendItem.subAggregation.spendData)?.cost ?? '0.00')
-            ),
-            totalStorage: costFormatter.format(
-              parseFloat(_.find({ category: 'Storage' }, spendItem.subAggregation.spendData)?.cost ?? '0.00')
-            ),
-            // otherSpend: costFormatter.format(
-            //   parseFloat(_.find({ category: 'Other' }, spendItem.subAggregation.spendData)?.cost ?? '0.00')
-            // ),
-          };
-        });
-      } catch {
-        // Return default values for each workspace in case of an error
-        return ownedWorkspaces.map(setDefaultSpendValues);
-      } finally {
-        // Ensure updating state is reset regardless of success or failure
+            return {
+              ...spendItem.workspace,
+              workspaceId: `${spendItem.workspace.namespace}-${spendItem.workspace.name}`,
+              authorizationDomain: [],
+              createdDate: workspaceDetails?.workspace.createdDate,
+              createdBy: workspaceDetails?.workspace.createdBy,
+              lastModified: workspaceDetails?.workspace.lastModified,
+
+              billingAccount: workspaceDetails?.workspace.billingAccount,
+              googleProject: workspaceDetails?.workspace.googleProject,
+              cloudPlatform: 'Gcp',
+              bucketName: workspaceDetails?.workspace.bucketName,
+
+              totalSpend: costFormatter.format(parseFloat(spendItem.cost ?? '0.00')),
+              totalCompute: costFormatter.format(
+                parseFloat(_.find({ category: 'Compute' }, spendItem.subAggregation.spendData)?.cost ?? '0.00')
+              ),
+              totalStorage: costFormatter.format(
+                parseFloat(_.find({ category: 'Storage' }, spendItem.subAggregation.spendData)?.cost ?? '0.00')
+              ),
+              // otherSpend: costFormatter.format(
+              //   parseFloat(_.find({ category: 'Other' }, spendItem.subAggregation.spendData)?.cost ?? '0.00')
+              // ),
+            } as GoogleWorkspaceInfo;
+          });
+        } catch {
+          // Return default values for each workspace in case of an error
+          return ownedWorkspaces.map(setDefaultSpendValues);
+        } finally {
+          // Ensure updating state is reset regardless of success or failure
+          setUpdating(false);
+        }
+      } else {
         setUpdating(false);
+        return storedSpendReport.spendReport;
       }
     };
     getWorkspaceSpendData(signal).then((updatedWorkspaces) => {
       if (updatedWorkspaces) {
+        spendReportStore.update((store) => {
+          const newStore: SpendReportStore = { ...store };
+          newStore[spendReportLengthInDays] = { spendReport: updatedWorkspaces, startDate, endDate };
+          return newStore;
+        });
         setOwnedWorkspaces(updatedWorkspaces);
       }
     });
