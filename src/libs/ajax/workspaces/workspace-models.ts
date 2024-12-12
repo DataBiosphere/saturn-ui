@@ -55,7 +55,7 @@ export interface RequesterPaysSetting {
 }
 
 export interface BatchSetting {
-  settingType: 'GcpBatch';
+  settingType: 'UseCromwellGcpBatchBackend';
   config: { enabled: boolean };
 }
 

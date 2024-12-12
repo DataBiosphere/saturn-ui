@@ -42,7 +42,7 @@ export const isRequesterPaysSetting = (setting: WorkspaceSetting): setting is Re
   setting.settingType === 'GcpBucketRequesterPays';
 
 export const isBatchSetting = (setting: WorkspaceSetting): setting is BatchSetting =>
-  setting.settingType === 'GcpBatch';
+  setting.settingType === 'UseCromwellGcpBatchBackend';
 
 const isSeparateSubmissionFinalOutputsSetting = (
   setting: WorkspaceSetting
@@ -259,14 +259,14 @@ export const modifyBatchSetting = (originalSettings: WorkspaceSetting[], enabled
   ) as BatchSetting[];
   const otherSettings: WorkspaceSetting[] = workspaceSettings.filter((setting) => !isBatchSetting(setting));
 
-  // If no batchSetting existed and requester pays is set to disabled, do nothing
+  // If no batchSetting existed and batch is set to disabled, do nothing
   if (batchSettings.length === 0 && !enabled) {
     return workspaceSettings;
   }
   return _.concat(
     [
       {
-        settingType: 'GcpBatch',
+        settingType: 'UseCromwellGcpBatchBackend',
         config: { enabled },
       } as BatchSetting,
     ],

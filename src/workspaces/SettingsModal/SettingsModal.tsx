@@ -252,7 +252,7 @@ const SettingsModal = (props: SettingsModalProps): ReactNode => {
     const originalBatchSetting = getBatchSetting(workspaceSettings || []);
     const newBatchSetting = getBatchSetting(newSettings);
     if (originalBatchSetting === undefined && !newBatchSetting?.config.enabled) {
-      // If the bucket had no requester pays setting before, and the current one is disabled, don't event.
+      // If the bucket had no batch setting before, and the current one is disabled, don't event.
     } else if (!_.isEqual(originalBatchSetting, newBatchSetting)) {
       // Event if the setting changed.
       void Metrics().captureEvent(Events.workspaceSettingsBatch, {

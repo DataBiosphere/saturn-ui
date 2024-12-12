@@ -114,12 +114,12 @@ describe('SettingsModal', () => {
   };
 
   const batchEnabledSetting: BatchSetting = {
-    settingType: 'GcpBatch',
+    settingType: 'UseCromwellGcpBatchBackend',
     config: { enabled: true },
   };
 
   const batchDisabledSetting: BatchSetting = {
-    settingType: 'GcpBatch',
+    settingType: 'UseCromwellGcpBatchBackend',
     config: { enabled: false },
   };
 
