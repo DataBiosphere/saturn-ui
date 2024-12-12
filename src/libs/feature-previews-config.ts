@@ -155,7 +155,7 @@ const featurePreviewsConfig: readonly FeaturePreview[] = [
     id: GCP_BATCH,
     title: 'Run workflows on GCP Batch',
     description:
-      'Enabling this feature allows workflows to be processed by the GCP Batch service, rather than the former Cloud Life Sciences API.',
+      'Enabling this feature allows workflows to be processed by the GCP Batch service, rather than the former Cloud Life Sciences API. All Terra workflows will be transitioned to GCP Batch by mid-2025.',
     groups: ['preview-batch'],
     feedbackUrl: `mailto:dsp-analysis@broadinstitute.org?subject=${encodeURIComponent('Feedback on GCP Batch')}`,
     lastUpdated: '12/12/2024',
