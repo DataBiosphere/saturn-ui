@@ -1,9 +1,9 @@
-import { DeepPartial, delay } from '@terra-ui-packages/core-utils';
-import { asMockedFn } from '@terra-ui-packages/test-utils';
+import { delay } from '@terra-ui-packages/core-utils';
+import { asMockedFn, MockedFn, partial } from '@terra-ui-packages/test-utils';
 import { act, fireEvent, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import React from 'react';
-import { Ajax } from 'src/libs/ajax';
+import { WorkspaceContract, Workspaces, WorkspacesAjaxContract } from 'src/libs/ajax/workspaces/Workspaces';
 import { renderWithAppContexts as render } from 'src/testing/test-utils';
 import { defaultGoogleWorkspace } from 'src/testing/workspace-fixtures';
 import { WorkspaceWrapper } from 'src/workspaces/utils';
@@ -40,16 +40,7 @@ jest.mock('react-virtualized', (): ReactVirtualizedExports => {
   };
 });
 
-type AjaxExports = typeof import('src/libs/ajax');
-jest.mock(
-  'src/libs/ajax',
-  (): AjaxExports => ({
-    ...jest.requireActual<AjaxExports>('src/libs/ajax'),
-    Ajax: jest.fn(),
-  })
-);
-
-type AjaxContract = ReturnType<typeof Ajax>;
+jest.mock('src/libs/ajax/workspaces/Workspaces');
 
 describe('WorkspaceAttributes', () => {
   interface SetupArgs {
@@ -165,11 +156,13 @@ describe('WorkspaceAttributes', () => {
 
   it('allows selecting and deleting attributes', async () => {
     // Arrange/Act
-    const deleteAttributes = jest.fn().mockResolvedValue(undefined);
-    const workspace = jest.fn(() => ({ deleteAttributes }));
+    const deleteAttributes: MockedFn<WorkspaceContract['deleteAttributes']> = jest.fn();
+    deleteAttributes.mockResolvedValue(undefined);
 
-    asMockedFn(Ajax).mockImplementation(
-      () => ({ Workspaces: { workspace } } as DeepPartial<AjaxContract> as AjaxContract)
+    asMockedFn(Workspaces).mockReturnValue(
+      partial<WorkspacesAjaxContract>({
+        workspace: () => partial<WorkspaceContract>({ deleteAttributes }),
+      })
     );
 
     setup({
