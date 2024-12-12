@@ -1,4 +1,4 @@
-import { getValidIgvFiles, getValidIgvFilesFromAttributeValues } from 'src/components/IGVFileSelector';
+import { getValidIgvFiles, getValidIgvFilesFromAttributeValues, isDrsUri } from 'src/components/IGVFileSelector';
 import { DrsUriResolver } from 'src/libs/ajax/drs/DrsUriResolver';
 import { isFeaturePreviewEnabled } from 'src/libs/feature-previews';
 
@@ -199,6 +199,29 @@ describe('getValidIgvFilesFromAttributeValues', () => {
         },
       ])
     ).toEqual([]);
+  });
+
+  it('robustly detects data table values that are DRS URIs', () => {
+    const drsUri = 'drs://dg.4503:2802a94d-f540-499f-950a-db3c2a9f2dc4';
+    expect(isDrsUri(drsUri)).toEqual(true);
+
+    const nonDrsUriString = 'gs://bucket/object';
+    expect(isDrsUri(nonDrsUriString)).toEqual(false);
+
+    // This assertion confirms no regression in
+    // https://github.com/DataBiosphere/terra-ui/pull/5199
+    const numericValue = 5;
+    expect(isDrsUri(numericValue)).toEqual(false);
+
+    const listValue = ['test'];
+    expect(isDrsUri(listValue)).toEqual(false);
+
+    const booleanValue = true;
+    expect(isDrsUri(booleanValue)).toEqual(false);
+
+    expect(isDrsUri(null)).toEqual(false);
+
+    expect(isDrsUri(undefined)).toEqual(false);
   });
 
   it('calls to resolve access URLs when two DRS URIs are found', async () => {
