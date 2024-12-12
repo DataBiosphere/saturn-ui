@@ -139,21 +139,11 @@ const RightHandContent = (props: RightHandContentProps): ReactNode => {
     );
   }
   if (type === 'consolidatedSpendReport' && !_.isEmpty(projectsOwned) && !selectedName) {
-    const billingProject = billingProjects.find(({ projectName }) => projectName === selectedName);
     return (
       <ConsolidatedSpendReport
         key={type}
-        // We know from the condition that the billingProject does exist.
         // @ts-ignore
-        billingProject={billingProject}
-        billingAccounts={billingAccounts}
-        authorizeAndLoadAccounts={authorizeAndLoadAccounts}
-        // We know from the condition that the billingProject does exist.
-        // @ts-ignore
-        reloadBillingProject={() => reloadBillingProject(billingProject).catch(loadProjects)}
-        isOwner={projectsOwned.some(({ projectName }) => projectName === selectedName)}
         workspaces={allWorkspaces}
-        refreshWorkspaces={refreshWorkspaces}
       />
     );
   }
@@ -162,7 +152,7 @@ const RightHandContent = (props: RightHandContentProps): ReactNode => {
   }
 };
 
-interface BillingListProps {
+export interface BillingListProps {
   queryParams: {
     selectedName: string | undefined;
     type: string | undefined;

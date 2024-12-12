@@ -8,7 +8,6 @@ import { BillingAccountStatus, parseCurrencyIfNeeded } from 'src/billing/utils';
 import { BillingProject } from 'src/billing-core/models';
 import { fixedSpinnerOverlay } from 'src/components/common';
 import { ariaSort, HeaderRenderer, Paginator } from 'src/components/table';
-import { Ajax } from 'src/libs/ajax';
 import { Billing } from 'src/libs/ajax/billing/Billing';
 import {
   AggregatedWorkspaceSpendData,
@@ -20,7 +19,7 @@ import * as Nav from 'src/libs/nav';
 import { memoWithName, useCancellation } from 'src/libs/react-utils';
 import * as Style from 'src/libs/style';
 import * as Utils from 'src/libs/utils';
-import { GoogleWorkspaceInfo } from 'src/workspaces/utils';
+import { GoogleWorkspace, GoogleWorkspaceInfo, WorkspaceWrapper } from 'src/workspaces/utils';
 
 // Copied and slightly altered from WorkspaceCard and WorkspaceCardHeaders in Workspaces,
 // May want to instead extend them
@@ -31,7 +30,7 @@ interface ConsolidatedSpendWorkspaceCardHeadersProps {
   onSort: (sort: { field: string; direction: 'asc' | 'desc' }) => void;
 }
 
-const ConsolidatedSpendWorkspaceCardHeaders: React.FC<ConsolidatedSpendWorkspaceCardHeaders> = memoWithName(
+const ConsolidatedSpendWorkspaceCardHeaders: React.FC<ConsolidatedSpendWorkspaceCardHeadersProps> = memoWithName(
   'ConsolidatedSpendWorkspaceCardHeaders',
   (props: ConsolidatedSpendWorkspaceCardHeadersProps) => {
     const { sort, onSort } = props;
@@ -156,7 +155,11 @@ const ConsolidatedSpendWorkspaceCard: React.FC<ConsolidatedSpendWorkspaceCardPro
 );
 /// ///
 
-export const ConsolidatedSpendReport = (): ReactNode => {
+interface ConsolidatedSpendReportProps {
+  workspaces: WorkspaceWrapper[];
+}
+
+export const ConsolidatedSpendReport = (props: ConsolidatedSpendReportProps): ReactNode => {
   const [spendReportLengthInDays, setSpendReportLengthInDays] = useState(30);
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [updating, setUpdating] = useState(false);
@@ -168,6 +171,7 @@ export const ConsolidatedSpendReport = (): ReactNode => {
     field: 'totalSpend',
     direction: 'desc',
   });
+  const allWorkspaces = props.workspaces;
 
   // BIG TODO - paginate without making too many BQ calls but also knowing how many pages there are???
   const [pageNumber, setPageNumber] = useState(1);
@@ -210,22 +214,9 @@ export const ConsolidatedSpendReport = (): ReactNode => {
           pageSize: itemsPerPage,
           offset: itemsPerPage * (pageNumber - 1),
         });
+
         const spendDataItems = (consolidatedSpendReport.spendDetails as AggregatedWorkspaceSpendData[]).map(
           (detail) => detail.spendData[0]
-        );
-
-        const allWorkspaces = await Ajax(signal).Workspaces.list(
-          [
-            'workspace.billingAccount',
-            'workspace.bucketName',
-            'workspace.createdBy',
-            'workspace.createdDate',
-            'workspace.googleProject',
-            'workspace.lastModified',
-            'workspace.name',
-            'workspace.namespace',
-          ],
-          250 // TODO what to do here
         );
 
         // Update each workspace with spend data or default values
@@ -237,7 +228,7 @@ export const ConsolidatedSpendReport = (): ReactNode => {
 
           // TODO what if it's not found
           const workspaceDetails = allWorkspaces.find(
-            (ws) =>
+            (ws): ws is GoogleWorkspace =>
               ws.workspace.name === spendItem.workspace.name && ws.workspace.namespace === spendItem.workspace.namespace
           );
 
@@ -250,7 +241,9 @@ export const ConsolidatedSpendReport = (): ReactNode => {
             lastModified: workspaceDetails?.workspace.lastModified,
 
             billingAccount: workspaceDetails?.workspace.billingAccount,
-            projectName: workspaceDetails?.workspace.projectName,
+            googleProject: workspaceDetails?.workspace.googleProject,
+            cloudPlatform: 'Gcp',
+            bucketName: workspaceDetails?.workspace.bucketName,
 
             totalSpend: costFormatter.format(parseFloat(spendItem.cost ?? '0.00')),
             totalCompute: costFormatter.format(
