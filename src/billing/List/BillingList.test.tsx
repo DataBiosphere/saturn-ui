@@ -1,7 +1,9 @@
 import { act, screen } from '@testing-library/react';
 import React from 'react';
+import { BillingProject } from 'src/billing-core/models';
+import { Billing, BillingContract } from 'src/libs/ajax/billing/Billing';
 import { isFeaturePreviewEnabled } from 'src/libs/feature-previews';
-import { renderWithAppContexts as render } from 'src/testing/test-utils';
+import { asMockedFn, partial, renderWithAppContexts as render } from 'src/testing/test-utils';
 
 import { BillingList, BillingListProps } from './BillingList';
 
@@ -13,6 +15,29 @@ jest.mock('src/libs/nav', () => ({
 }));
 
 type AuthExports = typeof import('src/auth/auth');
+jest.mock('src/libs/ajax/billing/Billing');
+asMockedFn(Billing).mockReturnValue(
+  partial<BillingContract>({
+    listProjects: async () => [
+      partial<BillingProject>({
+        billingAccount: 'billingAccounts/FOO-BAR-BAZ',
+        cloudPlatform: 'GCP',
+        invalidBillingAccount: false,
+        projectName: 'Google Billing Project',
+        roles: ['Owner'],
+        status: 'Ready',
+      }),
+      partial<BillingProject>({
+        // billingAccount: 'billingAccounts/BAA-RAM-EWE',
+        cloudPlatform: 'AZURE',
+        invalidBillingAccount: false,
+        projectName: 'Azure Billing Project',
+        roles: ['Owner'],
+        status: 'Ready',
+      }),
+    ],
+  })
+);
 
 jest.mock('src/auth/auth', (): AuthExports => {
   const originalModule = jest.requireActual<AuthExports>('src/auth/auth');

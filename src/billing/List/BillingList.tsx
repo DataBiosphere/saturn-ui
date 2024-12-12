@@ -138,7 +138,7 @@ const RightHandContent = (props: RightHandContentProps): ReactNode => {
       />
     );
   }
-  if (type === 'consolidatedSpendReport' && !_.isEmpty(projectsOwned) && !selectedName) {
+  if (type === 'consolidatedSpendReport' && !selectedName) {
     return (
       <ConsolidatedSpendReport
         key={type}
@@ -323,6 +323,7 @@ export const BillingList = (props: BillingListProps) => {
               type: 'consolidatedSpendReport',
             })}`}
             aria-current={false}
+            onClick={void Metrics().captureEvent(Events.billingViewConsolidatedSpendReport)}
           >
             <span style={{ wordBreak: 'break-all' }}>Consolidated Spend Report</span>
           </Clickable>

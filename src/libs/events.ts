@@ -57,6 +57,7 @@ const eventsList = {
   billingCreationBillingProjectCreated: 'billing:creation:billingProjectCreated',
   billingRemoveAccount: 'billing:project:account:remove',
   billingSpendConfigurationUpdated: 'billing:spendConfiguration:updated',
+  billingViewConsolidatedSpendReport: 'billing:view:consolidatedSpendReport',
   cloudEnvironmentConfigOpen: 'cloudEnvironment:config:open',
   cloudEnvironmentLaunch: 'cloudEnvironment:launch',
   cloudEnvironmentCreate: 'cloudEnvironment:create',
