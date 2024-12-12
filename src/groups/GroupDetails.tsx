@@ -143,7 +143,7 @@ export const GroupDetails = (props: GroupDetailsProps) => {
           <NewMemberModal
             adminLabel='admin'
             memberLabel='member'
-            title='Add user to Terra Group'
+            title='Add users to Terra Group'
             addUnregisteredUser
             addFunction={(roles: string[], email: string) =>
               Ajax()

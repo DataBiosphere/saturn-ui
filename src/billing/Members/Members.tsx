@@ -43,7 +43,7 @@ export const Members = (props: MembersProps): ReactNode => {
         <NewMemberModal
           adminLabel={billingRoles.owner}
           memberLabel={billingRoles.user}
-          title='Add user to Billing Project'
+          title='Add users to Billing Project'
           footer={[
             'Warning: Adding any user to this project will mean they can incur costs to the billing associated with this project.',
           ]}
