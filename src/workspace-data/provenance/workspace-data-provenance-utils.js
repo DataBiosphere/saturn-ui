@@ -1,7 +1,8 @@
 import _ from 'lodash/fp';
 import { useCallback, useEffect, useState } from 'react';
 import { parseGsUri } from 'src/components/data/data-utils';
-import { Ajax } from 'src/libs/ajax';
+import { Metrics } from 'src/libs/ajax/Metrics';
+import { Workspaces } from 'src/libs/ajax/workspaces/Workspaces';
 import { reportError } from 'src/libs/error';
 import Events from 'src/libs/events';
 import { useCancellation } from 'src/libs/react-utils';
@@ -24,7 +25,7 @@ const getSubmissionsWithRootEntityType = async (workspace, entityType, { signal 
   //
   // After fetching method configurations, another filter is required remove submissions whose root entity type
   // was a set of the desired entity type.
-  const allSubmissions = await Ajax(signal).Workspaces.workspace(namespace, name).listSubmissions();
+  const allSubmissions = await Workspaces(signal).workspace(namespace, name).listSubmissions();
   const submissionsMaybeUsingEntityType = _.flow(
     _.filter((submission) => {
       const submissionEntityType = submission.submissionEntity.entityType;
@@ -35,7 +36,7 @@ const getSubmissionsWithRootEntityType = async (workspace, entityType, { signal 
 
   const submissionConfigurations = await Promise.all(
     _.map(
-      (submission) => Ajax(signal).Workspaces.workspace(namespace, name).submission(submission.submissionId).getConfiguration(),
+      (submission) => Workspaces(signal).workspace(namespace, name).submission(submission.submissionId).getConfiguration(),
       submissionsMaybeUsingEntityType
     )
   );
@@ -141,7 +142,7 @@ export const getFileProvenance = async (workspace, fileUrl, { signal } = {}) => 
     };
   }
 
-  const workflowOutputs = await Ajax(signal).Workspaces.workspace(namespace, name).submission(submissionId).workflow(workflowId).outputs();
+  const workflowOutputs = await Workspaces(signal).workspace(namespace, name).submission(submissionId).workflow(workflowId).outputs();
 
   const [taskName, task] = _.flow(
     _.toPairs,
@@ -199,7 +200,7 @@ export const useFileProvenance = (workspace, fileUrl) => {
         success = false;
       } finally {
         setLoading(false);
-        Ajax().Metrics.captureEvent(Events.provenanceFile, {
+        void Metrics().captureEvent(Events.provenanceFile, {
           workspaceNamespace: workspace?.workspace?.namespace,
           workspaceName: workspace?.workspace?.name,
           fileProtocol: protocol,

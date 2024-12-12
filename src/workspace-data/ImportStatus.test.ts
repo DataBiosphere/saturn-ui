@@ -1,17 +1,16 @@
-import { DeepPartial } from '@terra-ui-packages/core-utils';
-import { asMockedFn } from '@terra-ui-packages/test-utils';
+import { asMockedFn, MockedFn, partial } from '@terra-ui-packages/test-utils';
 import { act } from '@testing-library/react';
 import { h } from 'react-hyperscript-helpers';
-import { Ajax } from 'src/libs/ajax';
+import { WDSJob, WorkspaceData, WorkspaceDataAjaxContract } from 'src/libs/ajax/WorkspaceDataService';
+import { WorkspaceContract, Workspaces, WorkspacesAjaxContract } from 'src/libs/ajax/workspaces/Workspaces';
 import { notify } from 'src/libs/notifications';
 import { asyncImportJobStore } from 'src/libs/state';
 import { renderWithAppContexts as render } from 'src/testing/test-utils';
 
 import ImportStatus from './ImportStatus';
 
-jest.mock('src/libs/ajax');
-type AjaxExports = typeof import('src/libs/ajax');
-type AjaxContract = ReturnType<AjaxExports['Ajax']>;
+jest.mock('src/libs/ajax/WorkspaceDataService');
+jest.mock('src/libs/ajax/workspaces/Workspaces');
 
 jest.mock('src/libs/notifications');
 
@@ -30,15 +29,13 @@ describe('ImportStatus', () => {
         { targetWorkspace: { namespace: 'test-workspaces', name: 'google-workspace' }, jobId: 'workspace-job-1' },
       ]);
 
-      const getImportJobStatus = jest.fn().mockResolvedValue({ status: 'Pending' });
-      const mockAjax: DeepPartial<AjaxContract> = {
-        Workspaces: {
-          workspace: (_namespace, _name) => ({
-            getImportJobStatus,
-          }),
-        },
-      };
-      asMockedFn(Ajax).mockImplementation(() => mockAjax as AjaxContract);
+      const getImportJobStatus: MockedFn<WorkspaceContract['getImportJobStatus']> = jest.fn();
+      getImportJobStatus.mockResolvedValue({ status: 'Pending' });
+      asMockedFn(Workspaces).mockReturnValue(
+        partial<WorkspacesAjaxContract>({
+          workspace: (_namespace, _name) => partial<WorkspaceContract>({ getImportJobStatus }),
+        })
+      );
 
       // Act
       render(h(ImportStatus, {}));
@@ -62,15 +59,13 @@ describe('ImportStatus', () => {
         { targetWorkspace: { namespace: 'test-workspaces', name: 'google-workspace' }, jobId: 'workspace-job-1' },
       ]);
 
-      const getImportJobStatus = jest.fn().mockResolvedValue({ status: 'Error', message: 'There has been an error.' });
-      const mockAjax: DeepPartial<AjaxContract> = {
-        Workspaces: {
-          workspace: (_namespace, _name) => ({
-            getImportJobStatus,
-          }),
-        },
-      };
-      asMockedFn(Ajax).mockImplementation(() => mockAjax as AjaxContract);
+      const getImportJobStatus: MockedFn<WorkspaceContract['getImportJobStatus']> = jest.fn();
+      getImportJobStatus.mockResolvedValue({ status: 'Error', message: 'There has been an error.' });
+      asMockedFn(Workspaces).mockReturnValue(
+        partial<WorkspacesAjaxContract>({
+          workspace: (_namespace, _name) => partial<WorkspaceContract>({ getImportJobStatus }),
+        })
+      );
 
       // Act
       render(h(ImportStatus, {}));
@@ -89,15 +84,13 @@ describe('ImportStatus', () => {
         { targetWorkspace: { namespace: 'test-workspaces', name: 'google-workspace' }, jobId: 'workspace-job-1' },
       ]);
 
-      const getImportJobStatus = jest.fn().mockResolvedValue({ status: 'Done' });
-      const mockAjax: DeepPartial<AjaxContract> = {
-        Workspaces: {
-          workspace: (_namespace, _name) => ({
-            getImportJobStatus,
-          }),
-        },
-      };
-      asMockedFn(Ajax).mockImplementation(() => mockAjax as AjaxContract);
+      const getImportJobStatus: MockedFn<WorkspaceContract['getImportJobStatus']> = jest.fn();
+      getImportJobStatus.mockResolvedValue({ status: 'Done' });
+      asMockedFn(Workspaces).mockReturnValue(
+        partial<WorkspacesAjaxContract>({
+          workspace: (_namespace, _name) => partial<WorkspaceContract>({ getImportJobStatus }),
+        })
+      );
 
       // Act
       render(h(ImportStatus, {}));
@@ -132,13 +125,9 @@ describe('ImportStatus', () => {
         },
       ]);
 
-      const getJobStatus = jest.fn().mockResolvedValue({ status: 'QUEUED' });
-      const mockAjax: DeepPartial<AjaxContract> = {
-        WorkspaceData: {
-          getJobStatus,
-        },
-      };
-      asMockedFn(Ajax).mockImplementation(() => mockAjax as AjaxContract);
+      const getJobStatus: MockedFn<WorkspaceDataAjaxContract['getJobStatus']> = jest.fn();
+      getJobStatus.mockResolvedValue(partial<WDSJob>({ status: 'QUEUED' }));
+      asMockedFn(WorkspaceData).mockReturnValue(partial<WorkspaceDataAjaxContract>({ getJobStatus }));
 
       // Act
       render(h(ImportStatus, {}));
@@ -166,15 +155,11 @@ describe('ImportStatus', () => {
         },
       ]);
 
-      const getJobStatus = jest
-        .fn()
-        .mockResolvedValue({ status: 'ERROR', errorMessage: 'Import failed for some reason.' });
-      const mockAjax: DeepPartial<AjaxContract> = {
-        WorkspaceData: {
-          getJobStatus,
-        },
-      };
-      asMockedFn(Ajax).mockImplementation(() => mockAjax as AjaxContract);
+      const getJobStatus: MockedFn<WorkspaceDataAjaxContract['getJobStatus']> = jest.fn();
+      getJobStatus.mockResolvedValue(
+        partial<WDSJob>({ status: 'ERROR', errorMessage: 'Import failed for some reason.' })
+      );
+      asMockedFn(WorkspaceData).mockReturnValue(partial<WorkspaceDataAjaxContract>({ getJobStatus }));
 
       // Act
       render(h(ImportStatus, {}));
@@ -196,13 +181,9 @@ describe('ImportStatus', () => {
         },
       ]);
 
-      const getJobStatus = jest.fn().mockResolvedValue({ status: 'SUCCEEDED' });
-      const mockAjax: DeepPartial<AjaxContract> = {
-        WorkspaceData: {
-          getJobStatus,
-        },
-      };
-      asMockedFn(Ajax).mockImplementation(() => mockAjax as AjaxContract);
+      const getJobStatus: MockedFn<WorkspaceDataAjaxContract['getJobStatus']> = jest.fn();
+      getJobStatus.mockResolvedValue(partial<WDSJob>({ status: 'SUCCEEDED' }));
+      asMockedFn(WorkspaceData).mockReturnValue(partial<WorkspaceDataAjaxContract>({ getJobStatus }));
 
       // Act
       render(h(ImportStatus, {}));
