@@ -1,5 +1,6 @@
 import _ from 'lodash/fp';
 import {
+  BatchSetting,
   BucketLifecycleRule,
   BucketLifecycleSetting,
   DeleteBucketLifecycleRule,
@@ -15,6 +16,7 @@ export type {
   RequesterPaysSetting,
   SoftDeleteSetting,
   WorkspaceSetting,
+  BatchSetting,
 } from 'src/libs/ajax/workspaces/workspace-models';
 
 export const suggestedPrefixes = {
@@ -38,6 +40,9 @@ export const isSoftDeleteSetting = (setting: WorkspaceSetting): setting is SoftD
 
 export const isRequesterPaysSetting = (setting: WorkspaceSetting): setting is RequesterPaysSetting =>
   setting.settingType === 'GcpBucketRequesterPays';
+
+export const isBatchSetting = (setting: WorkspaceSetting): setting is BatchSetting =>
+  setting.settingType === 'GcpBatch';
 
 const isSeparateSubmissionFinalOutputsSetting = (
   setting: WorkspaceSetting
@@ -234,6 +239,36 @@ const modifySeparateSubmissionOutputsSetting = (
         settingType: 'SeparateSubmissionFinalOutputs',
         config: { enabled },
       } as SeparateSubmissionFinalOutputsSetting,
+    ],
+    otherSettings
+  );
+};
+
+/**
+ * Modifies the batch setting in the workspace settings.
+ * If no such setting exists and batch is set to enabled, it will be created.
+ *
+ * Note that any other settings will be preserved but moved to the end of the array.
+ */
+export const modifyBatchSetting = (originalSettings: WorkspaceSetting[], enabled: boolean): WorkspaceSetting[] => {
+  // Clone original for testing purposes and to allow eventing only if there was a change.
+  const workspaceSettings = _.cloneDeep(originalSettings);
+
+  const batchSettings: BatchSetting[] = workspaceSettings.filter((setting: WorkspaceSetting) =>
+    isBatchSetting(setting)
+  ) as BatchSetting[];
+  const otherSettings: WorkspaceSetting[] = workspaceSettings.filter((setting) => !isBatchSetting(setting));
+
+  // If no batchSetting existed and requester pays is set to disabled, do nothing
+  if (batchSettings.length === 0 && !enabled) {
+    return workspaceSettings;
+  }
+  return _.concat(
+    [
+      {
+        settingType: 'GcpBatch',
+        config: { enabled },
+      } as BatchSetting,
     ],
     otherSettings
   );

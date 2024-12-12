@@ -7,10 +7,13 @@ import { Metrics, MetricsContract } from 'src/libs/ajax/Metrics';
 import { SeparateSubmissionFinalOutputsSetting } from 'src/libs/ajax/workspaces/workspace-models';
 import { Workspaces, WorkspacesAjaxContract, WorkspaceV2Contract } from 'src/libs/ajax/workspaces/Workspaces';
 import Events, { extractWorkspaceDetails } from 'src/libs/events';
+import { isFeaturePreviewEnabled } from 'src/libs/feature-previews';
+import { GCP_BATCH } from 'src/libs/feature-previews-config';
 import { asMockedFn, partial, renderWithAppContexts as render, SelectHelper } from 'src/testing/test-utils';
 import { defaultGoogleWorkspace, makeGoogleWorkspace } from 'src/testing/workspace-fixtures';
 import SettingsModal from 'src/workspaces/SettingsModal/SettingsModal';
 import {
+  BatchSetting,
   BucketLifecycleSetting,
   RequesterPaysSetting,
   secondsInADay,
@@ -22,6 +25,14 @@ import {
 
 jest.mock('src/libs/ajax/Metrics');
 jest.mock('src/libs/ajax/workspaces/Workspaces');
+
+type FeaturePreviewsExports = typeof import('src/libs/feature-previews');
+jest.mock('src/libs/feature-previews', (): FeaturePreviewsExports => {
+  return {
+    ...jest.requireActual<FeaturePreviewsExports>('src/libs/feature-previews'),
+    isFeaturePreviewEnabled: jest.fn(),
+  };
+});
 
 describe('SettingsModal', () => {
   const captureEvent = jest.fn();
@@ -102,6 +113,16 @@ describe('SettingsModal', () => {
     config: { enabled: false },
   };
 
+  const batchEnabledSetting: BatchSetting = {
+    settingType: 'GcpBatch',
+    config: { enabled: true },
+  };
+
+  const batchDisabledSetting: BatchSetting = {
+    settingType: 'GcpBatch',
+    config: { enabled: false },
+  };
+
   const separateSubmissionOutputsDisabledSetting: SeparateSubmissionFinalOutputsSetting = {
     settingType: 'SeparateSubmissionFinalOutputs',
     config: { enabled: false },
@@ -125,6 +146,7 @@ describe('SettingsModal', () => {
           }),
       })
     );
+    asMockedFn(isFeaturePreviewEnabled).mockImplementation((id) => id === GCP_BATCH);
   };
 
   it('has no accessibility errors', async () => {
@@ -854,5 +876,144 @@ describe('SettingsModal', () => {
       expect(updateSettingsMock).toHaveBeenCalledWith([requesterPaysEnabledSetting, defaultSoftDeleteSetting]);
       expect(captureEvent).not.toHaveBeenCalledWith();
     });
+  });
+
+  describe('Batch Setting', () => {
+    const getBatchToggle = () => screen.getByLabelText('GCP Batch:');
+
+    it('renders the option as disabled if the user is not an owner', async () => {
+      // Arrange
+      setup([], jest.fn());
+
+      // Act
+      await act(async () => {
+        render(<SettingsModal workspace={makeGoogleWorkspace({ accessLevel: 'READER' })} onDismiss={jest.fn()} />);
+      });
+
+      // Assert
+      expect(getBatchToggle()).toBeDisabled();
+    });
+
+    it('renders the option as off if no settings exist', async () => {
+      // Arrange
+      setup([], jest.fn());
+
+      // Act
+      await act(async () => {
+        render(<SettingsModal workspace={defaultGoogleWorkspace} onDismiss={jest.fn()} />);
+      });
+
+      // Assert
+      expect(getBatchToggle()).not.toBeChecked();
+    });
+
+    it('renders the option as off if batch is disabled', async () => {
+      // Arrange
+      setup([batchDisabledSetting], jest.fn());
+
+      // Act
+      await act(async () => {
+        render(<SettingsModal workspace={defaultGoogleWorkspace} onDismiss={jest.fn()} />);
+      });
+
+      // Assert
+      expect(getBatchToggle()).not.toBeChecked();
+    });
+
+    it('renders the option as on if batch is enabled', async () => {
+      // Arrange
+      setup([batchEnabledSetting], jest.fn());
+
+      // Act
+      await act(async () => {
+        render(<SettingsModal workspace={defaultGoogleWorkspace} onDismiss={jest.fn()} />);
+      });
+
+      // Assert
+      expect(getBatchToggle()).toBeChecked();
+    });
+
+    it('supports disabling batch', async () => {
+      // Arrange
+      const user = userEvent.setup();
+      const updateSettingsMock = jest.fn();
+      setup([batchEnabledSetting], updateSettingsMock);
+
+      // Act
+      await act(async () => {
+        render(<SettingsModal workspace={defaultGoogleWorkspace} onDismiss={jest.fn()} />);
+      });
+
+      const toggle = getBatchToggle();
+      expect(toggle).toBeChecked();
+      await user.click(toggle);
+      expect(toggle).not.toBeChecked();
+
+      await user.click(screen.getByRole('button', { name: 'Save' }));
+
+      // Assert
+      expect(updateSettingsMock).toHaveBeenCalledWith([batchDisabledSetting, defaultSoftDeleteSetting]);
+      expect(captureEvent).toHaveBeenCalledWith(Events.workspaceSettingsBatch, {
+        enabled: false,
+        ...extractWorkspaceDetails(defaultGoogleWorkspace),
+      });
+    });
+
+    it('supports enabling batch', async () => {
+      // Arrange
+      const user = userEvent.setup();
+      const updateSettingsMock = jest.fn();
+      setup([], updateSettingsMock);
+
+      // Act
+      await act(async () => {
+        render(<SettingsModal workspace={defaultGoogleWorkspace} onDismiss={jest.fn()} />);
+      });
+
+      const toggle = getBatchToggle();
+      expect(toggle).not.toBeChecked();
+      await user.click(toggle);
+      expect(toggle).toBeChecked();
+
+      await user.click(screen.getByRole('button', { name: 'Save' }));
+
+      // Assert
+      expect(updateSettingsMock).toHaveBeenCalledWith([batchEnabledSetting, defaultSoftDeleteSetting]);
+      expect(captureEvent).toHaveBeenCalledWith(Events.workspaceSettingsBatch, {
+        enabled: true,
+        ...extractWorkspaceDetails(defaultGoogleWorkspace),
+      });
+    });
+
+    it('does not event if batch did not change', async () => {
+      // Arrange
+      const user = userEvent.setup();
+      const updateSettingsMock = jest.fn();
+      setup([batchEnabledSetting], updateSettingsMock);
+
+      // Act
+      await act(async () => {
+        render(<SettingsModal workspace={defaultGoogleWorkspace} onDismiss={jest.fn()} />);
+      });
+      await user.click(screen.getByRole('button', { name: 'Save' }));
+
+      // Assert
+      expect(updateSettingsMock).toHaveBeenCalledWith([batchEnabledSetting, defaultSoftDeleteSetting]);
+      expect(captureEvent).not.toHaveBeenCalledWith();
+    });
+  });
+
+  it('does not show GCP batch settings if the feature flag is disabled', async () => {
+    // Arrange
+    setup([], jest.fn());
+    asMockedFn(isFeaturePreviewEnabled).mockReturnValue(false);
+
+    // Act
+    await act(async () => {
+      render(<SettingsModal workspace={defaultGoogleWorkspace} onDismiss={jest.fn()} />);
+    });
+
+    // Assert
+    expect(screen.queryByText('GCP Batch')).toBeNull();
   });
 });
