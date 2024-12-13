@@ -2,8 +2,11 @@ import { act, screen } from '@testing-library/react';
 import React from 'react';
 import { BillingProject } from 'src/billing-core/models';
 import { Billing, BillingContract } from 'src/libs/ajax/billing/Billing';
+import { Metrics, MetricsContract } from 'src/libs/ajax/Metrics';
 import { isFeaturePreviewEnabled } from 'src/libs/feature-previews';
 import { asMockedFn, partial, renderWithAppContexts as render } from 'src/testing/test-utils';
+import { defaultAzureWorkspace, defaultGoogleWorkspace } from 'src/testing/workspace-fixtures';
+import { useWorkspaces } from 'src/workspaces/common/state/useWorkspaces';
 
 import { BillingList, BillingListProps } from './BillingList';
 
@@ -13,6 +16,23 @@ jest.mock('src/libs/nav', () => ({
   getPath: jest.fn(() => '/test/'),
   getLink: jest.fn(() => '/'),
 }));
+
+jest.mock('src/libs/ajax/Metrics');
+asMockedFn(Metrics).mockImplementation(() => partial<MetricsContract>({ captureEvent: jest.fn() }));
+
+type UseWorkspacesExports = typeof import('src/workspaces/common/state/useWorkspaces');
+jest.mock('src/workspaces/common/state/useWorkspaces', (): UseWorkspacesExports => {
+  return {
+    ...jest.requireActual<UseWorkspacesExports>('src/workspaces/common/state/useWorkspaces'),
+    useWorkspaces: jest.fn(),
+  };
+});
+asMockedFn(useWorkspaces).mockReturnValue({
+  workspaces: [defaultAzureWorkspace, defaultGoogleWorkspace],
+  loading: false,
+  refresh: () => Promise.resolve(),
+  status: 'Ready',
+});
 
 type AuthExports = typeof import('src/auth/auth');
 jest.mock('src/libs/ajax/billing/Billing');
@@ -27,15 +47,8 @@ asMockedFn(Billing).mockReturnValue(
         roles: ['Owner'],
         status: 'Ready',
       }),
-      partial<BillingProject>({
-        // billingAccount: 'billingAccounts/BAA-RAM-EWE',
-        cloudPlatform: 'AZURE',
-        invalidBillingAccount: false,
-        projectName: 'Azure Billing Project',
-        roles: ['Owner'],
-        status: 'Ready',
-      }),
     ],
+    getProject: async () => partial<BillingProject>({ projectName: 'Google Billing Project' }),
   })
 );
 
