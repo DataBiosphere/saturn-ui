@@ -8,6 +8,7 @@ import { BillingAccountStatus, parseCurrencyIfNeeded } from 'src/billing/utils';
 import { BillingProject } from 'src/billing-core/models';
 import { fixedSpinnerOverlay } from 'src/components/common';
 import { ariaSort, HeaderRenderer, Paginator } from 'src/components/table';
+import { Ajax } from 'src/libs/ajax';
 import { Billing } from 'src/libs/ajax/billing/Billing';
 import {
   AggregatedWorkspaceSpendData,
@@ -173,19 +174,16 @@ interface ConsolidatedSpendReportProps {
 
 export const ConsolidatedSpendReport = (props: ConsolidatedSpendReportProps): ReactNode => {
   const [spendReportLengthInDays, setSpendReportLengthInDays] = useState(30);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [updating, setUpdating] = useState(false);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [searchValue, setSearchValue] = useState<string>('');
   const [ownedWorkspaces, setOwnedWorkspaces] = useState<GoogleWorkspaceInfo[]>([]);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [workspaceSort, setWorkspaceSort] = useState<{ field: string; direction: 'asc' | 'desc' }>({
     field: 'totalSpend',
     direction: 'desc',
   });
-  const allWorkspaces = props.workspaces;
+  const [allWorkspaces, setAllWorkspaces] = useState<WorkspaceWrapper[]>(props.workspaces);
 
-  // BIG TODO - paginate without making too many BQ calls but also knowing how many pages there are???
+  // TODO - how to know how many workspaces there are  in total in order to paginate without querying BQ?
   const [pageNumber, setPageNumber] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(25);
 
@@ -207,6 +205,24 @@ export const ConsolidatedSpendReport = (props: ConsolidatedSpendReportProps): Re
     // Define start and end dates
     const endDate = new Date().toISOString().slice(0, 10);
     const startDate = subDays(spendReportLengthInDays, new Date()).toISOString().slice(0, 10);
+
+    const fetchWorkspaces = async (signal: AbortSignal): Promise<WorkspaceWrapper[]> => {
+      const fetchedWorkspaces = await Ajax(signal).Workspaces.list(
+        [
+          'workspace.billingAccount',
+          'workspace.bucketName',
+          'workspace.createdBy',
+          'workspace.createdDate',
+          'workspace.googleProject',
+          'workspace.lastModified',
+          'workspace.name',
+          'workspace.namespace',
+        ],
+        250 // TODO what to do here
+      );
+      return fetchedWorkspaces;
+    };
+
     const getWorkspaceSpendData = async (signal: AbortSignal): Promise<GoogleWorkspaceInfo[]> => {
       setUpdating(true);
 
@@ -222,7 +238,6 @@ export const ConsolidatedSpendReport = (props: ConsolidatedSpendReportProps): Re
 
         try {
           // Fetch the spend report for the billing project
-          // TODO Cache the result so it doesn't get called on every page change
           const consolidatedSpendReport: SpendReportServerResponse = await Billing(signal).getCrossBillingSpendReport({
             startDate,
             endDate,
@@ -241,7 +256,6 @@ export const ConsolidatedSpendReport = (props: ConsolidatedSpendReportProps): Re
               currency: spendItem.currency,
             });
 
-            // TODO what if it's not found
             const workspaceDetails = allWorkspaces.find(
               (ws): ws is GoogleWorkspace =>
                 ws.workspace.name === spendItem.workspace.name &&
@@ -285,18 +299,31 @@ export const ConsolidatedSpendReport = (props: ConsolidatedSpendReportProps): Re
         return storedSpendReport.spendReport;
       }
     };
-    getWorkspaceSpendData(signal).then((updatedWorkspaces) => {
-      if (updatedWorkspaces) {
-        spendReportStore.update((store) => {
-          const newStore: SpendReportStore = { ...store };
-          newStore[spendReportLengthInDays] = { spendReport: updatedWorkspaces, startDate, endDate };
-          return newStore;
+
+    const initialize = async () => {
+      // Fetch workspaces if they haven't been fetched yet
+      if (!allWorkspaces || allWorkspaces.length === 0) {
+        setUpdating(true);
+        await fetchWorkspaces(signal).then((workspaces) => {
+          // const gcpWorkspaces = workspaces.filter((ws) => ws.workspace.cloudPlatform === 'Gcp');
+          setAllWorkspaces(workspaces);
         });
-        setOwnedWorkspaces(updatedWorkspaces);
+      } else {
+        getWorkspaceSpendData(signal).then((updatedWorkspaces) => {
+          if (updatedWorkspaces) {
+            spendReportStore.update((store) => {
+              const newStore: SpendReportStore = { ...store };
+              newStore[spendReportLengthInDays] = { spendReport: updatedWorkspaces, startDate, endDate };
+              return newStore;
+            });
+            setOwnedWorkspaces(updatedWorkspaces);
+          }
+        });
       }
-    });
+    };
+    initialize();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [signal, spendReportLengthInDays]);
+  }, [signal, spendReportLengthInDays, allWorkspaces]);
 
   return (
     <>
