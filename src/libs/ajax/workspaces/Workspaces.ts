@@ -76,6 +76,7 @@ export const Workspaces = (signal?: AbortSignal) => ({
 
   getShareLog: async (): Promise<string[]> => {
     try {
+      console.log("Running share workspace...")
       const res = await fetchOrchestration('api/sharelog/sharees?shareType=workspace', _.merge(authOpts(), { signal }));
       return res.json();
     } catch (e) {
