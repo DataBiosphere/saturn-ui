@@ -7,7 +7,7 @@ import { SearchFilter } from 'src/billing/Filter/SearchFilter';
 import { BillingAccountStatus, parseCurrencyIfNeeded } from 'src/billing/utils';
 import { BillingProject } from 'src/billing-core/models';
 import { fixedSpinnerOverlay } from 'src/components/common';
-import { ariaSort, HeaderRenderer, Paginator } from 'src/components/table';
+import { ariaSort, HeaderRenderer } from 'src/components/table';
 import { Ajax } from 'src/libs/ajax';
 import { Billing } from 'src/libs/ajax/billing/Billing';
 import {
@@ -184,8 +184,10 @@ export const ConsolidatedSpendReport = (props: ConsolidatedSpendReportProps): Re
   const [allWorkspaces, setAllWorkspaces] = useState<WorkspaceWrapper[]>(props.workspaces);
 
   // TODO - how to know how many workspaces there are  in total in order to paginate without querying BQ?
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [pageNumber, setPageNumber] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(25);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [itemsPerPage, setItemsPerPage] = useState(250);
 
   const signal = useCancellation();
 
@@ -218,7 +220,7 @@ export const ConsolidatedSpendReport = (props: ConsolidatedSpendReportProps): Re
           'workspace.name',
           'workspace.namespace',
         ],
-        250 // TODO what to do here
+        itemsPerPage // TODO what to do here
       );
       return fetchedWorkspaces;
     };
@@ -305,7 +307,6 @@ export const ConsolidatedSpendReport = (props: ConsolidatedSpendReportProps): Re
       if (!allWorkspaces || allWorkspaces.length === 0) {
         setUpdating(true);
         await fetchWorkspaces(signal).then((workspaces) => {
-          // const gcpWorkspaces = workspaces.filter((ws) => ws.workspace.cloudPlatform === 'Gcp');
           setAllWorkspaces(workspaces);
         });
       } else {
@@ -371,51 +372,53 @@ export const ConsolidatedSpendReport = (props: ConsolidatedSpendReportProps): Re
           Total spend includes infrastructure or query costs related to the general operations of Terra.
         </div>
         {!_.isEmpty(filteredOwnedWorkspaces) && (
-          <div role='table' aria-label='owned workspaces'>
-            <ConsolidatedSpendWorkspaceCardHeaders onSort={setWorkspaceSort} sort={workspaceSort} />
-            <div style={{ position: 'relative' }}>
-              {_.flow(
-                _.orderBy(
-                  [(workspace) => parseCurrencyIfNeeded(workspaceSort.field, _.get(workspaceSort.field, workspace))],
-                  [workspaceSort.direction]
-                ),
-                _.map((workspace: GoogleWorkspaceInfo) => {
-                  return (
-                    <ConsolidatedSpendWorkspaceCard
-                      workspace={workspace}
-                      billingAccountDisplayName={workspace.namespace}
-                      billingProject={{
-                        cloudPlatform: 'GCP',
-                        billingAccount: workspace.billingAccount,
-                        projectName: workspace.googleProject,
-                        invalidBillingAccount: false,
-                        roles: ['Owner'],
-                        status: 'Ready',
-                      }}
-                      billingAccountStatus={false}
-                      key={workspace.workspaceId}
-                    />
-                  );
-                })
-              )(filteredOwnedWorkspaces)}
-              <div style={{ marginBottom: '0.5rem' }}>
-                {
-                  // @ts-expect-error
-                  <Paginator
-                    filteredDataLength={filteredOwnedWorkspaces.length}
-                    unfilteredDataLength={ownedWorkspaces.length}
-                    pageNumber={pageNumber}
-                    setPageNumber={setPageNumber}
-                    itemsPerPage={itemsPerPage}
-                    setItemsPerPage={(v) => {
-                      setPageNumber(1);
-                      setItemsPerPage(v);
-                    }}
-                  />
-                }
+          <>
+            <div role='table' aria-label='owned workspaces'>
+              <ConsolidatedSpendWorkspaceCardHeaders onSort={setWorkspaceSort} sort={workspaceSort} />
+              <div style={{ position: 'relative' }}>
+                {_.flow(
+                  _.orderBy(
+                    [(workspace) => parseCurrencyIfNeeded(workspaceSort.field, _.get(workspaceSort.field, workspace))],
+                    [workspaceSort.direction]
+                  ),
+                  _.map((workspace: GoogleWorkspaceInfo) => {
+                    return (
+                      <ConsolidatedSpendWorkspaceCard
+                        workspace={workspace}
+                        billingAccountDisplayName={workspace.namespace}
+                        billingProject={{
+                          cloudPlatform: 'GCP',
+                          billingAccount: workspace.billingAccount,
+                          projectName: workspace.googleProject,
+                          invalidBillingAccount: false,
+                          roles: ['Owner'],
+                          status: 'Ready',
+                        }}
+                        billingAccountStatus={false}
+                        key={workspace.workspaceId}
+                      />
+                    );
+                  })
+                )(filteredOwnedWorkspaces)}
               </div>
             </div>
-          </div>
+            {/* <div style={{ marginBottom: '0.5rem' }}>
+              {
+                // @ts-expect-error
+                <Paginator
+                  filteredDataLength={filteredOwnedWorkspaces.length}
+                  unfilteredDataLength={allWorkspaces.length}
+                  pageNumber={pageNumber}
+                  setPageNumber={setPageNumber}
+                  itemsPerPage={itemsPerPage}
+                  setItemsPerPage={(v) => {
+                    setPageNumber(1);
+                    setItemsPerPage(v);
+                  }}
+                />
+              }
+            </div> */}
+          </>
         )}
         {updating && fixedSpinnerOverlay}
       </div>
