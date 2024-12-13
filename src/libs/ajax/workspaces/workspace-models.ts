@@ -36,6 +36,7 @@ export type WorkspaceSetting =
   | BucketLifecycleSetting
   | SoftDeleteSetting
   | RequesterPaysSetting
+  | BatchSetting
   | SeparateSubmissionFinalOutputsSetting;
 
 export interface BucketLifecycleSetting {
@@ -50,6 +51,11 @@ export interface SoftDeleteSetting {
 
 export interface RequesterPaysSetting {
   settingType: 'GcpBucketRequesterPays';
+  config: { enabled: boolean };
+}
+
+export interface BatchSetting {
+  settingType: 'UseCromwellGcpBatchBackend';
   config: { enabled: boolean };
 }
 
