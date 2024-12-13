@@ -16,7 +16,8 @@ import colors from 'src/libs/colors';
 import { withErrorReporting } from 'src/libs/error';
 import { FormLabel } from 'src/libs/forms';
 import { useCancellation, useOnMount } from 'src/libs/react-utils';
-import { cond, withBusyState } from 'src/libs/utils';
+import { cond, summarizeErrors, withBusyState } from 'src/libs/utils';
+import validate from 'validate.js';
 
 interface NewMemberModalProps {
   addFunction: (roles: string[], email: string) => Promise<unknown>;
@@ -104,11 +105,43 @@ export const NewMemberModal = (props: NewMemberModalProps) => {
       : await submit();
   });
 
-  const isAdmin = _.includes(adminLabel, roles);
-  const isValidEmail = (email: string): boolean => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
+  // Validator for a single email
+  const isValidEmail = (userEmail: string): boolean => {
+    return !validate.single(userEmail, { email: true, presence: true });
   };
+
+  // Custom validator for an array of emails
+  validate.validators.emailArray = (value: string[], options: { message: string; emptyMessage: string }, key: any) => {
+    if (!Array.isArray(value)) {
+      return options.message || `^${key} must be an array.`;
+    }
+
+    if (value.length === 0) {
+      return options.emptyMessage || `^${key} cannot be empty.`;
+    }
+
+    const errors = _.flow(
+      _.map((email: string, index: number) =>
+        !isValidEmail(email) ? `^Invalid email at position ${index + 1}: ${email}` : null
+      ),
+      _.filter(Boolean)
+    )(value);
+
+    return errors.length ? errors.join(', ') : null;
+  };
+
+  const errors = validate(
+    { userEmails },
+    {
+      userEmails: {
+        emailArray: {
+          message: '^All inputs must be valid email addresses.',
+          emptyMessage: '^User emails cannot be empty.',
+        },
+      },
+    }
+  );
+  const isAdmin = _.includes(adminLabel, roles);
 
   const emailInputId = useUniqueId();
   const roleSelectId = useUniqueId();
@@ -132,7 +165,11 @@ export const NewMemberModal = (props: NewMemberModalProps) => {
       <Modal
         onDismiss={onDismiss}
         title={title}
-        okButton={<ButtonPrimary onClick={addUsers}>Add Users</ButtonPrimary>}
+        okButton={
+          <ButtonPrimary tooltip={summarizeErrors(errors)} onClick={addUsers} disabled={!!errors}>
+            Add Users
+          </ButtonPrimary>
+        }
         width={720}
       >
         {isInvalidEmail && <ErrorAlert errorValue='Please add a valid email' />}
