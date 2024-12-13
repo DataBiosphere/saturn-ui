@@ -1,20 +1,14 @@
-import {
-  ButtonPrimary,
-  CreatableSelect,
-  Modal,
-  Select,
-  SpinnerOverlay,
-  useUniqueId,
-} from '@terra-ui-packages/components';
+import { ButtonPrimary, Modal, SpinnerOverlay } from '@terra-ui-packages/components';
 import _ from 'lodash/fp';
 import React, { useState } from 'react';
 import { ErrorAlert } from 'src/alerts/ErrorAlert';
+import { EmailSelect } from 'src/groups/Members/EmailSelect';
+import { RoleSelect } from 'src/groups/Members/RoleSelect';
 import { Groups } from 'src/libs/ajax/Groups';
 import { User } from 'src/libs/ajax/User';
 import { Workspaces } from 'src/libs/ajax/workspaces/Workspaces';
 import colors from 'src/libs/colors';
 import { withErrorReporting } from 'src/libs/error';
-import { FormLabel } from 'src/libs/forms';
 import { useCancellation, useOnMount } from 'src/libs/react-utils';
 import { cond, summarizeErrors, withBusyState } from 'src/libs/utils';
 import validate from 'validate.js';
@@ -143,9 +137,6 @@ export const NewMemberModal = (props: NewMemberModalProps) => {
   );
   const isAdmin = _.includes(adminLabel, roles);
 
-  const emailInputId = useUniqueId();
-  const roleSelectId = useUniqueId();
-
   return cond(
     [
       confirmAddUser,
@@ -175,17 +166,9 @@ export const NewMemberModal = (props: NewMemberModalProps) => {
         {isInvalidEmail && <ErrorAlert errorValue='Please add a valid email' />}
         <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
           <div style={{ flex: 2 }}>
-            <FormLabel id={emailInputId} required>
-              User emails
-            </FormLabel>
-            <CreatableSelect
-              id={emailInputId}
-              isMulti
-              isClearable={false}
-              isSearchable
-              placeholder='Type or select user emails'
-              aria-label='Type or select user emails'
-              value={_.map((value) => ({ value, label: value }), userEmails)}
+            <EmailSelect
+              options={_.map((value) => ({ value, label: value }), suggestions)}
+              values={_.map((value) => ({ value, label: value }), userEmails)}
               onChange={(data: Array<{ value: string; label: string }>) => {
                 setIsInvalidEmail(false);
                 const selectedEmails = _.map('value', data);
@@ -197,14 +180,10 @@ export const NewMemberModal = (props: NewMemberModalProps) => {
                   setIsInvalidEmail(true);
                 }
               }}
-              options={_.map((value) => ({ value, label: value }), suggestions)}
             />
           </div>
           <div style={{ flex: '1' }}>
-            <FormLabel id={roleSelectId}>&nbsp;</FormLabel>
-            <Select
-              id={roleSelectId}
-              aria-label='Select Role'
+            <RoleSelect
               options={_.map(
                 (value) => ({
                   label: value.name,
