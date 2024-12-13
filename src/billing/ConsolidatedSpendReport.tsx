@@ -31,10 +31,22 @@ interface ConsolidatedSpendWorkspaceCardHeadersProps {
   onSort: (sort: { field: string; direction: 'asc' | 'desc' }) => void;
 }
 
+// Since the variable names don't match display names for these two columns, we need to map them
+const columnTitleToVariableNameMap = {
+  billingAccount: 'namespace',
+  workspaceName: 'name',
+};
+
 const ConsolidatedSpendWorkspaceCardHeaders: React.FC<ConsolidatedSpendWorkspaceCardHeadersProps> = memoWithName(
   'ConsolidatedSpendWorkspaceCardHeaders',
   (props: ConsolidatedSpendWorkspaceCardHeadersProps) => {
     const { sort, onSort } = props;
+
+    const handleSort = (name: string) => {
+      const variableName = columnTitleToVariableNameMap[name];
+      onSort({ field: variableName, direction: sort.direction === 'asc' ? 'desc' : 'asc' });
+    };
+
     return (
       <div
         role='row'
@@ -47,10 +59,10 @@ const ConsolidatedSpendWorkspaceCardHeaders: React.FC<ConsolidatedSpendWorkspace
         }}
       >
         <div role='columnheader' aria-sort={ariaSort(sort, 'billingAccount')} style={{ flex: 1, paddingLeft: '2rem' }}>
-          <HeaderRenderer sort={sort} onSort={onSort} name='billingAccount' />
+          <HeaderRenderer sort={sort} onSort={() => handleSort('billingAccount')} name='billingAccount' />
         </div>
         <div role='columnheader' aria-sort={ariaSort(sort, 'workspaceName')} style={{ flex: 1 }}>
-          <HeaderRenderer sort={sort} onSort={onSort} name='workspaceName' />
+          <HeaderRenderer sort={sort} onSort={() => handleSort('workspaceName')} name='workspaceName' />
         </div>
         <div role='columnheader' aria-sort={ariaSort(sort, 'totalSpend')} style={{ flex: 1 }}>
           <HeaderRenderer sort={sort} onSort={onSort} name='totalSpend' />
@@ -91,7 +103,6 @@ const ConsolidatedSpendWorkspaceCard: React.FC<ConsolidatedSpendWorkspaceCardPro
   (props: ConsolidatedSpendWorkspaceCardProps) => {
     const { workspace, billingAccountDisplayName, billingProject, billingAccountStatus } = props;
     const { namespace, name, createdBy, lastModified, totalSpend, totalCompute, totalStorage } = workspace;
-
     const workspaceCardStyles = {
       field: {
         ...Style.noWrapEllipsis,
@@ -147,7 +158,7 @@ const ConsolidatedSpendWorkspaceCard: React.FC<ConsolidatedSpendWorkspaceCardPro
             {createdBy}
           </div>
           <div role='cell' style={{ height: '1rem', flex: `0 0 ${workspaceLastModifiedWidth}px` }}>
-            {Utils.makeStandardDate(lastModified)}
+            {lastModified ? Utils.makeStandardDate(lastModified) : ' '}
           </div>
         </div>
       </div>
@@ -334,10 +345,7 @@ export const ConsolidatedSpendReport = (props: ConsolidatedSpendReportProps): Re
         </div>
         {!_.isEmpty(filteredOwnedWorkspaces) && (
           <div role='table' aria-label='owned workspaces'>
-            <ConsolidatedSpendWorkspaceCardHeaders
-              onSort={setWorkspaceSort}
-              sort={{ field: 'name', direction: 'asc' }}
-            />
+            <ConsolidatedSpendWorkspaceCardHeaders onSort={setWorkspaceSort} sort={workspaceSort} />
             <div style={{ position: 'relative' }}>
               {_.flow(
                 _.orderBy(
