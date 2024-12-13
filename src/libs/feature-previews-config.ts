@@ -158,9 +158,11 @@ const featurePreviewsConfig: readonly FeaturePreview[] = [
     description:
       'Enabling this feature will allow user to generate a spend report across all billing projects in which they own workspaces',
     feedbackUrl: `mailto:dsp-core-services@broadinstitute.org?subject=${encodeURIComponent(
-      'Feedback on Consolidated Spend Report')}`,
+      'Feedback on Consolidated Spend Report'
+    )}`,
     lastUpdated: '12/20/2024',
-    },
+  },
+  {
     id: GCP_BATCH,
     title: 'Run workflows on GCP Batch',
     description:
