@@ -1,4 +1,5 @@
 import { CreatableSelect, useUniqueId } from '@terra-ui-packages/components';
+import _ from 'lodash/fp';
 import React from 'react';
 import { FormLabel } from 'src/libs/forms';
 
@@ -8,9 +9,9 @@ interface EmailSelectProps {
   isMulti?: boolean;
   isClearable?: boolean;
   isSearchable?: boolean;
-  options: Array<{ value: string; label: string }>;
-  values: Array<{ value: string; label: string }>;
-  onChange: (data: Array<{ value: string; label: string }>) => void;
+  options: string[];
+  emails: string[];
+  setEmails: (values: string[]) => void;
 }
 
 export const EmailSelect: React.FC<EmailSelectProps> = ({
@@ -20,14 +21,14 @@ export const EmailSelect: React.FC<EmailSelectProps> = ({
   isClearable = false,
   isSearchable = true,
   options,
-  values,
-  onChange,
+  emails,
+  setEmails,
 }) => {
   const emailInputId = useUniqueId();
 
   return (
     <>
-      <FormLabel id={emailInputId} required>
+      <FormLabel id={emailInputId} required style={{ marginTop: '0.25rem' }}>
         {label}
       </FormLabel>
       <CreatableSelect
@@ -37,9 +38,15 @@ export const EmailSelect: React.FC<EmailSelectProps> = ({
         isSearchable={isSearchable}
         placeholder={placeholder}
         aria-label={placeholder}
-        value={values}
-        onChange={onChange}
-        options={options}
+        value={_.map((value: string) => ({ value, label: value }), emails)}
+        options={_.map((value: string) => ({ value, label: value }), options)}
+        onChange={(option: Array<{ value: string; label: string }>) => {
+          const selectedOption: string[] = _.map('value', option);
+          const newEmail: string | undefined = _.find((email: string) => !emails.includes(email), selectedOption);
+          if (newEmail || newEmail === undefined) {
+            setEmails(selectedOption);
+          }
+        }}
       />
     </>
   );
