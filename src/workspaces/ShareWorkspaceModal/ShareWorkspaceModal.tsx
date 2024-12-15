@@ -3,15 +3,13 @@ import _ from 'lodash/fp';
 import React, { useLayoutEffect, useRef, useState } from 'react';
 import { ButtonPrimary, ButtonSecondary, spinnerOverlay } from 'src/components/common';
 import { centeredSpinner } from 'src/components/icons';
-import { AutocompleteTextInput } from 'src/components/input';
+import { EmailSelect } from 'src/groups/Members/EmailSelect';
 import { Groups } from 'src/libs/ajax/Groups';
 import { CurrentUserGroupMembership } from 'src/libs/ajax/Groups';
 import { Metrics } from 'src/libs/ajax/Metrics';
-import { WorkspaceAclUpdate } from 'src/libs/ajax/workspaces/workspace-models';
 import { Workspaces } from 'src/libs/ajax/workspaces/Workspaces';
 import { reportError } from 'src/libs/error';
 import Events, { extractWorkspaceDetails } from 'src/libs/events';
-import { FormLabel } from 'src/libs/forms';
 import { useCancellation, useOnMount } from 'src/libs/react-utils';
 import { append, cond, withBusyState } from 'src/libs/utils';
 import {
@@ -22,8 +20,9 @@ import {
   transformAcl,
   WorkspaceAcl,
 } from 'src/workspaces/acl-utils';
+import { AclInput } from 'src/workspaces/ShareWorkspaceModal/Collaborator';
 import { CurrentCollaborators } from 'src/workspaces/ShareWorkspaceModal/CurrentCollaborators';
-import { WorkspaceWrapper } from 'src/workspaces/utils';
+import { isAzureWorkspace, WorkspaceWrapper } from 'src/workspaces/utils';
 import { WorkspacePolicies } from 'src/workspaces/WorkspacePolicies/WorkspacePolicies';
 import validate from 'validate.js';
 
@@ -41,12 +40,19 @@ const ShareWorkspaceModal: React.FC<ShareWorkspaceModalProps> = (props: ShareWor
   const [groups, setGroups] = useState<CurrentUserGroupMembership[]>([]);
   const [originalAcl, setOriginalAcl] = useState<WorkspaceAcl>([]);
   const [searchValue, setSearchValue] = useState('');
+  const [searchValues, setSearchValues] = useState<string[]>([]);
   const [acl, setAcl] = useState<WorkspaceAcl>([]);
+  const [newAcl, setNewAcl] = useState<AccessEntry>({
+    email: '',
+    accessLevel: 'READER',
+    pending: false,
+    canShare: false,
+    canCompute: false,
+  });
   const [loaded, setLoaded] = useState(false);
   const [working, setWorking] = useState(false);
   const [updateError, setUpdateError] = useState(undefined);
   const [lastAddedEmail, setLastAddedEmail] = useState(undefined);
-  const [searchHasFocus, setSearchHasFocus] = useState(true);
   const list = useRef<HTMLDivElement>(null);
 
   const signal = useCancellation();
@@ -136,34 +142,32 @@ const ShareWorkspaceModal: React.FC<ShareWorkspaceModalProps> = (props: ShareWor
     }
   });
 
-  const newEntryId = useUniqueId('new-entry');
   const shareSupportId = useUniqueId('share-support');
 
   return (
-    <Modal title='Share Workspace' width={550} showButtons={false} onDismiss={onDismiss}>
-      <div style={{ display: 'flex', alignItems: 'flex-end' }}>
-        <div style={{ flexGrow: 1, marginRight: '1rem' }}>
-          <FormLabel id={newEntryId}>User email</FormLabel>
-          <AutocompleteTextInput
-            labelId={newEntryId}
-            openOnFocus
-            placeholderText={
-              _.includes(searchValue, aclEmails)
-                ? 'This email has already been added to the list'
-                : 'Type an email address and press "Enter" or "Return"'
-            }
-            onPick={addCollaborator}
+    <Modal title='Share Workspace' width={720} showButtons={false} onDismiss={onDismiss}>
+      <div style={{ display: 'flex', alignItems: 'flex-end', gap: '0.5rem' }}>
+        <div style={{ flexGrow: 2, width: '500px' }}>
+          <EmailSelect
             placeholder='Add people or groups'
-            value={searchValue}
-            onFocus={() => setSearchHasFocus(true)}
-            onBlur={() => setSearchHasFocus(false)}
-            onChange={setSearchValue}
-            suggestions={cond(
+            options={cond(
               [searchValueValid && !_.includes(searchValue, aclEmails), () => [searchValue]],
               [remainingSuggestions.length > 0, () => remainingSuggestions],
               () => []
             )}
-            style={{ fontSize: 16 }}
+            emails={searchValues}
+            setEmails={setSearchValues}
+          />
+        </div>
+        <div style={{ flexGrow: 1 }}>
+          <AclInput
+            aria-label='permissions for new collaborator'
+            value={newAcl}
+            onChange={setNewAcl}
+            disabled={false}
+            maxAccessLevel={workspace.accessLevel}
+            isAzureWorkspace={isAzureWorkspace(workspace)}
+            showRow={false}
           />
         </div>
         <ButtonPrimary
@@ -174,7 +178,7 @@ const ShareWorkspaceModal: React.FC<ShareWorkspaceModalProps> = (props: ShareWor
           Add
         </ButtonPrimary>
       </div>
-      {searchValueValid && !searchHasFocus && <p>{addUserReminder}</p>}
+      {searchValueValid && <p>{addUserReminder}</p>}
       <CurrentCollaborators
         acl={acl}
         setAcl={setAcl}
