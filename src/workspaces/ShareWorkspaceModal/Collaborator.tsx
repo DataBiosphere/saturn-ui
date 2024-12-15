@@ -86,10 +86,11 @@ interface AclInputProps extends AclSelectProps {
   isAzureWorkspace: boolean | undefined;
   disabled: boolean | undefined;
   onChange: (AccessEntry) => void;
+  showRow?: boolean;
 }
 
 export const AclInput: React.FC<AclInputProps> = (props: AclInputProps) => {
-  const { value, onChange, disabled, maxAccessLevel, isAzureWorkspace, autoFocus, ...rest } = props;
+  const { value, onChange, disabled, maxAccessLevel, isAzureWorkspace, autoFocus, showRow = true, ...rest } = props;
   const { accessLevel, canShare, canCompute } = value;
   const userCanShareAdditionalPerms = ['OWNER', 'PROJECT_OWNER'].includes(maxAccessLevel);
   const tooltipProps = userCanShareAdditionalPerms
@@ -97,7 +98,7 @@ export const AclInput: React.FC<AclInputProps> = (props: AclInputProps) => {
     : { tooltip: 'Only Owners and Project Owners can share additional permissions' };
 
   return (
-    <div style={{ display: 'flex', marginTop: '0.25rem' }}>
+    <div style={{ display: 'flex', marginTop: '0.25rem', flexDirection: showRow ? 'row' : 'column' }}>
       <div style={{ width: isAzureWorkspace ? 425 : 200 }}>
         <AclSelect
           autoFocus={autoFocus}
@@ -124,7 +125,7 @@ export const AclInput: React.FC<AclInputProps> = (props: AclInputProps) => {
         />
       </div>
       {!isAzureWorkspace && (
-        <div style={{ marginLeft: '1rem' }}>
+        <div style={{ margin: showRow ? '0 0 0 1rem' : '0.2rem 0 0 0' }}>
           <div style={{ marginBottom: '0.2rem' }}>
             <LabeledCheckbox
               disabled={disabled || !userCanShareAdditionalPerms}
