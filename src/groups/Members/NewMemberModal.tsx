@@ -1,7 +1,6 @@
 import { ButtonPrimary, Modal, SpinnerOverlay } from '@terra-ui-packages/components';
 import _ from 'lodash/fp';
 import React, { useState } from 'react';
-import { ErrorAlert } from 'src/alerts/ErrorAlert';
 import { EmailSelect } from 'src/groups/Members/EmailSelect';
 import { RoleSelect } from 'src/groups/Members/RoleSelect';
 import { Groups } from 'src/libs/ajax/Groups';
@@ -39,10 +38,9 @@ export const NewMemberModal = (props: NewMemberModalProps) => {
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [confirmAddUser, setConfirmAddUser] = useState(false);
   const [inviteEmail, setInviteEmail] = useState('');
-  const [roles, setRoles] = useState<string[]>([memberLabel]);
+  const [role, setRole] = useState<string>(memberLabel);
   const [submitError, setSubmitError] = useState(undefined);
   const [busy, setBusy] = useState(false);
-  const [isInvalidEmail, setIsInvalidEmail] = useState(false);
 
   const signal = useCancellation();
 
@@ -61,7 +59,7 @@ export const NewMemberModal = (props: NewMemberModalProps) => {
     // only called by invite and add, which set busy & catch errors
     try {
       for (const userEmail of userEmails) {
-        await addFunction(roles, userEmail);
+        await addFunction([role], userEmail);
       }
       onSuccess();
     } catch (error: any) {
@@ -115,13 +113,11 @@ export const NewMemberModal = (props: NewMemberModalProps) => {
     }
 
     const errors = _.flow(
-      _.map((email: string, index: number) =>
-        !isValidEmail(email) ? `^Invalid email at position ${index + 1}: ${email}` : null
-      ),
+      _.map((email: string) => (!isValidEmail(email) ? email : null)),
       _.filter(Boolean)
     )(value);
 
-    return errors.length ? errors.join(', ') : null;
+    return errors.length ? `^Invalid email(s): ${errors.join(', ')}` : null;
   };
 
   const errors = validate(
@@ -135,7 +131,6 @@ export const NewMemberModal = (props: NewMemberModalProps) => {
       },
     }
   );
-  const isAdmin = _.includes(adminLabel, roles);
 
   return cond(
     [
@@ -163,40 +158,12 @@ export const NewMemberModal = (props: NewMemberModalProps) => {
         }
         width={720}
       >
-        {isInvalidEmail && <ErrorAlert errorValue='Please add a valid email' />}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
-          <div style={{ flex: 2 }}>
-            <EmailSelect
-              options={_.map((value) => ({ value, label: value }), suggestions)}
-              values={_.map((value) => ({ value, label: value }), userEmails)}
-              onChange={(data: Array<{ value: string; label: string }>) => {
-                setIsInvalidEmail(false);
-                const selectedEmails = _.map('value', data);
-                const newEmail = _.find((email) => !userEmails.includes(email), selectedEmails);
-                // If the new email is valid or undefined (remove all), update the list of emails
-                if ((newEmail && isValidEmail(newEmail)) || newEmail === undefined) {
-                  setUserEmails(selectedEmails);
-                } else {
-                  setIsInvalidEmail(true);
-                }
-              }}
-            />
+        <div style={{ display: 'flex', alignItems: 'flex-end', gap: '1.5rem' }}>
+          <div style={{ flex: 2, width: '500px' }}>
+            <EmailSelect options={suggestions} emails={userEmails} setEmails={setUserEmails} />
           </div>
           <div style={{ flex: '1' }}>
-            <RoleSelect
-              options={_.map(
-                (value) => ({
-                  label: value.name,
-                  value: value.id,
-                }),
-                [
-                  { id: memberLabel, name: _.startCase(memberLabel) },
-                  { id: adminLabel, name: _.startCase(adminLabel) },
-                ]
-              )}
-              value={isAdmin ? adminLabel : memberLabel}
-              onChange={() => setRoles([isAdmin ? memberLabel : adminLabel])}
-            />
+            <RoleSelect options={[memberLabel, adminLabel]} role={role} setRole={setRole} />
           </div>
         </div>
         {footer && <div style={{ marginTop: '1rem' }}>{footer}</div>}
