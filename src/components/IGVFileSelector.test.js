@@ -1,9 +1,18 @@
-import { getValidIgvFiles, getValidIgvFilesFromAttributeValues } from 'src/components/IGVFileSelector';
+import { getValidIgvFiles, getValidIgvFilesFromAttributeValues, isDrsUri } from 'src/components/IGVFileSelector';
+import { DrsUriResolver } from 'src/libs/ajax/drs/DrsUriResolver';
+import { isFeaturePreviewEnabled } from 'src/libs/feature-previews';
+
+jest.mock('src/libs/ajax/drs/DrsUriResolver');
+
+jest.mock('src/libs/feature-previews', () => ({
+  ...jest.requireActual('src/libs/feature-previews'),
+  isFeaturePreviewEnabled: jest.fn(),
+}));
 
 describe('getValidIgvFiles', () => {
-  it('allows BAM files with indices', () => {
+  it('allows BAM files with indices', async () => {
     expect(
-      getValidIgvFiles([
+      await getValidIgvFiles([
         'gs://bucket/test1.bam',
         'gs://bucket/test2.bam',
         'gs://bucket/test2.bai',
@@ -28,9 +37,9 @@ describe('getValidIgvFiles', () => {
     ]);
   });
 
-  it('allows CRAM files with indices', () => {
+  it('allows CRAM files with indices', async () => {
     expect(
-      getValidIgvFiles([
+      await getValidIgvFiles([
         'gs://bucket/test1.cram',
         'gs://bucket/test2.cram',
         'gs://bucket/test2.crai',
@@ -49,9 +58,9 @@ describe('getValidIgvFiles', () => {
     ]);
   });
 
-  it('allows VCF files with indices', () => {
+  it('allows VCF files with indices', async () => {
     expect(
-      getValidIgvFiles([
+      await getValidIgvFiles([
         'gs://bucket/test1.vcf',
         'gs://bucket/test2.vcf',
         'gs://bucket/test2.idx',
@@ -88,8 +97,8 @@ describe('getValidIgvFiles', () => {
     ]);
   });
 
-  it('allows BED files', () => {
-    expect(getValidIgvFiles(['gs://bucket/test.bed'])).toEqual([
+  it('allows BED files', async () => {
+    expect(await getValidIgvFiles(['gs://bucket/test.bed'])).toEqual([
       {
         filePath: 'gs://bucket/test.bed',
         indexFilePath: false,
@@ -97,8 +106,8 @@ describe('getValidIgvFiles', () => {
     ]);
   });
 
-  it('requires GCS URLs', () => {
-    expect(getValidIgvFiles(['gs://bucket/test.bed', 'https://example.com/test.bed', 'test.bed'])).toEqual([
+  it('requires GCS URLs', async () => {
+    expect(await getValidIgvFiles(['gs://bucket/test.bed', 'https://example.com/test.bed', 'test.bed'])).toEqual([
       {
         filePath: 'gs://bucket/test.bed',
         indexFilePath: false,
@@ -107,9 +116,9 @@ describe('getValidIgvFiles', () => {
   });
 
   describe('TDR URLs', () => {
-    it('allows TDR URLs', () => {
+    it('allows TDR URLs', async () => {
       expect(
-        getValidIgvFiles([
+        await getValidIgvFiles([
           'gs://datarepo-ab123456-bucket/cae37a2a-657f-4b04-9fef-59c215020078/5f5f634d-70f3-4914-9c71-9d14c7f98e60/test.bam',
           'gs://datarepo-ab123456-bucket/cae37a2a-657f-4b04-9fef-59c215020078/2eeff61f-ae9e-41ae-bb40-909ff6bdfba8/test.bam.bai',
         ])
@@ -121,9 +130,9 @@ describe('getValidIgvFiles', () => {
       ]);
     });
 
-    it('allows TDR URLs with additional path segments', () => {
+    it('allows TDR URLs with additional path segments', async () => {
       expect(
-        getValidIgvFiles([
+        await getValidIgvFiles([
           'gs://datarepo-ab123456-bucket/cae37a2a-657f-4b04-9fef-59c215020078/5f5f634d-70f3-4914-9c71-9d14c7f98e60/path/to/test.bam',
           'gs://datarepo-ab123456-bucket/cae37a2a-657f-4b04-9fef-59c215020078/2eeff61f-ae9e-41ae-bb40-909ff6bdfba8/path/to/test.bam.bai',
         ])
@@ -136,9 +145,9 @@ describe('getValidIgvFiles', () => {
       ]);
     });
 
-    it('allows TDR URLs from non-production environments', () => {
+    it('allows TDR URLs from non-production environments', async () => {
       expect(
-        getValidIgvFiles([
+        await getValidIgvFiles([
           'gs://datarepo-dev-ab123456-bucket/cae37a2a-657f-4b04-9fef-59c215020078/5f5f634d-70f3-4914-9c71-9d14c7f98e60/test.bam',
           'gs://datarepo-dev-ab123456-bucket/cae37a2a-657f-4b04-9fef-59c215020078/2eeff61f-ae9e-41ae-bb40-909ff6bdfba8/test.bam.bai',
         ])
@@ -153,9 +162,9 @@ describe('getValidIgvFiles', () => {
 });
 
 describe('getValidIgvFilesFromAttributeValues', () => {
-  it('gets all valid files from lists', () => {
+  it('gets all valid files from lists', async () => {
     expect(
-      getValidIgvFilesFromAttributeValues([
+      await getValidIgvFilesFromAttributeValues([
         {
           itemsType: 'AttributeValue',
           items: ['gs://bucket/test1.bed', 'gs://bucket/test2.bed', 'gs://bucket/test3.bed'],
@@ -173,6 +182,92 @@ describe('getValidIgvFilesFromAttributeValues', () => {
       {
         filePath: 'gs://bucket/test3.bed',
         indexFilePath: false,
+      },
+    ]);
+  });
+
+  it('does not consider single DRS URI valid', async () => {
+    // This is a DRS URI with a data GUID namespace, from
+    // https://support.terra.bio/hc/en-us/articles/360039330211-Overview-Interoperable-data-GA4GH-DRS-URIs
+    const drsUri = 'drs://dg.4503:2802a94d-f540-499f-950a-db3c2a9f2dc4';
+
+    expect(
+      await getValidIgvFilesFromAttributeValues([
+        {
+          itemsType: 'AttributeValue',
+          items: ['testString', drsUri, 'testString2'],
+        },
+      ])
+    ).toEqual([]);
+  });
+
+  it('robustly detects data table values that are DRS URIs', () => {
+    const drsUri = 'drs://dg.4503:2802a94d-f540-499f-950a-db3c2a9f2dc4';
+    expect(isDrsUri(drsUri)).toEqual(true);
+
+    const nonDrsUriString = 'gs://bucket/object';
+    expect(isDrsUri(nonDrsUriString)).toEqual(false);
+
+    // This assertion confirms no regression in
+    // https://github.com/DataBiosphere/terra-ui/pull/5199
+    const numericValue = 5;
+    expect(isDrsUri(numericValue)).toEqual(false);
+
+    const listValue = ['test'];
+    expect(isDrsUri(listValue)).toEqual(false);
+
+    const booleanValue = true;
+    expect(isDrsUri(booleanValue)).toEqual(false);
+
+    expect(isDrsUri(null)).toEqual(false);
+
+    expect(isDrsUri(undefined)).toEqual(false);
+  });
+
+  it('calls to resolve access URLs when two DRS URIs are found', async () => {
+    // An IGV selection must have a file (e.g. VCF) and an index file (TBI)
+    const fileDrsUri = 'drs://dg.4503:2802a94d-f540-499f-950a-db3c2a9f2dc4';
+    const indexFileDrsUri = 'drs://dg.4503:2802a94d-f540-499f-950a-11111111111';
+    const fileName = 'foo.vcf.gz';
+    const indexFileName = 'foo.vcf.gz.tbi';
+
+    const fileNameJson = { fileName };
+    const indexFileNameJson = { fileName: indexFileName };
+
+    // The access URL (aka signed URL) can have various parameters to track requester-pay features
+    const accessUrlParams = 'requestedBy=user@domain.tls&userProject=my-billing-project&signature=secret';
+    const fileAccessUrl = `https://bucket/${fileName}?${accessUrlParams}`;
+    const fileIndexAccessUrl = `https://bucket/${indexFileName}?${accessUrlParams}`;
+
+    // DRS URIs get resolved via DRS Hub.
+    // API docs: https://drshub.dsde-prod.broadinstitute.org/#/drsHub/resolveDrs
+    DrsUriResolver.mockImplementation(() => ({
+      getDataObjectMetadata: jest.fn((value, fields) => {
+        if (fields.includes('fileName')) {
+          const mockJson = value === fileDrsUri ? fileNameJson : indexFileNameJson;
+          return Promise.resolve(mockJson);
+        }
+        if (fields.includes('accessUrl')) {
+          const mockAccessUrl = value === fileDrsUri ? fileAccessUrl : fileIndexAccessUrl;
+          const mockAccessUrlJson = { accessUrl: { url: mockAccessUrl } };
+          return Promise.resolve(mockAccessUrlJson);
+        }
+      }),
+    }));
+
+    isFeaturePreviewEnabled.mockReturnValue(true);
+
+    expect(
+      await getValidIgvFilesFromAttributeValues([
+        {
+          itemsType: 'AttributeValue',
+          items: ['testString', fileDrsUri, indexFileDrsUri],
+        },
+      ])
+    ).toEqual([
+      {
+        filePath: 'https://bucket/foo.vcf.gz?requestedBy=user@domain.tls&userProject=my-billing-project&signature=secret',
+        indexFilePath: 'https://bucket/foo.vcf.gz.tbi?requestedBy=user@domain.tls&userProject=my-billing-project&signature=secret',
       },
     ]);
   });

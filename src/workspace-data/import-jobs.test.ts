@@ -1,15 +1,12 @@
-import { DeepPartial } from '@terra-ui-packages/core-utils';
 import { act, renderHook } from '@testing-library/react';
-import { Ajax } from 'src/libs/ajax';
+import { WorkspaceContract, Workspaces, WorkspacesAjaxContract } from 'src/libs/ajax/workspaces/Workspaces';
 import { asyncImportJobStore } from 'src/libs/state';
-import { asMockedFn } from 'src/testing/test-utils';
+import { asMockedFn, MockedFn, partial } from 'src/testing/test-utils';
 import { AzureWorkspace, GoogleWorkspace } from 'src/workspaces/utils';
 
 import { useImportJobs } from './import-jobs';
 
-jest.mock('src/libs/ajax');
-type AjaxExports = typeof import('src/libs/ajax');
-type AjaxContract = ReturnType<AjaxExports['Ajax']>;
+jest.mock('src/libs/ajax/workspaces/Workspaces');
 
 describe('useImportJobs', () => {
   describe('for Google workspaces', () => {
@@ -56,13 +53,13 @@ describe('useImportJobs', () => {
         { targetWorkspace: { namespace: 'test-workspaces', name: 'google-workspace' }, jobId: 'job-2' },
       ]);
 
-      const listImportJobs = jest.fn().mockResolvedValue([{ jobId: 'job-2' }, { jobId: 'job-3' }]);
-      const mockAjax: DeepPartial<AjaxContract> = {
-        Workspaces: {
-          workspace: () => ({ listImportJobs }),
-        },
-      };
-      asMockedFn(Ajax).mockImplementation(() => mockAjax as AjaxContract);
+      const listImportJobs: MockedFn<WorkspaceContract['listImportJobs']> = jest.fn();
+      listImportJobs.mockResolvedValue([{ jobId: 'job-2' }, { jobId: 'job-3' }]);
+      asMockedFn(Workspaces).mockReturnValue(
+        partial<WorkspacesAjaxContract>({
+          workspace: () => partial<WorkspaceContract>({ listImportJobs }),
+        })
+      );
 
       const { result: hookReturnRef } = renderHook(() => useImportJobs(workspace));
 
@@ -120,13 +117,13 @@ describe('useImportJobs', () => {
         { targetWorkspace: { namespace: 'test-workspaces', name: 'azure-workspace' }, jobId: 'workspace-job-2' },
       ]);
 
-      const listImportJobs = jest.fn().mockResolvedValue([{ jobId: 'workspace-job' }, { jobId: 'workspace-job-2' }]);
-      const mockAjax: DeepPartial<AjaxContract> = {
-        Workspaces: {
-          workspace: () => ({ listImportJobs }),
-        },
-      };
-      asMockedFn(Ajax).mockImplementation(() => mockAjax as AjaxContract);
+      const listImportJobs: MockedFn<WorkspaceContract['listImportJobs']> = jest.fn();
+      listImportJobs.mockResolvedValue([{ jobId: 'workspace-job' }, { jobId: 'workspace-job-2' }]);
+      asMockedFn(Workspaces).mockReturnValue(
+        partial<WorkspacesAjaxContract>({
+          workspace: () => partial<WorkspaceContract>({ listImportJobs }),
+        })
+      );
 
       const { result: hookReturnRef } = renderHook(() => useImportJobs(workspace));
 

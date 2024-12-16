@@ -11,7 +11,7 @@ import { DelayedSearchInput, TextInput } from 'src/components/input';
 import { MenuButton } from 'src/components/MenuButton';
 import { MenuDivider, MenuTrigger } from 'src/components/PopupTrigger';
 import { FlexTable, HeaderCell } from 'src/components/table';
-import { Ajax } from 'src/libs/ajax';
+import { Workspaces } from 'src/libs/ajax/workspaces/Workspaces';
 import colors from 'src/libs/colors';
 import { withErrorReporting } from 'src/libs/error';
 import * as Style from 'src/libs/style';
@@ -113,8 +113,8 @@ export const WorkspaceAttributes = ({
       ...(!editDescription ? [editDescriptionKey] : []),
     ];
 
-    await Ajax().Workspaces.workspace(namespace, name).shallowMergeNewAttributes(attributesToMerge);
-    await Ajax().Workspaces.workspace(namespace, name).deleteAttributes(attributesToDelete);
+    await Workspaces().workspace(namespace, name).shallowMergeNewAttributes(attributesToMerge);
+    await Workspaces().workspace(namespace, name).deleteAttributes(attributesToDelete);
 
     await refreshAttributes();
 
@@ -126,7 +126,7 @@ export const WorkspaceAttributes = ({
     withErrorReporting('Error uploading file'),
     Utils.withBusyState(setBusy)
   )(async ([file]) => {
-    await Ajax().Workspaces.workspace(namespace, name).importAttributes(file);
+    await Workspaces().workspace(namespace, name).importAttributes(file);
     await refreshAttributes();
   });
 
@@ -134,7 +134,7 @@ export const WorkspaceAttributes = ({
     withErrorReporting('Error downloading attributes'),
     Utils.withBusyState(setBusy)
   )(async () => {
-    const blob = await Ajax().Workspaces.workspace(namespace, name).exportAttributes();
+    const blob = await Workspaces().workspace(namespace, name).exportAttributes();
     FileSaver.saveAs(blob, `${name}-workspace-attributes.tsv`);
   });
 
@@ -443,8 +443,8 @@ export const WorkspaceAttributes = ({
                   withErrorReporting('Error deleting workspace variables')
                 )(async () => {
                   setDeleting(false);
-                  await Ajax()
-                    .Workspaces.workspace(namespace, name)
+                  await Workspaces()
+                    .workspace(namespace, name)
                     .deleteAttributes(
                       Object.entries(selection)
                         .filter(([_, selected]) => selected)

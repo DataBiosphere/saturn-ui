@@ -1,30 +1,25 @@
-import { DeepPartial } from '@terra-ui-packages/core-utils';
-import { asMockedFn } from '@terra-ui-packages/test-utils';
-import { Ajax } from 'src/libs/ajax';
+import { asMockedFn, MockedFn, partial } from '@terra-ui-packages/test-utils';
+import { GoogleWorkspaceInfo, WorkspaceWrapper } from 'src/libs/ajax/workspaces/workspace-models';
+import { WorkspaceContract, Workspaces, WorkspacesAjaxContract } from 'src/libs/ajax/workspaces/Workspaces';
 import { renderHookInActWithAppContexts } from 'src/testing/test-utils';
 
 import { useWorkspaceDataAttributes } from './useWorkspaceDataAttributes';
 
-type AjaxExports = typeof import('src/libs/ajax');
-jest.mock(
-  'src/libs/ajax',
-  (): AjaxExports => ({
-    ...jest.requireActual<AjaxExports>('src/libs/ajax'),
-    Ajax: jest.fn(),
-  })
-);
-
-type AjaxContract = ReturnType<typeof Ajax>;
+jest.mock('src/libs/ajax/workspaces/Workspaces');
 
 describe('useWorkspaceDataAttributes', () => {
   it('should call Ajax.Workspaces.workspace with the correct arguments', async () => {
     // Arrange
-    const workspaceDetails = jest.fn().mockResolvedValue({ workspace: { attributes: {} } });
-    const workspace = jest.fn(() => ({ details: workspaceDetails }));
-
-    asMockedFn(Ajax).mockImplementation(
-      () => ({ Workspaces: { workspace } } as DeepPartial<AjaxContract> as AjaxContract)
+    const workspaceDetails: MockedFn<WorkspaceContract['details']> = jest.fn();
+    workspaceDetails.mockResolvedValue(
+      partial<WorkspaceWrapper>({
+        workspace: partial<GoogleWorkspaceInfo>({ attributes: {} }),
+      })
     );
+    const workspace: MockedFn<WorkspacesAjaxContract['workspace']> = jest.fn();
+    workspace.mockReturnValue(partial<WorkspaceContract>({ details: workspaceDetails }));
+
+    asMockedFn(Workspaces).mockReturnValue(partial<WorkspacesAjaxContract>({ workspace }));
 
     // Act
     await renderHookInActWithAppContexts(() => useWorkspaceDataAttributes('namespace', 'name'));
@@ -45,15 +40,18 @@ describe('useWorkspaceDataAttributes', () => {
       __DESCRIPTION__attr1: 'description1',
     };
 
-    asMockedFn(Ajax).mockImplementation(
-      () =>
-        ({
-          Workspaces: {
-            workspace: () => ({
-              details: () => Promise.resolve({ workspace: { attributes: workspaceAttributes } }),
-            }),
-          },
-        } as DeepPartial<AjaxContract> as AjaxContract)
+    asMockedFn(Workspaces).mockReturnValue(
+      partial<WorkspacesAjaxContract>({
+        workspace: () =>
+          partial<WorkspaceContract>({
+            details: () =>
+              Promise.resolve(
+                partial<WorkspaceWrapper>({
+                  workspace: partial<GoogleWorkspaceInfo>({ attributes: workspaceAttributes }),
+                })
+              ),
+          }),
+      })
     );
 
     // Act

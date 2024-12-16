@@ -2,7 +2,7 @@ import DOMPurify from 'dompurify';
 import _ from 'lodash/fp';
 import { Fragment, useState } from 'react';
 import { div, h, img } from 'react-hyperscript-helpers';
-import { Ajax } from 'src/libs/ajax';
+import { GoogleStorage } from 'src/libs/ajax/GoogleStorage';
 import colors from 'src/libs/colors';
 import { useCancellation, useOnMount } from 'src/libs/react-utils';
 import * as Utils from 'src/libs/utils';
@@ -57,7 +57,7 @@ export const UriPreview = ({ metadata, metadata: { uri, bucket, name }, googlePr
         setPreview(metadata.textContent); // NB: For now, we only support text previews for Azure URIs.
       } else {
         const canPreviewFull = isImage(metadata) || canRender(metadata);
-        const res = await Ajax(signal).Buckets.getObjectPreview(googleProject, bucket, name, canPreviewFull);
+        const res = await GoogleStorage(signal).getObjectPreview(googleProject, bucket, name, canPreviewFull);
         if (isImage(metadata) || isPdf(metadata)) {
           setPreview(URL.createObjectURL(await res.blob()));
         } else if (isHtml(metadata)) {

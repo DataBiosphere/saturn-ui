@@ -7,7 +7,9 @@ import { ButtonPrimary, ButtonSecondary, IdContainer, Link, spinnerOverlay } fro
 import { icon } from 'src/components/icons';
 import { ValidatedInput } from 'src/components/input';
 import { MarkdownEditor, MarkdownViewer } from 'src/components/markdown';
-import { Ajax } from 'src/libs/ajax';
+import { DataRepo } from 'src/libs/ajax/DataRepo';
+import { Metrics } from 'src/libs/ajax/Metrics';
+import { Workspaces } from 'src/libs/ajax/workspaces/Workspaces';
 import { getConfig } from 'src/libs/config';
 import { reportError } from 'src/libs/error';
 import Events, { extractWorkspaceDetails } from 'src/libs/events';
@@ -51,7 +53,7 @@ export const SnapshotInfo = ({
   const save = async () => {
     try {
       setSaving(true); // this will be unmounted in the reload, so no need to reset this
-      await Ajax().Workspaces.workspace(namespace, name).snapshot(resourceId).update({ name: newName, description: newDescription });
+      await Workspaces().workspace(namespace, name).snapshot(resourceId).update({ name: newName, description: newDescription });
       onUpdate(newName);
     } catch (e) {
       setSaving(false);
@@ -63,7 +65,7 @@ export const SnapshotInfo = ({
   useOnMount(() => {
     const loadSnapshotInfo = async () => {
       try {
-        const snapshotInfo = await Ajax(signal).DataRepo.snapshot(snapshotId).details();
+        const snapshotInfo = await DataRepo(signal).snapshot(snapshotId).details();
         setSelectedSnapshotInfo(snapshotInfo);
         setSnapshotLoadError(undefined);
       } catch (e) {
@@ -261,8 +263,8 @@ export const SnapshotInfo = ({
                   try {
                     setSaving(true); // this will be unmounted in the reload, so no need to reset this
                     setDeleting(false);
-                    await Ajax().Workspaces.workspace(namespace, name).snapshot(resourceId).delete();
-                    Ajax().Metrics.captureEvent(Events.workspaceSnapshotDelete, {
+                    await Workspaces().workspace(namespace, name).snapshot(resourceId).delete();
+                    void Metrics().captureEvent(Events.workspaceSnapshotDelete, {
                       ...extractWorkspaceDetails(workspace),
                       resourceId,
                       snapshotId,

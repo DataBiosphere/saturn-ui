@@ -1,5 +1,8 @@
-import { Ajax } from 'src/libs/ajax';
+import { Billing } from 'src/libs/ajax/billing/Billing';
+import { DataRepo } from 'src/libs/ajax/DataRepo';
+import { Groups } from 'src/libs/ajax/Groups';
 import { FullyQualifiedResourceId } from 'src/libs/ajax/SamResources';
+import { Workspaces } from 'src/libs/ajax/workspaces/Workspaces';
 
 export type SupportSummary = object;
 
@@ -20,27 +23,26 @@ export const supportResources: SupportResourceType[] = [
   {
     displayName: 'Group',
     resourceType: 'managed-group',
-    loadSupportSummaryFn: (id: FullyQualifiedResourceId) => Ajax().Groups.group(id.resourceId).getSupportSummary(),
+    loadSupportSummaryFn: (id: FullyQualifiedResourceId) => Groups().group(id.resourceId).getSupportSummary(),
   },
   {
     displayName: 'Workspace',
     resourceType: 'workspace',
-    loadSupportSummaryFn: (id: FullyQualifiedResourceId) => Ajax().Workspaces.adminGetById(id.resourceId),
+    loadSupportSummaryFn: (id: FullyQualifiedResourceId) => Workspaces().adminGetById(id.resourceId),
   },
   {
     displayName: 'Billing Project',
     resourceType: 'billing-project',
-    loadSupportSummaryFn: (id: FullyQualifiedResourceId) => Ajax().Billing.adminGetProject(id.resourceId),
+    loadSupportSummaryFn: (id: FullyQualifiedResourceId) => Billing().adminGetProject(id.resourceId),
   },
   {
     displayName: 'Dataset',
     resourceType: 'dataset',
-    loadSupportSummaryFn: (id: FullyQualifiedResourceId) => Ajax().DataRepo.admin().adminRetrieveDataset(id.resourceId),
+    loadSupportSummaryFn: (id: FullyQualifiedResourceId) => DataRepo().admin().adminRetrieveDataset(id.resourceId),
   },
   {
     displayName: 'Snapshot',
     resourceType: 'datasnapshot',
-    loadSupportSummaryFn: (id: FullyQualifiedResourceId) =>
-      Ajax().DataRepo.admin().adminRetrieveSnapshot(id.resourceId),
+    loadSupportSummaryFn: (id: FullyQualifiedResourceId) => DataRepo().admin().adminRetrieveSnapshot(id.resourceId),
   },
 ].sort((a, b) => a.displayName.localeCompare(b.displayName));

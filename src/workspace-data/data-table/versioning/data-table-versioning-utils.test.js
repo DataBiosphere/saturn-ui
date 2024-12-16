@@ -1,10 +1,14 @@
 import JSZip from 'jszip';
-import { Ajax } from 'src/libs/ajax';
+import { GoogleStorage } from 'src/libs/ajax/GoogleStorage';
+import { Metrics } from 'src/libs/ajax/Metrics';
+import { Workspaces } from 'src/libs/ajax/workspaces/Workspaces';
 import { getTerraUser } from 'src/libs/state';
 
 import { importDataTableVersion, saveDataTableVersion, tableNameForImport } from './data-table-versioning-utils';
 
-jest.mock('src/libs/ajax');
+jest.mock('src/libs/ajax/GoogleStorage');
+jest.mock('src/libs/ajax/Metrics');
+jest.mock('src/libs/ajax/workspaces/Workspaces');
 
 jest.mock('src/libs/state', () => ({
   ...jest.requireActual('src/libs/state'),
@@ -104,21 +108,14 @@ describe('saveDataTableVersion', () => {
     uploadObject = jest.fn();
     patchObject = jest.fn();
 
-    Ajax.mockImplementation(() => ({
-      Buckets: {
-        upload: uploadObject,
-        patch: patchObject,
-      },
-      Metrics: {
-        captureEvent: jest.fn(),
-      },
-      Workspaces: {
-        workspace: () => ({
-          entityMetadata: getEntityMetadata,
-          paginatedEntitiesOfType,
-        }),
-      },
-    }));
+    GoogleStorage.mockReturnValue({ upload: uploadObject, patch: patchObject });
+    Metrics.mockReturnValue({ captureEvent: jest.fn() });
+    Workspaces.mockReturnValue({
+      workspace: () => ({
+        entityMetadata: getEntityMetadata,
+        paginatedEntitiesOfType,
+      }),
+    });
 
     getTerraUser.mockReturnValue({
       email: 'user@example.com',
@@ -295,11 +292,9 @@ describe('importDataTableVersion', () => {
     getObjectPreview = jest.fn().mockReturnValue(Promise.resolve({ blob: () => versionFile.generateAsync({ type: 'blob' }) }));
     upsertEntities = jest.fn().mockReturnValue(Promise.resolve({}));
 
-    Ajax.mockImplementation(() => ({
-      Buckets: { getObjectPreview },
-      Metrics: { captureEvent: jest.fn() },
-      Workspaces: { workspace: () => ({ upsertEntities }) },
-    }));
+    GoogleStorage.mockReturnValue({ getObjectPreview });
+    Metrics.mockReturnValue({ captureEvent: jest.fn() });
+    Workspaces.mockReturnValue({ workspace: () => ({ upsertEntities }) });
   });
 
   it('downloads version from GCS', async () => {

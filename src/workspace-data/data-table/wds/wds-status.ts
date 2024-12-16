@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
-import { Ajax } from 'src/libs/ajax';
 import { resolveWdsApp } from 'src/libs/ajax/data-table-providers/WdsDataTableProvider';
+import { Apps } from 'src/libs/ajax/leonardo/Apps';
 import { ListAppItem } from 'src/libs/ajax/leonardo/models/app-models';
+import { WorkspaceData } from 'src/libs/ajax/WorkspaceDataService';
 import { useCallback } from 'use-memo-one';
 
 type UseWdsStatusArgs = {
@@ -71,7 +72,7 @@ export const useWdsStatus = ({ workspaceId }: UseWdsStatusArgs) => {
 
     let listAppsResponse: ListAppItem[];
     try {
-      listAppsResponse = await Ajax(signal).Apps.listAppsV2(workspaceId);
+      listAppsResponse = await Apps(signal).listAppsV2(workspaceId);
     } catch (err) {
       setStatus({
         numApps: 'unknown',
@@ -145,8 +146,8 @@ export const useWdsStatus = ({ workspaceId }: UseWdsStatusArgs) => {
     }
 
     await Promise.allSettled([
-      Ajax(signal)
-        .WorkspaceData.getVersion(proxyUrl)
+      WorkspaceData(signal)
+        .getVersion(proxyUrl)
         .then((versionResponse) => {
           setStatus((previouStatus) => ({
             ...previouStatus,
@@ -166,8 +167,8 @@ export const useWdsStatus = ({ workspaceId }: UseWdsStatusArgs) => {
           }));
         }),
 
-      Ajax(signal)
-        .WorkspaceData.getStatus(proxyUrl)
+      WorkspaceData(signal)
+        .getStatus(proxyUrl)
         .then((statusResponse) => {
           setStatus((previousStatus) => ({
             ...previousStatus,
@@ -190,8 +191,8 @@ export const useWdsStatus = ({ workspaceId }: UseWdsStatusArgs) => {
           }));
         }),
 
-      Ajax(signal)
-        .WorkspaceData.listCollections(proxyUrl, workspaceId)
+      WorkspaceData(signal)
+        .listCollections(proxyUrl, workspaceId)
         .then((instancesResponse) => {
           setStatus((previousStatus) => ({
             ...previousStatus,
@@ -205,8 +206,8 @@ export const useWdsStatus = ({ workspaceId }: UseWdsStatusArgs) => {
           }));
         }),
 
-      Ajax(signal)
-        .WorkspaceData.getCloneStatus(proxyUrl)
+      WorkspaceData(signal)
+        .getCloneStatus(proxyUrl)
         .then((cloneStatusResponse) => {
           setStatus((previousStatus) => ({
             ...previousStatus,

@@ -7,7 +7,11 @@ import {
   getEnvMessageBasedOnStatus,
   workspaceHasMultipleApps,
 } from 'src/analysis/utils/app-utils';
-import { getCurrentAppDataDisk, workspaceHasMultipleDisks } from 'src/analysis/utils/disk-utils';
+import {
+  getCurrentAppDataDisk,
+  multipleDisksError,
+  workspaceUserHasMultipleDisks,
+} from 'src/analysis/utils/disk-utils';
 import { appToolLabels, appTools } from 'src/analysis/utils/tool-utils';
 import { App } from 'src/libs/ajax/leonardo/models/app-models';
 import { PersistentDisk } from 'src/libs/ajax/leonardo/providers/LeoDiskProvider';
@@ -573,20 +577,29 @@ describe('getCurrentAppDataDisk', () => {
 });
 
 describe('workspaceHasMultipleApps', () => {
-  it('returns true when there are multiple galaxy apps in the same project and workspace', () => {
+  it('returns true when there are multiple galaxy apps in a project/workspace', () => {
     expect(workspaceHasMultipleApps(mockAppsSameWorkspace, appTools.GALAXY.label)).toBe(true);
   });
-  it('returns false when there is not multiple cromwell apps', () => {
+  it('returns false when there is not multiple cromwell apps in a project/workspace', () => {
     expect(workspaceHasMultipleApps(mockAppsSameWorkspace, appTools.CROMWELL.label)).toBe(false);
   });
 });
 
-describe('workspaceHasMultipleDisks', () => {
-  it('returns true when there are multiple galaxy disks in the same project and workspace', () => {
-    expect(workspaceHasMultipleDisks(mockAppDisksSameWorkspace, appTools.GALAXY.label)).toBe(true);
+describe('workspaceUserHasMultipleDisks', () => {
+  it('returns true when there are multiple galaxy disks', () => {
+    expect(workspaceUserHasMultipleDisks(mockAppDisksSameWorkspace, appTools.GALAXY.label)).toBe(true);
   });
   it('returns false when there is not multiple cromwell disks', () => {
-    expect(workspaceHasMultipleDisks(mockAppDisksSameWorkspace, appTools.CROMWELL.label)).toBe(false);
+    expect(workspaceUserHasMultipleDisks(mockAppDisksSameWorkspace, appTools.CROMWELL.label)).toBe(false);
+  });
+});
+
+describe('multipleDisksError', () => {
+  it('returns true when there are multiple disks in a project/workspace for a given user', () => {
+    expect(multipleDisksError(mockAppDisksSameWorkspace, 'cahrens@gmail.com', appTools.GALAXY.label)).toBe(true);
+  });
+  it('returns false when there is not multiple disks in a project/workspace for a given user', () => {
+    expect(multipleDisksError(mockAppDisksSameWorkspace, 'notcahrens@gmail.com', appTools.GALAXY.label)).toBe(false);
   });
 });
 

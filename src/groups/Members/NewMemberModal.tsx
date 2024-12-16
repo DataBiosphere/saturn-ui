@@ -3,7 +3,9 @@ import _ from 'lodash/fp';
 import React, { useState } from 'react';
 import { LabeledCheckbox } from 'src/components/common';
 import { AutocompleteTextInput } from 'src/components/input';
-import { Ajax } from 'src/libs/ajax';
+import { Groups } from 'src/libs/ajax/Groups';
+import { User } from 'src/libs/ajax/User';
+import { Workspaces } from 'src/libs/ajax/workspaces/Workspaces';
 import colors from 'src/libs/colors';
 import { withErrorReporting } from 'src/libs/error';
 import { FormLabel } from 'src/libs/forms';
@@ -53,10 +55,7 @@ export const NewMemberModal = (props: NewMemberModalProps) => {
 
   useOnMount(() => {
     const loadData = withErrorReporting('Error looking up collaborators')(async () => {
-      const [shareSuggestions, groups] = await Promise.all([
-        Ajax(signal).Workspaces.getShareLog(),
-        Ajax(signal).Groups.list(),
-      ]);
+      const [shareSuggestions, groups] = await Promise.all([Workspaces(signal).getShareLog(), Groups(signal).list()]);
 
       const suggestions = _.flow(_.map('groupEmail'), _.concat(shareSuggestions), _.uniq)(groups);
 
@@ -83,7 +82,7 @@ export const NewMemberModal = (props: NewMemberModalProps) => {
     withErrorReporting('Error adding user'),
     withBusyState(setBusy)
   )(async () => {
-    await Ajax(signal).User.inviteUser(userEmail);
+    await User(signal).inviteUser(userEmail);
     await submit();
   });
 
@@ -91,9 +90,7 @@ export const NewMemberModal = (props: NewMemberModalProps) => {
     withErrorReporting('Error adding user'),
     withBusyState(setBusy)
   )(async () => {
-    addUnregisteredUser && !(await Ajax(signal).User.isUserRegistered(userEmail))
-      ? setConfirmAddUser(true)
-      : await submit();
+    addUnregisteredUser && !(await User(signal).isUserRegistered(userEmail)) ? setConfirmAddUser(true) : await submit();
   });
 
   const errors = validate({ userEmail }, { userEmail: { email: true } });

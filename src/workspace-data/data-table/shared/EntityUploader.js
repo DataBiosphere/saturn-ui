@@ -10,8 +10,8 @@ import { icon } from 'src/components/icons';
 import { PasteOnlyInput, ValidatedInput } from 'src/components/input';
 import { getRegionInfo, locationTypes } from 'src/components/region-common';
 import { SimpleTabBar } from 'src/components/tabBars';
-import { Ajax } from 'src/libs/ajax';
 import { wdsProviderName } from 'src/libs/ajax/data-table-providers/WdsDataTableProvider';
+import { Metrics } from 'src/libs/ajax/Metrics';
 import { getRegionFlag, getRegionLabel } from 'src/libs/azure-utils';
 import colors from 'src/libs/colors';
 import { reportError } from 'src/libs/error';
@@ -33,7 +33,13 @@ export const getSuggestedTableName = (tsv) => {
     return undefined;
   }
   const firstColumnHeading = tsv.slice(0, indexOfFirstSpace);
-  return firstColumnHeading.replace(/_id$/, '').replace(/^(membership|entity):/, '');
+  return firstColumnHeading.replace(/_id$/, '').replace(/^(membership|entity|update):/, '');
+};
+
+/** Validates that the suggested table name is legal syntax for Terra */
+export const validateSuggestedTableName = (tableName) => {
+  const match = /^([a-zA-Z0-9_-]+)$/.exec(tableName);
+  return match?.[1];
 };
 
 export const EntityUploader = ({ onSuccess, onDismiss, namespace, name, entityTypes, workspaceId, dataProvider, isGoogleWorkspace, region }) => {
@@ -73,7 +79,7 @@ export const EntityUploader = ({ onSuccess, onDismiss, namespace, name, entityTy
           id: `${recordType}_success`,
         });
       clearNotification(recordType);
-      Ajax().Metrics.captureEvent(Events.workspaceDataUpload, {
+      void Metrics().captureEvent(Events.workspaceDataUpload, {
         workspaceNamespace: namespace,
         workspaceName: name,
         providerName: dataProvider.providerName,
@@ -97,13 +103,13 @@ export const EntityUploader = ({ onSuccess, onDismiss, namespace, name, entityTy
     },
   });
 
-  const match = /(?:membership|entity):([^\s]+)_id/.exec(fileContents); // Specific to Google Workspaces -- Azure workspaces do not have this requirement for TSV headers
+  const newEntityType = validateSuggestedTableName(getSuggestedTableName(fileContents));
   const isInvalid = dataProvider.tsvFeatures.isInvalid({
     fileImportModeMatches: isFileImportCurrMode === isFileImportLastUsedMode,
-    match: !match,
+    match: !newEntityType,
     filePresent: file,
   });
-  const newEntityType = match?.[1];
+
   const entityTypeAlreadyExists = _.includes(_.toLower(newEntityType), entityTypes);
   const currentFile = isFileImportCurrMode === isFileImportLastUsedMode ? file : undefined;
   const containsNullValues = fileContents.match(/^\t|\t\t+|\t$|\n\n+/gm);
@@ -357,7 +363,7 @@ export const EntityUploader = ({ onSuccess, onDismiss, namespace, name, entityTy
                         href: dataProvider.tsvFeatures.sampleTSVLink,
                         ...Utils.newTabLinkProps,
                         onClick: () =>
-                          Ajax().Metrics.captureEvent(Events.workspaceSampleTsvDownload, {
+                          void Metrics().captureEvent(Events.workspaceSampleTsvDownload, {
                             workspaceNamespace: namespace,
                             workspaceName: name,
                             providerName: dataProvider.providerName,

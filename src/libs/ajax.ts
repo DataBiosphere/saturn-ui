@@ -30,7 +30,7 @@ import { Workspaces } from 'src/libs/ajax/workspaces/Workspaces';
 export const Ajax = (signal?: AbortSignal) => {
   return {
     Apps: Apps(signal), // used for e2e testing
-    AzureStorage: AzureStorage(signal), // target 1 for removal
+    AzureStorage: AzureStorage(signal),
     Billing: Billing(signal),
     Buckets: GoogleStorage(signal), // used for e2e testing
     Catalog: Catalog(signal),
