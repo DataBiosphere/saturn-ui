@@ -18,7 +18,7 @@ export const EmailSelect: React.FC<EmailSelectProps> = ({
   label = 'User emails',
   placeholder = 'Type or select user emails',
   isMulti = true,
-  isClearable = false,
+  isClearable = true,
   isSearchable = true,
   options,
   emails,
@@ -41,10 +41,14 @@ export const EmailSelect: React.FC<EmailSelectProps> = ({
         value={_.map((value: string) => ({ value, label: value }), emails)}
         options={_.map((value: string) => ({ value, label: value }), options)}
         onChange={(option: Array<{ value: string; label: string }>) => {
-          const selectedOption: string[] = _.map('value', option);
-          const newEmail: string | undefined = _.find((email: string) => !emails.includes(email), selectedOption);
+          // Split the value by commas and trim whitespace
+          const selectedOptions: string[] = _.flatMap(
+            (opt) => opt.value.split(',').map((email) => email.trim()),
+            option
+          );
+          const newEmail: string | undefined = _.find((email: string) => !emails.includes(email), selectedOptions);
           if (newEmail || newEmail === undefined) {
-            setEmails(selectedOption);
+            setEmails(selectedOptions);
           }
         }}
       />
