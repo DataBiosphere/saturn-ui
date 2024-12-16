@@ -1,6 +1,7 @@
 import { Modal, modalStyles, Switch, TooltipTrigger, useUniqueId } from '@terra-ui-packages/components';
 import _ from 'lodash/fp';
 import React, { useLayoutEffect, useRef, useState } from 'react';
+import { validateUserEmails } from 'src/billing/utils';
 import { ButtonPrimary, ButtonSecondary, spinnerOverlay } from 'src/components/common';
 import { centeredSpinner } from 'src/components/icons';
 import { EmailSelect } from 'src/groups/Members/EmailSelect';
@@ -11,7 +12,7 @@ import { Workspaces } from 'src/libs/ajax/workspaces/Workspaces';
 import { reportError } from 'src/libs/error';
 import Events, { extractWorkspaceDetails } from 'src/libs/events';
 import { useCancellation, useOnMount } from 'src/libs/react-utils';
-import { append, cond, withBusyState } from 'src/libs/utils';
+import { append, cond, summarizeErrors, withBusyState } from 'src/libs/utils';
 import {
   AccessEntry,
   aclEntryIsTerraSupport,
@@ -35,24 +36,25 @@ const ShareWorkspaceModal: React.FC<ShareWorkspaceModalProps> = (props: ShareWor
   const { onDismiss, workspace } = props;
   const { namespace, name } = workspace.workspace;
 
-  // State
-  const [shareSuggestions, setShareSuggestions] = useState<string[]>([]);
-  const [groups, setGroups] = useState<CurrentUserGroupMembership[]>([]);
-  const [originalAcl, setOriginalAcl] = useState<WorkspaceAcl>([]);
-  const [searchValue, setSearchValue] = useState('');
-  const [searchValues, setSearchValues] = useState<string[]>([]);
-  const [acl, setAcl] = useState<WorkspaceAcl>([]);
-  const [newAcl, setNewAcl] = useState<AccessEntry>({
+  const defaultAcl: AccessEntry = {
     email: '',
     accessLevel: 'READER',
     pending: false,
     canShare: false,
     canCompute: false,
-  });
+  };
+
+  // State
+  const [shareSuggestions, setShareSuggestions] = useState<string[]>([]);
+  const [groups, setGroups] = useState<CurrentUserGroupMembership[]>([]);
+  const [originalAcl, setOriginalAcl] = useState<WorkspaceAcl>([]);
+  const [searchValues, setSearchValues] = useState<string[]>([]);
+  const [acl, setAcl] = useState<WorkspaceAcl>([]);
+  const [newAcl, setNewAcl] = useState<AccessEntry>(defaultAcl);
   const [loaded, setLoaded] = useState(false);
   const [working, setWorking] = useState(false);
   const [updateError, setUpdateError] = useState(undefined);
-  const [lastAddedEmail, setLastAddedEmail] = useState(undefined);
+  const [lastAddedEmail, setLastAddedEmail] = useState<string | undefined>(undefined);
   const list = useRef<HTMLDivElement>(null);
 
   const signal = useCancellation();
@@ -87,7 +89,8 @@ const ShareWorkspaceModal: React.FC<ShareWorkspaceModalProps> = (props: ShareWor
   }, [lastAddedEmail]);
 
   // Render
-  const searchValueValid = !validate({ searchValue }, { searchValue: { email: true } });
+  const errors = validateUserEmails(searchValues);
+  const searchValuesValid = !!errors;
   const aclEmails = _.map('email', acl);
 
   const suggestions: string[] = _.flow(
@@ -98,20 +101,24 @@ const ShareWorkspaceModal: React.FC<ShareWorkspaceModalProps> = (props: ShareWor
   )(groups);
 
   const remainingSuggestions = _.difference(suggestions, _.map('email', acl));
+  const addUserReminder =
+    'Did you mean to add collaborators? Add them or clear the "User email(s)" field to save changes.';
 
-  const addUserReminder = `Did you mean to add ${searchValue} as a collaborator? Add them or clear the "User email" field to save changes.`;
-
-  const addCollaborator = (collaboratorEmail) => {
-    if (!validate.single(collaboratorEmail, { email: true, exclusion: aclEmails })) {
-      setSearchValue('');
-      setAcl(append({ email: collaboratorEmail, accessLevel: 'READER' } as AccessEntry));
-      setLastAddedEmail(collaboratorEmail);
-    }
+  const addCollaborators = (collaboratorEmails: string[], collaboratorAcl: AccessEntry) => {
+    collaboratorEmails.forEach((collaboratorEmail: string) => {
+      if (!validate.single(collaboratorEmail, { email: true, exclusion: aclEmails })) {
+        setAcl(append({ ...collaboratorAcl, email: collaboratorEmail } as AccessEntry));
+        setLastAddedEmail(collaboratorEmail);
+      }
+    });
+    // Clear the search values and new acl after adding collaborators
+    setSearchValues([]);
+    setNewAcl(defaultAcl);
   };
 
   const currentTerraSupportAccessLevel = terraSupportAccessLevel(originalAcl);
   const newTerraSupportAccessLevel = terraSupportAccessLevel(acl);
-  const addTerraSupportToAcl = () => addCollaborator(terraSupportEmail);
+  const addTerraSupportToAcl = () => addCollaborators([terraSupportEmail], defaultAcl);
   const removeTerraSupportFromAcl = () => setAcl(_.remove(aclEntryIsTerraSupport));
 
   const save = withBusyState(setWorking, async () => {
@@ -150,11 +157,7 @@ const ShareWorkspaceModal: React.FC<ShareWorkspaceModalProps> = (props: ShareWor
         <div style={{ flexGrow: 2, width: '500px' }}>
           <EmailSelect
             placeholder='Add people or groups'
-            options={cond(
-              [searchValueValid && !_.includes(searchValue, aclEmails), () => [searchValue]],
-              [remainingSuggestions.length > 0, () => remainingSuggestions],
-              () => []
-            )}
+            options={cond([remainingSuggestions.length > 0, () => remainingSuggestions], () => [])}
             emails={searchValues}
             setEmails={setSearchValues}
           />
@@ -171,14 +174,14 @@ const ShareWorkspaceModal: React.FC<ShareWorkspaceModalProps> = (props: ShareWor
           />
         </div>
         <ButtonPrimary
-          disabled={!searchValueValid}
-          tooltip={!searchValueValid && 'Enter an email address to add a collaborator'}
-          onClick={() => addCollaborator(searchValue)}
+          disabled={!!errors}
+          tooltip={summarizeErrors(errors)}
+          onClick={() => addCollaborators(searchValues, newAcl)}
         >
           Add
         </ButtonPrimary>
       </div>
-      {searchValueValid && <p>{addUserReminder}</p>}
+      {!searchValuesValid && <p>{addUserReminder}</p>}
       <CurrentCollaborators
         acl={acl}
         setAcl={setAcl}
@@ -246,7 +249,7 @@ const ShareWorkspaceModal: React.FC<ShareWorkspaceModalProps> = (props: ShareWor
           <ButtonSecondary style={{ marginRight: '1rem' }} onClick={onDismiss}>
             Cancel
           </ButtonSecondary>
-          <ButtonPrimary disabled={searchValueValid} tooltip={searchValueValid && addUserReminder} onClick={save}>
+          <ButtonPrimary disabled={!searchValuesValid} tooltip={!searchValuesValid && addUserReminder} onClick={save}>
             Save
           </ButtonPrimary>
         </span>
