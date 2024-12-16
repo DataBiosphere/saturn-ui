@@ -13,7 +13,7 @@ import { useCancellation, useOnMount } from 'src/libs/react-utils';
 import { cond, summarizeErrors, withBusyState } from 'src/libs/utils';
 
 interface NewMemberModalProps {
-  addFunction: (roles: string[], email: string) => Promise<unknown>;
+  addFunction: (roles: string[], emails: string[]) => Promise<unknown>;
   addUnregisteredUser?: boolean;
   adminLabel: string;
   memberLabel: string;
@@ -58,9 +58,7 @@ export const NewMemberModal = (props: NewMemberModalProps) => {
   const submit = async () => {
     // only called by invite and add, which set busy & catch errors
     try {
-      for (const userEmail of userEmails) {
-        await addFunction([role], userEmail);
-      }
+      await addFunction([role], userEmails);
       onSuccess();
     } catch (error: any) {
       if ('status' in error && error.status >= 400 && error.status <= 499) {
