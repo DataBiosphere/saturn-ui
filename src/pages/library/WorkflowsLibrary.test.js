@@ -3,7 +3,7 @@ import { h } from 'react-hyperscript-helpers';
 import { Dockstore } from 'src/libs/ajax/Dockstore';
 import { FirecloudBucket } from 'src/libs/ajax/firecloud/FirecloudBucket';
 import { Methods } from 'src/libs/ajax/methods/Methods';
-import { Code } from 'src/pages/library/Code';
+import { WorkflowsLibrary } from 'src/pages/library/WorkflowsLibrary';
 import { renderWithAppContexts as render } from 'src/testing/test-utils';
 
 jest.mock('src/libs/ajax/Dockstore');
@@ -15,8 +15,8 @@ jest.mock('src/libs/nav', () => ({
   getLink: jest.fn().mockImplementation((_) => _),
 }));
 
-describe('Code page', () => {
-  it('loads the code page', async () => {
+describe('Workflows library page', () => {
+  it('loads the workflows page', async () => {
     const methodsList = [
       {
         name: 'joint-discovery-gatk4',
@@ -49,12 +49,12 @@ describe('Code page', () => {
 
     // Act
     await act(async () => {
-      render(h(Code, {}));
+      render(h(WorkflowsLibrary, {}));
     });
 
     // Assert
-    const codeAndWorkflows = await screen.getByRole('link', { name: 'code & workflows' });
-    expect(codeAndWorkflows).toHaveAttribute('href', 'library-code');
+    const codeAndWorkflows = await screen.getByRole('link', { name: 'workflows' });
+    expect(codeAndWorkflows).toHaveAttribute('href', 'library-workflows');
 
     const workflowName = await screen.getByRole('link', { name: 'joint-discovery-gatk4 Implements the joint discovery and VQSR filtering' });
     expect(workflowName.getAttribute('href')).toContain('?return=terra#methods/gatk/joint-discovery-gatk4/');

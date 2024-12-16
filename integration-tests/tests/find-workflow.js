@@ -12,7 +12,7 @@ const testFindWorkflowFn = _.flow(
   await signIntoTerra(page, { token, testUrl });
 
   await click(page, clickable({ textContains: 'View Examples' }));
-  await click(page, clickable({ textContains: 'code & workflows' }));
+  await click(page, clickable({ textContains: 'workflows' }));
   await click(page, clickable({ textContains: workflowName }));
 
   await firecloud.signIntoFirecloud(page, token);

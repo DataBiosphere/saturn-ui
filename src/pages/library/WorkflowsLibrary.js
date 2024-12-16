@@ -140,7 +140,7 @@ const getFeaturedMethods = async (signal) => {
   )(featuredMethods);
 };
 
-export const Code = () => {
+export const WorkflowsLibrary = () => {
   const signal = useCancellation();
   const [featuredMethods, setFeaturedMethods] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -155,7 +155,7 @@ export const Code = () => {
   });
 
   return h(FooterWrapper, { alwaysShow: true }, [
-    libraryTopMatter('code & workflows'),
+    libraryTopMatter('workflows'),
     div({ role: 'main', style: { flexGrow: 1 } }, [
       div({ style: { display: 'flex', flex: 1 } }, [
         div({ style: { flex: 1, margin: '30px 0 30px 40px' } }, [
@@ -189,10 +189,10 @@ export const Code = () => {
 
 export const navPaths = [
   {
-    name: 'library-code',
-    path: '/library/code',
-    component: Code,
+    name: 'library-workflows',
+    path: '/library/workflows',
+    component: WorkflowsLibrary,
     public: false,
-    title: 'Code & Workflows',
+    title: 'Workflows',
   },
 ];
