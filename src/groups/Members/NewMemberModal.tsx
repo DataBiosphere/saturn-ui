@@ -1,6 +1,7 @@
 import { ButtonPrimary, Modal, SpinnerOverlay } from '@terra-ui-packages/components';
 import _ from 'lodash/fp';
 import React, { useState } from 'react';
+import { validateUserEmails } from 'src/billing/utils';
 import { EmailSelect } from 'src/groups/Members/EmailSelect';
 import { RoleSelect } from 'src/groups/Members/RoleSelect';
 import { Groups } from 'src/libs/ajax/Groups';
@@ -10,7 +11,6 @@ import colors from 'src/libs/colors';
 import { withErrorReporting } from 'src/libs/error';
 import { useCancellation, useOnMount } from 'src/libs/react-utils';
 import { cond, summarizeErrors, withBusyState } from 'src/libs/utils';
-import validate from 'validate.js';
 
 interface NewMemberModalProps {
   addFunction: (roles: string[], email: string) => Promise<unknown>;
@@ -97,40 +97,7 @@ export const NewMemberModal = (props: NewMemberModalProps) => {
       : await submit();
   });
 
-  // Validator for a single email
-  const isValidEmail = (userEmail: string): boolean => {
-    return !validate.single(userEmail, { email: true, presence: true });
-  };
-
-  // Custom validator for an array of emails
-  validate.validators.emailArray = (value: string[], options: { message: string; emptyMessage: string }, key: any) => {
-    if (!Array.isArray(value)) {
-      return options.message || `^${key} must be an array.`;
-    }
-
-    if (value.length === 0) {
-      return options.emptyMessage || `^${key} cannot be empty.`;
-    }
-
-    const errors = _.flow(
-      _.map((email: string) => (!isValidEmail(email) ? email : null)),
-      _.filter(Boolean)
-    )(value);
-
-    return errors.length ? `^Invalid email(s): ${errors.join(', ')}` : null;
-  };
-
-  const errors = validate(
-    { userEmails },
-    {
-      userEmails: {
-        emailArray: {
-          message: '^All inputs must be valid email addresses.',
-          emptyMessage: '^User emails cannot be empty.',
-        },
-      },
-    }
-  );
+  const errors = validateUserEmails(userEmails);
 
   return cond(
     [
