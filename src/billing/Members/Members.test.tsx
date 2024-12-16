@@ -81,8 +81,8 @@ describe('Members', () => {
     const projectUsers: Member[] = [{ email: 'owner@test.email.org', roles: ['Owner'] }];
     const user = userEvent.setup();
 
-    const addProjectUser: MockedFn<BillingContract['addProjectUser']> = jest.fn();
-    asMockedFn(Billing).mockReturnValue(partial<BillingContract>({ addProjectUser }));
+    const addProjectUsers: MockedFn<BillingContract['addProjectUsers']> = jest.fn();
+    asMockedFn(Billing).mockReturnValue(partial<BillingContract>({ addProjectUsers }));
     // Next 2 mocks are needed for suggestions in the NewUserModal.
     asMockedFn(Workspaces).mockReturnValue(
       partial<WorkspacesAjaxContract>({
@@ -119,8 +119,9 @@ describe('Members', () => {
     await user.click(saveButton);
 
     // Assert
+    // expect(emailSelect).toHaveValue('test-user@company.com');
     // expect(userAddedCallback).toHaveBeenCalled();
-    // expect(addProjectUser).toHaveBeenCalledWith('test-project', ['User'], 'test-user@company.com');
+    // expect(addProjectUsers).toHaveBeenCalledWith('test-project', ['User'], ['test-user@company.com']);
 
     // The actual display of the dialog to add a user is done in the parent file.
   });
