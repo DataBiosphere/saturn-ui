@@ -142,7 +142,7 @@ describe('Members', () => {
     );
 
     // Assert
-    expect(screen.queryByText('Add User')).toBeNull();
+    expect(screen.queryByText('Add Users')).toBeNull();
   });
 
   it('disables the action menu for an owner if there are not multiple owners', async () => {
