@@ -1,4 +1,3 @@
-import { expect } from '@storybook/test';
 import { act, fireEvent, screen } from '@testing-library/react';
 import userEvent, { UserEvent } from '@testing-library/user-event';
 import React from 'react';
@@ -69,7 +68,7 @@ const permissionsProviderError: PermissionsProvider = {
 };
 
 describe('PermissionsModal', () => {
-  it('loads the correct title and basic elements', async () => {
+  it('loads the correct title and basic elements for snapshot permissions', async () => {
     // ARRANGE
 
     await act(async () => {
@@ -88,6 +87,33 @@ describe('PermissionsModal', () => {
 
     // ASSERT
     expect(screen.getByText('Edit permissions for snapshot 3'));
+    expect(screen.getByText('Note: Sharing with user groups is not supported.'));
+    expect(screen.getByText('User'));
+    expect(screen.getByRole('textbox', { name: 'User' }));
+    expect(screen.getByRole('button', { name: 'Add' }));
+    expect(screen.getByText('Current Users'));
+    expect(screen.getByRole('checkbox', { name: 'Make Publicly Readable?' }));
+    expect(screen.getByRole('button', { name: 'Cancel' }));
+    expect(screen.getByRole('button', { name: 'Save' }));
+  });
+
+  it('loads the correct title and basic elements for namespace permissions', async () => {
+    // ARRANGE
+
+    await act(async () => {
+      renderWithAppContexts(
+        <PermissionsModal
+          namespace='my-namespace'
+          snapshotOrNamespace='Namespace'
+          setPermissionsModalOpen={jest.fn()}
+          refresh={jest.fn()}
+          permissionsProvider={permissionsProviderSuccess}
+        />
+      );
+    });
+
+    // ASSERT
+    expect(screen.getByText('Edit permissions for namespace my-namespace'));
     expect(screen.getByText('Note: Sharing with user groups is not supported.'));
     expect(screen.getByText('User'));
     expect(screen.getByRole('textbox', { name: 'User' }));

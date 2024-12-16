@@ -13,6 +13,7 @@ import { notify } from 'src/libs/notifications';
 import { TerraUser, TerraUserState, userStore } from 'src/libs/state';
 import { WorkflowList } from 'src/pages/methods/WorkflowList';
 import { asMockedFn, partial, renderWithAppContexts as render } from 'src/testing/test-utils';
+import { WorkflowsPermissions } from 'src/workflows/methods/workflows-acl-utils';
 
 jest.mock('src/libs/ajax/methods/Methods');
 
@@ -52,9 +53,21 @@ jest.mock('react-virtualized', () => {
   };
 });
 
+const mockPublicPermissions: WorkflowsPermissions = [
+  {
+    role: 'READER',
+    user: 'public',
+  },
+  {
+    role: 'OWNER',
+    user: 'revali@gale.com',
+  },
+];
+
 const mockMethods = (methods: MethodDefinition[]): MethodsAjaxContract => {
   return partial<MethodsAjaxContract>({
     definitions: jest.fn(async () => methods),
+    getNamespacePermissions: jest.fn(async () => mockPublicPermissions),
   });
 };
 
@@ -247,6 +260,87 @@ describe('workflows table', () => {
     expect(methodCells[2]).toHaveTextContent('another revali description');
     expect(methodCells[3]).toHaveTextContent('revali@gale.com, revali@champions.com');
     expect(methodCells[4]).toHaveTextContent('1');
+  });
+
+  it('allows editing permissions for namespace owned by user', async () => {
+    // Arrange
+    asMockedFn(Methods).mockReturnValue(mockMethods([revaliMethod]));
+    const user: UserEvent = userEvent.setup();
+
+    // set the user's email
+    jest.spyOn(userStore, 'get').mockImplementation(jest.fn().mockReturnValue(mockUserState('revali@gale.com')));
+
+    // Act
+    await act(async () => {
+      render(<WorkflowList />);
+    });
+
+    const table: HTMLElement = await screen.findByRole('table');
+
+    const rows: HTMLElement[] = within(table).getAllByRole('row');
+    expect(rows).toHaveLength(2);
+
+    const methodCells: HTMLElement[] = within(rows[1]).getAllByRole('cell');
+    expect(methodCells).toHaveLength(5);
+    within(methodCells[1]).getByText('revali bird namespace');
+    within(methodCells[1]).getByText('revali method');
+
+    const actionsMenu = within(methodCells[0]).getByRole('button');
+
+    // Act
+    await user.click(actionsMenu);
+
+    // Assert
+    expect(screen.getByText('Edit namespace permissions'));
+
+    // Act
+    await user.click(screen.getByRole('button', { name: 'Edit namespace permissions' }));
+
+    // Assert
+    expect(
+      screen.queryByRole('dialog', { name: /Edit permissions for namespace revali bird namespace/i })
+    ).toBeInTheDocument();
+  });
+
+  it("doesn't allow editing permissions for namespace not owned by user", async () => {
+    // Arrange
+    asMockedFn(Methods).mockReturnValue(mockMethods([darukMethod]));
+    const user: UserEvent = userEvent.setup();
+
+    // set the user's email
+    jest.spyOn(userStore, 'get').mockImplementation(jest.fn().mockReturnValue(mockUserState('revali@gale.com')));
+
+    // Act
+    await act(async () => {
+      render(<WorkflowList queryParams={{ tab: 'public' }} />);
+    });
+
+    const table: HTMLElement = await screen.findByRole('table');
+
+    const rows: HTMLElement[] = within(table).getAllByRole('row');
+    expect(rows).toHaveLength(2);
+
+    const methodCells: HTMLElement[] = within(rows[1]).getAllByRole('cell');
+    expect(methodCells).toHaveLength(5);
+    within(methodCells[1]).getByText('daruk rock namespace');
+    within(methodCells[1]).getByText('daruk method');
+
+    const actionsMenu = within(methodCells[0]).getByRole('button');
+
+    // Act
+    await user.click(actionsMenu);
+
+    // Assert
+    expect(screen.getByText('Edit namespace permissions'));
+    expect(screen.getByRole('button', { name: 'Edit namespace permissions' })).toHaveAttribute('disabled');
+
+    // Act
+    await user.click(screen.getByRole('button', { name: 'Edit namespace permissions' }));
+
+    // Assert
+    expect(
+      screen.queryByRole('dialog', { name: /Edit permissions for namespace revali bird namespace/i })
+    ).not.toBeInTheDocument();
   });
 
   it('displays a message with no my workflows', async () => {
