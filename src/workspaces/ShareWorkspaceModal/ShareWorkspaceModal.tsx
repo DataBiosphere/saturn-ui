@@ -154,7 +154,7 @@ const ShareWorkspaceModal: React.FC<ShareWorkspaceModalProps> = (props: ShareWor
   return (
     <Modal title='Share Workspace' width={720} showButtons={false} onDismiss={onDismiss}>
       <div style={{ display: 'flex', alignItems: 'flex-end', gap: '0.5rem' }}>
-        <div style={{ flexGrow: 2, width: '500px' }}>
+        <div style={{ flexGrow: 2, width: '500px', alignSelf: 'flex-start' }}>
           <EmailSelect
             placeholder='Add people or groups'
             options={cond([remainingSuggestions.length > 0, () => remainingSuggestions], () => [])}
@@ -162,7 +162,7 @@ const ShareWorkspaceModal: React.FC<ShareWorkspaceModalProps> = (props: ShareWor
             setEmails={setSearchValues}
           />
         </div>
-        <div style={{ flexGrow: 1 }}>
+        <div style={{ flexGrow: 1, alignSelf: 'stretch', marginTop: '1.4rem' }}>
           <AclInput
             aria-label='permissions for new collaborator'
             value={newAcl}
@@ -173,13 +173,15 @@ const ShareWorkspaceModal: React.FC<ShareWorkspaceModalProps> = (props: ShareWor
             showRow={false}
           />
         </div>
-        <ButtonPrimary
-          disabled={!!errors}
-          tooltip={summarizeErrors(errors)}
-          onClick={() => addCollaborators(searchValues, newAcl)}
-        >
-          Add
-        </ButtonPrimary>
+        <div style={{ flexGrow: 1, alignSelf: 'flex-start', marginTop: '1.65rem' }}>
+          <ButtonPrimary
+            disabled={!!errors}
+            tooltip={summarizeErrors(errors)}
+            onClick={() => addCollaborators(searchValues, newAcl)}
+          >
+            Add
+          </ButtonPrimary>
+        </div>
       </div>
       {!searchValuesValid && <p>{addUserReminder}</p>}
       <CurrentCollaborators
