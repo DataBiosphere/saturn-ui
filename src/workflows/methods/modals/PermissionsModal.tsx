@@ -33,8 +33,8 @@ import validate from 'validate.js';
 type WorkflowPermissionsModalProps = {
   snapshotOrNamespace: 'Snapshot' | 'Namespace';
   namespace: string;
-  name?: string | undefined;
-  selectedSnapshot?: number | undefined;
+  name?: string;
+  selectedSnapshot?: number;
   setPermissionsModalOpen: (b: boolean) => void;
   refresh: () => void;
   permissionsProvider: PermissionsProvider;
