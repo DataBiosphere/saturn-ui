@@ -234,7 +234,7 @@ describe('workflows table', () => {
     expect(headers[0]).toHaveTextContent('Workflows');
     expect(headers[1]).toHaveTextContent('Synopsis');
     expect(headers[2]).toHaveTextContent('Owners');
-    expect(headers[3]).toHaveTextContent('Snapshots');
+    expect(headers[3]).toHaveTextContent('Versions');
 
     const rows: HTMLElement[] = within(table).getAllByRole('row');
     expect(rows).toHaveLength(2);

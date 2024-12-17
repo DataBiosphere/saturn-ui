@@ -111,9 +111,9 @@ export const MethodRepoTile = () => {
             : `${getConfig().firecloudUrlRoot}/?return=${getEnabledBrand().queryName}#methods`,
           style: { color: colors.accent(1.1) }, // For a11y, we need at least 4.5:1 contrast agaisnst the gray background
         },
-        'Broad Methods Repository'
+        'Terra Workflow Repository'
       ),
-      div([`Use Broad workflows in ${getEnabledBrand().name}. Share your own, or choose from > 700 public workflows`]),
+      div([`Use Terra-hosted workflows in ${getEnabledBrand().name}. Share your own, or choose from > 700 public workflows`]),
     ]),
   ]);
 };
