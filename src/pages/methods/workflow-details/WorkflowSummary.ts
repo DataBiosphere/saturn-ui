@@ -50,7 +50,7 @@ export const BaseWorkflowSummary = () => {
       h(
         WorkflowRightBoxSection,
         {
-          title: 'Snapshot Information',
+          title: 'Version Information',
           defaultPanelOpen: true,
           persistenceId: `${persistenceId}/snapshotInfoPanelOpen`,
         },

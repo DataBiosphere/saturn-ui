@@ -44,7 +44,7 @@ describe('WorkflowSummary Component', () => {
     // ** ASSERT **
     expect(screen.getByText('Synopsis')).toBeInTheDocument();
     expect(screen.getByText('Documentation')).toBeInTheDocument();
-    expect(screen.getByText('Snapshot Information')).toBeInTheDocument();
+    expect(screen.getByText('Version Information')).toBeInTheDocument();
     expect(screen.getByText('Owners')).toBeInTheDocument();
     expect(screen.getByText('Import URL')).toBeInTheDocument();
   });
@@ -69,7 +69,7 @@ describe('WorkflowSummary Component', () => {
     renderWithAppContexts(h(BaseWorkflowSummary));
 
     // ** ASSERT **
-    const snapshotInfoCollapsable = screen.getByRole('button', { name: 'Snapshot Information' });
+    const snapshotInfoCollapsable = screen.getByRole('button', { name: 'Version Information' });
     expect(snapshotInfoCollapsable).toHaveAttribute('aria-expanded', 'true');
 
     expect(screen.getByText('Creation Date'));
