@@ -115,7 +115,7 @@ export const FindWorkflowModal = (props: FindWorkflowModalProps) => {
         </div>
         <div style={{ flex: 1, marginLeft: 20 }}>
           <WorkflowSourceCard
-            title='Broad Methods Repository'
+            title='Terra Workflow Repository'
             description='A repository of WDL workflows that offers private workflows hosted in the platform.'
             url={workflowsRepoUrl}
             openInNewTab={false}
