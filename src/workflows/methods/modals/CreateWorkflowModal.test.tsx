@@ -50,7 +50,7 @@ describe('CreateWorkflowModal', () => {
     await act(async () => {
       render(
         <CreateWorkflowModal
-          title='Create New Method'
+          title='Create New Workflow'
           buttonActionName='Upload'
           postMethodProvider={successPostMethodProvider}
           onSuccess={jest.fn()}
@@ -60,7 +60,7 @@ describe('CreateWorkflowModal', () => {
     });
 
     // Assert
-    expect(screen.getByText('Create New Method'));
+    expect(screen.getByText('Create New Workflow'));
     expect(screen.getByText('Namespace *'));
     expect(screen.getByText('Name *'));
     expect(screen.getByText('WDL *'));
@@ -84,7 +84,7 @@ describe('CreateWorkflowModal', () => {
     await act(async () => {
       render(
         <CreateWorkflowModal
-          title='Create New Method'
+          title='Create New Workflow'
           buttonActionName='Upload'
           defaultWdl='a'
           postMethodProvider={successPostMethodProvider}
@@ -125,7 +125,7 @@ describe('CreateWorkflowModal', () => {
     await act(async () => {
       render(
         <CreateWorkflowModal
-          title='Create New Method'
+          title='Create New Workflow'
           buttonActionName='Upload'
           defaultNamespace=','
           defaultName=','
@@ -160,7 +160,7 @@ describe('CreateWorkflowModal', () => {
     await act(async () => {
       render(
         <CreateWorkflowModal
-          title='Create New Method'
+          title='Create New Workflow'
           buttonActionName='Upload'
           defaultNamespace={longStringNamespace}
           defaultName={longStringName}
@@ -189,7 +189,7 @@ describe('CreateWorkflowModal', () => {
     await act(async () => {
       render(
         <CreateWorkflowModal
-          title='Create New Method'
+          title='Create New Workflow'
           buttonActionName='Upload'
           defaultNamespace='a'
           defaultName='a'
@@ -220,7 +220,7 @@ describe('CreateWorkflowModal', () => {
     await act(async () => {
       render(
         <CreateWorkflowModal
-          title='Create New Method'
+          title='Create New Workflow'
           buttonActionName='Upload'
           defaultNamespace='a'
           defaultName='a'
@@ -255,7 +255,7 @@ describe('CreateWorkflowModal', () => {
     await act(async () => {
       render(
         <CreateWorkflowModal
-          title='Create New Method'
+          title='Create New Workflow'
           buttonActionName='Upload'
           defaultNamespace='namespace'
           defaultName='name'
@@ -291,7 +291,7 @@ describe('CreateWorkflowModal', () => {
     await act(async () => {
       render(
         <CreateWorkflowModal
-          title='Create New Method'
+          title='Create New Workflow'
           buttonActionName='Upload'
           defaultNamespace='testnamespace'
           defaultName='testname'
@@ -341,7 +341,7 @@ describe('CreateWorkflowModal', () => {
     await act(async () => {
       render(
         <CreateWorkflowModal
-          title='Create New Method'
+          title='Create New Workflow'
           buttonActionName='Upload'
           defaultNamespace='testnamespace'
           defaultName='testname'
@@ -391,7 +391,7 @@ describe('CreateWorkflowModal', () => {
     await act(async () => {
       render(
         <CreateWorkflowModal
-          title='Create New Method'
+          title='Create New Workflow'
           buttonActionName='Upload'
           defaultNamespace='namespace'
           defaultName='name'
@@ -424,7 +424,7 @@ describe('CreateWorkflowModal', () => {
     await act(async () => {
       render(
         <CreateWorkflowModal
-          title='Create New Method'
+          title='Create New Workflow'
           buttonActionName='Upload'
           defaultNamespace='namespace'
           defaultName='name'
@@ -457,7 +457,7 @@ describe('CreateWorkflowModal', () => {
     await act(async () => {
       render(
         <CreateWorkflowModal
-          title='Create New Method'
+          title='Create New Workflow'
           buttonActionName='Upload'
           defaultNamespace='namespace'
           defaultName='name'
@@ -488,12 +488,12 @@ describe('CreateWorkflowModal', () => {
     await act(async () => {
       render(
         <CreateWorkflowModal
-          title='Create new method'
+          title='Create new workflow'
           defaultName='groot-scientific-workflow_copy'
           defaultWdl='workflow do-great-stuff {}'
           defaultDocumentation='I am Groot'
           defaultSynopsis='I am Groot'
-          buttonActionName='Create new method'
+          buttonActionName='Create new workflow'
           postMethodProvider={successPostMethodProvider}
           onSuccess={mockOnSuccess}
           onDismiss={mockOnDismiss}
@@ -509,7 +509,7 @@ describe('CreateWorkflowModal', () => {
     expect(screen.getByRole('textbox', { name: 'Synopsis (80 characters max)' })).toHaveDisplayValue('I am Groot');
     expect(screen.getByRole('textbox', { name: 'Snapshot comment' })).toHaveDisplayValue('');
 
-    const cloneMethodButton = screen.getByRole('button', { name: 'Create new method' });
+    const cloneMethodButton = screen.getByRole('button', { name: 'Create new workflow' });
 
     // Assert
     expect(cloneMethodButton).toHaveAttribute('aria-disabled', 'true');
@@ -524,7 +524,7 @@ describe('CreateWorkflowModal', () => {
     });
 
     // Act
-    await user.click(screen.getByRole('button', { name: 'Create new method' }));
+    await user.click(screen.getByRole('button', { name: 'Create new workflow' }));
 
     // Assert
     expect(successPostMethodProvider.postMethod).toHaveBeenCalledTimes(1);
