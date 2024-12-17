@@ -53,7 +53,7 @@ describe('Code page', () => {
     });
 
     // Assert
-    const codeAndWorkflows = await screen.getByRole('link', { name: 'code & workflows' });
+    const codeAndWorkflows = await screen.getByRole('link', { name: 'workflows' });
     expect(codeAndWorkflows).toHaveAttribute('href', 'library-code');
 
     const workflowName = await screen.getByRole('link', { name: 'joint-discovery-gatk4 Implements the joint discovery and VQSR filtering' });

@@ -265,7 +265,7 @@ export const TopBar = (props: TopBarProps): ReactNode => {
                 Featured Workspaces
               </DropDownSubItem>
               <DropDownSubItem href={Nav.getLink('library-code')} onClick={hideNav}>
-                Code & Workflows
+                Workflows
               </DropDownSubItem>
             </DropDownSection>
             <DropDownSection

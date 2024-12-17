@@ -155,7 +155,7 @@ export const Code = () => {
   });
 
   return h(FooterWrapper, { alwaysShow: true }, [
-    libraryTopMatter('code & workflows'),
+    libraryTopMatter('workflows'),
     div({ role: 'main', style: { flexGrow: 1 } }, [
       div({ style: { display: 'flex', flex: 1 } }, [
         div({ style: { flex: 1, margin: '30px 0 30px 40px' } }, [
@@ -193,6 +193,6 @@ export const navPaths = [
     path: '/library/code',
     component: Code,
     public: false,
-    title: 'Code & Workflows',
+    title: 'Workflows',
   },
 ];
