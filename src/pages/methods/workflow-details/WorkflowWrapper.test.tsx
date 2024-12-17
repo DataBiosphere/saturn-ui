@@ -427,7 +427,7 @@ describe('workflows container', () => {
       Methods().method(mockDeleteSnapshot.namespace, mockDeleteSnapshot.name, mockDeleteSnapshot.snapshotId).delete
     ).toHaveBeenCalled();
 
-    expect(window.history.replaceState).toHaveBeenCalledWith({}, '', '#methods/methodnamespace/testname');
+    expect(window.history.replaceState).toHaveBeenCalledWith({}, '', '#workflows/methodnamespace/testname');
 
     expect(snapshotStore.get()).toEqual(snapshotStoreInitialValue);
 
@@ -460,7 +460,7 @@ describe('workflows container', () => {
     await user.click(screen.getByRole('button', { name: 'Snapshot action menu' }));
     await user.click(screen.getByRole('button', { name: 'Save as' }));
 
-    const dialog = screen.getByRole('dialog', { name: /create new method/i });
+    const dialog = screen.getByRole('dialog', { name: /create new workflow/i });
 
     // Assert
     expect(dialog).toBeInTheDocument();
@@ -495,7 +495,7 @@ describe('workflows container', () => {
     await user.click(screen.getByRole('button', { name: 'Snapshot action menu' }));
     await user.click(screen.getByRole('button', { name: 'Save as' }));
 
-    const dialog = screen.getByRole('dialog', { name: /create new method/i });
+    const dialog = screen.getByRole('dialog', { name: /create new workflow/i });
 
     // Assert
     expect(dialog).toBeInTheDocument();
@@ -514,7 +514,7 @@ describe('workflows container', () => {
       target: { value: 'groot-new-snapshot' },
     });
 
-    await user.click(screen.getByRole('button', { name: 'Create new method' }));
+    await user.click(screen.getByRole('button', { name: 'Create new workflow' }));
 
     // Assert
     expect(postMethodProvider.postMethod).toHaveBeenCalled();
@@ -559,14 +559,14 @@ describe('workflows container', () => {
     await user.click(screen.getByRole('button', { name: 'Save as' }));
 
     // Assert
-    const dialog1 = screen.queryByRole('dialog', { name: /create new method/i });
+    const dialog1 = screen.queryByRole('dialog', { name: /create new workflow/i });
     expect(dialog1).toBeInTheDocument();
 
     // Act
     await user.click(screen.getByRole('button', { name: 'Cancel' }));
 
     // Assert
-    const dialog2 = screen.queryByRole('dialog', { name: /create new method/i });
+    const dialog2 = screen.queryByRole('dialog', { name: /create new workflow/i });
     expect(dialog2).not.toBeInTheDocument();
   });
 
