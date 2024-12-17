@@ -886,7 +886,7 @@ describe('workflows table', () => {
 });
 
 describe('create workflow modal', () => {
-  it('appears with the correct text and blank inputs when you press the create new method button', async () => {
+  it('appears with the correct text and blank inputs when you press the create new workflow button', async () => {
     // Arrange
     asMockedFn(Methods).mockReturnValue(mockMethods([]));
 
