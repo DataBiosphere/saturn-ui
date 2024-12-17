@@ -447,7 +447,7 @@ describe('workflows table', () => {
       render(<WorkflowList />);
     });
 
-    fireEvent.change(screen.getByPlaceholderText('SEARCH METHODS'), { target: { value: 'mysearch' } });
+    fireEvent.change(screen.getByPlaceholderText('SEARCH WORKFLOWS'), { target: { value: 'mysearch' } });
     await act(() => delay(300)); // debounced search
 
     // Assert
