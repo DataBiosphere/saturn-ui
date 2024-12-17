@@ -39,7 +39,7 @@ const DeleteSnapshotModal = (props: DeleteSnapshotModalProps): ReactNode => {
       onDismiss={onDismiss}
     >
       <p>
-        Are you sure you want to delete snapshot <b>{snapshotId}</b> of the method{' '}
+        Are you sure you want to delete version <b>{snapshotId}</b> of the workflow{' '}
         <b>
           {namespace}/{name}
         </b>

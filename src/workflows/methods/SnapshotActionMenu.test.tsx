@@ -68,7 +68,7 @@ describe('snapshot action menu', () => {
     expect(screen.queryByRole('tooltip')).not.toBeInTheDocument();
 
     // Act
-    const deleteSnapshotButton = screen.getByRole('button', { name: 'Delete snapshot' });
+    const deleteSnapshotButton = screen.getByRole('button', { name: 'Delete version' });
 
     await user.pointer({ target: deleteSnapshotButton });
 
@@ -132,7 +132,7 @@ describe('snapshot action menu', () => {
     expect(screen.getByRole('tooltip')).toBeInTheDocument();
 
     // Act
-    const deleteSnapshotButton = screen.getByRole('button', { name: 'Delete snapshot' });
+    const deleteSnapshotButton = screen.getByRole('button', { name: 'Delete version' });
 
     await user.pointer({ target: deleteSnapshotButton });
 
@@ -189,7 +189,7 @@ describe('snapshot action menu edit snapshot permissions button', () => {
   });
 });
 
-describe('snapshot action menu delete snapshot button', () => {
+describe('snapshot action menu delete version button', () => {
   it('closes and calls the onDelete callback when you press it', async () => {
     // Arrange
     const user: UserEvent = userEvent.setup();
@@ -207,11 +207,11 @@ describe('snapshot action menu delete snapshot button', () => {
       );
     });
 
-    await user.click(screen.getByRole('button', { name: 'Snapshot action menu' }));
-    await user.click(screen.getByRole('button', { name: 'Delete snapshot' }));
+    await user.click(screen.getByRole('button', { name: 'Version action menu' }));
+    await user.click(screen.getByRole('button', { name: 'Delete version' }));
 
     // Assert
-    expect(screen.queryByRole('button', { name: 'Delete snapshot' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Delete version' })).not.toBeInTheDocument();
     expect(mockOnDelete).toHaveBeenCalled();
     expect(mockOnEditPermissions).not.toHaveBeenCalled();
   });

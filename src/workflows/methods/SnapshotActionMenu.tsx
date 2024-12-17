@@ -12,7 +12,7 @@ export interface SnapshotActionMenuProps {
   /**
    * Whether the user is an owner of the workflow snapshot the actions in the
    * menu are for. Controls whether the following actions are enabled: edit
-   * permissions, delete snapshot
+   * permissions, delete snapshot, a.k.a. version in the UI
    */
   isSnapshotOwner: boolean;
 
@@ -22,7 +22,7 @@ export interface SnapshotActionMenuProps {
    */
   onEditPermissions: () => void;
 
-  /** The action to be performed if the "Delete snapshot" button is pressed. */
+  /** The action to be performed if the "Delete version" button is pressed. */
   onDelete: () => void;
 
   /** The action to be performed if the "Save as" button is pressed. */
@@ -36,7 +36,7 @@ export interface SnapshotActionMenuProps {
  * A kebab (vertical three-dot) menu that displays buttons to perform actions on
  * a workflow snapshot.
  *
- * Currently supported actions: edit permissions, delete snapshot, clone snapshot, edit method
+ * Currently supported actions: edit permissions, delete version, clone version, edit workflow
  */
 const SnapshotActionMenu = (props: SnapshotActionMenuProps): ReactNode => {
   const { disabled, isSnapshotOwner, onEditPermissions, onDelete, onClone, onEdit } = props;
@@ -65,7 +65,7 @@ const SnapshotActionMenu = (props: SnapshotActionMenuProps): ReactNode => {
         onClick={onDelete}
       >
         {makeMenuIcon('trash')}
-        Delete snapshot
+        Delete version
       </MenuButton>
       <MenuButton
         disabled={!isSnapshotOwner}

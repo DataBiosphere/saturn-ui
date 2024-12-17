@@ -607,7 +607,7 @@ describe('workflows container', () => {
     expect(within(dialog).getByRole('textbox', { name: 'Synopsis (80 characters max)' })).toHaveDisplayValue('');
     expect(within(dialog).getByRole('textbox', { name: 'Version comment' })).toHaveDisplayValue('');
     expect(within(dialog).getByTestId('wdl editor')).toHaveDisplayValue(mockSnapshot.payload.toString());
-    expect(within(dialog).getByRole('checkbox', { name: 'Delete snapshot 1' })).not.toBeChecked();
+    expect(within(dialog).getByRole('checkbox', { name: 'Delete version 1' })).not.toBeChecked();
   });
 
   it('calls the right provider with expected arguments when new snapshot is created', async () => {
@@ -635,11 +635,11 @@ describe('workflows container', () => {
     await user.click(screen.getByRole('button', { name: 'Edit' }));
 
     fireEvent.change(screen.getByRole('textbox', { name: 'Version comment' }), {
-      target: { value: "groot's new improved snapshot" },
+      target: { value: "groot's new improved version" },
     });
-    await user.click(screen.getByRole('checkbox', { name: 'Delete snapshot 1' }));
+    await user.click(screen.getByRole('checkbox', { name: 'Delete version 1' }));
 
-    await user.click(screen.getByRole('button', { name: 'Create new snapshot' }));
+    await user.click(screen.getByRole('button', { name: 'Create new version' }));
 
     // Assert
     expect(editMethodProvider.createNewSnapshot).toHaveBeenCalled();
@@ -697,7 +697,7 @@ describe('workflows container', () => {
     expect(dialog2).not.toBeInTheDocument();
   });
 
-  it('hides the delete snapshot modal and displays a loading spinner when the deletion is confirmed', async () => {
+  it('hides the delete version modal and displays a loading spinner when the deletion is confirmed', async () => {
     // Arrange
     mockAjax({
       deleteImpl: jest.fn(async () => {
@@ -707,7 +707,7 @@ describe('workflows container', () => {
 
     // ensure that an additional loading spinner does not appear due to the
     // snapshot store being reset, so that we can test only the spinner that
-    // should appear while the delete snapshot operation is being performed
+    // should appear while the delete version operation is being performed
     jest.spyOn(snapshotStore, 'reset').mockImplementation(_.noop);
 
     // set the user's email
@@ -728,18 +728,18 @@ describe('workflows container', () => {
     });
 
     await user.click(screen.getByRole('button', { name: 'Snapshot action menu' }));
-    await user.click(screen.getByRole('button', { name: 'Delete snapshot' })); // open modal
-    await user.click(screen.getByRole('button', { name: 'Delete snapshot' })); // confirm deletion
+    await user.click(screen.getByRole('button', { name: 'Delete version' })); // open modal
+    await user.click(screen.getByRole('button', { name: 'Delete version' })); // confirm deletion
 
     // Assert
-    const dialog = screen.queryByRole('dialog', { name: /delete snapshot/i });
+    const dialog = screen.queryByRole('dialog', { name: /delete version/i });
     const spinner = document.querySelector('[data-icon="loadingSpinner"]');
 
     expect(dialog).not.toBeInTheDocument();
     expect(spinner).toBeInTheDocument();
   });
 
-  it('renders the delete snapshot modal when the corresponding button is pressed if the user is a snapshot owner', async () => {
+  it('renders the delete version modal when the corresponding button is pressed if the user is a version owner', async () => {
     // Arrange
     mockAjax();
 
@@ -761,10 +761,10 @@ describe('workflows container', () => {
     });
 
     await user.click(screen.getByRole('button', { name: 'Snapshot action menu' }));
-    await user.click(screen.getByRole('button', { name: 'Delete snapshot' }));
+    await user.click(screen.getByRole('button', { name: 'Delete version' }));
 
     // Assert
-    const dialog = screen.getByRole('dialog', { name: /delete snapshot/i });
+    const dialog = screen.getByRole('dialog', { name: /delete version/i });
 
     expect(dialog).toBeInTheDocument();
     expect(within(dialog).getByText('methodnamespace', { exact: false })).toBeInTheDocument();
@@ -772,7 +772,7 @@ describe('workflows container', () => {
     expect(within(dialog).getByText('3', { exact: false })).toBeInTheDocument();
   });
 
-  it('only allows the delete snapshot modal to be opened if the user is a snapshot owner', async () => {
+  it('only allows the delete version modal to be opened if the user is a snapshot owner', async () => {
     // Arrange
     mockAjax();
 
@@ -794,15 +794,15 @@ describe('workflows container', () => {
     });
 
     await user.click(screen.getByRole('button', { name: 'Snapshot action menu' }));
-    await user.click(screen.getByRole('button', { name: 'Delete snapshot' }));
+    await user.click(screen.getByRole('button', { name: 'Delete version' }));
 
     // Assert
-    const dialog = screen.queryByRole('dialog', { name: /delete snapshot/i });
+    const dialog = screen.queryByRole('dialog', { name: /delete version/i });
 
     expect(dialog).not.toBeInTheDocument();
   });
 
-  it('hides the delete snapshot modal when it is dismissed', async () => {
+  it('hides the delete version modal when it is dismissed', async () => {
     // Arrange
     mockAjax();
 
@@ -823,12 +823,12 @@ describe('workflows container', () => {
       );
     });
 
-    await user.click(screen.getByRole('button', { name: 'Snapshot action menu' }));
-    await user.click(screen.getByRole('button', { name: 'Delete snapshot' }));
+    await user.click(screen.getByRole('button', { name: 'Version action menu' }));
+    await user.click(screen.getByRole('button', { name: 'Delete version' }));
     await user.click(screen.getByRole('button', { name: 'Cancel' }));
 
     // Assert
-    const dialog = screen.queryByRole('dialog', { name: /delete snapshot/i });
+    const dialog = screen.queryByRole('dialog', { name: /delete version/i });
 
     expect(dialog).not.toBeInTheDocument();
   });
@@ -858,9 +858,9 @@ describe('workflows container', () => {
       );
     });
 
-    await user.click(screen.getByRole('button', { name: 'Snapshot action menu' }));
-    await user.click(screen.getByRole('button', { name: 'Delete snapshot' })); // open modal
-    await user.click(screen.getByRole('button', { name: 'Delete snapshot' })); // confirm deletion
+    await user.click(screen.getByRole('button', { name: 'Version action menu' }));
+    await user.click(screen.getByRole('button', { name: 'Delete version' })); // open modal
+    await user.click(screen.getByRole('button', { name: 'Delete version' })); // confirm deletion
 
     // Assert
     expect(errorWatcher).toHaveBeenCalledWith('Error deleting snapshot', expect.anything());

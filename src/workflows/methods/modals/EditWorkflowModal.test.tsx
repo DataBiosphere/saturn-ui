@@ -74,7 +74,7 @@ describe('EditWorkflowModal', () => {
     expect(screen.getByRole('textbox', { name: 'Documentation' })).toHaveDisplayValue('documentation');
     expect(screen.getByRole('textbox', { name: 'Synopsis (80 characters max)' })).toHaveDisplayValue('synopsis');
     expect(screen.getByRole('textbox', { name: 'Version comment' })).toHaveDisplayValue('');
-    expect(screen.getByText('Delete snapshot 3'));
+    expect(screen.getByText('Delete version 3'));
   });
 
   it('successfully creates a new snapshot with inputted information', async () => {
@@ -158,9 +158,9 @@ describe('EditWorkflowModal', () => {
     fireEvent.change(screen.getByRole('textbox', { name: 'Version comment' }), {
       target: { value: 'version comment' },
     });
-    await user.click(screen.getByRole('checkbox', { name: 'Delete snapshot 3' }));
+    await user.click(screen.getByRole('checkbox', { name: 'Delete version 3' }));
 
-    await user.click(screen.getByRole('button', { name: 'Create new snapshot' }));
+    await user.click(screen.getByRole('button', { name: 'Create new version' }));
 
     // Assert
     expect(editMethodProviderSuccess.createNewSnapshot).toHaveBeenCalledTimes(1);
