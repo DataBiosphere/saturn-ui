@@ -33,7 +33,7 @@ const defaultTabKey: TabKey = tabKeys[0];
 
 /**
  * Represents a list of method definitions grouped into two
- * categories — My Methods and Public Methods — corresponding
+ * categories — My Workflows and Public Workflows — corresponding
  * to the tabs above the workflows table.
  */
 type GroupedWorkflows = Record<TabKey, MethodDefinition[]>;
@@ -173,7 +173,7 @@ export const WorkflowList = (props: WorkflowListProps) => {
         });
       } catch (error) {
         setWorkflows(null);
-        notify('error', 'Error loading methods', { detail: error instanceof Response ? await error.text() : error });
+        notify('error', 'Error loading workflows', { detail: error instanceof Response ? await error.text() : error });
       }
     });
 
@@ -216,11 +216,11 @@ export const WorkflowList = (props: WorkflowListProps) => {
 
   return (
     <FooterWrapper>
-      <TopBar title='Broad Methods Repository' href=''>
+      <TopBar title='Terra Workflow Repository' href=''>
         {null /* no additional content to display in the top bar */}
       </TopBar>
       <TabBar
-        aria-label='methods list menu'
+        aria-label='workflows list menu'
         activeTab={selectedTab}
         tabNames={tabKeys}
         displayNames={getTabDisplayNames(workflows, selectedTab)}
@@ -236,8 +236,8 @@ export const WorkflowList = (props: WorkflowListProps) => {
         <div style={{ display: 'flex' }}>
           <DelayedSearchInput
             style={{ width: 500, display: 'flex', justifyContent: 'flex-start' }}
-            placeholder='SEARCH METHODS'
-            aria-label='Search methods'
+            placeholder='SEARCH WORKFLOWS'
+            aria-label='Search workflows'
             onChange={(val) => updateQuery({ newFilter: val })}
             value={filter}
           />
@@ -313,7 +313,7 @@ const getColumns = (
     field: 'name',
     headerRenderer: () => (
       <WorkflowTableHeader sort={sort} field='name' onSort={onSort}>
-        Method
+        Workflow
       </WorkflowTableHeader>
     ),
     cellRenderer: ({ rowIndex }) => {
