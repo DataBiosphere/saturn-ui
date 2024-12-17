@@ -410,8 +410,8 @@ describe('workflows container', () => {
     });
 
     await user.click(screen.getByRole('button', { name: 'Snapshot action menu' }));
-    await user.click(screen.getByRole('button', { name: 'Delete snapshot' })); // open modal
-    await user.click(screen.getByRole('button', { name: 'Delete snapshot' })); // confirm deletion
+    await user.click(screen.getByRole('button', { name: 'Delete version' })); // open modal
+    await user.click(screen.getByRole('button', { name: 'Delete version' })); // confirm deletion
 
     // Assert
 
@@ -427,7 +427,8 @@ describe('workflows container', () => {
       Methods().method(mockDeleteSnapshot.namespace, mockDeleteSnapshot.name, mockDeleteSnapshot.snapshotId).delete
     ).toHaveBeenCalled();
 
-    expect(window.history.replaceState).toHaveBeenCalledWith({}, '', '#workflows/methodnamespace/testname');
+    // Refers to FCUI `#methods`
+    expect(window.history.replaceState).toHaveBeenCalledWith({}, '', '#methods/methodnamespace/testname');
 
     expect(snapshotStore.get()).toEqual(snapshotStoreInitialValue);
 
