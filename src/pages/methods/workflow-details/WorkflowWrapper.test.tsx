@@ -50,7 +50,7 @@ const mockSnapshot: Snapshot = {
   createDate: '2024-09-04T15:37:57Z',
   documentation: 'mock documentation',
   entityType: 'Workflow',
-  snapshotComment: 'mock snapshot comment',
+  snapshotComment: 'mock version comment',
   snapshotId: 1,
   namespace: 'testnamespace',
   payload:
@@ -468,7 +468,7 @@ describe('workflows container', () => {
     expect(within(dialog).getByRole('textbox', { name: 'Name *' })).toHaveDisplayValue('testname_copy');
     expect(within(dialog).getByRole('textbox', { name: 'Documentation' })).toHaveDisplayValue('mock documentation');
     expect(within(dialog).getByRole('textbox', { name: 'Synopsis (80 characters max)' })).toHaveDisplayValue('');
-    expect(within(dialog).getByRole('textbox', { name: 'Snapshot comment' })).toHaveDisplayValue('');
+    expect(within(dialog).getByRole('textbox', { name: 'Version comment' })).toHaveDisplayValue('');
     expect(within(dialog).getByTestId('wdl editor')).toHaveDisplayValue(mockSnapshot.payload.toString());
   });
 
@@ -503,14 +503,14 @@ describe('workflows container', () => {
     expect(within(dialog).getByRole('textbox', { name: 'Name *' })).toHaveDisplayValue('testname_copy');
     expect(within(dialog).getByRole('textbox', { name: 'Documentation' })).toHaveDisplayValue('mock documentation');
     expect(within(dialog).getByRole('textbox', { name: 'Synopsis (80 characters max)' })).toHaveDisplayValue('');
-    expect(within(dialog).getByRole('textbox', { name: 'Snapshot comment' })).toHaveDisplayValue('');
+    expect(within(dialog).getByRole('textbox', { name: 'Version comment' })).toHaveDisplayValue('');
     expect(within(dialog).getByTestId('wdl editor')).toHaveDisplayValue(mockSnapshot.payload.toString());
 
     // Act
     fireEvent.change(screen.getByRole('textbox', { name: 'Namespace *' }), {
       target: { value: 'groot-new-namespace' },
     });
-    fireEvent.change(screen.getByRole('textbox', { name: 'Snapshot comment' }), {
+    fireEvent.change(screen.getByRole('textbox', { name: 'Version comment' }), {
       target: { value: 'groot-new-snapshot' },
     });
 
@@ -604,7 +604,7 @@ describe('workflows container', () => {
     expect(within(dialog).getByRole('textbox', { name: 'Name' })).toHaveAttribute('disabled');
     expect(within(dialog).getByRole('textbox', { name: 'Documentation' })).toHaveDisplayValue('mock documentation');
     expect(within(dialog).getByRole('textbox', { name: 'Synopsis (80 characters max)' })).toHaveDisplayValue('');
-    expect(within(dialog).getByRole('textbox', { name: 'Snapshot comment' })).toHaveDisplayValue('');
+    expect(within(dialog).getByRole('textbox', { name: 'Version comment' })).toHaveDisplayValue('');
     expect(within(dialog).getByTestId('wdl editor')).toHaveDisplayValue(mockSnapshot.payload.toString());
     expect(within(dialog).getByRole('checkbox', { name: 'Delete snapshot 1' })).not.toBeChecked();
   });
@@ -633,7 +633,7 @@ describe('workflows container', () => {
     await user.click(screen.getByRole('button', { name: 'Snapshot action menu' }));
     await user.click(screen.getByRole('button', { name: 'Edit' }));
 
-    fireEvent.change(screen.getByRole('textbox', { name: 'Snapshot comment' }), {
+    fireEvent.change(screen.getByRole('textbox', { name: 'Version comment' }), {
       target: { value: "groot's new improved snapshot" },
     });
     await user.click(screen.getByRole('checkbox', { name: 'Delete snapshot 1' }));

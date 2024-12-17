@@ -21,7 +21,7 @@ const mockCreateSnapshotResponse: MethodResponse = {
   documentation: 'documentation',
   synopsis: 'synopsis',
   entityType: 'Workflow',
-  snapshotComment: 'snapshot comment',
+  snapshotComment: 'version comment',
   snapshotId: 4,
   namespace: 'my-namespace',
   payload: 'workflow doStuff {}',
@@ -73,7 +73,7 @@ describe('EditWorkflowModal', () => {
     expect(screen.getByTestId('wdl editor')).toHaveDisplayValue('workflow doStuff {}');
     expect(screen.getByRole('textbox', { name: 'Documentation' })).toHaveDisplayValue('documentation');
     expect(screen.getByRole('textbox', { name: 'Synopsis (80 characters max)' })).toHaveDisplayValue('synopsis');
-    expect(screen.getByRole('textbox', { name: 'Snapshot comment' })).toHaveDisplayValue('');
+    expect(screen.getByRole('textbox', { name: 'Version comment' })).toHaveDisplayValue('');
     expect(screen.getByText('Delete snapshot 3'));
   });
 
@@ -105,8 +105,8 @@ describe('EditWorkflowModal', () => {
     fireEvent.change(screen.getByRole('textbox', { name: 'Synopsis (80 characters max)' }), {
       target: { value: 'synopsis' },
     });
-    fireEvent.change(screen.getByRole('textbox', { name: 'Snapshot comment' }), {
-      target: { value: 'snapshot comment' },
+    fireEvent.change(screen.getByRole('textbox', { name: 'Version comment' }), {
+      target: { value: 'version comment' },
     });
 
     await user.click(screen.getByRole('button', { name: 'Create new snapshot' }));
@@ -121,7 +121,7 @@ describe('EditWorkflowModal', () => {
       'synopsis',
       'documentation',
       'workflow doStuff {}',
-      'snapshot comment'
+      'version comment'
     );
     expect(mockOnSuccess).toHaveBeenCalledWith('my-namespace', 'my-workflow', 4);
     expect(mockOnDismiss).not.toHaveBeenCalled();
@@ -155,8 +155,8 @@ describe('EditWorkflowModal', () => {
     fireEvent.change(screen.getByRole('textbox', { name: 'Synopsis (80 characters max)' }), {
       target: { value: 'synopsis' },
     });
-    fireEvent.change(screen.getByRole('textbox', { name: 'Snapshot comment' }), {
-      target: { value: 'snapshot comment' },
+    fireEvent.change(screen.getByRole('textbox', { name: 'Version comment' }), {
+      target: { value: 'version comment' },
     });
     await user.click(screen.getByRole('checkbox', { name: 'Delete snapshot 3' }));
 
@@ -172,7 +172,7 @@ describe('EditWorkflowModal', () => {
       'synopsis',
       'documentation',
       'workflow doStuff {}',
-      'snapshot comment'
+      'version comment'
     );
     expect(mockOnSuccess).toHaveBeenCalledWith('my-namespace', 'my-workflow', 4);
     expect(mockOnDismiss).not.toHaveBeenCalled();

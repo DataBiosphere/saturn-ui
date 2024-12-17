@@ -62,7 +62,7 @@ export const BaseWorkflowSummary = () => {
               div({ style: { paddingLeft: '0.5rem' } }, [isPublic ? 'Public' : 'Private']),
             ]),
           ]),
-          h(InfoRow, { title: 'Snapshot Comment' }, [h(TooltipCell, [snapshotComment])]),
+          h(InfoRow, { title: 'Version Comment' }, [h(TooltipCell, [snapshotComment])]),
         ]
       ),
       h(

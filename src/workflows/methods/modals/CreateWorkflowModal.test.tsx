@@ -67,7 +67,7 @@ describe('CreateWorkflowModal', () => {
     expect(screen.getByRole('button', { name: 'Load WDL from file' }));
     expect(screen.getByText('Documentation'));
     expect(screen.getByText('Synopsis (80 characters max)'));
-    expect(screen.getByText('Snapshot comment'));
+    expect(screen.getByText('Version comment'));
     expect(screen.getByRole('button', { name: 'Cancel' }));
     expect(screen.getByRole('button', { name: 'Upload' }));
 
@@ -76,7 +76,7 @@ describe('CreateWorkflowModal', () => {
     expect(screen.getByTestId('wdl editor')).toHaveDisplayValue('');
     expect(screen.getByRole('textbox', { name: 'Documentation' })).toHaveDisplayValue('');
     expect(screen.getByRole('textbox', { name: 'Synopsis (80 characters max)' })).toHaveDisplayValue('');
-    expect(screen.getByRole('textbox', { name: 'Snapshot comment' })).toHaveDisplayValue('');
+    expect(screen.getByRole('textbox', { name: 'Version comment' })).toHaveDisplayValue('');
   });
 
   it('shows an error and disables the action button when the namespace and name inputs are empty', async () => {
@@ -312,7 +312,7 @@ describe('CreateWorkflowModal', () => {
     fireEvent.change(screen.getByRole('textbox', { name: 'Synopsis (80 characters max)' }), {
       target: { value: 'new synopsis' },
     });
-    fireEvent.change(screen.getByRole('textbox', { name: 'Snapshot comment' }), { target: { value: 'new comment' } });
+    fireEvent.change(screen.getByRole('textbox', { name: 'Version comment' }), { target: { value: 'new comment' } });
 
     await user.click(screen.getByRole('button', { name: 'Upload' }));
 
@@ -361,7 +361,7 @@ describe('CreateWorkflowModal', () => {
     expect(screen.getByTestId('wdl editor')).toHaveDisplayValue('workflow hi {}');
     expect(screen.getByRole('textbox', { name: 'Documentation' })).toHaveDisplayValue('test docs');
     expect(screen.getByRole('textbox', { name: 'Synopsis (80 characters max)' })).toHaveDisplayValue('test synopsis');
-    expect(screen.getByRole('textbox', { name: 'Snapshot comment' })).toHaveDisplayValue('');
+    expect(screen.getByRole('textbox', { name: 'Version comment' })).toHaveDisplayValue('');
 
     // Act
     await user.click(screen.getByRole('button', { name: 'Upload' }));
@@ -507,7 +507,7 @@ describe('CreateWorkflowModal', () => {
     expect(screen.getByTestId('wdl editor')).toHaveDisplayValue('workflow do-great-stuff {}');
     expect(screen.getByRole('textbox', { name: 'Documentation' })).toHaveDisplayValue('I am Groot');
     expect(screen.getByRole('textbox', { name: 'Synopsis (80 characters max)' })).toHaveDisplayValue('I am Groot');
-    expect(screen.getByRole('textbox', { name: 'Snapshot comment' })).toHaveDisplayValue('');
+    expect(screen.getByRole('textbox', { name: 'Version comment' })).toHaveDisplayValue('');
 
     const cloneMethodButton = screen.getByRole('button', { name: 'Create new workflow' });
 
@@ -518,8 +518,8 @@ describe('CreateWorkflowModal', () => {
     fireEvent.change(screen.getByRole('textbox', { name: 'Namespace *' }), {
       target: { value: 'groot-test-namespace' },
     });
-    // user enters value for 'Snapshot comment' text box
-    fireEvent.change(screen.getByRole('textbox', { name: 'Snapshot comment' }), {
+    // user enters value for 'Version comment' text box
+    fireEvent.change(screen.getByRole('textbox', { name: 'Version comment' }), {
       target: { value: "Groot's brand new snapshot" },
     });
 
