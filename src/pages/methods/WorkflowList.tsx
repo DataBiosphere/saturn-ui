@@ -133,7 +133,7 @@ export const WorkflowList = (props: WorkflowListProps) => {
     setSort(newSort);
   };
 
-  const tabNames: Record<TabKey, string> = { mine: 'My Methods', public: 'Public Methods' };
+  const tabNames: Record<TabKey, string> = { mine: 'My Workflows', public: 'Public Workflows' };
 
   const getTabDisplayNames = (
     workflows: GroupedWorkflows | null | undefined,
@@ -247,7 +247,7 @@ export const WorkflowList = (props: WorkflowListProps) => {
                 setCreateWorkflowModalOpen(true);
               }}
             >
-              Create New Method
+              Create New Workflow
             </ButtonPrimary>
           </div>
         </div>
@@ -289,7 +289,7 @@ export const WorkflowList = (props: WorkflowListProps) => {
         )}
         {createWorkflowModalOpen && (
           <CreateWorkflowModal
-            title='Create New Method'
+            title='Create New Workflow'
             buttonActionName='Upload'
             postMethodProvider={postMethodProvider}
             onSuccess={navigateToWorkflow}
@@ -377,8 +377,8 @@ const getColumns = (
 export const navPaths = [
   {
     name: 'workflows',
-    path: '/methods',
+    path: '/workflows',
     component: WorkflowList,
-    title: 'Broad Methods Repository',
+    title: 'Terra Workflow Repository',
   },
 ];
