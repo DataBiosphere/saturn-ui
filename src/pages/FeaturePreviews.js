@@ -134,6 +134,7 @@ export const FeaturePreviews = () => {
             },
           ],
         }),
+        div({ style: { marginTop: '1rem' } }, [h(Link, { href: '#workspaces' }, ['Go to Workspaces List'])]),
       ])
   );
 };
