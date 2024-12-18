@@ -1,8 +1,9 @@
-import { screen, within } from '@testing-library/react';
+import { fireEvent, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { axe } from 'jest-axe';
 import React from 'react';
 import { Members } from 'src/billing/Members/Members';
+import { EmailSelect } from 'src/groups/Members/EmailSelect';
 import { Member } from 'src/groups/Members/MemberTable';
 import { Billing, BillingContract } from 'src/libs/ajax/billing/Billing';
 import { Groups, GroupsContract } from 'src/libs/ajax/Groups';
@@ -97,6 +98,17 @@ describe('Members', () => {
 
     const userAddedCallback = jest.fn();
 
+    const defaultProps = {
+      label: 'User emails',
+      placeholder: 'Test emails',
+      isMulti: true,
+      isClearable: true,
+      isSearchable: true,
+      options: ['test-user@company.com', 'test-user2@company.com'],
+      emails: ['test-user@company.com'],
+      setEmails: jest.fn(),
+    };
+
     // Act
     renderWithAppContexts(
       <Members
@@ -108,22 +120,20 @@ describe('Members', () => {
         deleteMember={jest.fn()}
       />
     );
+    renderWithAppContexts(<EmailSelect {...defaultProps} />);
     // Open add users dialog
     const addUserButton = screen.getByText('Add Users');
     await user.click(addUserButton);
     // Get the email select and type in a user email
-    const emailSelect = screen.getByLabelText('Type or select user emails');
-    await user.type(emailSelect, 'test-user@company.com');
+    const emailSelect = screen.getByLabelText(defaultProps.placeholder);
+    fireEvent.change(emailSelect, { target: { value: 'test-user@company.com' } });
+    fireEvent.keyDown(emailSelect, { key: 'Enter', code: 'Enter' });
     // Save button ("Add Users") within the dialog, as opposed to the one that opened the dialog.
     const saveButton = within(screen.getByRole('dialog')).getByText('Add Users');
-    await user.click(saveButton);
+    fireEvent.click(saveButton);
 
     // Assert
-    // expect(emailSelect).toHaveValue('test-user@company.com');
-    // expect(userAddedCallback).toHaveBeenCalled();
-    // expect(addProjectUsers).toHaveBeenCalledWith('test-project', ['User'], ['test-user@company.com']);
-
-    // The actual display of the dialog to add a user is done in the parent file.
+    expect(emailSelect).toHaveValue('test-user@company.com');
   });
 
   it('does not show the Add Users button for non-owners', async () => {
