@@ -109,4 +109,12 @@ describe('FeaturePreviews', () => {
     const link3 = getByRole('link', { name: 'Submit feedback' });
     expect(link3).toHaveAttribute('href', 'mailto:feature2-feedback@example.com');
   });
+
+  it('should render "Go to Workspaces List" link', () => {
+    const { getByRole } = render(h(FeaturePreviews));
+    const link = getByRole('link', { name: 'Go to Workspaces List' });
+
+    expect(link).toBeTruthy();
+    expect(link).toHaveAttribute('href', '#workspaces');
+  });
 });
