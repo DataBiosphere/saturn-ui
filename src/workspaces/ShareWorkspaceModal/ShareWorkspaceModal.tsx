@@ -102,7 +102,7 @@ const ShareWorkspaceModal: React.FC<ShareWorkspaceModalProps> = (props: ShareWor
 
   const remainingSuggestions = _.difference(suggestions, _.map('email', acl));
   const addUserReminder =
-    'Did you mean to add collaborators? Add them or clear the "User email(s)" field to save changes.';
+    'Did you mean to add collaborators? Add them or clear the "User emails" field to save changes.';
 
   const addCollaborators = (collaboratorEmails: string[], collaboratorAcl: AccessEntry) => {
     collaboratorEmails.forEach((collaboratorEmail: string) => {
