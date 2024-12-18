@@ -122,8 +122,7 @@ const ConsolidatedSpendWorkspaceCard: React.FC<ConsolidatedSpendWorkspaceCardPro
               style={Style.noWrapEllipsis}
               href={`${Nav.getLink('billing')}?${qs.stringify({ selectedName: namespace, type: 'project' })}`}
               onClick={() => {
-                void Metrics().captureEvent(Events.billingProjectGoToWorkspace, {
-                  workspaceName: name,
+                void Metrics().captureEvent(Events.billingConsolidatedReportGoToBillingProject, {
                   ...extractBillingDetails(billingProject),
                 });
               }}
@@ -144,7 +143,7 @@ const ConsolidatedSpendWorkspaceCard: React.FC<ConsolidatedSpendWorkspaceCardPro
               style={Style.noWrapEllipsis}
               href={Nav.getLink('workspace-dashboard', { namespace, name })}
               onClick={() => {
-                void Metrics().captureEvent(Events.billingProjectGoToWorkspace, {
+                void Metrics().captureEvent(Events.billingConsolidatedReportGoToWorkspace, {
                   workspaceName: name,
                   ...extractBillingDetails(billingProject),
                 });
@@ -397,8 +396,8 @@ export const ConsolidatedSpendReport = (props: ConsolidatedSpendReportProps): Re
                         workspace={workspace}
                         billingProject={{
                           cloudPlatform: 'GCP',
-                          billingAccount: workspace.namespace,
-                          projectName: workspace.googleProject,
+                          billingAccount: workspace.billingAccount,
+                          projectName: workspace.namespace,
                           invalidBillingAccount: false,
                           roles: ['Owner'],
                           status: 'Ready',

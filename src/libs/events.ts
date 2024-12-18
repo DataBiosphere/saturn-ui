@@ -35,6 +35,8 @@ const eventsList = {
   billingProjectGoToWorkspace: 'billing:project:workspace:navigate',
   billingProjectOpenFromList: 'billing:project:open-from-list',
   billingProjectSelectTab: 'billing:project:tab',
+  billingConsolidatedReportGoToWorkspace: 'billing:consolidatedReport:workspace:navigate',
+  billingConsolidatedReportGoToBillingProject: 'billing:consolidatedReport:project:navigate',
   billingChangeAccount: 'billing:project:account:update',
   billingAzureCreationSubscriptionStep: 'billing:creation:step1:AzureSubscriptionStepActive',
   billingAzureCreationMRGSelected: 'billing:creation:step1:AzureMRGSelected',

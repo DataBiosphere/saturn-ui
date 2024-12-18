@@ -163,7 +163,7 @@ const featurePreviewsConfig: readonly FeaturePreview[] = [
   },
   {
     id: CONSOLIDATED_SPEND_REPORT,
-    title: 'Show spend report for all workspaces owned by user',
+    title: 'Show Consolidated Spend Report for all workspaces owned by user',
     description:
       'Enabling this feature will allow user to generate a spend report across all billing projects in which they own workspaces',
     feedbackUrl: `mailto:dsp-core-services@broadinstitute.org?subject=${encodeURIComponent(
