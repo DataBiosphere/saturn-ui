@@ -51,6 +51,11 @@ export type FeaturePreview = {
    * Optional date string for the last updated date. Shown on the feature previews page.
    */
   readonly lastUpdated?: string;
+
+  /**
+   * Optional URL for an article about the feature. Shown on the feature previews page.
+   */
+  readonly articleUrl?: string;
 };
 
 const featurePreviewsConfig: readonly FeaturePreview[] = [
@@ -98,6 +103,7 @@ const featurePreviewsConfig: readonly FeaturePreview[] = [
       'Feedback on deprecating Firecloud UI'
     )}`,
     lastUpdated: '3/22/2024',
+    articleUrl: 'https://support.terra.bio/hc/en-us/articles/31191238873243',
   },
   {
     id: COHORT_BUILDER_CARD,
@@ -119,6 +125,7 @@ const featurePreviewsConfig: readonly FeaturePreview[] = [
       'Feedback on Improved Spend Reports'
     )}`,
     lastUpdated: '11/19/2024',
+    articleUrl: 'https://support.terra.bio/hc/en-us/articles/31182586327323',
   },
   {
     id: AUTO_GENERATE_DATA_TABLES,
@@ -129,6 +136,7 @@ const featurePreviewsConfig: readonly FeaturePreview[] = [
       'Feedback on Autogenerate data table for single and paired end sequencing'
     )}`,
     lastUpdated: '11/26/2024',
+    articleUrl: 'https://support.terra.bio/hc/en-us/articles/31258673632923',
   },
   {
     id: PREVIEW_COST_CAPPING,
@@ -140,6 +148,7 @@ const featurePreviewsConfig: readonly FeaturePreview[] = [
       'Feedback on Workflow Cost Capping'
     )}`,
     lastUpdated: '12/6/2024',
+    articleUrl: 'https://support.terra.bio/hc/en-us/articles/31269696049307',
   },
   {
     id: IGV_ENHANCEMENTS,
