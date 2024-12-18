@@ -21,6 +21,7 @@ interface FileBrowserProvider {
   getFilesInDirectory(path: string, options?: { signal?: AbortSignal }): Promise<IncrementalResponse<FileBrowserFile>>;
   getDownloadUrlForFile(path: string, options?: { signal?: AbortSignal }): Promise<string>;
   getDownloadCommandForFile(path: string, options?: { signal?: AbortSignal }): Promise<string>;
+  getPageSize(): number;
 
   uploadFileToDirectory(directoryPath: string, file: File): Promise<void>;
   deleteFile(path: string): Promise<void>;

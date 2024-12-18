@@ -2,7 +2,7 @@ import { Dispatch, Fragment, ReactNode, SetStateAction, useEffect, useRef, useSt
 import { div, h, span } from 'react-hyperscript-helpers';
 import { ButtonOutline, Link, topSpinnerOverlay } from 'src/components/common';
 import Dropzone from 'src/components/Dropzone';
-import { useFilesInDirectory } from 'src/components/file-browser/file-browser-hooks';
+import { useDirectoriesInDirectory, useFilesInDirectory } from 'src/components/file-browser/file-browser-hooks';
 import { basename, dirname } from 'src/components/file-browser/file-browser-utils';
 import { FilesMenu } from 'src/components/file-browser/FilesMenu';
 import FilesTable from 'src/components/file-browser/FilesTable';
@@ -29,12 +29,15 @@ interface FilesInDirectoryProps {
   rootLabel?: string;
   selectedFiles: { [path: string]: FileBrowserFile };
   setSelectedFiles: Dispatch<SetStateAction<{ [path: string]: FileBrowserFile }>>;
+  onClickDirectory: (directory: FileBrowserDirectory) => void;
   onClickFile: (file: FileBrowserFile) => void;
   onCreateDirectory: (directory: FileBrowserDirectory) => void;
   onDeleteDirectory: () => void;
   onError: (error: Error) => void;
   extraMenuItems?: any;
 }
+
+type FileObjectStatus = 'Loading' | 'Ready' | 'Error';
 
 const FilesInDirectory = (props: FilesInDirectoryProps) => {
   const {
@@ -45,6 +48,7 @@ const FilesInDirectory = (props: FilesInDirectoryProps) => {
     rootLabel = 'Files',
     selectedFiles,
     setSelectedFiles,
+    onClickDirectory,
     onClickFile,
     onCreateDirectory,
     onDeleteDirectory,
@@ -56,13 +60,19 @@ const FilesInDirectory = (props: FilesInDirectoryProps) => {
 
   const loadedAlertElementRef = useRef<HTMLSpanElement | null>(null);
 
-  const { state, hasNextPage, loadAllRemainingItems, loadNextPage, reload } = useFilesInDirectory(provider, path);
+  const directoriesResults = useDirectoriesInDirectory(provider, path);
+  const filesResults = useFilesInDirectory(provider, path);
+  const loadNextPage =
+    directoriesResults.hasNextPage !== false ? directoriesResults.loadNextPage : filesResults.loadNextPage;
 
   useEffect(() => {
-    if (state.status === 'Error') {
-      onError(state.error);
+    if (filesResults.state.status === 'Error') {
+      onError(filesResults.state.error);
     }
-  }, [state, onError]);
+    if (directoriesResults.state.status === 'Error') {
+      onError(directoriesResults.state.error);
+    }
+  }, [filesResults.state, directoriesResults.state, onError]);
 
   const { uploadState, uploadFiles, cancelUpload } = useUploader((file) => {
     return provider.uploadFileToDirectory(path, file);
@@ -77,16 +87,33 @@ const FilesInDirectory = (props: FilesInDirectoryProps) => {
     });
   });
 
-  const { status, files } = state;
+  const statusFrom = (fs: FileObjectStatus, ds: FileObjectStatus): FileObjectStatus => {
+    if (fs === ds) {
+      return fs;
+    }
+    if (fs === 'Error' || ds === 'Error') {
+      return 'Error';
+    }
+    return 'Loading';
+  };
+
+  const { status: directoriesStatus, directories } = directoriesResults.state;
+  const { status: filesStatus, files } = filesResults.state;
+  const status = statusFrom(filesStatus, directoriesStatus);
+  const filesToShow =
+    directoriesResults.hasNextPage !== false
+      ? 0
+      : Math.max(0, files.length - (directories.length % provider.getPageSize()));
+
   const isLoading = status === 'Loading';
 
   useEffect(() => {
     loadedAlertElementRef.current!.innerHTML = {
       Loading: '',
-      Ready: `Loaded ${files.length} files in ${directoryLabel}`,
-      Error: `Error loading files in ${directoryLabel}`,
+      Ready: `Loaded ${directories.length} directories and ${filesToShow} files in ${directoryLabel}`,
+      Error: `Error loading files or directories in ${directoryLabel}`,
     }[status];
-  }, [directoryLabel, files, status]);
+  }, [directories, directoryLabel, filesToShow, status]);
 
   const [renamingFile, setRenamingFile] = useState<FileBrowserFile>();
 
@@ -111,7 +138,7 @@ const FilesInDirectory = (props: FilesInDirectoryProps) => {
           maxFiles: 0, // no limit on number of files
           onDropAccepted: async (files) => {
             await uploadFiles(files);
-            reload();
+            filesResults.reload();
           },
         },
         [
@@ -127,9 +154,9 @@ const FilesInDirectory = (props: FilesInDirectoryProps) => {
                 onCreateDirectory,
                 onDeleteFiles: () => {
                   setSelectedFiles({});
-                  reload();
+                  filesResults.reload();
                 },
-                onRefresh: reload,
+                onRefresh: filesResults.reload,
                 extraMenuItems,
               }),
 
@@ -153,18 +180,20 @@ const FilesInDirectory = (props: FilesInDirectoryProps) => {
                     className: 'sr-only',
                     role: 'alert',
                   },
-                  [`Loading files in ${directoryLabel}`]
+                  [`Loading files and directories in ${directoryLabel}`]
                 ),
 
-              files.length > 0 &&
+              directories.length + filesToShow > 0 &&
                 h(Fragment, [
                   h(FilesTable, {
                     'aria-label': `Files in ${directoryLabel}`,
                     editDisabled,
                     editDisabledReason,
-                    files,
+                    files: files.slice(0, filesToShow),
+                    directories,
                     selectedFiles,
                     setSelectedFiles,
+                    onClickDirectory,
                     onClickFile,
                     onRenameFile: setRenamingFile,
                   }),
@@ -180,10 +209,10 @@ const FilesInDirectory = (props: FilesInDirectoryProps) => {
                     },
                     [
                       div([
-                        `${files.length} files `,
+                        `${directories.length} directories and ${filesToShow} files `,
                         isLoading && h(Fragment, ['Loading more... ', icon('loadingSpinner', { size: 12 })]),
                       ]),
-                      hasNextPage !== false &&
+                      (directoriesResults.hasNextPage !== false || filesResults.hasNextPage !== false) &&
                         div([
                           h(
                             Link,
@@ -200,7 +229,10 @@ const FilesInDirectory = (props: FilesInDirectoryProps) => {
                               disabled: isLoading,
                               style: { marginLeft: '1ch' },
                               tooltip: 'This may take a long time for folders containing several thousand objects.',
-                              onClick: () => loadAllRemainingItems(),
+                              onClick: () => {
+                                directoriesResults.loadAllRemainingItems();
+                                filesResults.loadAllRemainingItems();
+                              },
                             },
                             ['Load all']
                           ),
@@ -208,7 +240,8 @@ const FilesInDirectory = (props: FilesInDirectoryProps) => {
                     ]
                   ),
                 ]),
-              files.length === 0 &&
+
+              directories.length + filesToShow === 0 &&
                 div(
                   {
                     style: {
@@ -219,8 +252,8 @@ const FilesInDirectory = (props: FilesInDirectoryProps) => {
                   },
                   [
                     Utils.cond<ReactNode>(
-                      [status === 'Loading', () => 'Loading files...'],
-                      [status === 'Error', () => 'Unable to load files'],
+                      [status === 'Loading', () => 'Loading...'],
+                      [status === 'Error', () => 'Unable to load'],
                       () =>
                         h(Fragment, [
                           div(['No files have been uploaded yet']),
@@ -270,7 +303,7 @@ const FilesInDirectory = (props: FilesInDirectoryProps) => {
             const destinationPath = `${dirname(renamingFile.path)}${name}`;
             try {
               await provider.moveFile(renamingFile.path, destinationPath);
-              reload();
+              filesResults.reload();
             } catch (error) {
               reportError('Error renaming file', error);
             } finally {
