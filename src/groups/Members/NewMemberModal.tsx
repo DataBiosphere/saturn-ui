@@ -81,18 +81,21 @@ export const NewMemberModal = (props: NewMemberModalProps) => {
     withErrorReporting('Error adding user'),
     withBusyState(setBusy)
   )(async () => {
+    if (!addUnregisteredUser) {
+      await submit();
+      return;
+    }
+
     for (const userEmail of userEmails) {
       const isRegistered = await User(signal).isUserRegistered(userEmail);
-      if (addUnregisteredUser && !isRegistered) {
+      if (!isRegistered) {
         setConfirmAddUser(true);
         setInviteEmail(userEmail);
         return;
       }
     }
+
     await submit();
-    addUnregisteredUser && !(await User(signal).isUserRegistered(inviteEmail))
-      ? setConfirmAddUser(true)
-      : await submit();
   });
 
   const errors = validateUserEmails(userEmails);
