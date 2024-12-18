@@ -9,7 +9,7 @@ const mockOnEditPermissions = jest.fn();
 const mockOnClone = jest.fn();
 const mockOnEdit = jest.fn();
 
-describe('snapshot action menu', () => {
+describe('version action menu', () => {
   it('honors the disabled prop', async () => {
     // Act
     await act(async () => {
@@ -26,7 +26,7 @@ describe('snapshot action menu', () => {
     });
 
     // Assert
-    const snapshotActionMenu = screen.getByRole('button', { name: 'Snapshot action menu' });
+    const snapshotActionMenu = screen.getByRole('button', { name: 'Version action menu' });
 
     expect(snapshotActionMenu).toHaveAttribute('disabled');
     expect(snapshotActionMenu).toHaveAttribute('aria-disabled');
@@ -50,7 +50,7 @@ describe('snapshot action menu', () => {
     });
 
     // Assert
-    const snapshotActionMenu = screen.getByRole('button', { name: 'Snapshot action menu' });
+    const snapshotActionMenu = screen.getByRole('button', { name: 'Version action menu' });
 
     expect(snapshotActionMenu).not.toHaveAttribute('disabled');
     expect(snapshotActionMenu).toHaveAttribute('aria-disabled', 'false');
@@ -114,7 +114,7 @@ describe('snapshot action menu', () => {
     });
 
     // Assert
-    const snapshotActionMenu = screen.getByRole('button', { name: 'Snapshot action menu' });
+    const snapshotActionMenu = screen.getByRole('button', { name: 'Version action menu' });
 
     expect(snapshotActionMenu).not.toHaveAttribute('disabled');
     expect(snapshotActionMenu).toHaveAttribute('aria-disabled', 'false');
@@ -162,7 +162,7 @@ describe('snapshot action menu', () => {
   });
 });
 
-describe('snapshot action menu edit snapshot permissions button', () => {
+describe('version action menu edit version permissions button', () => {
   it('closes and calls the onEditPermissions callback when you press it', async () => {
     // Arrange
     const user: UserEvent = userEvent.setup();
@@ -180,16 +180,16 @@ describe('snapshot action menu edit snapshot permissions button', () => {
       );
     });
 
-    await user.click(screen.getByRole('button', { name: 'Snapshot action menu' }));
-    await user.click(screen.getByRole('button', { name: 'Edit snapshot permissions' }));
+    await user.click(screen.getByRole('button', { name: 'Version action menu' }));
+    await user.click(screen.getByRole('button', { name: 'Edit version permissions' }));
 
-    expect(screen.queryByRole('button', { name: 'Edit snapshot permissions' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Edit version permissions' })).not.toBeInTheDocument();
     expect(mockOnEditPermissions).toHaveBeenCalled();
     expect(mockOnDelete).not.toHaveBeenCalled();
   });
 });
 
-describe('snapshot action menu delete version button', () => {
+describe('version action menu delete version button', () => {
   it('closes and calls the onDelete callback when you press it', async () => {
     // Arrange
     const user: UserEvent = userEvent.setup();
@@ -217,7 +217,7 @@ describe('snapshot action menu delete version button', () => {
   });
 });
 
-describe('snapshot action menu save as button', () => {
+describe('version action menu save as button', () => {
   it('closes and calls the onClone callback when clicked', async () => {
     // Arrange
     const user: UserEvent = userEvent.setup();
@@ -235,7 +235,7 @@ describe('snapshot action menu save as button', () => {
       );
     });
 
-    await user.click(screen.getByRole('button', { name: 'Snapshot action menu' }));
+    await user.click(screen.getByRole('button', { name: 'Version action menu' }));
     await user.click(screen.getByRole('button', { name: 'Save as' }));
 
     // Assert
@@ -244,7 +244,7 @@ describe('snapshot action menu save as button', () => {
   });
 });
 
-describe('snapshot action menu edit button', () => {
+describe('version action menu edit button', () => {
   it('closes and calls the onEdit callback when clicked', async () => {
     // Arrange
     const user: UserEvent = userEvent.setup();
@@ -262,7 +262,7 @@ describe('snapshot action menu edit button', () => {
       );
     });
 
-    await user.click(screen.getByRole('button', { name: 'Snapshot action menu' }));
+    await user.click(screen.getByRole('button', { name: 'Version action menu' }));
     await user.click(screen.getByRole('button', { name: 'Edit' }));
 
     // Assert

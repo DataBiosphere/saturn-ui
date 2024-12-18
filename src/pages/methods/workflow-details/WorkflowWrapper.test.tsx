@@ -315,7 +315,7 @@ describe('workflow wrapper', () => {
     expect(screen.queryByText(/snapshot:/i)).not.toBeInTheDocument();
     expect(screen.queryByText(`${mockSnapshot.snapshotId}`)).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /export to workspace/i })).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Snapshot action menu' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Version action menu' })).not.toBeInTheDocument();
     expect(screen.queryByText('children')).not.toBeInTheDocument();
 
     // should only display the 404 error page, with the correct info filled in
@@ -372,7 +372,7 @@ describe('workflow wrapper', () => {
     expect(screen.queryByText(/snapshot:/i)).not.toBeInTheDocument();
     expect(screen.queryByText(`${mockSnapshot.snapshotId}`)).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /export to workspace/i })).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Snapshot action menu' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Version action menu' })).not.toBeInTheDocument();
     expect(screen.queryByText('children')).not.toBeInTheDocument();
 
     // should not display the 404 error page
@@ -409,7 +409,7 @@ describe('workflows container', () => {
       );
     });
 
-    await user.click(screen.getByRole('button', { name: 'Snapshot action menu' }));
+    await user.click(screen.getByRole('button', { name: 'Version action menu' }));
     await user.click(screen.getByRole('button', { name: 'Delete version' })); // open modal
     await user.click(screen.getByRole('button', { name: 'Delete version' })); // confirm deletion
 
@@ -458,7 +458,7 @@ describe('workflows container', () => {
       );
     });
 
-    await user.click(screen.getByRole('button', { name: 'Snapshot action menu' }));
+    await user.click(screen.getByRole('button', { name: 'Version action menu' }));
     await user.click(screen.getByRole('button', { name: 'Save as' }));
 
     const dialog = screen.getByRole('dialog', { name: /create new workflow/i });
@@ -493,7 +493,7 @@ describe('workflows container', () => {
       );
     });
 
-    await user.click(screen.getByRole('button', { name: 'Snapshot action menu' }));
+    await user.click(screen.getByRole('button', { name: 'Version action menu' }));
     await user.click(screen.getByRole('button', { name: 'Save as' }));
 
     const dialog = screen.getByRole('dialog', { name: /create new workflow/i });
@@ -556,7 +556,7 @@ describe('workflows container', () => {
       );
     });
 
-    await user.click(screen.getByRole('button', { name: 'Snapshot action menu' }));
+    await user.click(screen.getByRole('button', { name: 'Version action menu' }));
     await user.click(screen.getByRole('button', { name: 'Save as' }));
 
     // Assert
@@ -592,7 +592,7 @@ describe('workflows container', () => {
       );
     });
 
-    await user.click(screen.getByRole('button', { name: 'Snapshot action menu' }));
+    await user.click(screen.getByRole('button', { name: 'Version action menu' }));
     await user.click(screen.getByRole('button', { name: 'Edit' }));
 
     const dialog = screen.getByRole('dialog', { name: /edit/i });
@@ -631,7 +631,7 @@ describe('workflows container', () => {
       );
     });
 
-    await user.click(screen.getByRole('button', { name: 'Snapshot action menu' }));
+    await user.click(screen.getByRole('button', { name: 'Version action menu' }));
     await user.click(screen.getByRole('button', { name: 'Edit' }));
 
     fireEvent.change(screen.getByRole('textbox', { name: 'Version comment' }), {
@@ -682,7 +682,7 @@ describe('workflows container', () => {
       );
     });
 
-    await user.click(screen.getByRole('button', { name: 'Snapshot action menu' }));
+    await user.click(screen.getByRole('button', { name: 'Version action menu' }));
     await user.click(screen.getByRole('button', { name: 'Edit' }));
 
     // Assert
@@ -727,7 +727,7 @@ describe('workflows container', () => {
       );
     });
 
-    await user.click(screen.getByRole('button', { name: 'Snapshot action menu' }));
+    await user.click(screen.getByRole('button', { name: 'Version action menu' }));
     await user.click(screen.getByRole('button', { name: 'Delete version' })); // open modal
     await user.click(screen.getByRole('button', { name: 'Delete version' })); // confirm deletion
 
@@ -760,7 +760,7 @@ describe('workflows container', () => {
       );
     });
 
-    await user.click(screen.getByRole('button', { name: 'Snapshot action menu' }));
+    await user.click(screen.getByRole('button', { name: 'Version action menu' }));
     await user.click(screen.getByRole('button', { name: 'Delete version' }));
 
     // Assert
@@ -793,7 +793,7 @@ describe('workflows container', () => {
       );
     });
 
-    await user.click(screen.getByRole('button', { name: 'Snapshot action menu' }));
+    await user.click(screen.getByRole('button', { name: 'Version action menu' }));
     await user.click(screen.getByRole('button', { name: 'Delete version' }));
 
     // Assert
@@ -910,7 +910,7 @@ describe('workflows container', () => {
     expect(exportButton).toHaveAttribute('disabled');
     expect(exportButton).toHaveAttribute('aria-disabled');
 
-    const actionMenu = screen.getByRole('button', { name: 'Snapshot action menu' });
+    const actionMenu = screen.getByRole('button', { name: 'Version action menu' });
     expect(actionMenu).toBeInTheDocument();
     expect(actionMenu).toHaveAttribute('disabled');
     expect(actionMenu).toHaveAttribute('aria-disabled');
@@ -968,7 +968,7 @@ describe('workflows container', () => {
     expect(screen.queryByText(/snapshot:/i)).not.toBeInTheDocument();
     expect(screen.queryByText(`${mockSnapshot.snapshotId}`)).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /export to workspace/i })).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Snapshot action menu' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Version action menu' })).not.toBeInTheDocument();
     expect(screen.queryByText('children')).not.toBeInTheDocument();
 
     // should not display the 404 error page
@@ -1187,8 +1187,8 @@ describe('workflows container', () => {
       );
     });
 
-    await user.click(screen.getByRole('button', { name: 'Snapshot action menu' }));
-    await user.click(screen.getByRole('button', { name: 'Edit snapshot permissions' }));
+    await user.click(screen.getByRole('button', { name: 'Version action menu' }));
+    await user.click(screen.getByRole('button', { name: 'Edit version permissions' }));
 
     // Assert
     expect(screen.getByText('Edit Snapshot Permissions'));
@@ -1215,8 +1215,8 @@ describe('workflows container', () => {
       );
     });
 
-    await user.click(screen.getByRole('button', { name: 'Snapshot action menu' }));
-    await user.click(screen.getByRole('button', { name: 'Edit snapshot permissions' }));
+    await user.click(screen.getByRole('button', { name: 'Version action menu' }));
+    await user.click(screen.getByRole('button', { name: 'Edit version permissions' }));
     await user.click(screen.getByRole('button', { name: 'Cancel' }));
 
     // Assert
@@ -1244,8 +1244,8 @@ describe('workflows container', () => {
       );
     });
 
-    await user.click(screen.getByRole('button', { name: 'Snapshot action menu' }));
-    await user.click(screen.getByRole('button', { name: 'Edit snapshot permissions' }));
+    await user.click(screen.getByRole('button', { name: 'Version action menu' }));
+    await user.click(screen.getByRole('button', { name: 'Edit version permissions' }));
     await user.click(screen.getByRole('button', { name: 'Save' }));
 
     // Assert
@@ -1278,8 +1278,8 @@ describe('workflows container', () => {
       );
     });
 
-    await user.click(screen.getByRole('button', { name: 'Snapshot action menu' }));
-    await user.click(screen.getByRole('button', { name: 'Edit snapshot permissions' }));
+    await user.click(screen.getByRole('button', { name: 'Version action menu' }));
+    await user.click(screen.getByRole('button', { name: 'Edit version permissions' }));
 
     // Simulate the snapshot being updated with new owners in the backend when
     // the save button is pressed

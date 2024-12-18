@@ -82,7 +82,7 @@ const SnapshotActionMenu = (props: SnapshotActionMenuProps): ReactNode => {
   return (
     <MenuTrigger side='bottom' closeOnClick content={menuContent}>
       <Clickable
-        aria-label='Snapshot action menu'
+        aria-label='Version action menu'
         aria-haspopup='menu'
         style={{ opacity: 0.65, height: 27 }}
         hover={!disabled ? { opacity: 1 } : undefined}
