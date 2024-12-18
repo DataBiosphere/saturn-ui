@@ -1,9 +1,9 @@
-import { DeepPartial } from '@terra-ui-packages/core-utils';
 import { act, renderHook } from '@testing-library/react';
-import { Ajax } from 'src/libs/ajax';
 import { fetchWDS } from 'src/libs/ajax/ajax-common';
+import { Apps, AppsAjaxContract } from 'src/libs/ajax/leonardo/Apps';
 import { ListAppItem } from 'src/libs/ajax/leonardo/models/app-models';
-import { asMockedFn } from 'src/testing/test-utils';
+import { WorkspaceData, WorkspaceDataAjaxContract } from 'src/libs/ajax/WorkspaceDataService';
+import { asMockedFn, MockedFn, partial } from 'src/testing/test-utils';
 
 import { useDataTableProvider } from './useDataTableProvider';
 
@@ -12,14 +12,8 @@ const WDS_APP_WORKSPACE_ID = 'wdsAppWorkspaceId';
 
 type AjaxCommonExports = typeof import('src/libs/ajax/ajax-common');
 
-type AjaxExports = typeof import('src/libs/ajax');
-jest.mock(
-  'src/libs/ajax',
-  (): AjaxExports => ({
-    ...jest.requireActual<AjaxExports>('src/libs/ajax'),
-    Ajax: jest.fn(),
-  })
-);
+jest.mock('src/libs/ajax/leonardo/Apps');
+jest.mock('src/libs/ajax/WorkspaceDataService');
 
 jest.mock('src/libs/ajax/ajax-common', (): AjaxCommonExports => {
   return {
@@ -54,31 +48,27 @@ jest.mock('src/libs/config', () => ({
   getConfig: jest.fn().mockReturnValue({ cwdsUrlRoot }),
 }));
 
-type AjaxContract = ReturnType<typeof Ajax>;
-
 describe('useDataTableProvider', () => {
-  const listAppResponse: DeepPartial<ListAppItem> = {
+  const listAppResponse = partial<ListAppItem>({
     proxyUrls: {
       wds: cwdsUrlRoot,
     },
     appType: 'WDS',
     status: 'RUNNING',
-  };
+  });
 
-  const mockGetCapabilities = jest.fn().mockResolvedValue({});
-  const mockGetSchema = jest.fn().mockResolvedValue([]);
-  const mockListAppsV2 = jest.fn().mockResolvedValue([listAppResponse]);
-  const mockAjax: DeepPartial<AjaxContract> = {
-    WorkspaceData: {
+  const mockGetCapabilities: MockedFn<WorkspaceDataAjaxContract['getCapabilities']> = jest.fn(async (_root) => ({}));
+  const mockGetSchema: MockedFn<WorkspaceDataAjaxContract['getSchema']> = jest.fn(async (_root, _schema) => []);
+  const mockListAppsV2: MockedFn<AppsAjaxContract['listAppsV2']> = jest.fn();
+  mockListAppsV2.mockResolvedValue([listAppResponse]);
+
+  asMockedFn(WorkspaceData).mockReturnValue(
+    partial<WorkspaceDataAjaxContract>({
       getCapabilities: mockGetCapabilities,
       getSchema: mockGetSchema,
-    },
-    Apps: {
-      listAppsV2: mockListAppsV2,
-    },
-  };
-
-  asMockedFn(Ajax).mockImplementation(() => mockAjax as AjaxContract);
+    })
+  );
+  asMockedFn(Apps).mockReturnValue(partial<AppsAjaxContract>({ listAppsV2: mockListAppsV2 }));
 
   it('should only check CWDS once', async () => {
     // Arrange

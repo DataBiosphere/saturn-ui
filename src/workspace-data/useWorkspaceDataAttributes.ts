@@ -1,7 +1,7 @@
 import { AutoLoadedState, useAutoLoadedData } from '@terra-ui-packages/components';
 import { useNotificationsFromContext } from '@terra-ui-packages/notifications';
 import { useCallback } from 'react';
-import { Ajax } from 'src/libs/ajax';
+import { Workspaces } from 'src/libs/ajax/workspaces/Workspaces';
 import { useCancellation } from 'src/libs/react-utils';
 
 const DESCRIPTION_PREFIX = '__DESCRIPTION__';
@@ -55,7 +55,7 @@ export const useWorkspaceDataAttributes = (
   const loadAttributes = useCallback(async () => {
     const {
       workspace: { attributes },
-    } = await Ajax(signal).Workspaces.workspace(namespace, name).details(['workspace.attributes']);
+    } = await Workspaces(signal).workspace(namespace, name).details(['workspace.attributes']);
     return getWorkspaceDataAttributes(attributes) as any;
   }, [namespace, name, signal]);
 

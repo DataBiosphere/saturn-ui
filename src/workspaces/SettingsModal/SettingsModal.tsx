@@ -6,18 +6,24 @@ import { Workspaces } from 'src/libs/ajax/workspaces/Workspaces';
 import colors from 'src/libs/colors';
 import { withErrorReporting } from 'src/libs/error';
 import Events, { extractWorkspaceDetails } from 'src/libs/events';
+import { isFeaturePreviewEnabled } from 'src/libs/feature-previews';
+import { GCP_BATCH } from 'src/libs/feature-previews-config';
 import { useCancellation } from 'src/libs/react-utils';
 import * as Utils from 'src/libs/utils';
+import Batch from 'src/workspaces/SettingsModal/Batch';
 import BucketLifecycleSettings from 'src/workspaces/SettingsModal/BucketLifecycleSettings';
 import RequesterPays from 'src/workspaces/SettingsModal/RequesterPays';
 import SoftDelete from 'src/workspaces/SettingsModal/SoftDelete';
 import {
+  BatchSetting,
   BucketLifecycleSetting,
   DeleteBucketLifecycleRule,
+  isBatchSetting,
   isBucketLifecycleSetting,
   isDeleteBucketLifecycleRule,
   isRequesterPaysSetting,
   isSoftDeleteSetting,
+  modifyBatchSetting,
   modifyFirstBucketDeletionRule,
   modifyFirstSoftDeleteSetting,
   modifyRequesterPaysSetting,
@@ -51,6 +57,8 @@ const SettingsModal = (props: SettingsModalProps): ReactNode => {
   const [softDeleteRetention, setSoftDeleteRetention] = useState<number | null>(null);
 
   const [requesterPaysEnabled, setRequesterPaysEnabled] = useState(false);
+
+  const [batchEnabled, setBatchEnabled] = useState(false);
 
   // Original settings from server, may contain multiple types
   const [workspaceSettings, setWorkspaceSettings] = useState<WorkspaceSetting[] | undefined>(undefined);
@@ -112,6 +120,10 @@ const SettingsModal = (props: SettingsModalProps): ReactNode => {
     return settings.find((setting: WorkspaceSetting) => isRequesterPaysSetting(setting)) as RequesterPaysSetting;
   };
 
+  const getBatchSetting = (settings: WorkspaceSetting[]): BatchSetting | undefined => {
+    return settings.find((setting: WorkspaceSetting) => isBatchSetting(setting)) as BatchSetting;
+  };
+
   useEffect(() => {
     const loadSettings = _.flow(
       Utils.withBusyState(setBusy),
@@ -148,6 +160,10 @@ const SettingsModal = (props: SettingsModalProps): ReactNode => {
       const requesterPays = getRequesterPaysSetting(settings);
       const requesterPaysEnabled = requesterPays === undefined ? false : requesterPays.config.enabled;
       setRequesterPaysEnabled(requesterPaysEnabled);
+
+      const batchSetting = getBatchSetting(settings);
+      const batchEnabled = batchSetting === undefined ? false : batchSetting.config.enabled;
+      setBatchEnabled(batchEnabled);
     });
 
     loadSettings();
@@ -167,6 +183,7 @@ const SettingsModal = (props: SettingsModalProps): ReactNode => {
     const softDeleteInDays = softDeleteEnabled ? softDeleteRetention! : 0;
     newSettings = modifyFirstSoftDeleteSetting(newSettings, softDeleteInDays);
     newSettings = modifyRequesterPaysSetting(newSettings, requesterPaysEnabled);
+    newSettings = modifyBatchSetting(newSettings, batchEnabled);
 
     await Workspaces().workspaceV2(namespace, name).updateSettings(newSettings);
     props.onDismiss();
@@ -230,6 +247,19 @@ const SettingsModal = (props: SettingsModalProps): ReactNode => {
         ...extractWorkspaceDetails(props.workspace),
       });
     }
+
+    // Event about batch setting only if something actually changed.
+    const originalBatchSetting = getBatchSetting(workspaceSettings || []);
+    const newBatchSetting = getBatchSetting(newSettings);
+    if (originalBatchSetting === undefined && !newBatchSetting?.config.enabled) {
+      // If the bucket had no batch setting before, and the current one is disabled, don't event.
+    } else if (!_.isEqual(originalBatchSetting, newBatchSetting)) {
+      // Event if the setting changed.
+      void Metrics().captureEvent(Events.workspaceSettingsBatch, {
+        enabled: batchEnabled,
+        ...extractWorkspaceDetails(props.workspace),
+      });
+    }
   });
 
   const getSaveTooltip = () => {
@@ -255,6 +285,11 @@ const SettingsModal = (props: SettingsModalProps): ReactNode => {
         </ButtonPrimary>
       }
     >
+      {isFeaturePreviewEnabled(GCP_BATCH) && (
+        <div style={{ paddingBottom: '1.0rem', borderBottom: `1px solid ${colors.accent()}` }}>
+          <Batch batchEnabled={batchEnabled} setBatchEnabled={setBatchEnabled} isOwner={isOwner} />
+        </div>
+      )}
       <div style={{ paddingBottom: '1.0rem', borderBottom: `1px solid ${colors.accent()}` }}>
         <BucketLifecycleSettings
           lifecycleRulesEnabled={lifecycleRulesEnabled}

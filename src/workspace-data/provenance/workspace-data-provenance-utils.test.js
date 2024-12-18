@@ -1,64 +1,65 @@
 import _ from 'lodash/fp';
-import { Ajax } from 'src/libs/ajax';
+import { Metrics } from 'src/libs/ajax/Metrics';
+import { Workspaces } from 'src/libs/ajax/workspaces/Workspaces';
 
 import { fileProvenanceTypes, getFileProtocol, getFileProvenance } from './workspace-data-provenance-utils';
 
-jest.mock('src/libs/ajax');
+jest.mock('src/libs/ajax/Metrics');
+jest.mock('src/libs/ajax/workspaces/Workspaces');
 
 describe('getFileProvenance', () => {
   const workspace = { workspace: { namespace: 'test', name: 'test', bucketName: 'workspace-bucket' } };
 
   beforeEach(() => {
-    Ajax.mockImplementation(() => ({
-      Workspaces: {
-        workspace: () => ({
-          submission: () => ({
-            workflow: () => ({
-              outputs: jest.fn().mockReturnValue(
-                Promise.resolve({
-                  tasks: {
-                    workflow: {
-                      outputs: {
-                        'workflow.output1': 'Hello world',
-                        'workflow.output2':
-                          'gs://workspace-bucket/submissions/8d79470f-7042-4e79-bf67-971adf4e5a4a/workflow/78f61618-30e6-4405-baf3-2ef2e576a3a3/task1/file.txt',
-                      },
-                    },
-                    'workflow.task1': {
-                      logs: [
-                        {
-                          backendLogs: {
-                            log: 'gs://workspace-bucket/submissions/8d79470f-7042-4e79-bf67-971adf4e5a4a/workflow/78f61618-30e6-4405-baf3-2ef2e576a3a3/task1/task1.log',
-                          },
-                          stderr:
-                            'gs://workspace-bucket/submissions/8d79470f-7042-4e79-bf67-971adf4e5a4a/workflow/78f61618-30e6-4405-baf3-2ef2e576a3a3/task1/stderr',
-                          stdout:
-                            'gs://workspace-bucket/submissions/8d79470f-7042-4e79-bf67-971adf4e5a4a/workflow/78f61618-30e6-4405-baf3-2ef2e576a3a3/task1/stdout',
-                        },
-                      ],
-                    },
-                    'workflow.task2': {
-                      logs: [
-                        {
-                          backendLogs: {
-                            log: 'gs://workspace-bucket/submissions/8d79470f-7042-4e79-bf67-971adf4e5a4a/workflow/78f61618-30e6-4405-baf3-2ef2e576a3a3/task2/task2.log',
-                          },
-                          stderr:
-                            'gs://workspace-bucket/submissions/8d79470f-7042-4e79-bf67-971adf4e5a4a/workflow/78f61618-30e6-4405-baf3-2ef2e576a3a3/task2/stderr',
-                          stdout:
-                            'gs://workspace-bucket/submissions/8d79470f-7042-4e79-bf67-971adf4e5a4a/workflow/78f61618-30e6-4405-baf3-2ef2e576a3a3/task2/stdout',
-                        },
-                      ],
+    Workspaces.mockReturnValue({
+      workspace: () => ({
+        submission: () => ({
+          workflow: () => ({
+            outputs: jest.fn().mockReturnValue(
+              Promise.resolve({
+                tasks: {
+                  workflow: {
+                    outputs: {
+                      'workflow.output1': 'Hello world',
+                      'workflow.output2':
+                        'gs://workspace-bucket/submissions/8d79470f-7042-4e79-bf67-971adf4e5a4a/workflow/78f61618-30e6-4405-baf3-2ef2e576a3a3/task1/file.txt',
                     },
                   },
-                  workflowId: '78f61618-30e6-4405-baf3-2ef2e576a3a3',
-                })
-              ),
-            }),
+                  'workflow.task1': {
+                    logs: [
+                      {
+                        backendLogs: {
+                          log: 'gs://workspace-bucket/submissions/8d79470f-7042-4e79-bf67-971adf4e5a4a/workflow/78f61618-30e6-4405-baf3-2ef2e576a3a3/task1/task1.log',
+                        },
+                        stderr:
+                          'gs://workspace-bucket/submissions/8d79470f-7042-4e79-bf67-971adf4e5a4a/workflow/78f61618-30e6-4405-baf3-2ef2e576a3a3/task1/stderr',
+                        stdout:
+                          'gs://workspace-bucket/submissions/8d79470f-7042-4e79-bf67-971adf4e5a4a/workflow/78f61618-30e6-4405-baf3-2ef2e576a3a3/task1/stdout',
+                      },
+                    ],
+                  },
+                  'workflow.task2': {
+                    logs: [
+                      {
+                        backendLogs: {
+                          log: 'gs://workspace-bucket/submissions/8d79470f-7042-4e79-bf67-971adf4e5a4a/workflow/78f61618-30e6-4405-baf3-2ef2e576a3a3/task2/task2.log',
+                        },
+                        stderr:
+                          'gs://workspace-bucket/submissions/8d79470f-7042-4e79-bf67-971adf4e5a4a/workflow/78f61618-30e6-4405-baf3-2ef2e576a3a3/task2/stderr',
+                        stdout:
+                          'gs://workspace-bucket/submissions/8d79470f-7042-4e79-bf67-971adf4e5a4a/workflow/78f61618-30e6-4405-baf3-2ef2e576a3a3/task2/stdout',
+                      },
+                    ],
+                  },
+                },
+                workflowId: '78f61618-30e6-4405-baf3-2ef2e576a3a3',
+              })
+            ),
           }),
         }),
-      },
-    }));
+      }),
+    });
+    Metrics.mockReturnValue({ captureEvent: jest.fn() });
   });
 
   it('returns external for files outside the workspace bucket', async () => {

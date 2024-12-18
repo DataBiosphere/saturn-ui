@@ -1,4 +1,4 @@
-import { fireEvent, waitFor } from '@testing-library/react';
+import { act, fireEvent, waitFor } from '@testing-library/react';
 import { userEvent } from '@testing-library/user-event';
 import React from 'react';
 import { NewGroupModal } from 'src/groups/NewGroupModal';
@@ -20,9 +20,9 @@ jest.mock('src/libs/ajax/Groups');
 
 describe('NewGroupModal', () => {
   it('renders correctly', () => {
-    // Arrange
     // Act
     const { getByText } = render(<NewGroupModal onDismiss={jest.fn()} onSuccess={jest.fn()} existingGroups={[]} />);
+
     // Assert
     expect(getByText('Create Group')).toBeInTheDocument();
   });
@@ -35,8 +35,10 @@ describe('NewGroupModal', () => {
     );
     const checkbox = getByLabelText('Allow anyone to request access');
     expect(checkbox).toBeChecked();
+
     // Act
     await user.click(checkbox);
+
     // Assert
     expect(checkbox).not.toBeChecked();
   });
@@ -46,10 +48,12 @@ describe('NewGroupModal', () => {
     const { getByText, getByLabelText } = render(
       <NewGroupModal onDismiss={jest.fn()} onSuccess={jest.fn()} existingGroups={[]} />
     );
+
     // Act
     expect(getByText('Create Group')).toHaveAttribute('aria-disabled', 'true');
     const nameInput = getByLabelText('Enter a unique name *');
     fireEvent.change(nameInput, { target: { value: 'ValidName' } });
+
     // Assert
     await waitFor(() => expect(getByText('Create Group')).not.toBeDisabled());
   });
@@ -59,12 +63,13 @@ describe('NewGroupModal', () => {
     const { getByText, getByLabelText } = render(
       <NewGroupModal onDismiss={jest.fn()} onSuccess={jest.fn()} existingGroups={[]} />
     );
+
     // Act
     const nameInput = getByLabelText('Enter a unique name *');
     fireEvent.change(nameInput, { target: { value: 'Invalid Name&' } });
 
     // Assert
-    waitFor(() =>
+    await waitFor(() =>
       expect(getByText('Group name can only contain letters, numbers, underscores, and dashes')).toBeInTheDocument()
     );
   });
@@ -75,11 +80,14 @@ describe('NewGroupModal', () => {
     const { getByText, getByLabelText } = render(
       <NewGroupModal onDismiss={jest.fn()} onSuccess={jest.fn()} existingGroups={[]} />
     );
+
     // Act
     const nameInput = getByLabelText('Enter a unique name *');
-    fireEvent.change(nameInput, { target: { value: 'Valid Name' } });
-    await waitFor(() => expect(nameInput).toHaveValue('Valid Name'));
+    await act(async () => {
+      fireEvent.change(nameInput, { target: { value: 'Valid Name' } });
+    });
     await user.clear(nameInput);
+
     // Assert
     expect(getByText("Group name can't be blank")).toBeInTheDocument();
   });
@@ -90,9 +98,11 @@ describe('NewGroupModal', () => {
     const { getByText, getByLabelText } = render(
       <NewGroupModal onDismiss={jest.fn()} onSuccess={jest.fn()} existingGroups={[existingName]} />
     );
+
     // Act
     const nameInput = getByLabelText('Enter a unique name *');
     fireEvent.change(nameInput, { target: { value: existingName } });
+
     // Assert
     await waitFor(() => expect(getByText('Group name already exists')).toBeInTheDocument());
   });
@@ -120,8 +130,10 @@ describe('NewGroupModal', () => {
     await waitFor(() => expect(nameInput).toHaveValue('ValidName'));
     const submitButton = getByText('Create Group');
     expect(submitButton).toBeEnabled();
+
     // Act
     await user.click(submitButton);
+
     // Assert
     expect(mockCreateFn).toHaveBeenCalled();
     expect(mockSetPolicyFn).toHaveBeenCalledWith('admin-notifier', true);

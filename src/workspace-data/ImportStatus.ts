@@ -2,7 +2,8 @@ import _ from 'lodash/fp';
 import { Fragment, ReactNode } from 'react';
 import { h, p } from 'react-hyperscript-helpers';
 import { Link } from 'src/components/common';
-import { Ajax } from 'src/libs/ajax';
+import { WorkspaceData } from 'src/libs/ajax/WorkspaceDataService';
+import { Workspaces } from 'src/libs/ajax/workspaces/Workspaces';
 import { withErrorReporting } from 'src/libs/error';
 import { clearNotification, notify } from 'src/libs/notifications';
 import { useCancellation, usePollingEffect, useStore } from 'src/libs/react-utils';
@@ -56,9 +57,9 @@ const ImportStatusItem = (props: ImportStatusItemProps): ReactNode => {
     const fetchImportStatus = async () => {
       try {
         if (wdsProxyUrl) {
-          return await Ajax(signal).WorkspaceData.getJobStatus(wdsProxyUrl, jobId);
+          return await WorkspaceData(signal).getJobStatus(wdsProxyUrl, jobId);
         }
-        return await Ajax(signal).Workspaces.workspace(namespace, name).getImportJobStatus(jobId);
+        return await Workspaces(signal).workspace(namespace, name).getImportJobStatus(jobId);
       } catch (error: unknown) {
         // Ignore 404; We're probably asking for status before the status endpoint knows about the job
         if (error instanceof Response && error.status === 404) {

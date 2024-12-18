@@ -1,5 +1,5 @@
 import { useCallback } from 'react';
-import { Ajax } from 'src/libs/ajax';
+import { Workspaces } from 'src/libs/ajax/workspaces/Workspaces';
 import { reportError } from 'src/libs/error';
 import { notify } from 'src/libs/notifications';
 import { useCancellation, useStore } from 'src/libs/react-utils';
@@ -31,8 +31,8 @@ export const useImportJobs = (workspace: WorkspaceWrapper): UseImportJobsResult 
       // Azure workspaces must rely solely on the asyncImportJobStore to know what imports are currently running,
       // Therefore they do not need a callback function here
       if (!isAzureWorkspace(workspace)) {
-        const runningJobsInWorkspace: { jobId: string }[] = await Ajax(signal)
-          .Workspaces.workspace(namespace, name)
+        const runningJobsInWorkspace: { jobId: string }[] = await Workspaces(signal)
+          .workspace(namespace, name)
           .listImportJobs(true);
 
         asyncImportJobStore.update((previousState) => {
