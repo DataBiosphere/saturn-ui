@@ -1,10 +1,11 @@
 import { Link } from '@terra-ui-packages/components';
 import { subDays } from 'date-fns/fp';
 import _ from 'lodash/fp';
+import qs from 'qs';
 import React, { ReactNode, useEffect, useState } from 'react';
 import { DateRangeFilter } from 'src/billing/Filter/DateRangeFilter';
 import { SearchFilter } from 'src/billing/Filter/SearchFilter';
-import { BillingAccountStatus, parseCurrencyIfNeeded } from 'src/billing/utils';
+import { parseCurrencyIfNeeded } from 'src/billing/utils';
 import { BillingProject } from 'src/billing-core/models';
 import { fixedSpinnerOverlay } from 'src/components/common';
 import { ariaSort, HeaderRenderer } from 'src/components/table';
@@ -34,7 +35,7 @@ interface ConsolidatedSpendWorkspaceCardHeadersProps {
 
 // Since the variable names don't match display names for these two columns, we need to map them
 const columnTitleToVariableNameMap = {
-  billingAccount: 'namespace',
+  billingProject: 'namespace',
   workspaceName: 'name',
 };
 
@@ -59,8 +60,8 @@ const ConsolidatedSpendWorkspaceCardHeaders: React.FC<ConsolidatedSpendWorkspace
           marginBottom: '0.5rem',
         }}
       >
-        <div role='columnheader' aria-sort={ariaSort(sort, 'billingAccount')} style={{ flex: 1, paddingLeft: '2rem' }}>
-          <HeaderRenderer sort={sort} onSort={() => handleSort('billingAccount')} name='billingAccount' />
+        <div role='columnheader' aria-sort={ariaSort(sort, 'billingProject')} style={{ flex: 1, paddingLeft: '2rem' }}>
+          <HeaderRenderer sort={sort} onSort={() => handleSort('billingProject')} name='billingProject' />
         </div>
         <div role='columnheader' aria-sort={ariaSort(sort, 'workspaceName')} style={{ flex: 1 }}>
           <HeaderRenderer sort={sort} onSort={() => handleSort('workspaceName')} name='workspaceName' />
@@ -94,15 +95,13 @@ const ConsolidatedSpendWorkspaceCardHeaders: React.FC<ConsolidatedSpendWorkspace
 
 interface ConsolidatedSpendWorkspaceCardProps {
   workspace: GoogleWorkspaceInfo;
-  billingAccountDisplayName: string | undefined;
   billingProject: BillingProject;
-  billingAccountStatus: false | BillingAccountStatus;
 }
 
 const ConsolidatedSpendWorkspaceCard: React.FC<ConsolidatedSpendWorkspaceCardProps> = memoWithName(
   'ConsolidatedSpendWorkspaceCard',
   (props: ConsolidatedSpendWorkspaceCardProps) => {
-    const { workspace, billingAccountDisplayName, billingProject, billingAccountStatus } = props;
+    const { workspace, billingProject } = props;
     const { namespace, name, createdBy, lastModified, totalSpend, totalCompute, totalStorage } = workspace;
     const workspaceCardStyles = {
       field: {
@@ -119,7 +118,18 @@ const ConsolidatedSpendWorkspaceCard: React.FC<ConsolidatedSpendWorkspaceCardPro
       <div role='row' style={{ ...Style.cardList.longCardShadowless, padding: 0, flexDirection: 'column' }}>
         <div style={workspaceCardStyles.row}>
           <div role='cell' style={workspaceCardStyles.field}>
-            {billingAccountDisplayName ?? '...'}
+            <Link
+              style={Style.noWrapEllipsis}
+              href={`${Nav.getLink('billing')}?${qs.stringify({ selectedName: namespace, type: 'project' })}`}
+              onClick={() => {
+                void Metrics().captureEvent(Events.billingProjectGoToWorkspace, {
+                  workspaceName: name,
+                  ...extractBillingDetails(billingProject),
+                });
+              }}
+            >
+              {namespace ?? '...'}
+            </Link>
           </div>
           <div
             role='rowheader'
@@ -127,7 +137,7 @@ const ConsolidatedSpendWorkspaceCard: React.FC<ConsolidatedSpendWorkspaceCardPro
               ...workspaceCardStyles.field,
               display: 'flex',
               alignItems: 'center',
-              paddingLeft: billingAccountStatus ? '1rem' : '2rem',
+              paddingLeft: '1rem',
             }}
           >
             <Link
@@ -385,16 +395,14 @@ export const ConsolidatedSpendReport = (props: ConsolidatedSpendReportProps): Re
                     return (
                       <ConsolidatedSpendWorkspaceCard
                         workspace={workspace}
-                        billingAccountDisplayName={workspace.namespace}
                         billingProject={{
                           cloudPlatform: 'GCP',
-                          billingAccount: workspace.billingAccount,
+                          billingAccount: workspace.namespace,
                           projectName: workspace.googleProject,
                           invalidBillingAccount: false,
                           roles: ['Owner'],
                           status: 'Ready',
                         }}
-                        billingAccountStatus={false}
                         key={workspace.workspaceId}
                       />
                     );
