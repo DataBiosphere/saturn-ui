@@ -11,6 +11,7 @@ export interface GCSFileBrowserProviderParams {
 
 type GCSFileBrowserProviderGetPageParams<T> = {
   isFirstPage: boolean;
+  matchGlob?: string;
   pageToken?: string;
   pendingItems?: T[];
   prefix: string;
@@ -28,6 +29,7 @@ type GCSFileBrowserProviderGetPageParams<T> = {
 );
 
 interface BucketListRequestOptions {
+  matchGlob?: string;
   maxResults: number;
   pageToken?: string;
 }
@@ -42,6 +44,7 @@ const GCSFileBrowserProvider = ({
       isFirstPage,
       itemsOrPrefixes,
       mapItemOrPrefix,
+      matchGlob,
       pageToken,
       pendingItems = [],
       prefix,
@@ -59,6 +62,9 @@ const GCSFileBrowserProvider = ({
         };
         if (nextPageToken) {
           requestOptions.pageToken = nextPageToken;
+        }
+        if (matchGlob) {
+          requestOptions.matchGlob = matchGlob;
         }
 
         const response = await Ajax(signal).Buckets.list(project, bucket, prefix, requestOptions);
@@ -87,6 +93,7 @@ const GCSFileBrowserProvider = ({
               isFirstPage: false,
               itemsOrPrefixes,
               mapItemOrPrefix,
+              matchGlob,
               pageToken: nextPageToken,
               pendingItems: nextPendingItems,
               prefix,
@@ -115,6 +122,8 @@ const GCSFileBrowserProvider = ({
           createdAt: new Date(item.timeCreated).getTime(),
           updatedAt: new Date(item.updated).getTime(),
         }),
+        // This glob pattern matches objects which are not themselves prefixes (i.e. files)
+        matchGlob: '**?',
         prefix: path,
         signal,
       }),
@@ -125,6 +134,8 @@ const GCSFileBrowserProvider = ({
         mapItemOrPrefix: (prefix) => ({
           path: `${prefix}`,
         }),
+        // This glob pattern matches prefixes (directories) excluding the given path
+        matchGlob: `${path}**?/`,
         prefix: path,
         signal,
       }),
