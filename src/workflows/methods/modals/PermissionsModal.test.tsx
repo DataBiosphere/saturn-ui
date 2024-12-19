@@ -67,6 +67,13 @@ const permissionsProviderError: PermissionsProvider = {
   }),
 };
 
+const permissionsProviderForbidden: PermissionsProvider = {
+  getPermissions: jest.fn().mockImplementation(() => {
+    throw new Response(JSON.stringify('No access'), { status: 403 });
+  }),
+  updatePermissions: mockSetPermissions,
+};
+
 describe('PermissionsModal', () => {
   it('loads the correct title and basic elements for snapshot permissions', async () => {
     // ARRANGE
@@ -483,6 +490,27 @@ describe('PermissionsModal', () => {
     expect(reportError).toHaveBeenCalledWith('Error loading permissions.', expect.anything());
     expect(mockSetPermissionsModalOpen).toHaveBeenCalledWith(false);
     expect(mockRefresh).not.toHaveBeenCalled();
+  });
+
+  it('displays an error message is user does not have edit permissions', async () => {
+    // ARRANGE
+    const mockSetPermissionsModalOpen = jest.fn();
+    const mockRefresh = jest.fn();
+
+    await act(async () => {
+      renderWithAppContexts(
+        <PermissionsModal
+          namespace='namespace'
+          snapshotOrNamespace='Namespace'
+          setPermissionsModalOpen={mockSetPermissionsModalOpen}
+          refresh={mockRefresh}
+          permissionsProvider={permissionsProviderForbidden}
+        />
+      );
+    });
+
+    // ASSERT
+    expect(screen.getByText('You do not have permissions to edit namespace settings.')).toBeInTheDocument();
   });
 
   it('displays an error popup and closes the modal if there is an error saving permissions', async () => {

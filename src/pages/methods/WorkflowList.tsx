@@ -338,21 +338,14 @@ const getColumns = (
       field: 'actions',
       headerRenderer: () => <HeaderCell>Actions</HeaderCell>,
       cellRenderer: ({ rowIndex }) => {
-        const { namespace, managers } = paginatedWorkflows[rowIndex];
-        const isNamespaceOwner = _.includes(getTerraUser().email?.toLowerCase(), _.map(_.toLower, managers));
-        const notNamespaceOwnerTooltip = 'You must be an owner of this namespace';
+        const { namespace } = paginatedWorkflows[rowIndex];
 
         return (
           <MenuTrigger
             side='bottom'
             closeOnClick
             content={
-              <MenuButton
-                disabled={!isNamespaceOwner}
-                tooltipSide='right'
-                tooltip={!isNamespaceOwner && notNamespaceOwnerTooltip}
-                onClick={() => onEditNamespacePermissions(namespace)}
-              >
+              <MenuButton tooltipSide='right' onClick={() => onEditNamespacePermissions(namespace)}>
                 {makeMenuIcon('edit')}
                 Edit namespace permissions
               </MenuButton>

@@ -178,6 +178,7 @@ export const PermissionsModal = (props: WorkflowPermissionsModalProps) => {
   const errors = validate({ searchValue }, constraints(userEmails), {
     prettify: (v) => ({ searchValue: 'User' }[v] || validate.prettify(v)),
   });
+  const [noEditPermissions, setNoEditPermissions] = useState<boolean>(false);
 
   useOnMount(() => {
     const loadWorkflowPermissions = withBusyState(setWorking, async () => {
@@ -188,8 +189,13 @@ export const PermissionsModal = (props: WorkflowPermissionsModalProps) => {
         setPermissions(workflowPermissions);
         setOriginalPermissions(workflowPermissions);
       } catch (error) {
-        await reportError('Error loading permissions.', error);
-        setPermissionsModalOpen(false);
+        // user doesn't have permissions to edit the namespace/snapshot permissions
+        if (error instanceof Response && error.status === 403) {
+          setNoEditPermissions(true);
+        } else {
+          await reportError('Error loading permissions.', error);
+          setPermissionsModalOpen(false);
+        }
       }
     });
 
@@ -233,61 +239,72 @@ export const PermissionsModal = (props: WorkflowPermissionsModalProps) => {
 
   const modalTitle =
     snapshotOrNamespace === 'Snapshot' ? 'Edit snapshot permissions' : `Edit permissions for namespace ${namespace}`;
+  const noEditPermissionsMsg =
+    snapshotOrNamespace === 'Snapshot'
+      ? 'You do not have permissions to edit snapshot settings.'
+      : 'You do not have permissions to edit namespace settings.';
 
   return (
-    <Modal title={modalTitle} onDismiss={() => setPermissionsModalOpen(false)} width='600px' showButtons={false}>
-      <div>
-        <span style={{ display: 'flex', alignItems: 'center' }}>
-          <Icon size={19} color={colors.warning()} icon='warning-standard' />
-          <span style={{ marginLeft: '1ch' }}>Note: Sharing with user groups is not supported.</span>
-        </span>
-        <div style={{ display: 'flex', alignItems: 'flex-end' }}>
-          <IdContainer>
-            {(id) => (
-              <div style={{ flexGrow: 1, marginRight: '1rem' }}>
-                <FormLabel htmlFor={id} style={{ ...Style.elements.sectionHeader, margin: '1rem 0 0.5rem 0' }}>
-                  User
-                </FormLabel>
-                <ValidatedInput
-                  inputProps={{
-                    id,
-                    autoFocus: true,
-                    placeholder: 'Add a user',
-                    value: searchValue,
-                    onChange: (v) => {
-                      setSearchValue(v);
-                      setUserValueModified(true);
-                    },
-                  }}
-                  error={Utils.summarizeErrors(userValueModified && errors?.searchValue)}
-                />
-              </div>
-            )}
-          </IdContainer>
-          <ButtonPrimary disabled={errors} onClick={() => addUser(searchValue)}>
-            Add
-          </ButtonPrimary>
-        </div>
-      </div>
-      <CurrentUsers allPermissions={permissions} setAllPermissions={setPermissions} />
-      <div style={{ ...modalStyles.buttonRow, justifyContent: 'space-between' }}>
+    <Modal title={modalTitle} onDismiss={() => setPermissionsModalOpen(false)} width='600px' showButtons={false} showX>
+      {noEditPermissions && (
+        <div style={{ color: colors.danger(1), fontSize: 15, paddingTop: '10px' }}>{noEditPermissionsMsg}</div>
+      )}
+      {!working && !noEditPermissions && (
         <div>
-          <LabeledCheckbox
-            checked={publicAccessLevel !== 'NO ACCESS'}
-            onChange={(v: boolean) => {
-              updatePublicUser(v);
-            }}
-          >
-            <span style={{ marginLeft: '0.3rem' }}>Make Publicly Readable?</span>
-          </LabeledCheckbox>
+          <div>
+            <span style={{ display: 'flex', alignItems: 'center' }}>
+              <Icon size={19} color={colors.warning()} icon='warning-standard' />
+              <span style={{ marginLeft: '1ch' }}>Note: Sharing with user groups is not supported.</span>
+            </span>
+            <div style={{ display: 'flex', alignItems: 'flex-end' }}>
+              <IdContainer>
+                {(id) => (
+                  <div style={{ flexGrow: 1, marginRight: '1rem' }}>
+                    <FormLabel htmlFor={id} style={{ ...Style.elements.sectionHeader, margin: '1rem 0 0.5rem 0' }}>
+                      User
+                    </FormLabel>
+                    <ValidatedInput
+                      inputProps={{
+                        id,
+                        autoFocus: true,
+                        placeholder: 'Add a user',
+                        value: searchValue,
+                        onChange: (v) => {
+                          setSearchValue(v);
+                          setUserValueModified(true);
+                        },
+                      }}
+                      error={Utils.summarizeErrors(userValueModified && errors?.searchValue)}
+                    />
+                  </div>
+                )}
+              </IdContainer>
+              <ButtonPrimary disabled={errors} onClick={() => addUser(searchValue)}>
+                Add
+              </ButtonPrimary>
+            </div>
+          </div>
+          <CurrentUsers allPermissions={permissions} setAllPermissions={setPermissions} />
+          <div style={{ ...modalStyles.buttonRow, justifyContent: 'space-between' }}>
+            <div>
+              <LabeledCheckbox
+                checked={publicAccessLevel !== 'NO ACCESS'}
+                onChange={(v: boolean) => {
+                  updatePublicUser(v);
+                }}
+              >
+                <span style={{ marginLeft: '0.3rem' }}>Make Publicly Readable?</span>
+              </LabeledCheckbox>
+            </div>
+            <span>
+              <ButtonSecondary style={{ marginRight: '1rem' }} onClick={() => setPermissionsModalOpen(false)}>
+                Cancel
+              </ButtonSecondary>
+              <ButtonPrimary onClick={save}>Save</ButtonPrimary>
+            </span>
+          </div>
         </div>
-        <span>
-          <ButtonSecondary style={{ marginRight: '1rem' }} onClick={() => setPermissionsModalOpen(false)}>
-            Cancel
-          </ButtonSecondary>
-          <ButtonPrimary onClick={save}>Save</ButtonPrimary>
-        </span>
-      </div>
+      )}
       {working && <SpinnerOverlay />}
     </Modal>
   );
