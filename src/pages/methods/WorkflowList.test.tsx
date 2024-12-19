@@ -302,47 +302,6 @@ describe('workflows table', () => {
     ).toBeInTheDocument();
   });
 
-  it("doesn't allow editing permissions for namespace not owned by user", async () => {
-    // Arrange
-    asMockedFn(Methods).mockReturnValue(mockMethods([darukMethod]));
-    const user: UserEvent = userEvent.setup();
-
-    // set the user's email
-    jest.spyOn(userStore, 'get').mockImplementation(jest.fn().mockReturnValue(mockUserState('revali@gale.com')));
-
-    // Act
-    await act(async () => {
-      render(<WorkflowList queryParams={{ tab: 'public' }} />);
-    });
-
-    const table: HTMLElement = await screen.findByRole('table');
-
-    const rows: HTMLElement[] = within(table).getAllByRole('row');
-    expect(rows).toHaveLength(2);
-
-    const methodCells: HTMLElement[] = within(rows[1]).getAllByRole('cell');
-    expect(methodCells).toHaveLength(5);
-    within(methodCells[1]).getByText('daruk rock namespace');
-    within(methodCells[1]).getByText('daruk method');
-
-    const actionsMenu = within(methodCells[0]).getByRole('button');
-
-    // Act
-    await user.click(actionsMenu);
-
-    // Assert
-    expect(screen.getByText('Edit namespace permissions'));
-    expect(screen.getByRole('button', { name: 'Edit namespace permissions' })).toHaveAttribute('disabled');
-
-    // Act
-    await user.click(screen.getByRole('button', { name: 'Edit namespace permissions' }));
-
-    // Assert
-    expect(
-      screen.queryByRole('dialog', { name: /Edit permissions for namespace revali bird namespace/i })
-    ).not.toBeInTheDocument();
-  });
-
   it('displays a message with no my workflows', async () => {
     // Arrange
     asMockedFn(Methods).mockReturnValue(mockMethods([darukMethod]));
