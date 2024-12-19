@@ -154,7 +154,7 @@ const ShareWorkspaceModal: React.FC<ShareWorkspaceModalProps> = (props: ShareWor
   return (
     <Modal title='Share Workspace' width={720} showButtons={false} onDismiss={onDismiss}>
       <div style={{ display: 'flex', alignItems: 'flex-end', gap: '0.5rem' }}>
-        <div style={{ flexGrow: 2, width: '500px', alignSelf: 'flex-start' }}>
+        <div style={{ flexGrow: 2, width: '400px', alignSelf: 'flex-start' }}>
           <EmailSelect
             placeholder='Add people or groups'
             options={cond([remainingSuggestions.length > 0, () => remainingSuggestions], () => [])}
