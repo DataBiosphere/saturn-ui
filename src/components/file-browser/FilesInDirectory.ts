@@ -100,10 +100,7 @@ const FilesInDirectory = (props: FilesInDirectoryProps) => {
   const { status: directoriesStatus, directories } = directoriesResults.state;
   const { status: filesStatus, files } = filesResults.state;
   const status = statusFrom(filesStatus, directoriesStatus);
-  const filesToShow =
-    directoriesResults.hasNextPage !== false
-      ? 0
-      : Math.max(0, files.length - (directories.length % provider.getPageSize()));
+  const filesToShow = directoriesResults.hasNextPage === false ? files.length : 0;
 
   const isLoading = status === 'Loading';
 

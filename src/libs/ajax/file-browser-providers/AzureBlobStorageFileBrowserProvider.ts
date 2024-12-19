@@ -189,9 +189,6 @@ const AzureBlobStorageFileBrowserProvider = ({
       blobUrl.pathname += `/${path}`;
       return `azcopy copy '${blobUrl.href}' .`;
     },
-    getPageSize: () => {
-      return pageSize;
-    },
     uploadFileToDirectory: async (directoryPath, file) => {
       // This provider uses Azure Blob Storage's PUT blob API to upload files.
       // If the user attempts to upload a larger file than that API supports, we can fail fast with

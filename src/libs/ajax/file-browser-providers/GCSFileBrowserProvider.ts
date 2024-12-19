@@ -145,9 +145,6 @@ const GCSFileBrowserProvider = ({
     getDownloadCommandForFile: (path) => {
       return Promise.resolve(`gcloud storage cp 'gs://${bucket}/${path}' .`);
     },
-    getPageSize: () => {
-      return pageSize;
-    },
     uploadFileToDirectory: (directoryPath, file) => {
       return Ajax().Buckets.upload(project, bucket, directoryPath, file);
     },
