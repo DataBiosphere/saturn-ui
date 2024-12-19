@@ -66,4 +66,30 @@ describe('EmailSelect', () => {
     // Assert
     expect(options).toHaveLength(defaultProps.emails.length);
   });
+
+  it('updates searchValue on input change', () => {
+    // Arrange
+    render(<EmailSelect {...defaultProps} />);
+    const input = screen.getByLabelText(defaultProps.placeholder);
+
+    // Act
+    fireEvent.change(input, { target: { value: 'newemail@example.com' } });
+
+    // Assert
+    // @ts-ignore
+    expect(input.value).toBe('newemail@example.com');
+  });
+
+  it('saves searchValue to emails on blur', () => {
+    // Arrange
+    render(<EmailSelect {...defaultProps} />);
+    const input = screen.getByLabelText(defaultProps.placeholder);
+
+    // Act
+    fireEvent.change(input, { target: { value: 'newemail@example.com' } });
+    fireEvent.blur(input);
+
+    // Assert
+    expect(defaultProps.setEmails).toHaveBeenCalledWith(['test1@example.com', 'newemail@example.com']);
+  });
 });

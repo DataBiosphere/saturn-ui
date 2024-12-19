@@ -1,6 +1,6 @@
 import { CreatableSelect, useUniqueId } from '@terra-ui-packages/components';
 import _ from 'lodash/fp';
-import React from 'react';
+import React, { useState } from 'react';
 import { FormLabel } from 'src/libs/forms';
 
 interface EmailSelectProps {
@@ -24,7 +24,37 @@ export const EmailSelect: React.FC<EmailSelectProps> = ({
   emails,
   setEmails,
 }) => {
+  const [searchValue, setSearchValue] = useState<string>('');
+
   const emailInputId = useUniqueId();
+  const emptySearchValue = (searchValue: string) => searchValue === '';
+  const addSelectedOptions = (options: string[]) => {
+    const selectedOptions: string[] = _.flatMap(
+      (option) =>
+        option
+          .split(',')
+          .map((email) => email.trim())
+          .filter((email) => email !== ''),
+      options
+    );
+    const newEmail: string | undefined = _.find((email: string) => !emails.includes(email), selectedOptions);
+    if (newEmail || newEmail === undefined) {
+      setEmails(selectedOptions);
+    }
+  };
+
+  const handleOnInputChange = (inputValue: any) => {
+    !emptySearchValue(inputValue) && setSearchValue(inputValue);
+  };
+
+  const handleOnBlur = () => {
+    !emptySearchValue(searchValue) && addSelectedOptions([...emails, searchValue]);
+    setSearchValue('');
+  };
+
+  const handleOnChange = (options: Array<{ value: string; label: string }>) => {
+    addSelectedOptions(_.map((option) => option.value, options));
+  };
 
   return (
     <>
@@ -40,17 +70,10 @@ export const EmailSelect: React.FC<EmailSelectProps> = ({
         aria-label={placeholder}
         value={_.map((value: string) => ({ value, label: value }), emails)}
         options={_.map((value: string) => ({ value, label: value }), options)}
-        onChange={(option: Array<{ value: string; label: string }>) => {
-          // Split the value by commas and trim whitespace
-          const selectedOptions: string[] = _.flatMap(
-            (opt) => opt.value.split(',').map((email) => email.trim()),
-            option
-          );
-          const newEmail: string | undefined = _.find((email: string) => !emails.includes(email), selectedOptions);
-          if (newEmail || newEmail === undefined) {
-            setEmails(selectedOptions);
-          }
-        }}
+        onInputChange={handleOnInputChange}
+        onBlur={handleOnBlur}
+        onChange={handleOnChange}
+        height={200}
       />
     </>
   );
