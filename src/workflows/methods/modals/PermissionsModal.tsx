@@ -33,8 +33,6 @@ import validate from 'validate.js';
 type WorkflowPermissionsModalProps = {
   snapshotOrNamespace: 'Snapshot' | 'Namespace';
   namespace: string;
-  name?: string;
-  selectedSnapshot?: number;
   setPermissionsModalOpen: (b: boolean) => void;
   refresh: () => void;
   permissionsProvider: PermissionsProvider;
@@ -168,15 +166,7 @@ const CurrentUsers = (props: CurrentUsersProps) => {
 };
 
 export const PermissionsModal = (props: WorkflowPermissionsModalProps) => {
-  const {
-    snapshotOrNamespace,
-    namespace,
-    name,
-    selectedSnapshot,
-    setPermissionsModalOpen,
-    refresh,
-    permissionsProvider,
-  } = props;
+  const { snapshotOrNamespace, namespace, setPermissionsModalOpen, refresh, permissionsProvider } = props;
   const signal: AbortSignal = useCancellation();
   const [searchValue, setSearchValue] = useState<string>('');
   const [permissions, setPermissions] = useState<WorkflowsPermissions>([]);
@@ -192,12 +182,9 @@ export const PermissionsModal = (props: WorkflowPermissionsModalProps) => {
   useOnMount(() => {
     const loadWorkflowPermissions = withBusyState(setWorking, async () => {
       try {
-        const workflowPermissions: WorkflowsPermissions = await permissionsProvider.getPermissions(
-          namespace,
-          name,
-          selectedSnapshot,
-          { signal }
-        );
+        const workflowPermissions: WorkflowsPermissions = await permissionsProvider.getPermissions(namespace, {
+          signal,
+        });
         setPermissions(workflowPermissions);
         setOriginalPermissions(workflowPermissions);
       } catch (error) {
@@ -235,7 +222,7 @@ export const PermissionsModal = (props: WorkflowPermissionsModalProps) => {
     const permissionUpdates: WorkflowsPermissions = [...permissions, ...toBeDeletedPermissionUpdates];
 
     try {
-      await permissionsProvider.updatePermissions(namespace, permissionUpdates, name, selectedSnapshot, { signal });
+      await permissionsProvider.updatePermissions(namespace, permissionUpdates, { signal });
       refresh();
       setPermissionsModalOpen(false);
     } catch (error) {
@@ -245,9 +232,7 @@ export const PermissionsModal = (props: WorkflowPermissionsModalProps) => {
   });
 
   const modalTitle =
-    snapshotOrNamespace === 'Snapshot'
-      ? `Edit permissions for snapshot ${selectedSnapshot}`
-      : `Edit permissions for namespace ${namespace}`;
+    snapshotOrNamespace === 'Snapshot' ? 'Edit snapshot permissions' : `Edit permissions for namespace ${namespace}`;
 
   return (
     <Modal title={modalTitle} onDismiss={() => setPermissionsModalOpen(false)} width='600px' showButtons={false}>

@@ -74,10 +74,8 @@ describe('PermissionsModal', () => {
     await act(async () => {
       renderWithAppContexts(
         <PermissionsModal
-          name='test'
           namespace='namespace'
           snapshotOrNamespace='Snapshot'
-          selectedSnapshot={3}
           setPermissionsModalOpen={jest.fn()}
           refresh={jest.fn()}
           permissionsProvider={permissionsProviderSuccess}
@@ -86,7 +84,7 @@ describe('PermissionsModal', () => {
     });
 
     // ASSERT
-    expect(screen.getByText('Edit permissions for snapshot 3'));
+    expect(screen.getByText('Edit snapshot permissions'));
     expect(screen.getByText('Note: Sharing with user groups is not supported.'));
     expect(screen.getByText('User'));
     expect(screen.getByRole('textbox', { name: 'User' }));
@@ -131,10 +129,8 @@ describe('PermissionsModal', () => {
     await act(async () => {
       renderWithAppContexts(
         <PermissionsModal
-          name='test'
           namespace='namespace'
           snapshotOrNamespace='Snapshot'
-          selectedSnapshot={3}
           setPermissionsModalOpen={jest.fn()}
           refresh={jest.fn()}
           permissionsProvider={permissionsProviderSuccess}
@@ -144,7 +140,7 @@ describe('PermissionsModal', () => {
 
     // ASSERT
     expect(mockGetPermissions).toHaveBeenCalled();
-    expect(mockGetPermissions).toHaveBeenCalledWith('namespace', 'test', 3, expect.any(Object));
+    expect(mockGetPermissions).toHaveBeenCalledWith('namespace', expect.any(Object));
 
     expect(screen.getByText('user1@foo.com'));
     expect(screen.getByText('user2@bar.com'));
@@ -168,10 +164,8 @@ describe('PermissionsModal', () => {
     await act(async () => {
       renderWithAppContexts(
         <PermissionsModal
-          name='test'
           namespace='namespace'
           snapshotOrNamespace='Snapshot'
-          selectedSnapshot={3}
           setPermissionsModalOpen={jest.fn()}
           refresh={jest.fn()}
           permissionsProvider={permissionsProviderSuccess}
@@ -206,8 +200,6 @@ describe('PermissionsModal', () => {
         { role: 'READER', user: 'user2@bar.com' },
         { role: 'OWNER', user: 'newuser@boo.com' },
       ],
-      'test',
-      3,
       expect.any(Object)
     );
   });
@@ -219,10 +211,8 @@ describe('PermissionsModal', () => {
     await act(async () => {
       renderWithAppContexts(
         <PermissionsModal
-          name='test'
           namespace='namespace'
           snapshotOrNamespace='Snapshot'
-          selectedSnapshot={3}
           setPermissionsModalOpen={jest.fn()}
           refresh={jest.fn()}
           permissionsProvider={permissionsProviderSuccess}
@@ -248,8 +238,6 @@ describe('PermissionsModal', () => {
         { role: 'OWNER', user: 'user1@foo.com' },
         { role: 'NO ACCESS', user: 'user2@bar.com' },
       ],
-      'test',
-      3,
       expect.any(Object)
     );
   });
@@ -261,10 +249,8 @@ describe('PermissionsModal', () => {
     await act(async () => {
       renderWithAppContexts(
         <PermissionsModal
-          name='test'
           namespace='namespace'
           snapshotOrNamespace='Snapshot'
-          selectedSnapshot={3}
           setPermissionsModalOpen={jest.fn()}
           refresh={jest.fn()}
           permissionsProvider={permissionsProviderSuccess}
@@ -286,10 +272,8 @@ describe('PermissionsModal', () => {
     await act(async () => {
       renderWithAppContexts(
         <PermissionsModal
-          name='test'
           namespace='namespace'
           snapshotOrNamespace='Snapshot'
-          selectedSnapshot={3}
           setPermissionsModalOpen={jest.fn()}
           refresh={jest.fn()}
           permissionsProvider={permissionsProviderSuccess}
@@ -317,10 +301,8 @@ describe('PermissionsModal', () => {
     await act(async () => {
       renderWithAppContexts(
         <PermissionsModal
-          name='test'
           namespace='namespace'
           snapshotOrNamespace='Snapshot'
-          selectedSnapshot={3}
           setPermissionsModalOpen={jest.fn()}
           refresh={jest.fn()}
           permissionsProvider={permissionsProviderSuccess}
@@ -361,10 +343,8 @@ describe('PermissionsModal', () => {
     await act(async () => {
       renderWithAppContexts(
         <PermissionsModal
-          name='test'
           namespace='namespace'
           snapshotOrNamespace='Snapshot'
-          selectedSnapshot={3}
           setPermissionsModalOpen={jest.fn()}
           refresh={jest.fn()}
           permissionsProvider={mockProvider}
@@ -388,8 +368,6 @@ describe('PermissionsModal', () => {
         { role: 'OWNER', user: 'user1@foo.com' },
         { role: 'READER', user: 'user2@bar.com' },
       ],
-      'test',
-      3,
       expect.any(Object)
     );
   });
@@ -401,10 +379,8 @@ describe('PermissionsModal', () => {
     await act(async () => {
       renderWithAppContexts(
         <PermissionsModal
-          name='test'
           namespace='namespace'
           snapshotOrNamespace='Snapshot'
-          selectedSnapshot={3}
           setPermissionsModalOpen={jest.fn()}
           refresh={jest.fn()}
           permissionsProvider={permissionsProviderSuccess}
@@ -428,8 +404,6 @@ describe('PermissionsModal', () => {
         { role: 'OWNER', user: 'user1@foo.com' },
         { role: 'READER', user: 'user2@bar.com' },
       ],
-      'test',
-      3,
       expect.any(Object)
     );
   });
@@ -444,10 +418,8 @@ describe('PermissionsModal', () => {
     await act(async () => {
       renderWithAppContexts(
         <PermissionsModal
-          name='test'
           namespace='namespace'
           snapshotOrNamespace='Snapshot'
-          selectedSnapshot={3}
           setPermissionsModalOpen={mockSetPermissionsModalOpen}
           refresh={mockRefresh}
           permissionsProvider={permissionsProviderSuccess}
@@ -473,10 +445,8 @@ describe('PermissionsModal', () => {
     await act(async () => {
       renderWithAppContexts(
         <PermissionsModal
-          name='test'
           namespace='namespace'
           snapshotOrNamespace='Snapshot'
-          selectedSnapshot={3}
           setPermissionsModalOpen={mockSetPermissionsModalOpen}
           refresh={mockRefresh}
           permissionsProvider={permissionsProviderSuccess}
@@ -500,10 +470,8 @@ describe('PermissionsModal', () => {
     await act(async () => {
       renderWithAppContexts(
         <PermissionsModal
-          name='test'
           namespace='namespace'
           snapshotOrNamespace='Snapshot'
-          selectedSnapshot={3}
           setPermissionsModalOpen={mockSetPermissionsModalOpen}
           refresh={mockRefresh}
           permissionsProvider={permissionsProviderError}
@@ -527,10 +495,8 @@ describe('PermissionsModal', () => {
     await act(async () => {
       renderWithAppContexts(
         <PermissionsModal
-          name='test'
           namespace='namespace'
           snapshotOrNamespace='Snapshot'
-          selectedSnapshot={3}
           setPermissionsModalOpen={mockSetPermissionsModalOpen}
           refresh={mockRefresh}
           permissionsProvider={permissionsProviderError}

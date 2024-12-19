@@ -293,11 +293,9 @@ export const WorkflowsContainer = (props: WorkflowContainerProps) => {
       h(PermissionsModal, {
         snapshotOrNamespace: 'Snapshot',
         namespace,
-        name,
-        selectedSnapshot,
         setPermissionsModalOpen,
         refresh: loadSnapshot,
-        permissionsProvider: snapshotPermissionsProvider,
+        permissionsProvider: snapshotPermissionsProvider(name, selectedSnapshot),
       }),
     showCloneModal &&
       h(CreateWorkflowModal, {

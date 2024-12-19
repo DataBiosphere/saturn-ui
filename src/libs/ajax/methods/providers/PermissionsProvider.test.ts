@@ -62,7 +62,7 @@ describe('PermissionsProvider', () => {
     const signal = new window.AbortController().signal;
 
     // Act
-    const result = await snapshotPermissionsProvider.getPermissions('groot-namespace', 'groot-method', 3, { signal });
+    const result = await snapshotPermissionsProvider('groot-method', 3).getPermissions('groot-namespace', { signal });
 
     // Assert
     expect(Methods).toBeCalledTimes(1);
@@ -77,7 +77,7 @@ describe('PermissionsProvider', () => {
     const signal = new window.AbortController().signal;
 
     // Act
-    const result = await snapshotPermissionsProvider.updatePermissions(
+    const result = await snapshotPermissionsProvider('groot-method', 3).updatePermissions(
       'groot-namespace',
       [
         {
@@ -85,8 +85,6 @@ describe('PermissionsProvider', () => {
           user: 'rocket.racoon@gmail.com',
         },
       ],
-      'groot-method',
-      3,
       { signal }
     );
 
@@ -108,7 +106,7 @@ describe('PermissionsProvider', () => {
     const signal = new window.AbortController().signal;
 
     // Act
-    const result = await namespacePermissionsProvider.getPermissions('groot-namespace', 'groot-method', 3, { signal });
+    const result = await namespacePermissionsProvider.getPermissions('groot-namespace', { signal });
 
     // Assert
     expect(Methods).toBeCalledTimes(1);
@@ -130,8 +128,6 @@ describe('PermissionsProvider', () => {
           user: 'rocket.racoon@gmail.com',
         },
       ],
-      undefined,
-      undefined,
       { signal }
     );
 
