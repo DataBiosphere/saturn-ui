@@ -52,8 +52,9 @@ export const Groups = (signal?: AbortSignal) => ({
         return res.json();
       },
 
-      addUser: (roles: GroupRole[], email: string): Promise<void[]> => {
-        return Promise.all(_.map((role) => addRole(role, email), roles));
+      addUsers: (roles: GroupRole[], emails: string[]): Promise<void[]> => {
+        const promises = emails.flatMap((email) => roles.map((role) => addRole(role, email)));
+        return Promise.all(promises);
       },
 
       removeUser: (roles: GroupRole[], email: string): Promise<void[]> => {
