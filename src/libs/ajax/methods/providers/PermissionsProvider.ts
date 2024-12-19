@@ -5,15 +5,15 @@ import { MethodConfigACL } from 'src/libs/ajax/methods/methods-models';
 export interface PermissionsProvider {
   getPermissions: (
     namespace: string,
-    name?: string | undefined,
-    snapshotId?: number | undefined,
+    name?: string,
+    snapshotId?: number,
     options?: AbortOption
   ) => Promise<MethodConfigACL>;
   updatePermissions: (
-    namespace,
+    namespace: string,
     updatedPermissions: MethodConfigACL,
-    name?: string | undefined,
-    snapshotId?: number | undefined,
+    name?: string,
+    snapshotId?: number,
     options?: AbortOption
   ) => Promise<MethodConfigACL>;
 }
@@ -24,8 +24,8 @@ export interface PermissionsProvider {
 export const namespacePermissionsProvider: PermissionsProvider = {
   getPermissions: async (
     namespace: string,
-    _name?: string | undefined,
-    _snapshotId?: number | undefined,
+    _name?: string,
+    _snapshotId?: number,
     options: AbortOption = {}
   ): Promise<MethodConfigACL> => {
     const { signal } = options;
@@ -35,8 +35,8 @@ export const namespacePermissionsProvider: PermissionsProvider = {
   updatePermissions: async (
     namespace: string,
     updatedPermissions: MethodConfigACL,
-    _name?: string | undefined,
-    _snapshotId?: number | undefined,
+    _name?: string,
+    _snapshotId?: number,
     options: AbortOption = {}
   ): Promise<MethodConfigACL> => {
     const { signal } = options;

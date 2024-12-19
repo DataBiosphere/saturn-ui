@@ -332,8 +332,8 @@ const getColumns = (
   paginatedWorkflows: MethodDefinition[]
 ) => {
   return [
-    // Note: 'field' values should be MethodDefinition property names for sorting
-    // to work properly
+    // Note: for sortable columns 'field' values should be MethodDefinition property names for sorting
+    // to work properly. This doesn't apply to 'Actions' column as it is not sortable.
     {
       field: 'actions',
       headerRenderer: () => <HeaderCell>Actions</HeaderCell>,
