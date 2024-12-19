@@ -41,6 +41,7 @@ export const EmailSelect: React.FC<EmailSelectProps> = ({
     if (newEmail || newEmail === undefined) {
       setEmails(selectedOptions);
     }
+    setSearchValue('');
   };
 
   const handleOnInputChange = (inputValue: any) => {
@@ -49,7 +50,6 @@ export const EmailSelect: React.FC<EmailSelectProps> = ({
 
   const handleOnBlur = () => {
     !emptySearchValue(searchValue) && addSelectedOptions([...emails, searchValue]);
-    setSearchValue('');
   };
 
   const handleOnChange = (options: Array<{ value: string; label: string }>) => {
