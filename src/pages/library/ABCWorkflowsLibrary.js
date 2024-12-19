@@ -187,12 +187,13 @@ export const WorkflowsLibrary = () => {
   ]);
 };
 
-export const navPaths = [
-  {
-    name: 'library-workflows',
-    path: '/library/workflows',
-    component: WorkflowsLibrary,
-    public: false,
-    title: 'Workflows',
-  },
-];
+// export const WorkflowsLibrary = () => {
+//   return h(FooterWrapper, { alwaysShow: true }, [
+//     libraryTopMatter('workflows'),
+//     div({ role: 'main', style: { flexGrow: 1 } }, [
+//       div({ style: { display: 'flex', flex: 1 } }, [
+//         div({ style: { flex: 1, margin: '30px 0 30px 40px' } }, [div({ style: styles.header }, 'Discover workflows')]),
+//       ]),
+//     ]),
+//   ]);
+// };
