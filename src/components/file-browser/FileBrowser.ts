@@ -161,6 +161,9 @@ const FileBrowser = (props: FileBrowserProps) => {
             rootLabel,
             selectedFiles,
             setSelectedFiles,
+            onClickDirectory: (directory: FileBrowserDirectory) => {
+              setPath(directory.path);
+            },
             onClickFile: setFocusedFile,
             onCreateDirectory: (directory: FileBrowserDirectory) => {
               setPath(directory.path);
