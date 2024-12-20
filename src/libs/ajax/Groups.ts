@@ -53,8 +53,17 @@ export const Groups = (signal?: AbortSignal) => ({
       },
 
       addUsers: (roles: GroupRole[], emails: string[]): Promise<void[]> => {
-        const promises = emails.flatMap((email) => roles.map((role) => addRole(role, email)));
-        return Promise.all(promises);
+        const userRoles = [
+          {
+            resourceTypeName: 'managed-group',
+            resourceId: groupName,
+            policyUpdates: _.map((role) => ({ policyName: role, addEmails: emails, removeEmails: [] }), roles),
+          },
+        ];
+        return fetchSam(
+          'api/resources/v2/bulkMembershipUpdate',
+          _.mergeAll([authOpts(), { signal, method: 'POST' }, jsonBody(userRoles)])
+        );
       },
 
       removeUser: (roles: GroupRole[], email: string): Promise<void[]> => {
