@@ -99,7 +99,7 @@ export const AclInput: React.FC<AclInputProps> = (props: AclInputProps) => {
 
   return (
     <div style={{ display: 'flex', marginTop: '0.25rem', flexDirection: showRow ? 'row' : 'column' }}>
-      <div style={{ width: isAzureWorkspace ? 425 : 200 }}>
+      <div style={{ width: isAzureWorkspace && showRow ? 425 : 200 }}>
         <AclSelect
           autoFocus={autoFocus}
           isSearchable={false}
