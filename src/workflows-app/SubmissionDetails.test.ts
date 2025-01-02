@@ -1058,7 +1058,7 @@ describe('Submission Details page', () => {
       },
     ];
 
-    const useDirectoriesInDirectoryResult = {
+    const useDirectoriesInDirectoryResult: ReturnType<typeof useDirectoriesInDirectory> = {
       state: { directories, status: 'Ready' },
       hasNextPage: false,
       loadNextPage: () => Promise.resolve(),
