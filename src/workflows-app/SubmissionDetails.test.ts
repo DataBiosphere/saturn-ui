@@ -200,6 +200,7 @@ describe('Submission Details page', () => {
     // arrange ajax data call defaults
     asMockedFn(Apps).mockReturnValue(
       partial<AppsAjaxContract>({
+        // TODO: remove any type: mockAzureApps type does not match what lsitAppsV2 actually returns
         listAppsV2: jest.fn(async () => mockAzureApps as any),
       })
     );
@@ -291,6 +292,7 @@ describe('Submission Details page', () => {
 
     asMockedFn(Apps).mockReturnValue(
       partial<AppsAjaxContract>({
+        // TODO: remove any type: mockCollaborativeAzureApps type does not match what lsitAppsV2 actually returns
         listAppsV2: jest.fn(async () => mockCollaborativeAzureApps as any),
       })
     );
