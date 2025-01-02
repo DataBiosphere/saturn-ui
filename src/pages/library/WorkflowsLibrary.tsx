@@ -53,7 +53,6 @@ interface WorkflowSourceBoxProps {
   logoFilePath: string;
 }
 
-// TODO: make both the boxes have the pop-out icon at same level horizontally
 const WorkflowSourceBox = (props: WorkflowSourceBoxProps) => {
   return (
     <Clickable href={props.url} {...Utils.newTabLinkProps}>
@@ -73,13 +72,13 @@ const WorkflowSourceBox = (props: WorkflowSourceBoxProps) => {
           <div style={{ fontSize: '1rem', fontWeight: 600, color: colors.accent(1), marginTop: '5px' }}>
             {props.title}
           </div>
-          <p>{props.description}</p>
-          <p style={{ marginBottom: '-10px' }}>
+          <p style={{ height: '55px' }}>{props.description}</p>
+          <div style={{ bottom: 0 }}>
             {icon('pop-out', {
               size: 18,
-              style: { marginLeft: '0.25rem', marginBottom: '1px', color: colors.accent(1) },
+              style: { color: colors.accent(1) },
             })}
-          </p>
+          </div>
         </div>
       </div>
     </Clickable>
@@ -112,13 +111,13 @@ const CuratedWorkflowsSection = () => {
               style={{
                 ...Style.elements.card.container,
                 width: 150,
-                height: 100,
+                height: 110,
                 margin: '0 1rem 2rem 0',
                 color: colors.accent(1),
               }}
             >
               <div>{wf.title}</div>
-              <div style={{ marginTop: '10px' }}>{icon('pop-out', { size: 14, style: { marginLeft: '0.25rem' } })}</div>
+              <div style={{ bottom: 0 }}>{icon('pop-out', { size: 14, style: { marginLeft: '0.25rem' } })}</div>
             </Clickable>
           );
         }, curatedWorkflowsList(dockstoreUrlRoot))}
@@ -127,8 +126,6 @@ const CuratedWorkflowsSection = () => {
   );
 };
 
-// TODO: zoom the window to 250% and fix the issue seen - the footer bar is displayed on top of the main div
-// TODO: in normal zoom, why is there a scroll bar?
 export const WorkflowsLibrary = () => {
   const dockstoreUrl = `${getConfig().dockstoreUrlRoot}/search?_type=workflow&descriptorType=WDL&searchMode=files`;
   const workflowsRepoUrl: string = isFeaturePreviewEnabled(FIRECLOUD_UI_MIGRATION)
@@ -139,8 +136,8 @@ export const WorkflowsLibrary = () => {
     <FooterWrapper alwaysShow>
       {libraryTopMatter('workflows')}
       <div role='main' style={{ flexGrow: 1 }}>
-        <div style={{ display: 'flex', flexDirection: 'row', flex: 1 }}>
-          <div style={{ width: '80%', height: '100vh', display: 'flex' }}>
+        <div style={{ display: 'flex', flexDirection: 'row', height: '100%', flex: 1 }}>
+          <div style={{ width: '80%', display: 'flex' }}>
             <div style={{ flex: 1, margin: '30px 0 30px 40px' }}>
               <div style={styles.header}>Discover Workflows</div>
               <div style={{ display: 'flex', marginTop: '0.25rem' }}>
@@ -167,7 +164,6 @@ export const WorkflowsLibrary = () => {
           <div
             style={{
               width: '20%',
-              height: '100vh',
               padding: '25px 30px',
               backgroundColor: colors.light(0.7),
               lineHeight: '20px',

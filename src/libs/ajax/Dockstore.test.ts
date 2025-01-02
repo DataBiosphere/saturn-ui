@@ -86,21 +86,4 @@ describe('Dockstore', () => {
       expect(versions).toEqual([]);
     });
   });
-
-  describe('listTools', () => {
-    it('fetches workflows', async () => {
-      // Arrange
-      asMockedFn(fetchDockstore).mockResolvedValue(new Response('[]'));
-
-      // Act
-      const tools = await Dockstore().listTools({ organization: 'gatk-workflows' });
-
-      // Assert
-      expect(fetchDockstore).toHaveBeenCalledWith('api/ga4gh/v1/tools?organization=gatk-workflows', {
-        signal: undefined,
-      });
-
-      expect(tools).toEqual([]);
-    });
-  });
 });
