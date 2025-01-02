@@ -33,7 +33,7 @@ const DeleteSnapshotModal = (props: DeleteSnapshotModalProps): ReactNode => {
 
   return (
     <DeleteConfirmationModal
-      objectType='snapshot'
+      objectType='version'
       objectName={`${namespace}/${name}/${snapshotId}`}
       onConfirm={onConfirm}
       onDismiss={onDismiss}
