@@ -2,12 +2,21 @@ import { act, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import _ from 'lodash/fp';
 import { h } from 'react-hyperscript-helpers';
-import { Ajax } from 'src/libs/ajax';
-import { Metrics } from 'src/libs/ajax/Metrics';
+import { AjaxContract } from 'src/libs/ajax';
+import {
+  AzureBlobByUriContract,
+  AzureBlobResult,
+  AzureStorage,
+  AzureStorageContract,
+  SasInfo,
+  StorageDetails,
+} from 'src/libs/ajax/AzureStorage';
+import { Metrics, MetricsContract } from 'src/libs/ajax/Metrics';
+import { CromwellApp, CromwellAppAjaxContract, WorkflowsContract } from 'src/libs/ajax/workflows-app/CromwellApp';
 import * as configStore from 'src/libs/config';
 import Events from 'src/libs/events';
 import { makeCompleteDate } from 'src/libs/utils';
-import { asMockedFn, renderWithAppContexts as render, SelectHelper } from 'src/testing/test-utils';
+import { asMockedFn, partial, renderWithAppContexts as render, SelectHelper } from 'src/testing/test-utils';
 import { appendSASTokenIfNecessary, getFilenameFromAzureBlobPath } from 'src/workflows-app/components/InputOutputModal';
 import { collapseCromwellStatus } from 'src/workflows-app/components/job-common';
 import { failedTasks as failedTasksMetadata } from 'src/workflows-app/fixtures/failed-tasks';
@@ -22,8 +31,9 @@ import { isAzureUri } from 'src/workspace-data/data-table/uri-viewer/uri-viewer-
 
 import { parseFullFilepathToContainerDirectory } from './utils/task-log-utils';
 
-jest.mock('src/libs/ajax');
+jest.mock('src/libs/ajax/AzureStorage');
 jest.mock('src/libs/ajax/Metrics');
+jest.mock('src/libs/ajax/workflows-app/CromwellApp');
 
 const wdsUrlRoot = 'https://lz-abc/wds-abc-c07807929cd1/';
 const cbasUrlRoot = 'https://lz-abc/terra-app-abc/cbas';
@@ -85,78 +95,75 @@ const runDetailsProps = {
 
 const captureEvent = jest.fn();
 
-const mockObj = {
-  CromwellApp: {
-    workflows: () => {
-      return {
-        metadata: jest.fn(() => {
-          return Promise.resolve(runDetailsMetadata);
-        }),
-        failedTasks: jest.fn(() => {
-          return Promise.resolve(failedTasksMetadata);
-        }),
-      };
-    },
-    callCacheDiff: jest.fn(() => {
-      return Promise.resolve(callCacheDiff);
-    }),
-  },
-  AzureStorage: {
-    blobByUri: jest.fn(() => ({
-      getMetadataAndTextContent: () =>
-        Promise.resolve({
+const mockObj: Pick<AjaxContract, 'CromwellApp' | 'AzureStorage' | 'Metrics'> = {
+  CromwellApp: partial<CromwellAppAjaxContract>({
+    workflows: () =>
+      partial<WorkflowsContract>({
+        metadata: jest.fn(async () => runDetailsMetadata),
+        failedTasks: jest.fn(async () => failedTasksMetadata),
+      }),
+    callCacheDiff: jest.fn(async () => callCacheDiff),
+  }),
+  AzureStorage: partial<AzureStorageContract>({
+    blobByUri: jest.fn(() =>
+      partial<AzureBlobByUriContract>({
+        getMetadataAndTextContent: async () => ({
           uri: 'https://someBlobFilePath.blob.core.windows.net/cromwell/user-inputs/inputFile.txt',
           sasToken: '1234-this-is-a-mock-sas-token-5678',
           fileName: 'inputFile.txt',
           name: 'inputFile.txt',
+          workspaceId: 'user-inputs',
           lastModified: 'Mon, 22 May 2023 17:12:58 GMT',
           size: '324',
           contentType: 'text/plain',
           textContent: 'this is the text of a mock file',
           azureSasStorageUrl: 'https://someBlobFilePath.blob.core.windows.net/cromwell/user-inputs/inputFile.txt',
         }),
-    })),
-    details: jest.fn(() => {
-      return Promise.resolve({ sas: { token: '1234-this-is-a-mock-sas-token-5678' } });
-    }),
-  },
-  Metrics: {
+      })
+    ),
+    details: jest.fn(async () =>
+      partial<StorageDetails>({
+        sas: partial<SasInfo>({ token: '1234-this-is-a-mock-sas-token-5678' }),
+      })
+    ),
+  }),
+  Metrics: partial<MetricsContract>({
     captureEvent,
-  },
+  }),
 };
 
-const subworkflowCromwellAjaxMock = (parentOverride = {}) => {
+type ParentMetadata = typeof parentMetadata;
+const subworkflowCromwellAjaxMock = (parentOverride: Partial<ParentMetadata> = {}): CromwellAppAjaxContract => {
   const modifiedParentMetadata = { ...parentMetadata, ...parentOverride };
-  return {
-    CromwellApp: {
-      workflows: (id) => {
-        return {
-          metadata: jest.fn(() => {
-            const workflowMap = {
-              [parentMetadata.id]: modifiedParentMetadata,
-              [childMetadata.id]: childMetadata,
-            };
-            return Promise.resolve(workflowMap[id]);
-          }),
-          failedTasks: jest.fn(() => {
-            return Promise.resolve({});
-          }),
+  return partial<CromwellAppAjaxContract>({
+    workflows: (id) => ({
+      metadata: jest.fn(() => {
+        const workflowMap = {
+          [parentMetadata.id]: modifiedParentMetadata,
+          [childMetadata.id]: childMetadata,
         };
-      },
-    },
-  };
+        return Promise.resolve(workflowMap[id]);
+      }),
+      failedTasks: jest.fn(async () => ({})),
+    }),
+  });
 };
 
 beforeEach(() => {
-  Ajax.mockImplementation(() => {
-    return mockObj;
-  });
+  asMockedFn(AzureStorage).mockReturnValue(mockObj.AzureStorage);
+  asMockedFn(CromwellApp).mockReturnValue(mockObj.CromwellApp);
   asMockedFn(Metrics).mockReturnValue(mockObj.Metrics);
 });
 
 describe('BaseRunDetails - render smoke test', () => {
-  const originalOffsetHeight = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'offsetHeight');
-  const originalOffsetWidth = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'offsetWidth');
+  const originalOffsetHeight: PropertyDescriptor = Object.getOwnPropertyDescriptor(
+    HTMLElement.prototype,
+    'offsetHeight'
+  ) || { value: undefined };
+  const originalOffsetWidth: PropertyDescriptor = Object.getOwnPropertyDescriptor(
+    HTMLElement.prototype,
+    'offsetWidth'
+  ) || { value: undefined };
 
   beforeAll(() => {
     Object.defineProperty(HTMLElement.prototype, 'offsetHeight', { configurable: true, value: 1000 });
@@ -169,7 +176,10 @@ describe('BaseRunDetails - render smoke test', () => {
   });
 
   it('has copy buttons', async () => {
+    // Act
     await act(async () => render(h(BaseRunDetails, runDetailsProps)));
+
+    // Assert
     screen.getByLabelText('Copy workflow id');
     screen.getByLabelText('Copy submission id');
     screen.getByText(runDetailsProps.workflowId);
@@ -177,6 +187,7 @@ describe('BaseRunDetails - render smoke test', () => {
   });
 
   it('shows the calls in a table', async () => {
+    // Arrange
     const { calls } = runDetailsMetadata;
 
     const calcRowCount = () => {
@@ -187,8 +198,10 @@ describe('BaseRunDetails - render smoke test', () => {
       }, 1);
     };
 
+    // Act
     await act(async () => render(h(BaseRunDetails, runDetailsProps)));
 
+    // Assert
     const table = screen.getByRole('table');
     const rows = within(table).getAllByRole('row');
     expect(rows.length).toEqual(calcRowCount());
@@ -211,8 +224,10 @@ describe('BaseRunDetails - render smoke test', () => {
   });
 
   it('shows expected cost details', async () => {
+    // Act
     await act(async () => render(h(BaseRunDetails, runDetailsProps)));
 
+    // Assert
     const table = screen.getByRole('table');
     const tableRows = within(table).getAllByRole('row').slice(1); // omit header row
 
@@ -228,36 +243,29 @@ describe('BaseRunDetails - render smoke test', () => {
   });
 
   it('only shows failed tasks if a workflow has failed', async () => {
+    // Arrange
     const failedTaskCalls = Object.values(failedTasksMetadata)[0].calls;
     const targetCall = Object.values(failedTaskCalls)[0][0];
     const { start, end } = targetCall;
     const workflowCopy = _.cloneDeep(runDetailsMetadata);
     workflowCopy.status = 'Failed';
 
-    const modifiedMock = {
-      ..._.cloneDeep(mockObj),
-      CromwellApp: {
-        workflows: () => {
-          return {
-            metadata: () => {
-              return workflowCopy;
-            },
-            failedTasks: () => {
-              return failedTasksMetadata;
-            },
-          };
-        },
-      },
-    };
-
-    // redefine Ajax mock so that it returns the modified workflow instead of the original
-    Ajax.mockImplementation(() => {
-      return modifiedMock;
-    });
+    asMockedFn(CromwellApp).mockReturnValue(
+      partial<CromwellAppAjaxContract>({
+        workflows: () =>
+          partial<WorkflowsContract>({
+            metadata: async () => workflowCopy,
+            failedTasks: async () => failedTasksMetadata,
+          }),
+      })
+    );
 
     const user = userEvent.setup();
 
+    // Act
     await act(async () => render(h(BaseRunDetails, runDetailsProps)));
+
+    // Assert
     const statusFilter = screen.getByLabelText('Status');
     const select = new SelectHelper(statusFilter, user);
     expect(select.getSelectedOptions()).toEqual(['Failed']);
@@ -276,33 +284,26 @@ describe('BaseRunDetails - render smoke test', () => {
   });
 
   it('only opens the failure modal when failure status is clicked', async () => {
+    // Arrange
     const workflowCopy = _.cloneDeep(runDetailsMetadata);
     workflowCopy.status = 'Failed';
 
-    const modifiedMock = {
-      ..._.cloneDeep(mockObj),
-      CromwellApp: {
-        workflows: () => {
-          return {
-            metadata: () => {
-              return workflowCopy;
-            },
-            failedTasks: () => {
-              return failedTasksMetadata;
-            },
-          };
-        },
-      },
-    };
-
-    // redefine Ajax mock so that it returns the modified workflow instead of the original
-    Ajax.mockImplementation(() => {
-      return modifiedMock;
-    });
+    asMockedFn(CromwellApp).mockReturnValue(
+      partial<CromwellAppAjaxContract>({
+        workflows: () =>
+          partial<WorkflowsContract>({
+            metadata: async () => workflowCopy,
+            failedTasks: async () => failedTasksMetadata,
+          }),
+      })
+    );
 
     const user = userEvent.setup();
 
+    // Act
     await act(async () => render(h(BaseRunDetails, runDetailsProps)));
+
+    // Assert
     const table = screen.getByRole('table');
     const targetRow = within(table).getAllByRole('row')[1];
     const failedStatus = within(targetRow).getAllByText('Failed (1 Message)');
@@ -347,9 +348,13 @@ describe('BaseRunDetails - render smoke test', () => {
 
   it('shows a static error message on LogViewer if log cannot be retrieved', async () => {
     // Arrange
-    const altMockObj = _.cloneDeep(mockObj);
-    altMockObj.AzureStorage.blobByUri = jest.fn(() => ({ getMetadataAndTextContent: () => Promise.reject('Mock error') }));
-    Ajax.mockImplementation(() => altMockObj);
+    const mockAzureStorage = _.cloneDeep(mockObj.AzureStorage);
+    mockAzureStorage.blobByUri = jest.fn(() =>
+      partial<AzureBlobByUriContract>({
+        getMetadataAndTextContent: () => Promise.reject('Mock error'),
+      })
+    );
+    asMockedFn(AzureStorage).mockReturnValue(mockAzureStorage);
     const user = userEvent.setup();
 
     // Act
@@ -380,9 +385,13 @@ describe('BaseRunDetails - render smoke test', () => {
       textContent: 'this is the text of a mock file',
     };
 
-    const altMockObj = _.cloneDeep(mockObj);
-    altMockObj.AzureStorage.blobByUri = jest.fn(() => ({ getMetadataAndTextContent: () => Promise.resolve(mockFetchedLogData) }));
-    Ajax.mockImplementation(() => altMockObj);
+    const mockAzureStorage = _.cloneDeep(mockObj.AzureStorage);
+    mockAzureStorage.blobByUri = jest.fn(() =>
+      partial<AzureBlobByUriContract>({
+        getMetadataAndTextContent: async () => mockFetchedLogData,
+      })
+    );
+    asMockedFn(AzureStorage).mockReturnValue(mockAzureStorage);
     const user = userEvent.setup();
 
     // Act
@@ -417,6 +426,7 @@ describe('BaseRunDetails - render smoke test', () => {
   });
 
   it('parses blob URIs correctly', () => {
+    // Arrange
     const tesLogFile =
       'https://lz813a3d637adefec2c6e88f.blob.core.windows.net/sc-bed4cf6c-8153-4f3d-852f-532cc17e6582/workspace-services/cbas/terra-app-c26307e1-4666-4a9a-aa27-dfb259be46a6/fetch_sra_to_bam/6d935b1a-e899-45da-9627-a94c23a2ca53/call-Fetch_SRA_to_BAM/tes_task/stderr.txt';
 
@@ -430,22 +440,30 @@ describe('BaseRunDetails - render smoke test', () => {
 
     const expected =
       'workspace-services/cbas/terra-app-c26307e1-4666-4a9a-aa27-dfb259be46a6/fetch_sra_to_bam/6d935b1a-e899-45da-9627-a94c23a2ca53/call-Fetch_SRA_to_BAM/tes_task';
+
+    // Act & Assert
     expect(parseFullFilepathToContainerDirectory(workspaceId, tesLogFile)).toEqual(expected);
     expect(parseFullFilepathToContainerDirectory(workspaceId, tesLogFolder)).toEqual(expected);
     expect(parseFullFilepathToContainerDirectory(workspaceId, tesLogFolderWithoutSlash)).toEqual(expected);
   });
 
   it('correctly identifies azure URIs', () => {
-    expect(isAzureUri('https://coaexternalstorage.blob.core.windows.net/cromwell/user-inputs/inputFile.txt')).toBeTruthy;
+    // Act & Assert
+    expect(isAzureUri('https://coaexternalstorage.blob.core.windows.net/cromwell/user-inputs/inputFile.txt'))
+      .toBeTruthy;
     expect(isAzureUri('gs://some-bucket/some-file.txt')).toBeFalsy;
   });
 
   it('shows a functional log modal when clicked', async () => {
+    // Arrange
     const user = userEvent.setup();
     await act(async () => render(h(BaseRunDetails, runDetailsProps)));
     const showLogsLink = screen.getAllByText('Logs')[0];
+
+    // Act
     await user.click(showLogsLink); // Open the modal
 
+    // Assert
     // Verify all the element titles are present
     screen.getByText('Task Standard Out');
     screen.getByText('Task Standard Err');
@@ -455,20 +473,26 @@ describe('BaseRunDetails - render smoke test', () => {
   });
 
   it('shows download button AND error when URI is valid but text could not be parsed', async () => {
-    const altMockObj = _.cloneDeep(mockObj);
-    altMockObj.AzureStorage.blobByUri = jest.fn(() => ({
-      getMetadataAndTextContent: () =>
-        Promise.resolve({
-          textContent: undefined,
-          azureSasStorageUrl: 'https://someBlobFilePath.blob.core.windows.net/cromwell/user-inputs/inputFile.txt',
-        }),
-    }));
-    Ajax.mockImplementation(() => altMockObj);
+    // Arrange
+    const mockAzureStorage = _.cloneDeep(mockObj.AzureStorage);
+    mockAzureStorage.blobByUri = jest.fn(() =>
+      partial<AzureBlobByUriContract>({
+        getMetadataAndTextContent: async () =>
+          partial<AzureBlobResult>({
+            textContent: undefined,
+            azureSasStorageUrl: 'https://someBlobFilePath.blob.core.windows.net/cromwell/user-inputs/inputFile.txt',
+          }),
+      })
+    );
+    asMockedFn(AzureStorage).mockReturnValue(mockAzureStorage);
     const user = userEvent.setup();
     await act(async () => render(h(BaseRunDetails, runDetailsProps)));
     const showLogsLink = screen.getAllByText('Logs')[0];
+
+    // Act
     await user.click(showLogsLink); // Open the modal
 
+    // Assert
     // Verify all the element titles are present
     screen.getByText('Task Standard Out');
     screen.getByText('Task Standard Err');
@@ -480,10 +504,15 @@ describe('BaseRunDetails - render smoke test', () => {
   });
 
   it('filters out task list via task name search', async () => {
+    // Arrange
     const taskName = Object.keys(runDetailsMetadata.calls)[0];
     await act(async () => render(h(BaseRunDetails, runDetailsProps)));
     const searchInput = screen.getByPlaceholderText('Search by task name');
+
+    // Act
     await userEvent.type(searchInput, 'Random');
+
+    // Assert
     const updatedTable = screen.getByRole('table');
     const updatedRows = within(updatedTable).getAllByRole('row');
     expect(updatedRows.length).toEqual(1);
@@ -492,10 +521,15 @@ describe('BaseRunDetails - render smoke test', () => {
   });
 
   it('filters in tasks via task name search', async () => {
+    // Arrange
     const taskName = Object.keys(runDetailsMetadata.calls)[0];
     await act(async () => render(h(BaseRunDetails, runDetailsProps)));
     const searchInput = screen.getByPlaceholderText('Search by task name');
+
+    // Act
     await userEvent.type(searchInput, 'Fetch');
+
+    // Assert
     const updatedTable = screen.getByRole('table');
     const updatedRows = within(updatedTable).getAllByRole('row');
     expect(updatedRows.length).toEqual(6);
@@ -517,26 +551,34 @@ describe('BaseRunDetails - render smoke test', () => {
   });
 
   it('opens the input/output modal when Outputs is clicked', async () => {
+    // Arrange
     const user = userEvent.setup();
     await act(async () => render(h(BaseRunDetails, runDetailsProps)));
     const table = screen.getByRole('table');
     const outputs = within(table).getAllByLabelText('View task outputs');
+
+    // Act
     await user.click(outputs[0]);
+
+    // Assert
     // There is no output data in this test case, but the modal still open.
     screen.getByText('Key');
     screen.getByText('Value');
   });
 
   it('input/output modal file functions work as expected', () => {
+    // Arrange
     const mockWorkspaceId = 'd4564046-bbba-495c-afec-14f7d3a8283a';
     jest.spyOn(configStore, 'getConfig').mockReturnValue({ workspaceId: mockWorkspaceId });
-    const publicURI = 'https://lza6bdb4ac5ff7bbc4bf6359.blob.core.windows.net/sc-fa554638-fc2b-42bd-b376-99db48fefd72/ref-sarscov2-NC_045512.2.fasta';
+    const publicURI =
+      'https://lza6bdb4ac5ff7bbc4bf6359.blob.core.windows.net/sc-fa554638-fc2b-42bd-b376-99db48fefd72/ref-sarscov2-NC_045512.2.fasta';
     const privateURI =
       'https://lz43a8a3d21540dfd25f5ace.blob.core.windows.net/sc-d4564046-bbba-495c-afec-14f7d3a8283a/workspace-services/cbas/terra-app-566e92a0-e55e-4250-b4c1-d0925dd03916/assemble_refbased/43d15a0d-848b-46e3-a1da-02b37caaa761/call-align_to_ref/shard-0/execution/stdout';
     const mockSAS = 'mockSAS';
 
     expect(privateURI.includes(mockWorkspaceId)).toBeTruthy; // sanity check that the test is set up properly
 
+    // Act & Assert
     // Should be the last thing after the slash
     const publicFilename = getFilenameFromAzureBlobPath(publicURI);
     const privateFilename = getFilenameFromAzureBlobPath(privateURI);
@@ -553,26 +595,39 @@ describe('BaseRunDetails - render smoke test', () => {
   });
 
   it('renders the workflow path above the table for successful workflows', async () => {
+    // Act
     await act(async () => render(h(BaseRunDetails, runDetailsProps)));
+
+    // Assert
     const workflowPath = screen.getByLabelText('Workflow Breadcrumb');
     within(workflowPath).getByText(runDetailsMetadata.workflowName);
   });
 
   it('shows the "View sub-workflow" button for sub-workflows', async () => {
-    const altMockObj = _.cloneDeep(mockObj);
+    // Arrange
+    asMockedFn(CromwellApp).mockReturnValue(subworkflowCromwellAjaxMock({ status: 'Succeeded' }));
+
     const altBaseRunDetailsProps = { ...runDetailsProps, workflowId: parentMetadata.id };
-    Ajax.mockImplementation(() => ({ ...altMockObj, ...subworkflowCromwellAjaxMock({ status: 'Succeeded' }) }));
+
+    // Act
     await act(async () => render(h(BaseRunDetails, altBaseRunDetailsProps)));
+
+    // Assert
     const table = screen.getByRole('table');
     within(table).getByText('View sub-workflow');
   });
 
   it('updates the workflow path when the "View sub-workflow" button is clicked', async () => {
-    const altMockObj = _.cloneDeep(mockObj);
-    const altBaseRunDetailsProps = { ...runDetailsProps, workflowId: parentMetadata.id };
-    Ajax.mockImplementation(() => ({ ...altMockObj, ...subworkflowCromwellAjaxMock({ status: 'Succeeded' }) }));
+    // Arrange
+    asMockedFn(CromwellApp).mockReturnValue(subworkflowCromwellAjaxMock({ status: 'Succeeded' }));
+
     const user = userEvent.setup();
+    const altBaseRunDetailsProps = { ...runDetailsProps, workflowId: parentMetadata.id };
+
+    // Act
     await act(async () => render(h(BaseRunDetails, altBaseRunDetailsProps)));
+
+    // Assert
     const table = screen.getByRole('table');
     const subworkflowButton = within(table).getByText('View sub-workflow');
     await user.click(subworkflowButton);
@@ -581,14 +636,20 @@ describe('BaseRunDetails - render smoke test', () => {
   });
 
   it('updates the table to show the sub-workflow calls when the "View sub-workflow" button is clicked', async () => {
-    const altMockObj = _.cloneDeep(mockObj);
-    const altBaseRunDetailsProps = { ...runDetailsProps, workflowId: parentMetadata.id };
-    Ajax.mockImplementation(() => ({ ...altMockObj, ...subworkflowCromwellAjaxMock({ status: 'Succeeded' }) }));
+    // Arrange
+    asMockedFn(CromwellApp).mockReturnValue(subworkflowCromwellAjaxMock({ status: 'Succeeded' }));
+
     const user = userEvent.setup();
+    const altBaseRunDetailsProps = { ...runDetailsProps, workflowId: parentMetadata.id };
+
     await act(async () => render(h(BaseRunDetails, altBaseRunDetailsProps)));
     const table = screen.getByRole('table');
     const subworkflowButton = within(table).getByText('View sub-workflow');
+
+    // Act
     await user.click(subworkflowButton);
+
+    // Assert
     const updatedTable = screen.getByRole('table');
     const subWorkflowTaskNames = Object.keys(childMetadata.calls);
     subWorkflowTaskNames.forEach((taskName) => {
@@ -597,17 +658,24 @@ describe('BaseRunDetails - render smoke test', () => {
   });
 
   it('updates the workflow path and the table if the user clicks on a workflow id within the workflow path', async () => {
-    const altMockObj = _.cloneDeep(mockObj);
+    // Arrange
+    asMockedFn(CromwellApp).mockReturnValue(subworkflowCromwellAjaxMock({ status: 'Succeeded' }));
+
     const altBaseRunDetailsProps = { ...runDetailsProps, workflowId: parentMetadata.id };
-    Ajax.mockImplementation(() => ({ ...altMockObj, ...subworkflowCromwellAjaxMock({ status: 'Succeeded' }) }));
     const user = userEvent.setup();
+
     await act(async () => render(h(BaseRunDetails, altBaseRunDetailsProps)));
+
     const table = screen.getByRole('table');
     const subworkflowButton = within(table).getByText('View sub-workflow');
     await user.click(subworkflowButton);
     const workflowPath = screen.getByLabelText('Workflow Breadcrumb');
     const targetIdPath = within(workflowPath).getByText(parentMetadata.workflowName);
+
+    // Act
     await user.click(targetIdPath);
+
+    // Assert
     const updatedTable = screen.getByRole('table');
     const updatedPath = screen.getByLabelText('Workflow Breadcrumb');
     within(updatedPath).getByText(parentMetadata.workflowName);
@@ -619,6 +687,7 @@ describe('BaseRunDetails - render smoke test', () => {
   });
 
   it('loads the page even if the failed tasks endpoint returns an error', async () => {
+    // Arrange
     const workflowCopy = _.cloneDeep(runDetailsMetadata);
     const failedTaskName = 'fetch_sra_to_bam.Fetch_SRA_to_BAM';
     const failedCall = workflowCopy.calls[failedTaskName][0];
@@ -627,30 +696,22 @@ describe('BaseRunDetails - render smoke test', () => {
     failedCall.executionStatus = 'Failed';
     workflowCopy.status = 'Failed';
 
-    const modifiedMock = {
-      ..._.cloneDeep(mockObj),
-      CromwellApp: {
-        workflows: () => {
-          return {
-            metadata: () => {
-              return workflowCopy;
-            },
-            failedTasks: () => {
-              return Promise.reject();
-            },
-          };
-        },
-      },
-    };
-
-    Ajax.mockImplementation(() => {
-      return modifiedMock;
-    });
+    asMockedFn(CromwellApp).mockReturnValue(
+      partial<CromwellAppAjaxContract>({
+        workflows: () =>
+          partial<WorkflowsContract>({
+            metadata: async () => workflowCopy,
+            failedTasks: async () => Promise.reject(),
+          }),
+      })
+    );
 
     const user = userEvent.setup();
 
+    // Act
     await act(async () => render(h(BaseRunDetails, runDetailsProps)));
 
+    // Assert
     const statusFilter = screen.getByLabelText('Status');
     const select = new SelectHelper(statusFilter, user);
     expect(select.getSelectedOptions()).toEqual(['Failed']);
@@ -668,35 +729,27 @@ describe('BaseRunDetails - render smoke test', () => {
   });
 
   it('loads the call cache diff wizard', async () => {
+    // Arrange
     const user = userEvent.setup();
+
     await act(async () => render(h(BaseRunDetails, runDetailsProps)));
+
     const showWizard = screen.getByLabelText('call cache debug wizard');
     await user.click(showWizard); // Open the modal
 
-    const wizard = screen.getByRole('dialog');
-
     // Adjust to load other workflow metadata
-    const modifiedMock = {
-      ..._.cloneDeep(mockObj),
-      CromwellApp: {
-        workflows: () => {
-          return {
-            metadata: () => {
-              return callCacheDiffMetadata;
-            },
-            failedTasks: () => {
-              return Promise.reject();
-            },
-          };
-        },
-      },
-    };
-
-    Ajax.mockImplementation(() => {
-      return modifiedMock;
-    });
+    asMockedFn(CromwellApp).mockReturnValue(
+      partial<CromwellAppAjaxContract>({
+        workflows: () =>
+          partial<WorkflowsContract>({
+            metadata: async () => callCacheDiffMetadata,
+            failedTasks: async () => Promise.reject(),
+          }),
+      })
+    );
 
     // Enter the workflow id in the text box and submit
+    const wizard = screen.getByRole('dialog');
     const wfIdTextBox = within(wizard).getByLabelText('Workflow ID:');
     await user.type(wfIdTextBox, 'some-random-uuid');
     const continueButton = within(wizard).getByText('Continue');
@@ -707,8 +760,11 @@ describe('BaseRunDetails - render smoke test', () => {
     const select = new SelectHelper(callDropdown, user);
     await select.selectOption('fetch_sra_to_bam.Fetch_SRA_to_BAM');
     const continueAgainButton = within(wizard).getByText('Continue');
+
+    // Act
     await user.click(continueAgainButton);
 
+    // Assert
     // Ensure the diff is rendered
     screen.getByText('Result: View cache diff');
   });

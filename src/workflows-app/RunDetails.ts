@@ -3,8 +3,9 @@ import _ from 'lodash';
 import { Fragment, ReactNode, useCallback, useEffect, useRef, useState } from 'react';
 import { div, h, span } from 'react-hyperscript-helpers';
 import { collapseStatus, statusType } from 'src/components/job-common';
-import { Ajax } from 'src/libs/ajax';
+import { AzureStorage } from 'src/libs/ajax/AzureStorage';
 import { useMetricsEvent } from 'src/libs/ajax/metrics/useMetrics';
+import { CromwellApp } from 'src/libs/ajax/workflows-app/CromwellApp';
 import Events from 'src/libs/events';
 import { notify } from 'src/libs/notifications';
 import { useCancellation, usePollingEffect } from 'src/libs/react-utils';
@@ -87,7 +88,7 @@ export const BaseRunDetails = (props: RunDetailsProps, _ref): ReactNode => {
    Cached here so we only fetch it once. */
   const [cromwellProxyState, setCromwellProxyState] = useState<CromwellProxyUrlState>();
 
-  /* Workflow metadta, which includes the call objects array, among other things. 
+  /* Workflow metadta, which includes the call objects array, among other things.
   The web request to fetch this data may be slow. */
   const [workflowMetadata, setWorkflowMetadata] = useState<WorkflowMetadata>();
   const [callObjects, setCallObjects] = useState<any[] | undefined>([]);
@@ -162,7 +163,7 @@ export const BaseRunDetails = (props: RunDetailsProps, _ref): ReactNode => {
     if (!workspaceId) return;
     const fetchSasToken = async () => {
       try {
-        const { sas } = await Ajax(signal).AzureStorage.details(workspaceId);
+        const { sas } = await AzureStorage(signal).details(workspaceId);
         setSasToken(sas.token);
       } catch (error) {
         notify('error', 'Error fetching SAS token for workspace.', {
@@ -189,7 +190,7 @@ export const BaseRunDetails = (props: RunDetailsProps, _ref): ReactNode => {
           let failedTasks: any;
           if (metadata?.status?.toLocaleLowerCase() === 'failed') {
             try {
-              failedTasks = await Ajax(signal).CromwellApp.workflows(workflowId).failedTasks(cromwellProxyState.state);
+              failedTasks = await CromwellApp(signal).workflows(workflowId).failedTasks(cromwellProxyState.state);
             } catch (error) {
               // do nothing, failure here means that user may not have access to an updated version of Cromwell
             }
@@ -268,7 +269,7 @@ export const BaseRunDetails = (props: RunDetailsProps, _ref): ReactNode => {
         return undefined;
       }
       if (cromwellProxyState.status === AppProxyUrlStatus.Ready) {
-        return Ajax(signal).CromwellApp.callCacheDiff(cromwellProxyState.state, thisWorkflow, thatWorkflow);
+        return CromwellApp(signal).callCacheDiff(cromwellProxyState.state, thisWorkflow, thatWorkflow);
       }
     },
     [signal, cromwellProxyState]
@@ -280,7 +281,7 @@ export const BaseRunDetails = (props: RunDetailsProps, _ref): ReactNode => {
         return undefined;
       }
       if (cromwellProxyState.status === AppProxyUrlStatus.Ready) {
-        return Ajax(signal).CromwellApp.workflows(wfId).metadata(cromwellProxyState.state, { includeKey, excludeKey });
+        return CromwellApp(signal).workflows(wfId).metadata(cromwellProxyState.state, { includeKey, excludeKey });
       }
     },
     [signal, cromwellProxyState]
