@@ -1,6 +1,8 @@
 import { IconProps } from '@terra-ui-packages/components';
+import _ from 'lodash/fp';
 import { BillingProject } from 'src/billing-core/models';
 import colors from 'src/libs/colors';
+import validate from 'validate.js';
 
 export const billingRoles = {
   owner: 'Owner',
@@ -98,4 +100,36 @@ export const parseCurrencyIfNeeded = (field: string, value: string | undefined):
 
   // Return original value for non-currency fields
   return value;
+};
+
+// Custom validator for an array of emails
+validate.validators.emailArray = (value: string[], options: { message: string; emptyMessage: string }, key: any) => {
+  if (!Array.isArray(value)) {
+    return options.message || `^${key} must be an array.`;
+  }
+
+  if (value.length === 0) {
+    return options.emptyMessage || `^${key} cannot be empty.`;
+  }
+
+  const errors = _.flow(
+    _.map((email: string) => (validate.single(email, { email: true, presence: true }) ? email : null)),
+    _.filter(Boolean)
+  )(value);
+
+  return errors.length ? `^Invalid email(s): ${errors.join(', ')}` : null;
+};
+
+export const validateUserEmails = (userEmails: string[]) => {
+  return validate(
+    { userEmails },
+    {
+      userEmails: {
+        emailArray: {
+          message: '^All inputs must be valid email addresses.',
+          emptyMessage: '^User emails cannot be empty.',
+        },
+      },
+    }
+  );
 };

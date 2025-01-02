@@ -60,7 +60,7 @@ interface NewMemberCardProps {
 const NewMemberCard = (props: NewMemberCardProps) => (
   <ButtonPrimary style={{ textTransform: 'none' }} onClick={props.onClick}>
     <Icon icon='plus' size={14} />
-    <div style={{ marginLeft: '0.5rem' }}>Add User</div>
+    <div style={{ marginLeft: '0.5rem' }}>Add Users</div>
   </ButtonPrimary>
 );
 

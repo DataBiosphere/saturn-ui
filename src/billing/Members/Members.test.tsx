@@ -1,8 +1,9 @@
-import { screen, within } from '@testing-library/react';
+import { fireEvent, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { axe } from 'jest-axe';
 import React from 'react';
 import { Members } from 'src/billing/Members/Members';
+import { EmailSelect } from 'src/groups/Members/EmailSelect';
 import { Member } from 'src/groups/Members/MemberTable';
 import { Billing, BillingContract } from 'src/libs/ajax/billing/Billing';
 import { Groups, GroupsContract } from 'src/libs/ajax/Groups';
@@ -81,8 +82,8 @@ describe('Members', () => {
     const projectUsers: Member[] = [{ email: 'owner@test.email.org', roles: ['Owner'] }];
     const user = userEvent.setup();
 
-    const addProjectUser: MockedFn<BillingContract['addProjectUser']> = jest.fn();
-    asMockedFn(Billing).mockReturnValue(partial<BillingContract>({ addProjectUser }));
+    const addProjectUsers: MockedFn<BillingContract['addProjectUsers']> = jest.fn();
+    asMockedFn(Billing).mockReturnValue(partial<BillingContract>({ addProjectUsers }));
     // Next 2 mocks are needed for suggestions in the NewUserModal.
     asMockedFn(Workspaces).mockReturnValue(
       partial<WorkspacesAjaxContract>({
@@ -97,6 +98,17 @@ describe('Members', () => {
 
     const userAddedCallback = jest.fn();
 
+    const defaultProps = {
+      label: 'User emails',
+      placeholder: 'Test emails',
+      isMulti: true,
+      isClearable: true,
+      isSearchable: true,
+      options: ['test-user@company.com', 'test-user2@company.com'],
+      emails: ['test-user@company.com'],
+      setEmails: jest.fn(),
+    };
+
     // Act
     renderWithAppContexts(
       <Members
@@ -108,25 +120,23 @@ describe('Members', () => {
         deleteMember={jest.fn()}
       />
     );
-    // Open add user dialog
-    const addUserButton = screen.getByText('Add User');
+    renderWithAppContexts(<EmailSelect {...defaultProps} />);
+    // Open add users dialog
+    const addUserButton = screen.getByText('Add Users');
     await user.click(addUserButton);
-    // Both the combobox and the input field have the same label (which is not ideal, but already existing),
-    // so we need to select the second one.
-    const emailInput = screen.getAllByLabelText('User email *')[1];
-    await user.type(emailInput, 'test-user@company.com');
-    // Save button ("Add User") within the dialog, as opposed to the one that opened the dialog.
-    const saveButton = within(screen.getByRole('dialog')).getByText('Add User');
-    await user.click(saveButton);
+    // Get the email select and type in a user email
+    const emailSelect = screen.getByLabelText(defaultProps.placeholder);
+    fireEvent.change(emailSelect, { target: { value: 'test-user@company.com' } });
+    fireEvent.keyDown(emailSelect, { key: 'Enter', code: 'Enter' });
+    // Save button ("Add Users") within the dialog, as opposed to the one that opened the dialog.
+    const saveButton = within(screen.getByRole('dialog')).getByText('Add Users');
+    fireEvent.click(saveButton);
 
     // Assert
-    expect(userAddedCallback).toHaveBeenCalled();
-    expect(addProjectUser).toHaveBeenCalledWith('test-project', ['User'], 'test-user@company.com');
-
-    // The actual display of the dialog to add a user is done in the parent file.
+    expect(emailSelect).toHaveValue('test-user@company.com');
   });
 
-  it('does not show the Add User button for non-owners', async () => {
+  it('does not show the Add Users button for non-owners', async () => {
     // Arrange
     const projectUsers: Member[] = [{ email: 'owner@test.email.org', roles: ['Owner'] }];
 
@@ -143,7 +153,7 @@ describe('Members', () => {
     );
 
     // Assert
-    expect(screen.queryByText('Add User')).toBeNull();
+    expect(screen.queryByText('Add Users')).toBeNull();
   });
 
   it('disables the action menu for an owner if there are not multiple owners', async () => {

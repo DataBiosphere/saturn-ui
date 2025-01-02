@@ -184,6 +184,43 @@ describe('the share workspace modal', () => {
     expect(errorMessage).not.toBeNull();
   });
 
+  it('renders EmailSelect, AclInput, and Add button correctly', async () => {
+    const acl: RawWorkspaceAcl = {};
+    mockAjax(acl, [], []);
+    render(<ShareWorkspaceModal workspace={workspace} onDismiss={jest.fn()} />);
+
+    const emailSelect = await screen.findByLabelText('Add people or groups');
+    expect(emailSelect).not.toBeNull();
+
+    const aclInput = await screen.findByLabelText('permissions for new collaborator');
+    expect(aclInput).not.toBeNull();
+
+    const addButton = await screen.findByText('Add');
+    expect(addButton).not.toBeNull();
+  });
+
+  it('adds a new collaborator when Add button is clicked', async () => {
+    const acl: RawWorkspaceAcl = {};
+    mockAjax(acl, [], []);
+    render(<ShareWorkspaceModal workspace={workspace} onDismiss={jest.fn()} />);
+
+    const emailSelect = await screen.findByLabelText('Add people or groups');
+    fireEvent.change(emailSelect, { target: { value: 'newuser@test.com' } });
+    fireEvent.keyDown(emailSelect, { key: 'Enter', code: 'Enter' });
+
+    const aclInput = await screen.findByLabelText('permissions for new collaborator');
+    fireEvent.change(aclInput, { target: { value: 'READER' } });
+
+    const list = screen.getByRole('list');
+    list.scrollTo = jest.fn();
+
+    const addButton = await screen.findByText('Add');
+    fireEvent.click(addButton);
+
+    const newCollaborator = await screen.findByText('newuser@test.com');
+    expect(newCollaborator).not.toBeNull();
+  });
+
   describe('the policy section for sharing workspaces', () => {
     const policyTitle = 'Security and controls on this workspace:';
     it('shows a policy section for Azure workspaces that have them', async () => {
