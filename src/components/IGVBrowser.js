@@ -13,7 +13,7 @@ import { knownBucketRequesterPaysStatuses, requesterPaysProjectStore } from 'src
 import * as Utils from 'src/libs/utils';
 import { RequesterPaysModal } from 'src/workspaces/common/requester-pays/RequesterPaysModal';
 
-// format for selectedFiles prop: [{ filePath, indexFilePath } }]
+// format for selectedFiles prop: [{ filePath, indexFilePath, isSignedURL } }]
 const IGVBrowser = ({ selectedFiles, refGenome: { genome, reference }, workspace, onDismiss }) => {
   const [loadingIgv, setLoadingIgv] = useState(true);
   const [requesterPaysModal, setRequesterPaysModal] = useState(null);
@@ -24,6 +24,8 @@ const IGVBrowser = ({ selectedFiles, refGenome: { genome, reference }, workspace
   const signal = useCancellation();
 
   const addTracks = withErrorReporting('Unable to add tracks')(async (tracks) => {
+    const gsTracks = tracks.filter((track) => track.isSignedURL === false);
+
     // Select one file per each bucket represented in the tracks list.
     const bucketExemplars = _.flow(
       _.map(_.get('url')),
@@ -31,18 +33,12 @@ const IGVBrowser = ({ selectedFiles, refGenome: { genome, reference }, workspace
         const [bucket] = parseGsUri(url);
         return bucket;
       })
-    )(tracks);
+    )(gsTracks);
 
     // Learn the requester pays status of each bucket.
     // Requesting a file will store its requester pays status in knownBucketRequesterPaysStatuses.
     const isRequesterPays = await Promise.all(
       _.map(async (url) => {
-        // As seen in requester-pays access URLs resolved from a DRS URI, e.g. AnVIL
-        // `userProject` is required to know who to bill
-        if (url.startsWith('https') && url.includes('requestedBy=') && url.includes('userProject=')) {
-          return true;
-        }
-
         const [bucket, file] = parseGsUri(url);
 
         if (knownBucketRequesterPaysStatuses.get()[bucket] === undefined) {
@@ -84,20 +80,23 @@ const IGVBrowser = ({ selectedFiles, refGenome: { genome, reference }, workspace
       }
     }
 
-    _.forEach(({ name, url, indexURL }) => {
+    _.forEach(({ name, url, indexURL, isSignedURL }) => {
       const [bucket] = parseGsUri(url);
       const userProjectParam = { userProject: knownBucketRequesterPaysStatuses.get()[bucket] ? userProject : undefined };
 
       // Omit residual URL parameters from access URLs resolved via DRS Hub
       const simpleUrl = _.last(url.split('/')).split('?')[0];
 
+      const fullUrl = isSignedURL ? url : Utils.mergeQueryParams(userProjectParam, url);
+      const fullIndexUrl = isSignedURL ? indexURL : Utils.mergeQueryParams(userProjectParam, indexURL);
+
       // Enable viewing features upon searching most genes, without needing to zoom several times
       const visibilityWindow = 75_000;
 
       igvBrowser.current.loadTrack({
         name: name || `${simpleUrl} (${url})`,
-        url: Utils.mergeQueryParams(userProjectParam, url),
-        indexURL: indexURL ? Utils.mergeQueryParams(userProjectParam, indexURL) : undefined,
+        url: fullUrl,
+        indexURL: indexURL ? fullIndexUrl : undefined,
         visibilityWindow,
       });
     }, tracks);
@@ -118,7 +117,9 @@ const IGVBrowser = ({ selectedFiles, refGenome: { genome, reference }, workspace
         igv.setGoogleOauthToken(() => saToken(workspace.workspace.googleProject));
         igvBrowser.current = await igv.createBrowser(containerRef.current, options);
 
-        const initialTracks = _.map(({ filePath, indexFilePath }) => ({ url: filePath, indexURL: indexFilePath }), selectedFiles);
+        const initialTracks = _.map(({ filePath, indexFilePath, isSignedURL }) => {
+          return { url: filePath, indexURL: indexFilePath, isSignedURL };
+        }, selectedFiles);
         addTracks(initialTracks);
       } catch (e) {
         reportError('Error loading IGV.js', e);

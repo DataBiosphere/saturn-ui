@@ -130,17 +130,33 @@ export const getValidIgvFiles = async (values, signal) => {
     }
   });
 
+  const fileUrls = basicFileUrls.map((fus) => {
+    const url = new URL(fus);
+    url.isSignedURL = false;
+    return url;
+  });
+
   const accessUrls = await resolveValidIgvDrsUris(values, signal);
-  const fileUrlStrings = basicFileUrls.concat(accessUrls);
-  const fileUrls = fileUrlStrings.map((fus) => new URL(fus));
+  accessUrls.forEach((accessUrl) => {
+    const url = new URL(accessUrl);
+
+    // Reliably indicate this is an access URL that should not be modified
+    // downstream, as done e.g. for some requester-pays URLS not resolved
+    // via DRS Hub.
+    url.isSignedURL = true;
+
+    fileUrls.push(url);
+  });
 
   return fileUrls.flatMap((fileUrl) => {
+    const filePath = fileUrl.href;
+    const isSignedURL = fileUrl.isSignedURL;
     if (fileUrl.pathname.endsWith('.bed')) {
-      return [{ filePath: fileUrl.href, indexFilePath: false }];
+      return [{ filePath, indexFilePath: false, isSignedURL }];
     }
     const indexFileUrl = findIndexForFile(fileUrl, fileUrls);
     if (indexFileUrl !== undefined) {
-      return [{ filePath: fileUrl.href, indexFilePath: indexFileUrl.href }];
+      return [{ filePath, indexFilePath: indexFileUrl.href, isSignedURL }];
     }
     return [];
   });
