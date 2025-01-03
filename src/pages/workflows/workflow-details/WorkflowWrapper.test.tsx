@@ -14,7 +14,7 @@ import { goToPath } from 'src/libs/nav';
 import * as Nav from 'src/libs/nav';
 import { forwardRefWithName } from 'src/libs/react-utils';
 import { snapshotsListStore, snapshotStore, TerraUser, TerraUserState, userStore } from 'src/libs/state';
-import { WorkflowsContainer, wrapWorkflows } from 'src/pages/methods/workflow-details/WorkflowWrapper';
+import { WorkflowsContainer, wrapWorkflows } from 'src/pages/workflows/workflow-details/WorkflowWrapper';
 import { asMockedFn, MockedFn, partial, renderWithAppContexts as render, SelectHelper } from 'src/testing/test-utils';
 import { useWorkspaces } from 'src/workspaces/common/state/useWorkspaces';
 import { AzureContext, WorkspaceInfo, WorkspaceWrapper } from 'src/workspaces/utils';
