@@ -13,7 +13,7 @@ import { knownBucketRequesterPaysStatuses, requesterPaysProjectStore } from 'src
 import * as Utils from 'src/libs/utils';
 import { RequesterPaysModal } from 'src/workspaces/common/requester-pays/RequesterPaysModal';
 
-// format for selectedFiles prop: [{ filePath, indexFilePath, isSignedURL } }]
+// format for selectedFiles prop: [{ filePath, indexFilePath, isSignedUrl } }]
 const IGVBrowser = ({ selectedFiles, refGenome: { genome, reference }, workspace, onDismiss }) => {
   const [loadingIgv, setLoadingIgv] = useState(true);
   const [requesterPaysModal, setRequesterPaysModal] = useState(null);
@@ -24,7 +24,7 @@ const IGVBrowser = ({ selectedFiles, refGenome: { genome, reference }, workspace
   const signal = useCancellation();
 
   const addTracks = withErrorReporting('Unable to add tracks')(async (tracks) => {
-    const gsTracks = tracks.filter((track) => track.isSignedURL === false);
+    const gsTracks = tracks.filter((track) => track.isSignedUrl === false);
 
     // Select one file per each bucket represented in the tracks list.
     const bucketExemplars = _.flow(
@@ -80,15 +80,15 @@ const IGVBrowser = ({ selectedFiles, refGenome: { genome, reference }, workspace
       }
     }
 
-    _.forEach(({ name, url, indexURL, isSignedURL }) => {
+    _.forEach(({ name, url, indexURL, isSignedUrl }) => {
       const [bucket] = parseGsUri(url);
       const userProjectParam = { userProject: knownBucketRequesterPaysStatuses.get()[bucket] ? userProject : undefined };
 
       // Omit residual URL parameters from access URLs resolved via DRS Hub
       const simpleUrl = _.last(url.split('/')).split('?')[0];
 
-      const fullUrl = isSignedURL ? url : Utils.mergeQueryParams(userProjectParam, url);
-      const fullIndexUrl = isSignedURL ? indexURL : Utils.mergeQueryParams(userProjectParam, indexURL);
+      const fullUrl = isSignedUrl ? url : Utils.mergeQueryParams(userProjectParam, url);
+      const fullIndexUrl = isSignedUrl ? indexURL : Utils.mergeQueryParams(userProjectParam, indexURL);
 
       // Enable viewing features upon searching most genes, without needing to zoom several times
       const visibilityWindow = 75_000;
@@ -117,8 +117,8 @@ const IGVBrowser = ({ selectedFiles, refGenome: { genome, reference }, workspace
         igv.setGoogleOauthToken(() => saToken(workspace.workspace.googleProject));
         igvBrowser.current = await igv.createBrowser(containerRef.current, options);
 
-        const initialTracks = _.map(({ filePath, indexFilePath, isSignedURL }) => {
-          return { url: filePath, indexURL: indexFilePath, isSignedURL };
+        const initialTracks = _.map(({ filePath, indexFilePath, isSignedUrl }) => {
+          return { url: filePath, indexURL: indexFilePath, isSignedUrl };
         }, selectedFiles);
         addTracks(initialTracks);
       } catch (e) {

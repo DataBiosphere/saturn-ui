@@ -33,7 +33,7 @@ const getCompoundExtension = (fileUrl) => {
 
 export const getIgvMetricDetails = (selectedFiles, refGenome) => {
   const igvNumTracks = selectedFiles.length;
-  const igvHasDrsUris = selectedFiles.some((f) => f.isSignedURL);
+  const igvHasDrsUris = selectedFiles.some((f) => f.isSignedUrl);
   const igvFileExtensions = selectedFiles.map((f) => getCompoundExtension(f.filePath));
   const igvIndexExtensions = selectedFiles.map((f) => getCompoundExtension(f.indexFilePath));
   const igvGenome = refGenome.genome;
@@ -155,7 +155,7 @@ export const getValidIgvFiles = async (values, signal) => {
 
   const fileUrls = basicFileUrls.map((fus) => {
     const url = new URL(fus);
-    url.isSignedURL = false;
+    url.isSignedUrl = false;
     return url;
   });
 
@@ -166,20 +166,20 @@ export const getValidIgvFiles = async (values, signal) => {
     // Reliably indicate this is an access URL that should not be modified
     // downstream, as done e.g. for some requester-pays URLS not resolved
     // via DRS Hub.
-    url.isSignedURL = true;
+    url.isSignedUrl = true;
 
     fileUrls.push(url);
   });
 
   return fileUrls.flatMap((fileUrl) => {
     const filePath = fileUrl.href;
-    const isSignedURL = fileUrl.isSignedURL;
+    const isSignedUrl = fileUrl.isSignedUrl;
     if (fileUrl.pathname.endsWith('.bed')) {
-      return [{ filePath, indexFilePath: false, isSignedURL }];
+      return [{ filePath, indexFilePath: false, isSignedUrl }];
     }
     const indexFileUrl = findIndexForFile(fileUrl, fileUrls);
     if (indexFileUrl !== undefined) {
-      return [{ filePath, indexFilePath: indexFileUrl.href, isSignedURL }];
+      return [{ filePath, indexFilePath: indexFileUrl.href, isSignedUrl }];
     }
     return [];
   });

@@ -25,17 +25,17 @@ describe('getValidIgvFiles', () => {
       {
         filePath: 'gs://bucket/test2.bam',
         indexFilePath: 'gs://bucket/test2.bai',
-        isSignedURL: false,
+        isSignedUrl: false,
       },
       {
         filePath: 'gs://bucket/test3.bam',
         indexFilePath: 'gs://bucket/test3.bam.bai',
-        isSignedURL: false,
+        isSignedUrl: false,
       },
       {
         filePath: 'gs://bucket/test4.sorted.bam',
         indexFilePath: 'gs://bucket/test4.sorted.bam.bai',
-        isSignedURL: false,
+        isSignedUrl: false,
       },
     ]);
   });
@@ -53,12 +53,12 @@ describe('getValidIgvFiles', () => {
       {
         filePath: 'gs://bucket/test2.cram',
         indexFilePath: 'gs://bucket/test2.crai',
-        isSignedURL: false,
+        isSignedUrl: false,
       },
       {
         filePath: 'gs://bucket/test3.cram',
         indexFilePath: 'gs://bucket/test3.cram.crai',
-        isSignedURL: false,
+        isSignedUrl: false,
       },
     ]);
   });
@@ -82,27 +82,27 @@ describe('getValidIgvFiles', () => {
       {
         filePath: 'gs://bucket/test2.vcf',
         indexFilePath: 'gs://bucket/test2.idx',
-        isSignedURL: false,
+        isSignedUrl: false,
       },
       {
         filePath: 'gs://bucket/test3.vcf',
         indexFilePath: 'gs://bucket/test3.vcf.idx',
-        isSignedURL: false,
+        isSignedUrl: false,
       },
       {
         filePath: 'gs://bucket/test4.vcf',
         indexFilePath: 'gs://bucket/test4.tbi',
-        isSignedURL: false,
+        isSignedUrl: false,
       },
       {
         filePath: 'gs://bucket/test5.vcf',
         indexFilePath: 'gs://bucket/test5.vcf.tbi',
-        isSignedURL: false,
+        isSignedUrl: false,
       },
       {
         filePath: 'gs://bucket/test6.vcf.gz',
         indexFilePath: 'gs://bucket/test6.vcf.gz.tbi',
-        isSignedURL: false,
+        isSignedUrl: false,
       },
     ]);
   });
@@ -112,7 +112,7 @@ describe('getValidIgvFiles', () => {
       {
         filePath: 'gs://bucket/test.bed',
         indexFilePath: false,
-        isSignedURL: false,
+        isSignedUrl: false,
       },
     ]);
   });
@@ -122,7 +122,7 @@ describe('getValidIgvFiles', () => {
       {
         filePath: 'gs://bucket/test.bed',
         indexFilePath: false,
-        isSignedURL: false,
+        isSignedUrl: false,
       },
     ]);
   });
@@ -138,7 +138,7 @@ describe('getValidIgvFiles', () => {
         {
           filePath: 'gs://datarepo-ab123456-bucket/cae37a2a-657f-4b04-9fef-59c215020078/5f5f634d-70f3-4914-9c71-9d14c7f98e60/test.bam',
           indexFilePath: 'gs://datarepo-ab123456-bucket/cae37a2a-657f-4b04-9fef-59c215020078/2eeff61f-ae9e-41ae-bb40-909ff6bdfba8/test.bam.bai',
-          isSignedURL: false,
+          isSignedUrl: false,
         },
       ]);
     });
@@ -154,7 +154,7 @@ describe('getValidIgvFiles', () => {
           filePath: 'gs://datarepo-ab123456-bucket/cae37a2a-657f-4b04-9fef-59c215020078/5f5f634d-70f3-4914-9c71-9d14c7f98e60/path/to/test.bam',
           indexFilePath:
             'gs://datarepo-ab123456-bucket/cae37a2a-657f-4b04-9fef-59c215020078/2eeff61f-ae9e-41ae-bb40-909ff6bdfba8/path/to/test.bam.bai',
-          isSignedURL: false,
+          isSignedUrl: false,
         },
       ]);
     });
@@ -169,7 +169,7 @@ describe('getValidIgvFiles', () => {
         {
           filePath: 'gs://datarepo-dev-ab123456-bucket/cae37a2a-657f-4b04-9fef-59c215020078/5f5f634d-70f3-4914-9c71-9d14c7f98e60/test.bam',
           indexFilePath: 'gs://datarepo-dev-ab123456-bucket/cae37a2a-657f-4b04-9fef-59c215020078/2eeff61f-ae9e-41ae-bb40-909ff6bdfba8/test.bam.bai',
-          isSignedURL: false,
+          isSignedUrl: false,
         },
       ]);
     });
@@ -189,17 +189,17 @@ describe('getValidIgvFilesFromAttributeValues', () => {
       {
         filePath: 'gs://bucket/test1.bed',
         indexFilePath: false,
-        isSignedURL: false,
+        isSignedUrl: false,
       },
       {
         filePath: 'gs://bucket/test2.bed',
         indexFilePath: false,
-        isSignedURL: false,
+        isSignedUrl: false,
       },
       {
         filePath: 'gs://bucket/test3.bed',
         indexFilePath: false,
-        isSignedURL: false,
+        isSignedUrl: false,
       },
     ]);
   });
@@ -286,7 +286,7 @@ describe('getValidIgvFilesFromAttributeValues', () => {
       {
         filePath: 'https://bucket/foo.vcf.gz?requestedBy=user@domain.tls&userProject=my-billing-project&signature=secret',
         indexFilePath: 'https://bucket/foo.vcf.gz.tbi?requestedBy=user@domain.tls&userProject=my-billing-project&signature=secret',
-        isSignedURL: true,
+        isSignedUrl: true,
       },
     ]);
   });
