@@ -8,7 +8,7 @@ import * as Nav from 'src/libs/nav';
 const TAB_LINKS = {
   datasets: 'library-datasets',
   'featured workspaces': 'library-showcase',
-  'code & workflows': 'library-code',
+  workflows: 'library-workflows',
 };
 
 export const libraryTopMatter = (activeTab) => {
