@@ -579,7 +579,7 @@ describe('workflows table', () => {
       render(<WorkflowList queryParams={{ tab: 'public' }} />);
     });
 
-    await user.click(screen.getByText('Snapshots'));
+    await user.click(screen.getByText('Versions'));
 
     // Assert
     checkOrder('revali method 2', 'revali method', 'sorting method', 'daruk method');
@@ -596,8 +596,8 @@ describe('workflows table', () => {
       render(<WorkflowList queryParams={{ tab: 'public' }} />);
     });
 
-    await user.click(screen.getByText('Snapshots'));
-    await user.click(screen.getByText('Snapshots'));
+    await user.click(screen.getByText('Versions'));
+    await user.click(screen.getByText('Versions'));
 
     // Assert
     checkOrder('daruk method', 'sorting method', 'revali method', 'revali method 2');
