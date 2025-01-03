@@ -23,6 +23,29 @@ const splitExtension = (fileUrl) => {
   return [base, extension];
 };
 
+/** Get file extension from URL, even if two-part / compound (e.g. "vcf.gz") */
+const getCompoundExtension = (fileUrl) => {
+  const splitPath = fileUrl.split('?')[0].split('.');
+  const numExtensions = splitPath.length > 2 ? 2 : 1;
+  const compoundExtension = splitPath.slice(-1 * numExtensions).join('.');
+  return compoundExtension;
+};
+
+export const getIgvMetricDetails = (selectedFiles, refGenome) => {
+  const igvNumTracks = selectedFiles.length;
+  const igvHasDrsUris = selectedFiles.some((f) => f.isSignedURL);
+  const igvFileExtensions = selectedFiles.map((f) => getCompoundExtension(f.filePath));
+  const igvIndexExtensions = selectedFiles.map((f) => getCompoundExtension(f.indexFilePath));
+  const igvGenome = refGenome.genome;
+  return {
+    igvNumTracks,
+    igvFileExtensions,
+    igvIndexExtensions,
+    igvHasDrsUris,
+    igvGenome,
+  };
+};
+
 const UUID_PATTERN = '[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}';
 
 const UUID_REGEX = new RegExp(UUID_PATTERN);
