@@ -135,7 +135,7 @@ export const WorkflowsLibrary = () => {
   return (
     <FooterWrapper alwaysShow>
       {libraryTopMatter('workflows')}
-      <div role='main' style={{ flexGrow: 1 }}>
+      <main style={{ flexGrow: 1 }}>
         <div style={{ display: 'flex', flexDirection: 'row', height: '100%', flex: 1 }}>
           <div style={{ width: '80%', display: 'flex' }}>
             <div style={{ flex: 1, margin: '30px 0 30px 40px' }}>
@@ -216,7 +216,7 @@ export const WorkflowsLibrary = () => {
             </p>
           </div>
         </div>
-      </div>
+      </main>
     </FooterWrapper>
   );
 };
