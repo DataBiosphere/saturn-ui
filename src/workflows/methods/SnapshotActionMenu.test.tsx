@@ -58,7 +58,7 @@ describe('version action menu', () => {
     // Act
     await user.click(snapshotActionMenu);
 
-    const editPermissionsButton = screen.getByRole('button', { name: 'Edit snapshot permissions' });
+    const editPermissionsButton = screen.getByRole('button', { name: 'Edit version permissions' });
 
     await user.pointer({ target: editPermissionsButton });
 
