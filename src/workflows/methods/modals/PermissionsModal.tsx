@@ -31,7 +31,7 @@ import {
 import validate from 'validate.js';
 
 type WorkflowPermissionsModalProps = {
-  snapshotOrNamespace: 'Snapshot' | 'Namespace';
+  snapshotOrNamespace: 'Version' | 'Namespace';
   namespace: string;
   name: string;
   selectedSnapshot: number;
