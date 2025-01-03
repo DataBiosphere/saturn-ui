@@ -214,7 +214,7 @@ export const WorkflowsContainer = (props: WorkflowContainerProps) => {
             Nav.getLink(`workflow-${currentTab}`, { namespace, name, snapshotId: selectedSnapshot }),
         },
         [
-          label({ htmlFor: snapshotLabelId, style: { marginRight: '1rem' } }, ['Snapshot:']),
+          label({ htmlFor: snapshotLabelId, style: { marginRight: '1rem' } }, ['Version:']),
           div({ style: { width: 100 } }, [
             h(Select, {
               id: snapshotLabelId,
