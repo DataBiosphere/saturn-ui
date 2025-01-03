@@ -35,6 +35,6 @@ describe('Showcase', () => {
     });
 
     const codeAndWorkflows = await screen.getByRole('link', { name: 'workflows' });
-    expect(codeAndWorkflows).toHaveAttribute('href', 'library-code');
+    expect(codeAndWorkflows).toHaveAttribute('href', 'library-workflows');
   });
 });

@@ -15,13 +15,13 @@ import * as Group from 'src/pages/groups/GroupDetailsPage';
 import * as Groups from 'src/pages/groups/GroupListPage';
 import * as ImportWorkflow from 'src/pages/ImportWorkflow/ImportWorkflow';
 import * as LandingPage from 'src/pages/LandingPage';
-import * as Code from 'src/pages/library/Code';
 import * as CreateDataset from 'src/pages/library/data-catalog/create-dataset/CreateDatasetPage';
 import * as DatasetBuilderDetails from 'src/pages/library/dataset-builder/DatasetBuilderDetailsPage';
 import * as DatasetBuilder from 'src/pages/library/dataset-builder/DatasetBuilderPage';
 import * as Datasets from 'src/pages/library/Datasets';
 import * as DataExplorer from 'src/pages/library/datasets/DataExplorer';
 import * as Showcase from 'src/pages/library/Showcase';
+import * as WorkflowsLibrary from 'src/pages/library/WorkflowsLibrary';
 import * as WorkflowDetails from 'src/pages/methods/workflow-details/WorkflowSummary';
 import * as WorkflowWdl from 'src/pages/methods/workflow-details/WorkflowWdl';
 import * as WorkflowList from 'src/pages/methods/WorkflowList';
@@ -69,7 +69,6 @@ const routes = _.flatten([
   Group.navPaths,
   AppLauncher.navPaths,
   TermsOfService.navPaths,
-  Code.navPaths,
   DataBrowserDetails.navPaths,
   DataBrowserPreview.navPaths,
   DatasetBuilder.navPaths,
@@ -88,6 +87,7 @@ const routes = _.flatten([
   WorkflowsApp.navPaths,
   SignOutPage.navPaths,
   Support.navPaths,
+  WorkflowsLibrary.navPaths,
   WorkflowWdl.navPaths,
   NotFound.navPaths, // must be last
 ]);
