@@ -17,7 +17,7 @@ export interface SnapshotActionMenuProps {
   isSnapshotOwner: boolean;
 
   /**
-   * The action to be performed if the "Edit snapshot permissions" button is
+   * The action to be performed if the "Edit version permissions" button is
    * pressed.
    */
   onEditPermissions: () => void;
@@ -74,7 +74,7 @@ const SnapshotActionMenu = (props: SnapshotActionMenuProps): ReactNode => {
         onClick={onEditPermissions}
       >
         {makeMenuIcon('cog')}
-        Edit snapshot permissions
+        Edit version permissions
       </MenuButton>
     </>
   );

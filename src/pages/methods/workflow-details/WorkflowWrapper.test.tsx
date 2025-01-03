@@ -1191,7 +1191,7 @@ describe('workflows container', () => {
     await user.click(screen.getByRole('button', { name: 'Edit version permissions' }));
 
     // Assert
-    expect(screen.getByText('Edit Snapshot Permissions'));
+    expect(screen.getByText('Edit Version Permissions'));
   });
 
   it('hides edit permissions modal when it is dismissed', async () => {
@@ -1220,7 +1220,7 @@ describe('workflows container', () => {
     await user.click(screen.getByRole('button', { name: 'Cancel' }));
 
     // Assert
-    expect(screen.queryByText('Edit Snapshot Permissions')).not.toBeInTheDocument();
+    expect(screen.queryByText('Edit Version Permissions')).not.toBeInTheDocument();
   });
 
   it("allows the currently displayed snapshot's permissions to be edited", async () => {
