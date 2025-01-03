@@ -362,7 +362,7 @@ const getColumns = (
     field: 'numSnapshots',
     headerRenderer: () => (
       <WorkflowTableHeader sort={sort} field='numSnapshots' onSort={onSort}>
-        Snapshots
+        Versions
       </WorkflowTableHeader>
     ),
     cellRenderer: ({ rowIndex }) => {

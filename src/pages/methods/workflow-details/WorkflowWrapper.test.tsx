@@ -651,7 +651,7 @@ describe('workflows container', () => {
       mockSnapshot.synopsis,
       mockSnapshot.documentation,
       mockSnapshot.payload,
-      "groot's new improved snapshot"
+      "groot's new improved version"
     );
 
     expect(Nav.goToPath).toHaveBeenCalledWith('workflow-dashboard', {
