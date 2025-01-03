@@ -91,6 +91,67 @@ describe('Directory', () => {
     expect(renderedSubdirectories).toEqual(['directory1', 'directory2', 'directory3']);
   });
 
+  it('fetches and renders contents for parent directory of selected directory', () => {
+    // Arrange
+    const directoriesIn = (path) => {
+      switch (path) {
+        case 'directory1/':
+          return [
+            {
+              path: 'directory1/test1',
+            },
+            {
+              path: 'directory1/test2',
+            },
+          ];
+        case 'directory1/test1/':
+          return [
+            {
+              path: 'directory1/test1/abc/',
+            },
+            {
+              path: 'directory1/test1/xyz/',
+            },
+          ];
+        default:
+          return [];
+      }
+    };
+
+    asMockedFn(useDirectoriesInDirectory).mockImplementation((_, path) => {
+      return {
+        state: { directories: directoriesIn(path), status: 'Ready' },
+        hasNextPage: undefined,
+        loadNextPage: () => Promise.resolve(),
+        loadAllRemainingItems: () => Promise.resolve(),
+        reload: () => Promise.resolve(),
+      };
+    });
+
+    render(
+      ul({ role: 'tree' }, [
+        h(Directory, {
+          activeDescendant: 'node-0',
+          id: 'node-0',
+          level: 0,
+          path: 'directory1/',
+          provider: mockFileBrowserProvider,
+          reloadRequests: subscribable(),
+          rootLabel: 'Workspace bucket',
+          selectedDirectory: 'directory1/test1/abc/',
+          setActiveDescendant: () => {},
+          onError: () => {},
+          onSelectDirectory: jest.fn(),
+        }),
+      ])
+    );
+
+    // Assert
+    const subdirectoryList = screen.getByLabelText('directory1 subdirectories');
+    const renderedSubdirectories = Array.from(subdirectoryList.children).map((el) => el.children[1].textContent);
+    expect(renderedSubdirectories).toEqual(['test1', 'test2']);
+  });
+
   describe('when directory name is clicked', () => {
     let onSelectDirectory;
 

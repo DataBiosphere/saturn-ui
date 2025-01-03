@@ -1,13 +1,17 @@
 import { h } from 'react-hyperscript-helpers';
-import { useFilesInDirectory } from 'src/components/file-browser/file-browser-hooks';
+import { useDirectoriesInDirectory, useFilesInDirectory } from 'src/components/file-browser/file-browser-hooks';
 import FileBrowser from 'src/components/file-browser/FileBrowser';
 import FilesTable from 'src/components/file-browser/FilesTable';
-import FileBrowserProvider, { FileBrowserFile } from 'src/libs/ajax/file-browser-providers/FileBrowserProvider';
+import FileBrowserProvider, {
+  FileBrowserDirectory,
+  FileBrowserFile,
+} from 'src/libs/ajax/file-browser-providers/FileBrowserProvider';
 import { asMockedFn, renderWithAppContexts as render } from 'src/testing/test-utils';
 import { RequesterPaysModal } from 'src/workspaces/common/requester-pays/RequesterPaysModal';
 
 jest.mock('src/components/file-browser/file-browser-hooks', () => ({
   ...jest.requireActual('src/components/file-browser/file-browser-hooks'),
+  useDirectoriesInDirectory: jest.fn(),
   useFilesInDirectory: jest.fn(),
 }));
 
@@ -29,6 +33,7 @@ jest.mock('src/workspaces/common/requester-pays/RequesterPaysModal', (): Request
   };
 });
 
+type UseDirectoriesInDirectoryResult = ReturnType<typeof useDirectoriesInDirectory>;
 type UseFilesInDirectoryResult = ReturnType<typeof useFilesInDirectory>;
 
 describe('FileBrowser', () => {
@@ -36,6 +41,12 @@ describe('FileBrowser', () => {
 
   it('renders files', () => {
     // Arrange
+    const directories: FileBrowserDirectory[] = [
+      {
+        path: 'path/to/folder/',
+      },
+    ];
+
     const files: FileBrowserFile[] = [
       {
         path: 'file.txt',
@@ -47,6 +58,14 @@ describe('FileBrowser', () => {
       },
     ];
 
+    const useDirectoriesInDirectoryResult: UseDirectoriesInDirectoryResult = {
+      state: { directories, status: 'Ready' },
+      hasNextPage: false,
+      loadNextPage: () => Promise.resolve(),
+      loadAllRemainingItems: () => Promise.resolve(),
+      reload: () => Promise.resolve(),
+    };
+
     const useFilesInDirectoryResult: UseFilesInDirectoryResult = {
       state: { files, status: 'Ready' },
       hasNextPage: false,
@@ -55,6 +74,7 @@ describe('FileBrowser', () => {
       reload: () => Promise.resolve(),
     };
 
+    asMockedFn(useDirectoriesInDirectory).mockReturnValue(useDirectoriesInDirectoryResult);
     asMockedFn(useFilesInDirectory).mockReturnValue(useFilesInDirectoryResult);
 
     // Act
@@ -71,21 +91,7 @@ describe('FileBrowser', () => {
     );
 
     // Assert
-    expect(FilesTable).toHaveBeenCalledWith(
-      expect.objectContaining({
-        files: [
-          {
-            path: 'file.txt',
-            url: 'gs://test-bucket/file.txt',
-            contentType: 'text/plain',
-            size: 1024,
-            createdAt: 1667408400000,
-            updatedAt: 1667408400000,
-          },
-        ],
-      }),
-      expect.anything()
-    );
+    expect(FilesTable).toHaveBeenCalledWith(expect.objectContaining({ directories, files }), expect.anything());
   });
 
   it('prompts to select workspace on requester pays errors', () => {

@@ -5,7 +5,7 @@ import { useState } from 'react';
 import { h } from 'react-hyperscript-helpers';
 import { basename } from 'src/components/file-browser/file-browser-utils';
 import FilesTable, { FilesTableProps } from 'src/components/file-browser/FilesTable';
-import { FileBrowserFile } from 'src/libs/ajax/file-browser-providers/FileBrowserProvider';
+import { FileBrowserDirectory, FileBrowserFile } from 'src/libs/ajax/file-browser-providers/FileBrowserProvider';
 import { renderWithAppContexts as render } from 'src/testing/test-utils';
 
 type ClipboardPolyfillExports = typeof import('clipboard-polyfill/text');
@@ -25,6 +25,15 @@ jest.mock('react-virtualized', () => ({
 }));
 
 describe('FilesTable', () => {
+  const directories: FileBrowserDirectory[] = [
+    {
+      path: 'path/to/folder1/',
+    },
+    {
+      path: 'path/to/folder2/',
+    },
+  ];
+
   const files: FileBrowserFile[] = [
     {
       path: 'path/to/file1.txt',
@@ -52,48 +61,49 @@ describe('FilesTable', () => {
     },
   ];
 
-  it.each([
-    { field: 'size', columnIndex: 2, expected: ['1 KB', '1 MB', '1 GB'] },
-    // { field: 'last modified', columnIndex: 2, expected: [] }
-  ])('renders a column with file $field', ({ columnIndex, expected }) => {
+  it('renders a column with size information', () => {
     // Act
     render(
       h(FilesTable, {
+        directories,
         files,
         selectedFiles: {},
         setSelectedFiles: () => {},
+        onClickDirectory: jest.fn(),
         onClickFile: jest.fn(),
         onRenameFile: () => {},
       })
     );
 
     const tableRows = screen.getAllByRole('row').slice(1); // skip header row
-    const cellsInColumn = tableRows.map((row) => getAllByRole(row, 'cell')[columnIndex]);
+    const cellsInColumn = tableRows.map((row) => getAllByRole(row, 'cell')[2]);
     const valuesInColumn = cellsInColumn.map((cell) => cell.textContent);
 
     // Assert
-    expect(valuesInColumn).toEqual(expected);
+    expect(valuesInColumn).toEqual(['--', '--', '1 KB', '1 MB', '1 GB']);
   });
 
   it('renders file names as links', () => {
     // Act
     render(
       h(FilesTable, {
+        directories,
         files,
         selectedFiles: {},
         setSelectedFiles: () => {},
+        onClickDirectory: jest.fn(),
         onClickFile: jest.fn(),
         onRenameFile: () => {},
       })
     );
 
-    const tableRows = screen.getAllByRole('row').slice(1); // skip header row
-    const fileNameCells = tableRows.map((row) => getAllByRole(row, 'cell')[1]);
-    const fileLinks = fileNameCells.map((cell) => getByRole(cell, 'link'));
+    const tableRows = screen.getAllByRole('row').slice(3); // skip header row and directories
+    const nameCells = tableRows.map((row) => getAllByRole(row, 'cell')[1]);
+    const links = nameCells.map((cell) => getByRole(cell, 'link'));
 
     // Assert
-    expect(fileLinks.map((link) => link.textContent)).toEqual(['file1.txt', 'file2.bam', 'file3.vcf']);
-    expect(fileLinks.map((link) => link.getAttribute('href'))).toEqual([
+    expect(links.map((link) => link.textContent)).toEqual(['file1.txt', 'file2.bam', 'file3.vcf']);
+    expect(links.map((link) => link.getAttribute('href'))).toEqual([
       'gs://test-bucket/path/to/file1.txt',
       'gs://test-bucket/path/to/file2.bam',
       'gs://test-bucket/path/to/file3.vcf',
@@ -106,21 +116,60 @@ describe('FilesTable', () => {
 
     render(
       h(FilesTable, {
+        directories,
         files,
         selectedFiles: {},
         setSelectedFiles: () => {},
+        onClickDirectory: jest.fn(),
         onClickFile: jest.fn(),
         onRenameFile: () => {},
       })
     );
 
     // Act
-    const firstRow = screen.getAllByRole('row')[1]; // skip header row
-    const copyUrlButton = within(firstRow).getByLabelText('Copy file URL to clipboard');
+    const thirdRow = screen.getAllByRole('row')[3]; // skip header row and directories
+    const copyUrlButton = within(thirdRow).getByLabelText('Copy file URL to clipboard');
     await user.click(copyUrlButton);
 
     // Assert
     expect(clipboard.writeText).toHaveBeenCalledWith('gs://test-bucket/path/to/file1.txt');
+  });
+
+  it('calls onClickDirectory callback when a directory link is clicked', async () => {
+    // Arrange
+    const user = userEvent.setup();
+
+    const onClickDirectory = jest.fn();
+    render(
+      h(FilesTable, {
+        directories,
+        files,
+        selectedFiles: {},
+        setSelectedFiles: () => {},
+        onClickDirectory,
+        onClickFile: jest.fn(),
+        onRenameFile: () => {},
+      })
+    );
+
+    const tableRows = screen.getAllByRole('row').slice(1, 3); // skip header row and files
+    const nameCells = tableRows.map((row) => getAllByRole(row, 'cell')[1]);
+    const links = nameCells.map((cell) => getByRole(cell, 'button'));
+
+    // Act
+    await user.click(links[0]);
+    await user.click(links[1]);
+
+    // Assert
+    expect(onClickDirectory).toHaveBeenCalledTimes(2);
+    expect(onClickDirectory.mock.calls.map((call) => call[0])).toEqual([
+      {
+        path: 'path/to/folder1/',
+      },
+      {
+        path: 'path/to/folder2/',
+      },
+    ]);
   });
 
   it('calls onClickFile callback when a file link is clicked', async () => {
@@ -130,21 +179,23 @@ describe('FilesTable', () => {
     const onClickFile = jest.fn();
     render(
       h(FilesTable, {
+        directories,
         files,
         selectedFiles: {},
         setSelectedFiles: () => {},
+        onClickDirectory: jest.fn(),
         onClickFile,
         onRenameFile: () => {},
       })
     );
 
-    const tableRows = screen.getAllByRole('row').slice(1); // skip header row
-    const fileNameCells = tableRows.map((row) => getAllByRole(row, 'cell')[1]);
-    const fileLinks = fileNameCells.map((cell) => getByRole(cell, 'link'));
+    const tableRows = screen.getAllByRole('row').slice(3); // skip header row and directories
+    const nameCells = tableRows.map((row) => getAllByRole(row, 'cell')[1]);
+    const links = nameCells.map((cell) => getByRole(cell, 'link'));
 
     // Act
-    await user.click(fileLinks[0]);
-    await user.click(fileLinks[1]);
+    await user.click(links[0]);
+    await user.click(links[1]);
 
     // Assert
     expect(onClickFile).toHaveBeenCalledTimes(2);
@@ -176,9 +227,11 @@ describe('FilesTable', () => {
       const onRenameFile = jest.fn();
       render(
         h(FilesTable, {
+          directories,
           files,
           selectedFiles: {},
           setSelectedFiles: () => {},
+          onClickDirectory: jest.fn(),
           onClickFile: () => {},
           onRenameFile,
         })
@@ -216,7 +269,9 @@ describe('FilesTable', () => {
       render(
         h(TestComponent, {
           initialSelectedFiles: { [files[0].path]: files[0] },
+          directories,
           files,
+          onClickDirectory: jest.fn(),
           onClickFile: () => {},
           onRenameFile: () => {},
         })
