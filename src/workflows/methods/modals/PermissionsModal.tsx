@@ -31,7 +31,7 @@ import {
 import validate from 'validate.js';
 
 type WorkflowPermissionsModalProps = {
-  snapshotOrNamespace: 'Version' | 'Namespace';
+  versionOrNamespace: 'Version' | 'Namespace';
   namespace: string;
   name: string;
   selectedSnapshot: number;
@@ -167,7 +167,7 @@ const CurrentUsers = (props: CurrentUsersProps) => {
 };
 
 export const PermissionsModal = (props: WorkflowPermissionsModalProps) => {
-  const { snapshotOrNamespace, namespace, name, selectedSnapshot, setPermissionsModalOpen, refresh } = props;
+  const { versionOrNamespace, namespace, name, selectedSnapshot, setPermissionsModalOpen, refresh } = props;
   const signal: AbortSignal = useCancellation();
   const [searchValue, setSearchValue] = useState<string>('');
   const [permissions, setPermissions] = useState<WorkflowsPermissions>([]);
@@ -234,7 +234,7 @@ export const PermissionsModal = (props: WorkflowPermissionsModalProps) => {
 
   return (
     <Modal
-      title={`Edit ${snapshotOrNamespace} Permissions`}
+      title={`Edit ${versionOrNamespace} Permissions`}
       onDismiss={() => setPermissionsModalOpen(false)}
       width='30rem'
       showButtons={false}

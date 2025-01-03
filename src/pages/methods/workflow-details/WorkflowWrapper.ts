@@ -290,7 +290,7 @@ export const WorkflowsContainer = (props: WorkflowContainerProps) => {
       }),
     permissionsModalOpen &&
       h(PermissionsModal, {
-        snapshotOrNamespace: 'Version',
+        versionOrNamespace: 'Version',
         namespace,
         name,
         selectedSnapshot,
