@@ -2,7 +2,7 @@ import { act, screen } from '@testing-library/react';
 import userEvent, { UserEvent } from '@testing-library/user-event';
 import React from 'react';
 import { renderWithAppContexts as render } from 'src/testing/test-utils';
-import SnapshotActionMenu from 'src/workflows/SnapshotActionMenu';
+import VersionActionMenu from 'src/workflows/VersionActionMenu';
 
 const mockOnDelete = jest.fn();
 const mockOnEditPermissions = jest.fn();
@@ -14,7 +14,7 @@ describe('version action menu', () => {
     // Act
     await act(async () => {
       render(
-        <SnapshotActionMenu
+        <VersionActionMenu
           disabled
           isSnapshotOwner
           onEditPermissions={mockOnEditPermissions}
@@ -39,7 +39,7 @@ describe('version action menu', () => {
     // Act
     await act(async () => {
       render(
-        <SnapshotActionMenu
+        <VersionActionMenu
           isSnapshotOwner
           onEditPermissions={mockOnEditPermissions}
           onDelete={mockOnDelete}
@@ -103,7 +103,7 @@ describe('version action menu', () => {
     // Act
     await act(async () => {
       render(
-        <SnapshotActionMenu
+        <VersionActionMenu
           isSnapshotOwner={false}
           onEditPermissions={mockOnEditPermissions}
           onDelete={mockOnDelete}
@@ -170,7 +170,7 @@ describe('version action menu edit version permissions button', () => {
     // Act
     await act(async () => {
       render(
-        <SnapshotActionMenu
+        <VersionActionMenu
           isSnapshotOwner
           onEditPermissions={mockOnEditPermissions}
           onDelete={mockOnDelete}
@@ -197,7 +197,7 @@ describe('version action menu delete version button', () => {
     // Act
     await act(async () => {
       render(
-        <SnapshotActionMenu
+        <VersionActionMenu
           isSnapshotOwner
           onEditPermissions={mockOnEditPermissions}
           onDelete={mockOnDelete}
@@ -225,7 +225,7 @@ describe('version action menu save as button', () => {
     // Act
     await act(async () => {
       render(
-        <SnapshotActionMenu
+        <VersionActionMenu
           isSnapshotOwner
           onEditPermissions={mockOnEditPermissions}
           onDelete={mockOnDelete}
@@ -252,7 +252,7 @@ describe('version action menu edit button', () => {
     // Act
     await act(async () => {
       render(
-        <SnapshotActionMenu
+        <VersionActionMenu
           isSnapshotOwner
           onEditPermissions={mockOnEditPermissions}
           onDelete={mockOnDelete}

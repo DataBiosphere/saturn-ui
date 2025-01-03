@@ -20,11 +20,11 @@ import * as Style from 'src/libs/style';
 import * as Utils from 'src/libs/utils';
 import { withBusyState } from 'src/libs/utils';
 import { CreateWorkflowModal } from 'src/workflows/modals/CreateWorkflowModal';
-import DeleteSnapshotModal from 'src/workflows/modals/DeleteSnapshotModal';
+import DeleteVersionModal from 'src/workflows/modals/DeleteVersionModal';
 import { EditWorkflowModal } from 'src/workflows/modals/EditWorkflowModal';
 import ExportWorkflowModal from 'src/workflows/modals/ExportWorkflowModal';
 import { PermissionsModal } from 'src/workflows/modals/PermissionsModal';
-import SnapshotActionMenu from 'src/workflows/SnapshotActionMenu';
+import VersionActionMenu from 'src/workflows/VersionActionMenu';
 import { isGoogleWorkspace, WorkspaceInfo, WorkspaceWrapper } from 'src/workspaces/utils';
 import * as WorkspaceUtils from 'src/workspaces/utils';
 
@@ -240,7 +240,7 @@ export const WorkflowsContainer = (props: WorkflowContainerProps) => {
             ['Export to Workspace']
           ),
           div({ style: { marginLeft: '1rem', marginRight: '0.5rem' } }, [
-            h(SnapshotActionMenu, {
+            h(VersionActionMenu, {
               disabled: !snapshot,
               isSnapshotOwner,
               onEditPermissions: () => setPermissionsModalOpen(true),
@@ -274,7 +274,7 @@ export const WorkflowsContainer = (props: WorkflowContainerProps) => {
         onDismiss: () => setExportingWorkflow(false),
       }),
     showDeleteModal &&
-      h(DeleteSnapshotModal, {
+      h(DeleteVersionModal, {
         namespace,
         name,
         snapshotId: `${selectedSnapshot}`,
