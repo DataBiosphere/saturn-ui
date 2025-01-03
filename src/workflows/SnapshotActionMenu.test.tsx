@@ -2,7 +2,7 @@ import { act, screen } from '@testing-library/react';
 import userEvent, { UserEvent } from '@testing-library/user-event';
 import React from 'react';
 import { renderWithAppContexts as render } from 'src/testing/test-utils';
-import SnapshotActionMenu from 'src/workflows/methods/SnapshotActionMenu';
+import SnapshotActionMenu from 'src/workflows/SnapshotActionMenu';
 
 const mockOnDelete = jest.fn();
 const mockOnEditPermissions = jest.fn();

@@ -13,7 +13,7 @@ import { forwardRefWithName, useStore } from 'src/libs/react-utils';
 import { snapshotStore } from 'src/libs/state';
 import * as Style from 'src/libs/style';
 import { wrapWorkflows } from 'src/pages/workflows/workflow-details/WorkflowWrapper';
-import { WorkflowRightBoxSection } from 'src/workflows/methods/WorkflowRightBoxSection';
+import { WorkflowRightBoxSection } from 'src/workflows/WorkflowRightBoxSection';
 import { InfoRow } from 'src/workspaces/dashboard/InfoRow';
 
 export const BaseWorkflowSummary = () => {

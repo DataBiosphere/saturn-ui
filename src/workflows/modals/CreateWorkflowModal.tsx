@@ -13,7 +13,7 @@ import {
   WdlBoxSection,
   workflowModalCommonConstraints,
   WorkflowModalCommonProps,
-} from 'src/workflows/methods/modals/WorkflowModalCommon';
+} from 'src/workflows/modals/WorkflowModalCommon';
 import validate from 'validate.js';
 
 export interface CreateWorkflowModalProps extends WorkflowModalCommonProps {
