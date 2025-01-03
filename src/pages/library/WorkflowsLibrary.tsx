@@ -69,7 +69,7 @@ const WorkflowSourceBox = (props: WorkflowSourceBoxProps) => {
       >
         <div style={{ marginLeft: '10px', marginTop: '4px' }}>
           <LogoTile logoFilePath={props.logoFilePath} />
-          <div style={{ fontSize: '1rem', fontWeight: 600, color: colors.accent(1), marginTop: '5px' }}>
+          <div style={{ fontSize: '1rem', fontWeight: 600, color: colors.accent(1.1), marginTop: '5px' }}>
             {props.title}
           </div>
           <p style={{ height: '55px' }}>{props.description}</p>
@@ -171,28 +171,44 @@ export const WorkflowsLibrary = () => {
           >
             <div style={{ fontSize: '1rem', fontWeight: 600 }}>Helpful Workflow support links</div>
             <p>Learn how to configure your workflow analysis, including options to save time and money.</p>
-            <p>
+            <div>
               <ul>
                 <li>
-                  <Link href='https://support.terra.bio/hc/en-us/articles/4411260552603' {...Utils.newTabLinkProps}>
+                  <Link
+                    style={{ color: colors.accent(1.1) }}
+                    href='https://support.terra.bio/hc/en-us/articles/4411260552603'
+                    {...Utils.newTabLinkProps}
+                  >
                     Importing Workflows in Terra
                   </Link>
                 </li>
                 <li>
-                  <Link href='https://support.terra.bio/hc/en-us/articles/360036379771' {...Utils.newTabLinkProps}>
+                  <Link
+                    style={{ color: colors.accent(1.1) }}
+                    href='https://support.terra.bio/hc/en-us/articles/360036379771'
+                    {...Utils.newTabLinkProps}
+                  >
                     Overview: Running Workflows in Terra
                   </Link>
                 </li>
                 <li>
-                  <Link href='https://support.terra.bio/hc/en-us/sections/4408366335131' {...Utils.newTabLinkProps}>
+                  <Link
+                    style={{ color: colors.accent(1.1) }}
+                    href='https://support.terra.bio/hc/en-us/sections/4408366335131'
+                    {...Utils.newTabLinkProps}
+                  >
                     Workflows setup
                   </Link>
                 </li>
               </ul>
-            </p>
+            </div>
             <p>
               For more documentation on Workflows, visit the
-              <Link href='https://support.terra.bio/hc/en-us/sections/360004147011' {...Utils.newTabLinkProps}>
+              <Link
+                style={{ color: colors.accent(1.1) }}
+                href='https://support.terra.bio/hc/en-us/sections/360004147011'
+                {...Utils.newTabLinkProps}
+              >
                 {' '}
                 Terra Support Site
               </Link>
