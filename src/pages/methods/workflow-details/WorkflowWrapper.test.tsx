@@ -319,7 +319,7 @@ describe('workflow wrapper', () => {
     expect(screen.queryByText('children')).not.toBeInTheDocument();
 
     // should only display the 404 error page, with the correct info filled in
-    expect(screen.getByText('Could not display method')).toBeInTheDocument();
+    expect(screen.getByText('Could not display workflow')).toBeInTheDocument();
     expect(
       screen.getByText(
         'You cannot access this method because either it does not exist or you do not have access to it.'
@@ -328,12 +328,12 @@ describe('workflow wrapper', () => {
     expect(screen.getByText('hello@world.org')).toBeInTheDocument();
     expect(
       screen.getByText(
-        'To view a snapshot of an existing method, an owner of the snapshot must give you permission to view it or make it publicly readable.'
+        'To view a version of an existing workflow, an owner of the version must give you permission to view it or make it publicly readable.'
       )
     ).toBeInTheDocument();
-    expect(screen.getByText('The method may also have been deleted by one of its owners.')).toBeInTheDocument();
+    expect(screen.getByText('The workflow may also have been deleted by one of its owners.')).toBeInTheDocument();
 
-    const returnToMethodsListButton = screen.getByRole('link', { name: 'Return to Methods List' });
+    const returnToMethodsListButton = screen.getByRole('link', { name: 'Return to Workflows List' });
     expect(returnToMethodsListButton).toBeInTheDocument();
 
     // mock link path based on internal nav path name
@@ -863,7 +863,7 @@ describe('workflows container', () => {
     await user.click(screen.getByRole('button', { name: 'Delete version' })); // confirm deletion
 
     // Assert
-    expect(errorWatcher).toHaveBeenCalledWith('Error deleting snapshot', expect.anything());
+    expect(errorWatcher).toHaveBeenCalledWith('Error deleting version', expect.anything());
   });
 
   it('displays the snapshot not found page if a snapshot does not exist or the user does not have access', async () => {
