@@ -52,7 +52,7 @@ interface WrappedComponentProps {
 }
 
 interface NotFoundMessageProps {
-  subject: 'snapshot' | 'method';
+  subject: 'version' | 'workflow';
 }
 
 type WrappedWorkflowComponent = (props: WrappedComponentProps) => ReactNode;
@@ -99,7 +99,7 @@ export const wrapWorkflows = (opts: WrapWorkflowOptions) => {
           ]),
         ]),
         busy && spinnerOverlay,
-        methodNotFound && h(NotFoundMessage, { subject: 'method' }),
+        methodNotFound && h(NotFoundMessage, { subject: 'workflow' }),
         snapshotsList &&
           div({ role: 'main', style: { flex: 1, display: 'flex', flexFlow: 'column nowrap' } }, [
             h(WorkflowsContainer, { namespace, name, snapshotId, tabName: activeTab }, [
@@ -159,7 +159,7 @@ export const WorkflowsContainer = (props: WorkflowContainerProps) => {
 
   const loadSnapshot = _.flow(
     withErrorHandling(checkForSnapshotNotFound),
-    withErrorReporting('Error loading snapshot'),
+    withErrorReporting('Error loading version'),
     withBusyState(setBusy)
   )(doSnapshotLoad);
 
@@ -280,7 +280,7 @@ export const WorkflowsContainer = (props: WorkflowContainerProps) => {
         snapshotId: `${selectedSnapshot}`,
         onConfirm: _.flow(
           Utils.withBusyState(setBusy),
-          withErrorReporting('Error deleting snapshot')
+          withErrorReporting('Error deleting version')
         )(async () => {
           setShowDeleteModal(false);
           await deleteSnapshot();
@@ -342,15 +342,15 @@ export const WorkflowsContainer = (props: WorkflowContainerProps) => {
         onDismiss: () => setShowEditWorkflowModal(false),
       }),
     busy && spinnerOverlay,
-    snapshotNotFound && h(NotFoundMessage, { subject: 'snapshot' }),
+    snapshotNotFound && h(NotFoundMessage, { subject: 'version' }),
     snapshot && div({ style: { flex: 1, display: 'flex', flexDirection: 'column' } }, [children]),
   ]);
 };
 
 const NotFoundMessage = (props: NotFoundMessageProps) => {
   const { subject } = props;
-  const isMethodMessage = subject === 'method';
-  const fullSubject = isMethodMessage ? subject : 'method snapshot';
+  const isMethodMessage = subject === 'workflow';
+  const fullSubject = isMethodMessage ? subject : 'workflow version';
 
   const suggestedAction = isMethodMessage
     ? h(
@@ -358,9 +358,9 @@ const NotFoundMessage = (props: NotFoundMessageProps) => {
         {
           href: Nav.getLink('workflows'),
         },
-        ['Return to Methods List']
+        ['Return to Workflows List']
       )
-    : p([strong(['Please select a different snapshot from the dropdown above.'])]);
+    : p([strong(['Please select a different version from the dropdown above.'])]);
 
   return div({ style: { padding: '2rem', flexGrow: 1 } }, [
     h2([`Could not display ${subject}`]),
@@ -373,8 +373,8 @@ const NotFoundMessage = (props: NotFoundMessageProps) => {
     ]),
     p([
       `To view ${
-        isMethodMessage ? 'a snapshot of an existing method' : 'an existing method snapshot'
-      }, an owner of the snapshot must give you permission to view it or make it publicly readable.`,
+        isMethodMessage ? 'a version of an existing workflow' : 'an existing workflow version'
+      }, an owner of the version must give you permission to view it or make it publicly readable.`,
     ]),
     p([`The ${subject} may also have been deleted by one of its owners.`]),
     suggestedAction,

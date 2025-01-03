@@ -369,15 +369,15 @@ describe('workflow wrapper', () => {
     // should not display the tab bar or children
     expect(screen.queryByText(/dashboard/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/wdl/i)).not.toBeInTheDocument();
-    expect(screen.queryByText(/snapshot:/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/version:/i)).not.toBeInTheDocument();
     expect(screen.queryByText(`${mockSnapshot.snapshotId}`)).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /export to workspace/i })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Version action menu' })).not.toBeInTheDocument();
     expect(screen.queryByText('children')).not.toBeInTheDocument();
 
     // should not display the 404 error page
-    expect(screen.queryByText('Could not display method')).not.toBeInTheDocument();
-    expect(screen.queryByText('Could not display snapshot')).not.toBeInTheDocument();
+    expect(screen.queryByText('Could not display workflow')).not.toBeInTheDocument();
+    expect(screen.queryByText('Could not display version')).not.toBeInTheDocument();
 
     // should only display an error toast
     expect(errorWatcher).toHaveBeenCalledWith('Error loading method', expect.anything());
@@ -916,16 +916,16 @@ describe('workflows container', () => {
     expect(actionMenu).toHaveAttribute('aria-disabled');
 
     // should display the 404 error page, with the correct info filled in
-    expect(screen.getByText('Could not display snapshot')).toBeInTheDocument();
+    expect(screen.getByText('Could not display version')).toBeInTheDocument();
     expect(
       screen.getByText(
-        'You cannot access this method snapshot because either it does not exist or you do not have access to it.'
+        'You cannot access this workflow version because either it does not exist or you do not have access to it.'
       )
     ).toBeInTheDocument();
     expect(screen.getByText('hello@world.org')).toBeInTheDocument();
     expect(
       screen.getByText(
-        'To view an existing method snapshot, an owner of the snapshot must give you permission to view it or make it publicly readable.'
+        'To view an existing workflow version, an owner of the snapshot must give you permission to view it or make it publicly readable.'
       )
     ).toBeInTheDocument();
     expect(screen.getByText('The snapshot may also have been deleted by one of its owners.')).toBeInTheDocument();
