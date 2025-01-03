@@ -100,7 +100,7 @@ export const EditWorkflowModal = (props: EditWorkflowModalProps) => {
       title={title}
       width='75rem'
       okButton={SubmitWorkflowModalButton({
-        buttonActionName: 'Create new snapshot',
+        buttonActionName: 'Create new version',
         validationErrors,
         onSubmitWorkflow,
       })}

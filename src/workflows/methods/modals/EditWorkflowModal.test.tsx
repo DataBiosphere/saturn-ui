@@ -109,7 +109,7 @@ describe('EditWorkflowModal', () => {
       target: { value: 'version comment' },
     });
 
-    await user.click(screen.getByRole('button', { name: 'Create new snapshot' }));
+    await user.click(screen.getByRole('button', { name: 'Create new version' }));
 
     // Assert
     expect(editMethodProviderSuccess.createNewSnapshot).toHaveBeenCalledTimes(1);
