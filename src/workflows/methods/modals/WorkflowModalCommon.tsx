@@ -110,7 +110,7 @@ export const SynopsisSnapshotSection = (props: SynopsisSnapshotSectionProps) => 
       </div>
       <div style={{ paddingTop: '1.5rem' }}>
         <div style={{ marginBottom: '0.1667em' }}>
-          <FormLabel htmlFor={snapshotCommentInputId}>Snapshot comment</FormLabel>
+          <FormLabel htmlFor={snapshotCommentInputId}>Version comment</FormLabel>
         </div>
         <TextInput id={snapshotCommentInputId} value={snapshotComment} onChange={setSnapshotComment} />
       </div>

@@ -46,7 +46,7 @@ const WorkflowWdl = _.flow(
 export const navPaths = [
   {
     name: 'workflow-wdl',
-    path: '/methods/:namespace/:name/:snapshotId/wdl',
+    path: '/workflows/:namespace/:name/:snapshotId/wdl',
     component: (props) => h(WorkflowWdl, { ...props, tabName: 'wdl' }),
     title: ({ name }) => `${name} - WDL`,
   },

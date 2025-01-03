@@ -35,8 +35,8 @@ export interface CreateWorkflowModalProps extends WorkflowModalCommonProps {
   /**
    * Provides a function to make an API call to perform the post method
    * operation. The postMethod function provided is called with the information
-   * inputted into the modal. This provider is used for both "create new method"
-   * and "clone method snapshot" functionality.
+   * inputted into the modal. This provider is used for both "create new workflow"
+   * and "clone workflow snapshot" functionality.
    */
   postMethodProvider: PostMethodProvider;
 }

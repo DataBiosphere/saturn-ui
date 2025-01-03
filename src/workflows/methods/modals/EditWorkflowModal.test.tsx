@@ -21,7 +21,7 @@ const mockCreateSnapshotResponse: MethodResponse = {
   documentation: 'documentation',
   synopsis: 'synopsis',
   entityType: 'Workflow',
-  snapshotComment: 'snapshot comment',
+  snapshotComment: 'version comment',
   snapshotId: 4,
   namespace: 'my-namespace',
   payload: 'workflow doStuff {}',
@@ -73,8 +73,8 @@ describe('EditWorkflowModal', () => {
     expect(screen.getByTestId('wdl editor')).toHaveDisplayValue('workflow doStuff {}');
     expect(screen.getByRole('textbox', { name: 'Documentation' })).toHaveDisplayValue('documentation');
     expect(screen.getByRole('textbox', { name: 'Synopsis (80 characters max)' })).toHaveDisplayValue('synopsis');
-    expect(screen.getByRole('textbox', { name: 'Snapshot comment' })).toHaveDisplayValue('');
-    expect(screen.getByText('Delete snapshot 3'));
+    expect(screen.getByRole('textbox', { name: 'Version comment' })).toHaveDisplayValue('');
+    expect(screen.getByText('Delete version 3'));
   });
 
   it('successfully creates a new snapshot with inputted information', async () => {
@@ -105,11 +105,11 @@ describe('EditWorkflowModal', () => {
     fireEvent.change(screen.getByRole('textbox', { name: 'Synopsis (80 characters max)' }), {
       target: { value: 'synopsis' },
     });
-    fireEvent.change(screen.getByRole('textbox', { name: 'Snapshot comment' }), {
-      target: { value: 'snapshot comment' },
+    fireEvent.change(screen.getByRole('textbox', { name: 'Version comment' }), {
+      target: { value: 'version comment' },
     });
 
-    await user.click(screen.getByRole('button', { name: 'Create new snapshot' }));
+    await user.click(screen.getByRole('button', { name: 'Create new version' }));
 
     // Assert
     expect(editMethodProviderSuccess.createNewSnapshot).toHaveBeenCalledTimes(1);
@@ -121,7 +121,7 @@ describe('EditWorkflowModal', () => {
       'synopsis',
       'documentation',
       'workflow doStuff {}',
-      'snapshot comment'
+      'version comment'
     );
     expect(mockOnSuccess).toHaveBeenCalledWith('my-namespace', 'my-workflow', 4);
     expect(mockOnDismiss).not.toHaveBeenCalled();
@@ -155,12 +155,12 @@ describe('EditWorkflowModal', () => {
     fireEvent.change(screen.getByRole('textbox', { name: 'Synopsis (80 characters max)' }), {
       target: { value: 'synopsis' },
     });
-    fireEvent.change(screen.getByRole('textbox', { name: 'Snapshot comment' }), {
-      target: { value: 'snapshot comment' },
+    fireEvent.change(screen.getByRole('textbox', { name: 'Version comment' }), {
+      target: { value: 'version comment' },
     });
-    await user.click(screen.getByRole('checkbox', { name: 'Delete snapshot 3' }));
+    await user.click(screen.getByRole('checkbox', { name: 'Delete version 3' }));
 
-    await user.click(screen.getByRole('button', { name: 'Create new snapshot' }));
+    await user.click(screen.getByRole('button', { name: 'Create new version' }));
 
     // Assert
     expect(editMethodProviderSuccess.createNewSnapshot).toHaveBeenCalledTimes(1);
@@ -172,7 +172,7 @@ describe('EditWorkflowModal', () => {
       'synopsis',
       'documentation',
       'workflow doStuff {}',
-      'snapshot comment'
+      'version comment'
     );
     expect(mockOnSuccess).toHaveBeenCalledWith('my-namespace', 'my-workflow', 4);
     expect(mockOnDismiss).not.toHaveBeenCalled();
@@ -203,7 +203,7 @@ describe('EditWorkflowModal', () => {
       );
     });
 
-    await user.click(screen.getByRole('button', { name: 'Create new snapshot' }));
+    await user.click(screen.getByRole('button', { name: 'Create new version' }));
 
     // Assert
     expect(editMethodProviderError.createNewSnapshot).toHaveBeenCalledTimes(1);
@@ -237,7 +237,7 @@ describe('EditWorkflowModal', () => {
       );
     });
 
-    await user.click(screen.getByRole('button', { name: 'Create new snapshot' }));
+    await user.click(screen.getByRole('button', { name: 'Create new version' }));
 
     // Assert
     expect(editMethodProviderErrorResponse.createNewSnapshot).toHaveBeenCalledTimes(1);
@@ -308,7 +308,7 @@ describe('EditWorkflowModal', () => {
 
     // Assert
     expect(screen.getAllByText("WDL can't be blank"));
-    const createSnapshotButton = screen.getByRole('button', { name: 'Create new snapshot' });
+    const createSnapshotButton = screen.getByRole('button', { name: 'Create new version' });
     expect(createSnapshotButton).toHaveAttribute('aria-disabled', 'true');
   });
 
@@ -340,7 +340,7 @@ describe('EditWorkflowModal', () => {
 
     // Assert
     expect(screen.getAllByText('Synopsis is too long (maximum is 80 characters)'));
-    const createSnapshotButton = screen.getByRole('button', { name: 'Create new snapshot' });
+    const createSnapshotButton = screen.getByRole('button', { name: 'Create new version' });
     expect(createSnapshotButton).toHaveAttribute('aria-disabled', 'true');
   });
 

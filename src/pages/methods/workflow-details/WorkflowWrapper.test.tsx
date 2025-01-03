@@ -50,7 +50,7 @@ const mockSnapshot: Snapshot = {
   createDate: '2024-09-04T15:37:57Z',
   documentation: 'mock documentation',
   entityType: 'Workflow',
-  snapshotComment: 'mock snapshot comment',
+  snapshotComment: 'mock version comment',
   snapshotId: 1,
   namespace: 'testnamespace',
   payload:
@@ -312,28 +312,28 @@ describe('workflow wrapper', () => {
     // should not display the tab bar or children
     expect(screen.queryByText(/dashboard/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/wdl/i)).not.toBeInTheDocument();
-    expect(screen.queryByText(/snapshot:/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/version:/i)).not.toBeInTheDocument();
     expect(screen.queryByText(`${mockSnapshot.snapshotId}`)).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /export to workspace/i })).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Snapshot action menu' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Version action menu' })).not.toBeInTheDocument();
     expect(screen.queryByText('children')).not.toBeInTheDocument();
 
     // should only display the 404 error page, with the correct info filled in
-    expect(screen.getByText('Could not display method')).toBeInTheDocument();
+    expect(screen.getByText('Could not display workflow')).toBeInTheDocument();
     expect(
       screen.getByText(
-        'You cannot access this method because either it does not exist or you do not have access to it.'
+        'You cannot access this workflow because either it does not exist or you do not have access to it.'
       )
     ).toBeInTheDocument();
     expect(screen.getByText('hello@world.org')).toBeInTheDocument();
     expect(
       screen.getByText(
-        'To view a snapshot of an existing method, an owner of the snapshot must give you permission to view it or make it publicly readable.'
+        'To view a version of an existing workflow, an owner of the version must give you permission to view it or make it publicly readable.'
       )
     ).toBeInTheDocument();
-    expect(screen.getByText('The method may also have been deleted by one of its owners.')).toBeInTheDocument();
+    expect(screen.getByText('The workflow may also have been deleted by one of its owners.')).toBeInTheDocument();
 
-    const returnToMethodsListButton = screen.getByRole('link', { name: 'Return to Methods List' });
+    const returnToMethodsListButton = screen.getByRole('link', { name: 'Return to Workflows List' });
     expect(returnToMethodsListButton).toBeInTheDocument();
 
     // mock link path based on internal nav path name
@@ -369,18 +369,18 @@ describe('workflow wrapper', () => {
     // should not display the tab bar or children
     expect(screen.queryByText(/dashboard/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/wdl/i)).not.toBeInTheDocument();
-    expect(screen.queryByText(/snapshot:/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/version:/i)).not.toBeInTheDocument();
     expect(screen.queryByText(`${mockSnapshot.snapshotId}`)).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /export to workspace/i })).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Snapshot action menu' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Version action menu' })).not.toBeInTheDocument();
     expect(screen.queryByText('children')).not.toBeInTheDocument();
 
     // should not display the 404 error page
-    expect(screen.queryByText('Could not display method')).not.toBeInTheDocument();
-    expect(screen.queryByText('Could not display snapshot')).not.toBeInTheDocument();
+    expect(screen.queryByText('Could not display workflow')).not.toBeInTheDocument();
+    expect(screen.queryByText('Could not display version')).not.toBeInTheDocument();
 
     // should only display an error toast
-    expect(errorWatcher).toHaveBeenCalledWith('Error loading method', expect.anything());
+    expect(errorWatcher).toHaveBeenCalledWith('Error loading workflow', expect.anything());
   });
 });
 
@@ -409,9 +409,9 @@ describe('workflows container', () => {
       );
     });
 
-    await user.click(screen.getByRole('button', { name: 'Snapshot action menu' }));
-    await user.click(screen.getByRole('button', { name: 'Delete snapshot' })); // open modal
-    await user.click(screen.getByRole('button', { name: 'Delete snapshot' })); // confirm deletion
+    await user.click(screen.getByRole('button', { name: 'Version action menu' }));
+    await user.click(screen.getByRole('button', { name: 'Delete version' })); // open modal
+    await user.click(screen.getByRole('button', { name: 'Delete version' })); // confirm deletion
 
     // Assert
 
@@ -427,6 +427,7 @@ describe('workflows container', () => {
       Methods().method(mockDeleteSnapshot.namespace, mockDeleteSnapshot.name, mockDeleteSnapshot.snapshotId).delete
     ).toHaveBeenCalled();
 
+    // Refers to FCUI `#methods`
     expect(window.history.replaceState).toHaveBeenCalledWith({}, '', '#methods/methodnamespace/testname');
 
     expect(snapshotStore.get()).toEqual(snapshotStoreInitialValue);
@@ -457,10 +458,10 @@ describe('workflows container', () => {
       );
     });
 
-    await user.click(screen.getByRole('button', { name: 'Snapshot action menu' }));
+    await user.click(screen.getByRole('button', { name: 'Version action menu' }));
     await user.click(screen.getByRole('button', { name: 'Save as' }));
 
-    const dialog = screen.getByRole('dialog', { name: /create new method/i });
+    const dialog = screen.getByRole('dialog', { name: /create new workflow/i });
 
     // Assert
     expect(dialog).toBeInTheDocument();
@@ -468,7 +469,7 @@ describe('workflows container', () => {
     expect(within(dialog).getByRole('textbox', { name: 'Name *' })).toHaveDisplayValue('testname_copy');
     expect(within(dialog).getByRole('textbox', { name: 'Documentation' })).toHaveDisplayValue('mock documentation');
     expect(within(dialog).getByRole('textbox', { name: 'Synopsis (80 characters max)' })).toHaveDisplayValue('');
-    expect(within(dialog).getByRole('textbox', { name: 'Snapshot comment' })).toHaveDisplayValue('');
+    expect(within(dialog).getByRole('textbox', { name: 'Version comment' })).toHaveDisplayValue('');
     expect(within(dialog).getByTestId('wdl editor')).toHaveDisplayValue(mockSnapshot.payload.toString());
   });
 
@@ -492,10 +493,10 @@ describe('workflows container', () => {
       );
     });
 
-    await user.click(screen.getByRole('button', { name: 'Snapshot action menu' }));
+    await user.click(screen.getByRole('button', { name: 'Version action menu' }));
     await user.click(screen.getByRole('button', { name: 'Save as' }));
 
-    const dialog = screen.getByRole('dialog', { name: /create new method/i });
+    const dialog = screen.getByRole('dialog', { name: /create new workflow/i });
 
     // Assert
     expect(dialog).toBeInTheDocument();
@@ -503,18 +504,18 @@ describe('workflows container', () => {
     expect(within(dialog).getByRole('textbox', { name: 'Name *' })).toHaveDisplayValue('testname_copy');
     expect(within(dialog).getByRole('textbox', { name: 'Documentation' })).toHaveDisplayValue('mock documentation');
     expect(within(dialog).getByRole('textbox', { name: 'Synopsis (80 characters max)' })).toHaveDisplayValue('');
-    expect(within(dialog).getByRole('textbox', { name: 'Snapshot comment' })).toHaveDisplayValue('');
+    expect(within(dialog).getByRole('textbox', { name: 'Version comment' })).toHaveDisplayValue('');
     expect(within(dialog).getByTestId('wdl editor')).toHaveDisplayValue(mockSnapshot.payload.toString());
 
     // Act
     fireEvent.change(screen.getByRole('textbox', { name: 'Namespace *' }), {
       target: { value: 'groot-new-namespace' },
     });
-    fireEvent.change(screen.getByRole('textbox', { name: 'Snapshot comment' }), {
+    fireEvent.change(screen.getByRole('textbox', { name: 'Version comment' }), {
       target: { value: 'groot-new-snapshot' },
     });
 
-    await user.click(screen.getByRole('button', { name: 'Create new method' }));
+    await user.click(screen.getByRole('button', { name: 'Create new workflow' }));
 
     // Assert
     expect(postMethodProvider.postMethod).toHaveBeenCalled();
@@ -555,18 +556,18 @@ describe('workflows container', () => {
       );
     });
 
-    await user.click(screen.getByRole('button', { name: 'Snapshot action menu' }));
+    await user.click(screen.getByRole('button', { name: 'Version action menu' }));
     await user.click(screen.getByRole('button', { name: 'Save as' }));
 
     // Assert
-    const dialog1 = screen.queryByRole('dialog', { name: /create new method/i });
+    const dialog1 = screen.queryByRole('dialog', { name: /create new workflow/i });
     expect(dialog1).toBeInTheDocument();
 
     // Act
     await user.click(screen.getByRole('button', { name: 'Cancel' }));
 
     // Assert
-    const dialog2 = screen.queryByRole('dialog', { name: /create new method/i });
+    const dialog2 = screen.queryByRole('dialog', { name: /create new workflow/i });
     expect(dialog2).not.toBeInTheDocument();
   });
 
@@ -591,7 +592,7 @@ describe('workflows container', () => {
       );
     });
 
-    await user.click(screen.getByRole('button', { name: 'Snapshot action menu' }));
+    await user.click(screen.getByRole('button', { name: 'Version action menu' }));
     await user.click(screen.getByRole('button', { name: 'Edit' }));
 
     const dialog = screen.getByRole('dialog', { name: /edit/i });
@@ -604,9 +605,9 @@ describe('workflows container', () => {
     expect(within(dialog).getByRole('textbox', { name: 'Name' })).toHaveAttribute('disabled');
     expect(within(dialog).getByRole('textbox', { name: 'Documentation' })).toHaveDisplayValue('mock documentation');
     expect(within(dialog).getByRole('textbox', { name: 'Synopsis (80 characters max)' })).toHaveDisplayValue('');
-    expect(within(dialog).getByRole('textbox', { name: 'Snapshot comment' })).toHaveDisplayValue('');
+    expect(within(dialog).getByRole('textbox', { name: 'Version comment' })).toHaveDisplayValue('');
     expect(within(dialog).getByTestId('wdl editor')).toHaveDisplayValue(mockSnapshot.payload.toString());
-    expect(within(dialog).getByRole('checkbox', { name: 'Delete snapshot 1' })).not.toBeChecked();
+    expect(within(dialog).getByRole('checkbox', { name: 'Delete version 1' })).not.toBeChecked();
   });
 
   it('calls the right provider with expected arguments when new snapshot is created', async () => {
@@ -630,15 +631,15 @@ describe('workflows container', () => {
       );
     });
 
-    await user.click(screen.getByRole('button', { name: 'Snapshot action menu' }));
+    await user.click(screen.getByRole('button', { name: 'Version action menu' }));
     await user.click(screen.getByRole('button', { name: 'Edit' }));
 
-    fireEvent.change(screen.getByRole('textbox', { name: 'Snapshot comment' }), {
-      target: { value: "groot's new improved snapshot" },
+    fireEvent.change(screen.getByRole('textbox', { name: 'Version comment' }), {
+      target: { value: "groot's new improved version" },
     });
-    await user.click(screen.getByRole('checkbox', { name: 'Delete snapshot 1' }));
+    await user.click(screen.getByRole('checkbox', { name: 'Delete version 1' }));
 
-    await user.click(screen.getByRole('button', { name: 'Create new snapshot' }));
+    await user.click(screen.getByRole('button', { name: 'Create new version' }));
 
     // Assert
     expect(editMethodProvider.createNewSnapshot).toHaveBeenCalled();
@@ -650,7 +651,7 @@ describe('workflows container', () => {
       mockSnapshot.synopsis,
       mockSnapshot.documentation,
       mockSnapshot.payload,
-      "groot's new improved snapshot"
+      "groot's new improved version"
     );
 
     expect(Nav.goToPath).toHaveBeenCalledWith('workflow-dashboard', {
@@ -681,7 +682,7 @@ describe('workflows container', () => {
       );
     });
 
-    await user.click(screen.getByRole('button', { name: 'Snapshot action menu' }));
+    await user.click(screen.getByRole('button', { name: 'Version action menu' }));
     await user.click(screen.getByRole('button', { name: 'Edit' }));
 
     // Assert
@@ -696,7 +697,7 @@ describe('workflows container', () => {
     expect(dialog2).not.toBeInTheDocument();
   });
 
-  it('hides the delete snapshot modal and displays a loading spinner when the deletion is confirmed', async () => {
+  it('hides the delete version modal and displays a loading spinner when the deletion is confirmed', async () => {
     // Arrange
     mockAjax({
       deleteImpl: jest.fn(async () => {
@@ -706,7 +707,7 @@ describe('workflows container', () => {
 
     // ensure that an additional loading spinner does not appear due to the
     // snapshot store being reset, so that we can test only the spinner that
-    // should appear while the delete snapshot operation is being performed
+    // should appear while the delete version operation is being performed
     jest.spyOn(snapshotStore, 'reset').mockImplementation(_.noop);
 
     // set the user's email
@@ -726,19 +727,19 @@ describe('workflows container', () => {
       );
     });
 
-    await user.click(screen.getByRole('button', { name: 'Snapshot action menu' }));
-    await user.click(screen.getByRole('button', { name: 'Delete snapshot' })); // open modal
-    await user.click(screen.getByRole('button', { name: 'Delete snapshot' })); // confirm deletion
+    await user.click(screen.getByRole('button', { name: 'Version action menu' }));
+    await user.click(screen.getByRole('button', { name: 'Delete version' })); // open modal
+    await user.click(screen.getByRole('button', { name: 'Delete version' })); // confirm deletion
 
     // Assert
-    const dialog = screen.queryByRole('dialog', { name: /delete snapshot/i });
+    const dialog = screen.queryByRole('dialog', { name: /delete version/i });
     const spinner = document.querySelector('[data-icon="loadingSpinner"]');
 
     expect(dialog).not.toBeInTheDocument();
     expect(spinner).toBeInTheDocument();
   });
 
-  it('renders the delete snapshot modal when the corresponding button is pressed if the user is a snapshot owner', async () => {
+  it('renders the delete version modal when the corresponding button is pressed if the user is a version owner', async () => {
     // Arrange
     mockAjax();
 
@@ -759,11 +760,11 @@ describe('workflows container', () => {
       );
     });
 
-    await user.click(screen.getByRole('button', { name: 'Snapshot action menu' }));
-    await user.click(screen.getByRole('button', { name: 'Delete snapshot' }));
+    await user.click(screen.getByRole('button', { name: 'Version action menu' }));
+    await user.click(screen.getByRole('button', { name: 'Delete version' }));
 
     // Assert
-    const dialog = screen.getByRole('dialog', { name: /delete snapshot/i });
+    const dialog = screen.getByRole('dialog', { name: /delete version/i });
 
     expect(dialog).toBeInTheDocument();
     expect(within(dialog).getByText('methodnamespace', { exact: false })).toBeInTheDocument();
@@ -771,7 +772,7 @@ describe('workflows container', () => {
     expect(within(dialog).getByText('3', { exact: false })).toBeInTheDocument();
   });
 
-  it('only allows the delete snapshot modal to be opened if the user is a snapshot owner', async () => {
+  it('only allows the delete version modal to be opened if the user is a snapshot owner', async () => {
     // Arrange
     mockAjax();
 
@@ -792,16 +793,16 @@ describe('workflows container', () => {
       );
     });
 
-    await user.click(screen.getByRole('button', { name: 'Snapshot action menu' }));
-    await user.click(screen.getByRole('button', { name: 'Delete snapshot' }));
+    await user.click(screen.getByRole('button', { name: 'Version action menu' }));
+    await user.click(screen.getByRole('button', { name: 'Delete version' }));
 
     // Assert
-    const dialog = screen.queryByRole('dialog', { name: /delete snapshot/i });
+    const dialog = screen.queryByRole('dialog', { name: /delete version/i });
 
     expect(dialog).not.toBeInTheDocument();
   });
 
-  it('hides the delete snapshot modal when it is dismissed', async () => {
+  it('hides the delete version modal when it is dismissed', async () => {
     // Arrange
     mockAjax();
 
@@ -822,12 +823,12 @@ describe('workflows container', () => {
       );
     });
 
-    await user.click(screen.getByRole('button', { name: 'Snapshot action menu' }));
-    await user.click(screen.getByRole('button', { name: 'Delete snapshot' }));
+    await user.click(screen.getByRole('button', { name: 'Version action menu' }));
+    await user.click(screen.getByRole('button', { name: 'Delete version' }));
     await user.click(screen.getByRole('button', { name: 'Cancel' }));
 
     // Assert
-    const dialog = screen.queryByRole('dialog', { name: /delete snapshot/i });
+    const dialog = screen.queryByRole('dialog', { name: /delete version/i });
 
     expect(dialog).not.toBeInTheDocument();
   });
@@ -857,12 +858,12 @@ describe('workflows container', () => {
       );
     });
 
-    await user.click(screen.getByRole('button', { name: 'Snapshot action menu' }));
-    await user.click(screen.getByRole('button', { name: 'Delete snapshot' })); // open modal
-    await user.click(screen.getByRole('button', { name: 'Delete snapshot' })); // confirm deletion
+    await user.click(screen.getByRole('button', { name: 'Version action menu' }));
+    await user.click(screen.getByRole('button', { name: 'Delete version' })); // open modal
+    await user.click(screen.getByRole('button', { name: 'Delete version' })); // confirm deletion
 
     // Assert
-    expect(errorWatcher).toHaveBeenCalledWith('Error deleting snapshot', expect.anything());
+    expect(errorWatcher).toHaveBeenCalledWith('Error deleting version', expect.anything());
   });
 
   it('displays the snapshot not found page if a snapshot does not exist or the user does not have access', async () => {
@@ -901,7 +902,7 @@ describe('workflows container', () => {
     // should display the tab bar, but with the export button and action menu disabled
     expect(screen.getByText(/dashboard/i)).toBeInTheDocument();
     expect(screen.getByText(/wdl/i)).toBeInTheDocument();
-    expect(screen.getByText(/snapshot:/i)).toBeInTheDocument();
+    expect(screen.getByText(/version:/i)).toBeInTheDocument();
     expect(screen.getByText(`${mockSnapshot.snapshotId}`)).toBeInTheDocument();
 
     const exportButton = screen.getByRole('button', { name: /export to workspace/i });
@@ -909,28 +910,28 @@ describe('workflows container', () => {
     expect(exportButton).toHaveAttribute('disabled');
     expect(exportButton).toHaveAttribute('aria-disabled');
 
-    const actionMenu = screen.getByRole('button', { name: 'Snapshot action menu' });
+    const actionMenu = screen.getByRole('button', { name: 'Version action menu' });
     expect(actionMenu).toBeInTheDocument();
     expect(actionMenu).toHaveAttribute('disabled');
     expect(actionMenu).toHaveAttribute('aria-disabled');
 
     // should display the 404 error page, with the correct info filled in
-    expect(screen.getByText('Could not display snapshot')).toBeInTheDocument();
+    expect(screen.getByText('Could not display version')).toBeInTheDocument();
     expect(
       screen.getByText(
-        'You cannot access this method snapshot because either it does not exist or you do not have access to it.'
+        'You cannot access this workflow version because either it does not exist or you do not have access to it.'
       )
     ).toBeInTheDocument();
     expect(screen.getByText('hello@world.org')).toBeInTheDocument();
     expect(
       screen.getByText(
-        'To view an existing method snapshot, an owner of the snapshot must give you permission to view it or make it publicly readable.'
+        'To view an existing workflow version, an owner of the version must give you permission to view it or make it publicly readable.'
       )
     ).toBeInTheDocument();
-    expect(screen.getByText('The snapshot may also have been deleted by one of its owners.')).toBeInTheDocument();
-    expect(screen.getByText('Please select a different snapshot from the dropdown above.')).toBeInTheDocument();
+    expect(screen.getByText('The version may also have been deleted by one of its owners.')).toBeInTheDocument();
+    expect(screen.getByText('Please select a different version from the dropdown above.')).toBeInTheDocument();
 
-    expect(screen.queryByRole('link', { name: 'Return to Methods List' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'Return to Workflows List' })).not.toBeInTheDocument();
   });
 
   it('displays an error toast when there is an unexpected error loading a snapshot', async () => {
@@ -964,18 +965,18 @@ describe('workflows container', () => {
     // should not display the tab bar or children
     expect(screen.queryByText(/dashboard/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/wdl/i)).not.toBeInTheDocument();
-    expect(screen.queryByText(/snapshot:/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/version:/i)).not.toBeInTheDocument();
     expect(screen.queryByText(`${mockSnapshot.snapshotId}`)).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /export to workspace/i })).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Snapshot action menu' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Version action menu' })).not.toBeInTheDocument();
     expect(screen.queryByText('children')).not.toBeInTheDocument();
 
     // should not display the 404 error page
-    expect(screen.queryByText('Could not display method')).not.toBeInTheDocument();
-    expect(screen.queryByText('Could not display snapshot')).not.toBeInTheDocument();
+    expect(screen.queryByText('Could not display workflow')).not.toBeInTheDocument();
+    expect(screen.queryByText('Could not display version')).not.toBeInTheDocument();
 
     // should only display an error toast
-    expect(errorWatcher).toHaveBeenCalledWith('Error loading snapshot', expect.anything());
+    expect(errorWatcher).toHaveBeenCalledWith('Error loading version', expect.anything());
   });
 
   it('displays export to workspace modal when export button is pressed', async () => {
@@ -1186,11 +1187,11 @@ describe('workflows container', () => {
       );
     });
 
-    await user.click(screen.getByRole('button', { name: 'Snapshot action menu' }));
-    await user.click(screen.getByRole('button', { name: 'Edit snapshot permissions' }));
+    await user.click(screen.getByRole('button', { name: 'Version action menu' }));
+    await user.click(screen.getByRole('button', { name: 'Edit version permissions' }));
 
     // Assert
-    expect(screen.getByText('Edit Snapshot Permissions'));
+    expect(screen.getByText('Edit Version Permissions'));
   });
 
   it('hides edit permissions modal when it is dismissed', async () => {
@@ -1214,12 +1215,12 @@ describe('workflows container', () => {
       );
     });
 
-    await user.click(screen.getByRole('button', { name: 'Snapshot action menu' }));
-    await user.click(screen.getByRole('button', { name: 'Edit snapshot permissions' }));
+    await user.click(screen.getByRole('button', { name: 'Version action menu' }));
+    await user.click(screen.getByRole('button', { name: 'Edit version permissions' }));
     await user.click(screen.getByRole('button', { name: 'Cancel' }));
 
     // Assert
-    expect(screen.queryByText('Edit Snapshot Permissions')).not.toBeInTheDocument();
+    expect(screen.queryByText('Edit Version Permissions')).not.toBeInTheDocument();
   });
 
   it("allows the currently displayed snapshot's permissions to be edited", async () => {
@@ -1243,8 +1244,8 @@ describe('workflows container', () => {
       );
     });
 
-    await user.click(screen.getByRole('button', { name: 'Snapshot action menu' }));
-    await user.click(screen.getByRole('button', { name: 'Edit snapshot permissions' }));
+    await user.click(screen.getByRole('button', { name: 'Version action menu' }));
+    await user.click(screen.getByRole('button', { name: 'Edit version permissions' }));
     await user.click(screen.getByRole('button', { name: 'Save' }));
 
     // Assert
@@ -1277,8 +1278,8 @@ describe('workflows container', () => {
       );
     });
 
-    await user.click(screen.getByRole('button', { name: 'Snapshot action menu' }));
-    await user.click(screen.getByRole('button', { name: 'Edit snapshot permissions' }));
+    await user.click(screen.getByRole('button', { name: 'Version action menu' }));
+    await user.click(screen.getByRole('button', { name: 'Edit version permissions' }));
 
     // Simulate the snapshot being updated with new owners in the backend when
     // the save button is pressed

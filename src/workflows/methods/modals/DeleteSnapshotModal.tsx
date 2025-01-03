@@ -33,13 +33,13 @@ const DeleteSnapshotModal = (props: DeleteSnapshotModalProps): ReactNode => {
 
   return (
     <DeleteConfirmationModal
-      objectType='snapshot'
+      objectType='version'
       objectName={`${namespace}/${name}/${snapshotId}`}
       onConfirm={onConfirm}
       onDismiss={onDismiss}
     >
       <p>
-        Are you sure you want to delete snapshot <b>{snapshotId}</b> of the method{' '}
+        Are you sure you want to delete version <b>{snapshotId}</b> of the workflow{' '}
         <b>
           {namespace}/{name}
         </b>
@@ -47,7 +47,7 @@ const DeleteSnapshotModal = (props: DeleteSnapshotModalProps): ReactNode => {
          */}
         ?
       </p>
-      <p>Exports of this snapshot in workspaces will no longer run.</p>
+      <p>Exports of this version in workspaces will no longer run.</p>
       <p>
         <strong>This cannot be undone.</strong>
       </p>

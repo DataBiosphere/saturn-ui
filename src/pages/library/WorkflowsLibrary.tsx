@@ -128,6 +128,9 @@ const CuratedWorkflowsSection = () => {
 
 export const WorkflowsLibrary = () => {
   const dockstoreUrl = `${getConfig().dockstoreUrlRoot}/search?_type=workflow&descriptorType=WDL&searchMode=files`;
+
+  // TODO: Change over to Terra workflow repo
+  // Set to static `workflows` and remove feature flag
   const workflowsRepoUrl: string = isFeaturePreviewEnabled(FIRECLOUD_UI_MIGRATION)
     ? Nav.getLink('workflows')
     : `${getConfig().firecloudUrlRoot}/?return=${getEnabledBrand().queryName}#methods`;
@@ -149,6 +152,10 @@ export const WorkflowsLibrary = () => {
                     logoFilePath={dockstoreLogo}
                   />
                 </div>
+                {
+                  // TODO: Change over to Terra workflow repo
+                  // Update `title` to 'Terra Workflow Repository'
+                }
                 <div style={{ marginLeft: 20 }}>
                   <WorkflowSourceBox
                     title='Broad Methods Repository'

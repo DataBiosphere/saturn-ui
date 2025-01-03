@@ -12,17 +12,17 @@ export interface SnapshotActionMenuProps {
   /**
    * Whether the user is an owner of the workflow snapshot the actions in the
    * menu are for. Controls whether the following actions are enabled: edit
-   * permissions, delete snapshot
+   * permissions, delete snapshot, a.k.a. version in the UI
    */
   isSnapshotOwner: boolean;
 
   /**
-   * The action to be performed if the "Edit snapshot permissions" button is
+   * The action to be performed if the "Edit version permissions" button is
    * pressed.
    */
   onEditPermissions: () => void;
 
-  /** The action to be performed if the "Delete snapshot" button is pressed. */
+  /** The action to be performed if the "Delete version" button is pressed. */
   onDelete: () => void;
 
   /** The action to be performed if the "Save as" button is pressed. */
@@ -36,7 +36,7 @@ export interface SnapshotActionMenuProps {
  * A kebab (vertical three-dot) menu that displays buttons to perform actions on
  * a workflow snapshot.
  *
- * Currently supported actions: edit permissions, delete snapshot, clone snapshot, edit method
+ * Currently supported actions: edit permissions, delete version, clone version, edit workflow
  */
 const SnapshotActionMenu = (props: SnapshotActionMenuProps): ReactNode => {
   const { disabled, isSnapshotOwner, onEditPermissions, onDelete, onClone, onEdit } = props;
@@ -65,7 +65,7 @@ const SnapshotActionMenu = (props: SnapshotActionMenuProps): ReactNode => {
         onClick={onDelete}
       >
         {makeMenuIcon('trash')}
-        Delete snapshot
+        Delete version
       </MenuButton>
       <MenuButton
         disabled={!isSnapshotOwner}
@@ -74,7 +74,7 @@ const SnapshotActionMenu = (props: SnapshotActionMenuProps): ReactNode => {
         onClick={onEditPermissions}
       >
         {makeMenuIcon('cog')}
-        Edit snapshot permissions
+        Edit version permissions
       </MenuButton>
     </>
   );
@@ -82,7 +82,7 @@ const SnapshotActionMenu = (props: SnapshotActionMenuProps): ReactNode => {
   return (
     <MenuTrigger side='bottom' closeOnClick content={menuContent}>
       <Clickable
-        aria-label='Snapshot action menu'
+        aria-label='Version action menu'
         aria-haspopup='menu'
         style={{ opacity: 0.65, height: 27 }}
         hover={!disabled ? { opacity: 1 } : undefined}

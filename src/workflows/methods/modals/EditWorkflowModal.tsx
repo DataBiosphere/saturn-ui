@@ -100,7 +100,7 @@ export const EditWorkflowModal = (props: EditWorkflowModalProps) => {
       title={title}
       width='75rem'
       okButton={SubmitWorkflowModalButton({
-        buttonActionName: 'Create new snapshot',
+        buttonActionName: 'Create new version',
         validationErrors,
         onSubmitWorkflow,
       })}
@@ -133,7 +133,7 @@ export const EditWorkflowModal = (props: EditWorkflowModalProps) => {
         />
         <div style={{ paddingTop: '1.5rem' }}>
           <LabeledCheckbox checked={redactPreviousSnapshot} onChange={setRedactPreviousSnapshot}>
-            <span style={{ marginLeft: '0.5rem' }}>Delete snapshot {snapshotId}</span>
+            <span style={{ marginLeft: '0.5rem' }}>Delete version {snapshotId}</span>
           </LabeledCheckbox>
         </div>
         {busy && <SpinnerOverlay />}
