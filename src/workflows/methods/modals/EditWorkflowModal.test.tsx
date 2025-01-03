@@ -203,7 +203,7 @@ describe('EditWorkflowModal', () => {
       );
     });
 
-    await user.click(screen.getByRole('button', { name: 'Create new snapshot' }));
+    await user.click(screen.getByRole('button', { name: 'Create new version' }));
 
     // Assert
     expect(editMethodProviderError.createNewSnapshot).toHaveBeenCalledTimes(1);
@@ -237,7 +237,7 @@ describe('EditWorkflowModal', () => {
       );
     });
 
-    await user.click(screen.getByRole('button', { name: 'Create new snapshot' }));
+    await user.click(screen.getByRole('button', { name: 'Create new version' }));
 
     // Assert
     expect(editMethodProviderErrorResponse.createNewSnapshot).toHaveBeenCalledTimes(1);
@@ -308,7 +308,7 @@ describe('EditWorkflowModal', () => {
 
     // Assert
     expect(screen.getAllByText("WDL can't be blank"));
-    const createSnapshotButton = screen.getByRole('button', { name: 'Create new snapshot' });
+    const createSnapshotButton = screen.getByRole('button', { name: 'Create new version' });
     expect(createSnapshotButton).toHaveAttribute('aria-disabled', 'true');
   });
 
@@ -340,7 +340,7 @@ describe('EditWorkflowModal', () => {
 
     // Assert
     expect(screen.getAllByText('Synopsis is too long (maximum is 80 characters)'));
-    const createSnapshotButton = screen.getByRole('button', { name: 'Create new snapshot' });
+    const createSnapshotButton = screen.getByRole('button', { name: 'Create new version' });
     expect(createSnapshotButton).toHaveAttribute('aria-disabled', 'true');
   });
 
