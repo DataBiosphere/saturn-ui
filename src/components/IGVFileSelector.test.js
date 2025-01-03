@@ -1,4 +1,4 @@
-import { getValidIgvFiles, getValidIgvFilesFromAttributeValues, isDrsUri } from 'src/components/IGVFileSelector';
+import { getIgvMetricDetails, getValidIgvFiles, getValidIgvFilesFromAttributeValues, isDrsUri } from 'src/components/IGVFileSelector';
 import { DrsUriResolver } from 'src/libs/ajax/drs/DrsUriResolver';
 import { isFeaturePreviewEnabled } from 'src/libs/feature-previews';
 
@@ -243,7 +243,7 @@ describe('getValidIgvFilesFromAttributeValues', () => {
   });
 
   it('calls to resolve access URLs when two DRS URIs are found', async () => {
-    // An IGV selection must have a file (e.g. VCF) and an index file (TBI)
+    // An IGV selection generally must have a file (e.g. VCF) and an index file (TBI)
     const fileDrsUri = 'drs://dg.4503:2802a94d-f540-499f-950a-db3c2a9f2dc4';
     const indexFileDrsUri = 'drs://dg.4503:2802a94d-f540-499f-950a-11111111111';
     const fileName = 'foo.vcf.gz';
@@ -289,5 +289,32 @@ describe('getValidIgvFilesFromAttributeValues', () => {
         isSignedUrl: true,
       },
     ]);
+  });
+
+  it('provides relevant component-specific logging metrics', async () => {
+    const selectedFiles = [
+      {
+        filePath: 'https://bucket/foo.vcf.gz?requestedBy=user@domain.tls&userProject=my-billing-project&signature=secret',
+        indexFilePath: 'https://bucket/foo.vcf.gz.tbi?requestedBy=user@domain.tls&userProject=my-billing-project&signature=secret',
+        isSignedUrl: true,
+      },
+      {
+        filePath: 'gs://datarepo-dev-ab123456-bucket/cae37a2a-657f-4b04-9fef-59c215020078/5f5f634d-70f3-4914-9c71-9d14c7f98e60/test.bam',
+        indexFilePath: 'gs://datarepo-dev-ab123456-bucket/cae37a2a-657f-4b04-9fef-59c215020078/2eeff61f-ae9e-41ae-bb40-909ff6bdfba8/test.bam.bai',
+        isSignedUrl: false,
+      },
+    ];
+
+    const refGenome = { genome: 'hg38' };
+
+    const igvDetails = getIgvMetricDetails(selectedFiles, refGenome);
+
+    expect(igvDetails).toEqual({
+      igvNumTracks: 2,
+      igvFileExtensions: ['vcf.gz', 'bam'],
+      igvIndexExtensions: ['gz.tbi', 'bam.bai'],
+      igvHasDrsUris: true,
+      igvGenome: 'hg38',
+    });
   });
 });
