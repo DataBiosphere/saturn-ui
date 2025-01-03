@@ -81,7 +81,7 @@ export const wrapWorkflows = (opts: WrapWorkflowOptions) => {
       };
 
       const loadSnapshotsList = _.flow(
-        withErrorReporting('Error loading method'),
+        withErrorReporting('Error loading workflow'),
         withBusyState(setBusy)
       )(doSnapshotsListLoad);
 

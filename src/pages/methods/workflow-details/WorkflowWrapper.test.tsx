@@ -312,7 +312,7 @@ describe('workflow wrapper', () => {
     // should not display the tab bar or children
     expect(screen.queryByText(/dashboard/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/wdl/i)).not.toBeInTheDocument();
-    expect(screen.queryByText(/snapshot:/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/version:/i)).not.toBeInTheDocument();
     expect(screen.queryByText(`${mockSnapshot.snapshotId}`)).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /export to workspace/i })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Version action menu' })).not.toBeInTheDocument();
@@ -322,7 +322,7 @@ describe('workflow wrapper', () => {
     expect(screen.getByText('Could not display workflow')).toBeInTheDocument();
     expect(
       screen.getByText(
-        'You cannot access this method because either it does not exist or you do not have access to it.'
+        'You cannot access this workflow because either it does not exist or you do not have access to it.'
       )
     ).toBeInTheDocument();
     expect(screen.getByText('hello@world.org')).toBeInTheDocument();
@@ -380,7 +380,7 @@ describe('workflow wrapper', () => {
     expect(screen.queryByText('Could not display version')).not.toBeInTheDocument();
 
     // should only display an error toast
-    expect(errorWatcher).toHaveBeenCalledWith('Error loading method', expect.anything());
+    expect(errorWatcher).toHaveBeenCalledWith('Error loading workflow', expect.anything());
   });
 });
 
