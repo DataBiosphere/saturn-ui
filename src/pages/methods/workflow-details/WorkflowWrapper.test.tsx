@@ -925,13 +925,13 @@ describe('workflows container', () => {
     expect(screen.getByText('hello@world.org')).toBeInTheDocument();
     expect(
       screen.getByText(
-        'To view an existing workflow version, an owner of the snapshot must give you permission to view it or make it publicly readable.'
+        'To view an existing workflow version, an owner of the version must give you permission to view it or make it publicly readable.'
       )
     ).toBeInTheDocument();
-    expect(screen.getByText('The snapshot may also have been deleted by one of its owners.')).toBeInTheDocument();
-    expect(screen.getByText('Please select a different snapshot from the dropdown above.')).toBeInTheDocument();
+    expect(screen.getByText('The version may also have been deleted by one of its owners.')).toBeInTheDocument();
+    expect(screen.getByText('Please select a different version from the dropdown above.')).toBeInTheDocument();
 
-    expect(screen.queryByRole('link', { name: 'Return to Methods List' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'Return to Workflows List' })).not.toBeInTheDocument();
   });
 
   it('displays an error toast when there is an unexpected error loading a snapshot', async () => {
@@ -965,15 +965,15 @@ describe('workflows container', () => {
     // should not display the tab bar or children
     expect(screen.queryByText(/dashboard/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/wdl/i)).not.toBeInTheDocument();
-    expect(screen.queryByText(/snapshot:/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/version:/i)).not.toBeInTheDocument();
     expect(screen.queryByText(`${mockSnapshot.snapshotId}`)).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /export to workspace/i })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Version action menu' })).not.toBeInTheDocument();
     expect(screen.queryByText('children')).not.toBeInTheDocument();
 
     // should not display the 404 error page
-    expect(screen.queryByText('Could not display method')).not.toBeInTheDocument();
-    expect(screen.queryByText('Could not display snapshot')).not.toBeInTheDocument();
+    expect(screen.queryByText('Could not display workflow')).not.toBeInTheDocument();
+    expect(screen.queryByText('Could not display version')).not.toBeInTheDocument();
 
     // should only display an error toast
     expect(errorWatcher).toHaveBeenCalledWith('Error loading version', expect.anything());
