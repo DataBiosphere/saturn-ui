@@ -976,7 +976,7 @@ describe('workflows container', () => {
     expect(screen.queryByText('Could not display snapshot')).not.toBeInTheDocument();
 
     // should only display an error toast
-    expect(errorWatcher).toHaveBeenCalledWith('Error loading snapshot', expect.anything());
+    expect(errorWatcher).toHaveBeenCalledWith('Error loading version', expect.anything());
   });
 
   it('displays export to workspace modal when export button is pressed', async () => {
