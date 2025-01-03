@@ -144,7 +144,7 @@ export const WorkflowsLibrary = () => {
                 <div>
                   <WorkflowSourceBox
                     title='Dockstore.org'
-                    description='A community repository of public workflows that offers automatic integration with GitHub and publishing features.'
+                    description='A community repository of public workflows that offers publishing features and automatic integration with GitHub.'
                     url={dockstoreUrl}
                     logoFilePath={dockstoreLogo}
                   />
