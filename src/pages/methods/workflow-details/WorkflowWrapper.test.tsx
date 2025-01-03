@@ -902,7 +902,7 @@ describe('workflows container', () => {
     // should display the tab bar, but with the export button and action menu disabled
     expect(screen.getByText(/dashboard/i)).toBeInTheDocument();
     expect(screen.getByText(/wdl/i)).toBeInTheDocument();
-    expect(screen.getByText(/snapshot:/i)).toBeInTheDocument();
+    expect(screen.getByText(/version:/i)).toBeInTheDocument();
     expect(screen.getByText(`${mockSnapshot.snapshotId}`)).toBeInTheDocument();
 
     const exportButton = screen.getByRole('button', { name: /export to workspace/i });
