@@ -1191,7 +1191,7 @@ describe('workflows container', () => {
     await user.click(screen.getByRole('button', { name: 'Edit version permissions' }));
 
     // Assert
-    expect(screen.getByText('Edit Version Permissions'));
+    expect(screen.getByText('Edit version permissions'));
   });
 
   it('hides edit permissions modal when it is dismissed', async () => {

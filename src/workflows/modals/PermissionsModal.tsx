@@ -189,7 +189,7 @@ export const PermissionsModal = (props: WorkflowPermissionsModalProps) => {
         setPermissions(workflowPermissions);
         setOriginalPermissions(workflowPermissions);
       } catch (error) {
-        // user doesn't have permissions to edit the namespace/snapshot permissions
+        // user doesn't have permissions to edit the namespace/version permissions
         if (error instanceof Response && error.status === 403) {
           setNoEditPermissions(true);
         } else {

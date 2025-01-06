@@ -75,7 +75,7 @@ const permissionsProviderForbidden: PermissionsProvider = {
 };
 
 describe('PermissionsModal', () => {
-  it('loads the correct title and basic elements for snapshot permissions', async () => {
+  it('loads the correct title and basic elements for version permissions', async () => {
     // ARRANGE
 
     await act(async () => {
@@ -91,7 +91,7 @@ describe('PermissionsModal', () => {
     });
 
     // ASSERT
-    expect(screen.getByText('Edit Version permissions'));
+    expect(screen.getByText('Edit version permissions'));
     expect(screen.getByText('Note: Sharing with user groups is not supported.'));
     expect(screen.getByText('User'));
     expect(screen.getByRole('textbox', { name: 'User' }));
