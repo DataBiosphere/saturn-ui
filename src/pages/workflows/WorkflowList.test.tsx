@@ -11,22 +11,22 @@ import * as Nav from 'src/libs/nav';
 import { getLink } from 'src/libs/nav';
 import { notify } from 'src/libs/notifications';
 import { TerraUser, TerraUserState, userStore } from 'src/libs/state';
-import { WorkflowList } from 'src/pages/methods/WorkflowList';
+import { WorkflowList } from 'src/pages/workflows/WorkflowList';
 import { asMockedFn, partial, renderWithAppContexts as render } from 'src/testing/test-utils';
-import { WorkflowsPermissions } from 'src/workflows/methods/workflows-acl-utils';
+import { WorkflowsPermissions } from 'src/workflows/workflows-acl-utils';
 
 jest.mock('src/libs/ajax/methods/Methods');
 
 jest.mock('src/libs/notifications');
 jest.mock('src/libs/nav', () => ({
   ...jest.requireActual('src/libs/nav'),
-  getLink: jest.fn(() => '#methods'),
+  getLink: jest.fn(() => '#workflows'),
   goToPath: jest.fn(),
 }));
 
-type WDLEditorExports = typeof import('src/workflows/methods/WDLEditor');
-jest.mock('src/workflows/methods/WDLEditor', (): WDLEditorExports => {
-  const mockWDLEditorModule = jest.requireActual('src/workflows/methods/WDLEditor.mock');
+type WDLEditorExports = typeof import('src/workflows/WDLEditor');
+jest.mock('src/workflows/WDLEditor', (): WDLEditorExports => {
+  const mockWDLEditorModule = jest.requireActual('src/workflows/WDLEditor.mock');
   return {
     WDLEditor: mockWDLEditorModule.MockWDLEditor,
   };
@@ -220,11 +220,11 @@ describe('workflows table', () => {
     });
 
     // Assert
-    expect(screen.getByPlaceholderText('SEARCH METHODS')).toBeInTheDocument();
-    expect(screen.getByText('My Methods (0)')).toBeInTheDocument();
-    expect(screen.getByText('Public Methods (0)')).toBeInTheDocument();
+    expect(screen.getByPlaceholderText('SEARCH WORKFLOWS')).toBeInTheDocument();
+    expect(screen.getByText('My Workflows (0)')).toBeInTheDocument();
+    expect(screen.getByText('Public Workflows (0)')).toBeInTheDocument();
 
-    expect(screen.queryByText('Featured Methods')).not.toBeInTheDocument();
+    expect(screen.queryByText('Featured Workflows')).not.toBeInTheDocument();
   });
 
   it('renders the workflows table with method information', async () => {
@@ -245,10 +245,10 @@ describe('workflows table', () => {
     const headers: HTMLElement[] = within(table).getAllByRole('columnheader');
     expect(headers).toHaveLength(5);
     expect(headers[0]).toHaveTextContent('Actions');
-    expect(headers[1]).toHaveTextContent('Method');
+    expect(headers[1]).toHaveTextContent('Workflow');
     expect(headers[2]).toHaveTextContent('Synopsis');
     expect(headers[3]).toHaveTextContent('Owners');
-    expect(headers[4]).toHaveTextContent('Snapshots');
+    expect(headers[4]).toHaveTextContent('Versions');
 
     const rows: HTMLElement[] = within(table).getAllByRole('row');
     expect(rows).toHaveLength(2);
@@ -389,8 +389,8 @@ describe('workflows table', () => {
       });
 
       // Assert
-      expect(screen.getByText(`My Methods (${myMethodsCount})`)).toBeInTheDocument();
-      expect(screen.getByText(`Public Methods (${publicMethodsCount})`)).toBeInTheDocument();
+      expect(screen.getByText(`My Workflows (${myMethodsCount})`)).toBeInTheDocument();
+      expect(screen.getByText(`Public Workflows (${publicMethodsCount})`)).toBeInTheDocument();
     }
   );
 
@@ -409,10 +409,10 @@ describe('workflows table', () => {
     // Assert
 
     // currently selected tab - count based on filter
-    expect(screen.getByText('My Methods (1)')).toBeInTheDocument();
+    expect(screen.getByText('My Workflows (1)')).toBeInTheDocument();
 
     // other tab - count not based on filter
-    expect(screen.getByText('Public Methods (3)')).toBeInTheDocument();
+    expect(screen.getByText('Public Workflows (3)')).toBeInTheDocument();
   });
 
   it('filters workflows by namespace', async () => {
@@ -479,8 +479,8 @@ describe('workflows table', () => {
       render(<WorkflowList queryParams={{ filter: 'test' }} />);
     });
 
-    await user.click(screen.getByText('Public Methods (2)'));
-    await user.click(screen.getByText('My Methods (0)'));
+    await user.click(screen.getByText('Public Workflows (2)'));
+    await user.click(screen.getByText('My Workflows (0)'));
 
     // Assert
     expect(navHistoryReplace).toHaveBeenCalledTimes(2);
@@ -501,7 +501,7 @@ describe('workflows table', () => {
       render(<WorkflowList />);
     });
 
-    fireEvent.change(screen.getByPlaceholderText('SEARCH METHODS'), { target: { value: 'mysearch' } });
+    fireEvent.change(screen.getByPlaceholderText('SEARCH WORKFLOWS'), { target: { value: 'mysearch' } });
     await act(() => delay(300)); // debounced search
 
     // Assert
@@ -546,7 +546,7 @@ describe('workflows table', () => {
       render(<WorkflowList queryParams={{ tab: 'public' }} />);
     });
 
-    await user.click(screen.getByText('Method'));
+    await user.click(screen.getByText('Workflow'));
 
     // Assert
     checkOrder('sorting method', 'revali method 2', 'revali method', 'daruk method');
@@ -633,7 +633,7 @@ describe('workflows table', () => {
       render(<WorkflowList queryParams={{ tab: 'public' }} />);
     });
 
-    await user.click(screen.getByText('Snapshots'));
+    await user.click(screen.getByText('Versions'));
 
     // Assert
     checkOrder('revali method 2', 'revali method', 'sorting method', 'daruk method');
@@ -650,8 +650,8 @@ describe('workflows table', () => {
       render(<WorkflowList queryParams={{ tab: 'public' }} />);
     });
 
-    await user.click(screen.getByText('Snapshots'));
-    await user.click(screen.getByText('Snapshots'));
+    await user.click(screen.getByText('Versions'));
+    await user.click(screen.getByText('Versions'));
 
     // Assert
     checkOrder('daruk method', 'sorting method', 'revali method', 'revali method 2');
@@ -749,7 +749,7 @@ describe('workflows table', () => {
     expect(screen.getByText('11 - 13 of 13')).toBeInTheDocument();
 
     // Act
-    await user.click(screen.getByText('Public Methods (13)'));
+    await user.click(screen.getByText('Public Workflows (13)'));
 
     // Assert
 
@@ -781,7 +781,7 @@ describe('workflows table', () => {
     expect(screen.getByText('11 - 13 of 13')).toBeInTheDocument();
 
     // Act
-    fireEvent.change(screen.getByPlaceholderText('SEARCH METHODS'), { target: { value: 'method' } });
+    fireEvent.change(screen.getByPlaceholderText('SEARCH WORKFLOWS'), { target: { value: 'method' } });
     await act(() => delay(300)); // debounced search
 
     // Assert
@@ -931,16 +931,16 @@ describe('workflows table', () => {
 
     // tabs should not display method counts because their
     // true values are not known
-    expect(screen.getByText('My Methods')).toBeInTheDocument();
-    expect(screen.getByText('Public Methods')).toBeInTheDocument();
+    expect(screen.getByText('My Workflows')).toBeInTheDocument();
+    expect(screen.getByText('Public Workflows')).toBeInTheDocument();
 
     expect(screen.getByText('Nothing to display')).toBeInTheDocument();
-    expect(notify).toHaveBeenCalledWith('error', 'Error loading methods', expect.anything());
+    expect(notify).toHaveBeenCalledWith('error', 'Error loading workflows', expect.anything());
   });
 });
 
 describe('create workflow modal', () => {
-  it('appears with the correct text and blank inputs when you press the create new method button', async () => {
+  it('appears with the correct text and blank inputs when you press the create new workflow button', async () => {
     // Arrange
     asMockedFn(Methods).mockReturnValue(mockMethods([]));
 
@@ -951,13 +951,13 @@ describe('create workflow modal', () => {
       render(<WorkflowList />);
     });
 
-    await user.click(screen.getByRole('button', { name: 'Create New Method' }));
+    await user.click(screen.getByRole('button', { name: 'Create New Workflow' }));
 
     // Assert
-    const createWorkflowModal = screen.getByRole('dialog', { name: 'Create New Method' });
+    const createWorkflowModal = screen.getByRole('dialog', { name: 'Create New Workflow' });
 
     expect(createWorkflowModal).toBeInTheDocument();
-    expect(within(createWorkflowModal).getByText('Create New Method')).toBeInTheDocument();
+    expect(within(createWorkflowModal).getByText('Create New Workflow')).toBeInTheDocument();
     expect(within(createWorkflowModal).getByRole('button', { name: 'Upload' })).toBeInTheDocument();
 
     expect(within(createWorkflowModal).getByRole('textbox', { name: 'Namespace *' })).toHaveDisplayValue('');
@@ -967,7 +967,7 @@ describe('create workflow modal', () => {
     expect(
       within(createWorkflowModal).getByRole('textbox', { name: 'Synopsis (80 characters max)' })
     ).toHaveDisplayValue('');
-    expect(within(createWorkflowModal).getByRole('textbox', { name: 'Snapshot comment' })).toHaveDisplayValue('');
+    expect(within(createWorkflowModal).getByRole('textbox', { name: 'Version comment' })).toHaveDisplayValue('');
   });
 
   it('uploads a new workflow and navigates to its workflow details page', async () => {
@@ -983,7 +983,7 @@ describe('create workflow modal', () => {
       render(<WorkflowList />);
     });
 
-    await user.click(screen.getByRole('button', { name: 'Create New Method' }));
+    await user.click(screen.getByRole('button', { name: 'Create New Workflow' }));
 
     fireEvent.change(screen.getByRole('textbox', { name: 'Namespace *' }), { target: { value: 'testnamespace' } });
     fireEvent.change(screen.getByRole('textbox', { name: 'Name *' }), { target: { value: 'testname' } });
@@ -992,7 +992,7 @@ describe('create workflow modal', () => {
     fireEvent.change(screen.getByRole('textbox', { name: 'Synopsis (80 characters max)' }), {
       target: { value: 'my synopsis' },
     });
-    fireEvent.change(screen.getByRole('textbox', { name: 'Snapshot comment' }), { target: { value: 'comment' } });
+    fireEvent.change(screen.getByRole('textbox', { name: 'Version comment' }), { target: { value: 'comment' } });
 
     await user.click(screen.getByRole('button', { name: 'Upload' }));
 
@@ -1017,11 +1017,11 @@ describe('create workflow modal', () => {
       render(<WorkflowList />);
     });
 
-    await user.click(screen.getByRole('button', { name: 'Create New Method' }));
+    await user.click(screen.getByRole('button', { name: 'Create New Workflow' }));
     await user.click(screen.getByRole('button', { name: 'Cancel' }));
 
     // Assert
-    expect(screen.queryByRole('dialog', { name: 'Create New Method' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('dialog', { name: 'Create New Workflow' })).not.toBeInTheDocument();
   });
 });
 

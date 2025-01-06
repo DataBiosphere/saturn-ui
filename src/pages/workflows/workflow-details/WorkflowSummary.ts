@@ -12,8 +12,8 @@ import { withErrorReporting } from 'src/libs/error';
 import { forwardRefWithName, useStore } from 'src/libs/react-utils';
 import { snapshotStore } from 'src/libs/state';
 import * as Style from 'src/libs/style';
-import { wrapWorkflows } from 'src/pages/methods/workflow-details/WorkflowWrapper';
-import { WorkflowRightBoxSection } from 'src/workflows/methods/WorkflowRightBoxSection';
+import { wrapWorkflows } from 'src/pages/workflows/workflow-details/WorkflowWrapper';
+import { WorkflowRightBoxSection } from 'src/workflows/WorkflowRightBoxSection';
 import { InfoRow } from 'src/workspaces/dashboard/InfoRow';
 
 export const BaseWorkflowSummary = () => {
@@ -28,7 +28,7 @@ export const BaseWorkflowSummary = () => {
     public: isPublic,
     snapshotComment,
   } = useStore(snapshotStore);
-  const persistenceId = `methods/${namespace}/${name}/dashboard`;
+  const persistenceId = `workflows/${namespace}/${name}/dashboard`;
   const [importUrlCopied, setImportUrlCopied] = useState<boolean>();
   const importUrl = `${
     getConfig().orchestrationUrlRoot
@@ -50,7 +50,7 @@ export const BaseWorkflowSummary = () => {
       h(
         WorkflowRightBoxSection,
         {
-          title: 'Snapshot Information',
+          title: 'Version Information',
           defaultPanelOpen: true,
           persistenceId: `${persistenceId}/snapshotInfoPanelOpen`,
         },
@@ -62,7 +62,7 @@ export const BaseWorkflowSummary = () => {
               div({ style: { paddingLeft: '0.5rem' } }, [isPublic ? 'Public' : 'Private']),
             ]),
           ]),
-          h(InfoRow, { title: 'Snapshot Comment' }, [h(TooltipCell, [snapshotComment])]),
+          h(InfoRow, { title: 'Version Comment' }, [h(TooltipCell, [snapshotComment])]),
         ]
       ),
       h(
@@ -125,7 +125,7 @@ const WorkflowSummary = _.flow(
 export const navPaths = [
   {
     name: 'workflow-dashboard',
-    path: '/methods/:namespace/:name/:snapshotId?',
+    path: '/workflows/:namespace/:name/:snapshotId?',
     component: (props) => h(WorkflowSummary, { ...props, tabName: 'dashboard' }),
     title: ({ name }) => `${name} - Dashboard`,
   },

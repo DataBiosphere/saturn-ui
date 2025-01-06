@@ -1,3 +1,4 @@
+import { icon } from '@terra-ui-packages/components';
 import filesize from 'filesize';
 import React, { Dispatch, Fragment, SetStateAction } from 'react';
 import { div, h } from 'react-hyperscript-helpers';
@@ -7,7 +8,7 @@ import { Checkbox, Link } from 'src/components/common';
 import { basename } from 'src/components/file-browser/file-browser-utils';
 import { FileMenu } from 'src/components/file-browser/FileMenu';
 import { FlexTable, HeaderCell, TextCell } from 'src/components/table';
-import { FileBrowserFile } from 'src/libs/ajax/file-browser-providers/FileBrowserProvider';
+import { FileBrowserDirectory, FileBrowserFile } from 'src/libs/ajax/file-browser-providers/FileBrowserProvider';
 import * as Style from 'src/libs/style';
 import * as Utils from 'src/libs/utils';
 
@@ -15,9 +16,11 @@ export interface FilesTableProps {
   'aria-label'?: string;
   editDisabled?: boolean;
   editDisabledReason?: string;
+  directories: FileBrowserDirectory[];
   files: FileBrowserFile[];
   selectedFiles: { [path: string]: FileBrowserFile };
   setSelectedFiles: Dispatch<SetStateAction<{ [path: string]: FileBrowserFile }>>;
+  onClickDirectory: (directory: FileBrowserDirectory) => void;
   onClickFile: (file: FileBrowserFile) => void;
   onRenameFile: (file: FileBrowserFile) => void;
 }
@@ -27,9 +30,11 @@ const FilesTable = (props: FilesTableProps) => {
     'aria-label': ariaLabel = 'Files',
     editDisabled = false,
     editDisabledReason,
+    directories,
     files,
     selectedFiles,
     setSelectedFiles,
+    onClickDirectory,
     onClickFile,
     onRenameFile,
   } = props;
@@ -44,7 +49,7 @@ const FilesTable = (props: FilesTableProps) => {
           'aria-label': ariaLabel,
           width,
           height,
-          rowCount: files.length,
+          rowCount: files.length + directories.length,
           noContentMessage: ' ',
           styleCell: () => ({ padding: '0.5em', borderRight: 'none', borderLeft: 'none' }),
           styleHeader: () => ({ padding: '0.5em', borderRight: 'none', borderLeft: 'none' }),
@@ -67,7 +72,18 @@ const FilesTable = (props: FilesTableProps) => {
                 ]);
               },
               cellRenderer: ({ rowIndex }) => {
-                const file = files[rowIndex];
+                if (rowIndex < directories.length) {
+                  const directory = directories[rowIndex];
+                  return h(
+                    Link,
+                    {
+                      style: { flex: 1, textAlign: 'center' },
+                      onClick: () => onClickDirectory(directory),
+                    },
+                    [icon('folderSolid')]
+                  );
+                }
+                const file = files[rowIndex - directories.length];
                 const isSelected = file.path in selectedFiles;
                 return div({ style: { flex: 1, textAlign: 'center' } }, [
                   h(Checkbox, {
@@ -91,7 +107,24 @@ const FilesTable = (props: FilesTableProps) => {
               size: { min: 100, grow: 1 },
               headerRenderer: () => h(HeaderCell, ['Name']),
               cellRenderer: ({ rowIndex }) => {
-                const file = files[rowIndex];
+                if (rowIndex < directories.length) {
+                  const directory = directories[rowIndex];
+                  return h(
+                    Link,
+                    {
+                      style: {
+                        ...(Style.noWrapEllipsis as React.CSSProperties),
+                        textDecoration: 'underline',
+                      },
+                      onClick: (e) => {
+                        e.preventDefault();
+                        onClickDirectory(directory);
+                      },
+                    },
+                    [basename(directory.path)]
+                  );
+                }
+                const file = files[rowIndex - directories.length];
                 return h(Fragment, [
                   h(
                     Link,
@@ -123,7 +156,10 @@ const FilesTable = (props: FilesTableProps) => {
               size: { min: 150, grow: 0 },
               headerRenderer: () => h(HeaderCell, ['Size']),
               cellRenderer: ({ rowIndex }) => {
-                const file = files[rowIndex];
+                if (rowIndex < directories.length) {
+                  return h(TextCell, ['--']);
+                }
+                const file = files[rowIndex - directories.length];
                 return h(TextCell, [filesize(file.size, { round: 0 })]);
               },
             },
@@ -131,7 +167,10 @@ const FilesTable = (props: FilesTableProps) => {
               size: { min: 200, grow: 0 },
               headerRenderer: () => h(HeaderCell, ['Last modified']),
               cellRenderer: ({ rowIndex }) => {
-                const file = files[rowIndex];
+                if (rowIndex < directories.length) {
+                  return h(TextCell, ['--']);
+                }
+                const file = files[rowIndex - directories.length];
                 return h(TextCell, [Utils.makePrettyDate(file.updatedAt)]);
               },
             },
@@ -139,7 +178,10 @@ const FilesTable = (props: FilesTableProps) => {
               size: { basis: 40, grow: 0, shrink: 0 },
               headerRenderer: () => h(HeaderCell, { className: 'sr-only' }, ['Actions']),
               cellRenderer: ({ rowIndex }) => {
-                const file = files[rowIndex];
+                if (rowIndex < directories.length) {
+                  return h(TextCell);
+                }
+                const file = files[rowIndex - directories.length];
                 return h(TextCell, [
                   h(FileMenu, {
                     editDisabled,

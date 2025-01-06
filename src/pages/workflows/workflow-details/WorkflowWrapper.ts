@@ -20,12 +20,12 @@ import { getTerraUser, snapshotsListStore, snapshotStore } from 'src/libs/state'
 import * as Style from 'src/libs/style';
 import * as Utils from 'src/libs/utils';
 import { withBusyState } from 'src/libs/utils';
-import { CreateWorkflowModal } from 'src/workflows/methods/modals/CreateWorkflowModal';
-import DeleteSnapshotModal from 'src/workflows/methods/modals/DeleteSnapshotModal';
-import { EditWorkflowModal } from 'src/workflows/methods/modals/EditWorkflowModal';
-import { PermissionsModal } from 'src/workflows/methods/modals/PermissionsModal';
-import SnapshotActionMenu from 'src/workflows/methods/SnapshotActionMenu';
+import { CreateWorkflowModal } from 'src/workflows/modals/CreateWorkflowModal';
+import DeleteVersionModal from 'src/workflows/modals/DeleteVersionModal';
+import { EditWorkflowModal } from 'src/workflows/modals/EditWorkflowModal';
 import ExportWorkflowModal from 'src/workflows/modals/ExportWorkflowModal';
+import { PermissionsModal } from 'src/workflows/modals/PermissionsModal';
+import VersionActionMenu from 'src/workflows/VersionActionMenu';
 import { isGoogleWorkspace, WorkspaceInfo, WorkspaceWrapper } from 'src/workspaces/utils';
 import * as WorkspaceUtils from 'src/workspaces/utils';
 
@@ -53,7 +53,7 @@ interface WrappedComponentProps {
 }
 
 interface NotFoundMessageProps {
-  subject: 'snapshot' | 'method';
+  subject: 'version' | 'workflow';
 }
 
 type WrappedWorkflowComponent = (props: WrappedComponentProps) => ReactNode;
@@ -82,7 +82,7 @@ export const wrapWorkflows = (opts: WrapWorkflowOptions) => {
       };
 
       const loadSnapshotsList = _.flow(
-        withErrorReporting('Error loading method'),
+        withErrorReporting('Error loading workflow'),
         withBusyState(setBusy)
       )(doSnapshotsListLoad);
 
@@ -93,14 +93,14 @@ export const wrapWorkflows = (opts: WrapWorkflowOptions) => {
       });
 
       return h(FooterWrapper, [
-        h(TopBar, { title: 'Broad Methods Repository', href: Nav.getLink('workflows') }, [
+        h(TopBar, { title: 'Terra Workflow Repository', href: Nav.getLink('workflows') }, [
           div({ style: Style.breadcrumb.breadcrumb }, [
             div(breadcrumbs(props)),
             div({ style: Style.breadcrumb.textUnderBreadcrumb }, [`${namespace}/${name}`]),
           ]),
         ]),
         busy && spinnerOverlay,
-        methodNotFound && h(NotFoundMessage, { subject: 'method' }),
+        methodNotFound && h(NotFoundMessage, { subject: 'workflow' }),
         snapshotsList &&
           div({ role: 'main', style: { flex: 1, display: 'flex', flexFlow: 'column nowrap' } }, [
             h(WorkflowsContainer, { namespace, name, snapshotId, tabName: activeTab }, [
@@ -160,7 +160,7 @@ export const WorkflowsContainer = (props: WorkflowContainerProps) => {
 
   const loadSnapshot = _.flow(
     withErrorHandling(checkForSnapshotNotFound),
-    withErrorReporting('Error loading snapshot'),
+    withErrorReporting('Error loading version'),
     withBusyState(setBusy)
   )(doSnapshotLoad);
 
@@ -182,9 +182,9 @@ export const WorkflowsContainer = (props: WorkflowContainerProps) => {
     await Methods(signal).method(namespace, name, selectedSnapshot).delete();
 
     // Replace the current history entry linking to the method details page of a
-    // specific snapshot, like /#methods/sschu/echo-strings-test/29, with an
+    // specific snapshot, like /#workflows/sschu/echo-strings-test/29, with an
     // entry with the corresponding link without the snapshot ID, like
-    // /#methods/sschu/echo-strings-test
+    // /#workflows/sschu/echo-strings-test
     // This way, if the user presses the back button after deleting a
     // method snapshot, they will be automatically redirected to the most recent
     // snapshot that still exists of the same method
@@ -208,14 +208,14 @@ export const WorkflowsContainer = (props: WorkflowContainerProps) => {
       h(
         TabBar,
         {
-          'aria-label': 'method details menu',
+          'aria-label': 'workflow details menu',
           activeTab: tabName,
           tabNames: ['dashboard', 'wdl'],
           getHref: (currentTab) =>
             Nav.getLink(`workflow-${currentTab}`, { namespace, name, snapshotId: selectedSnapshot }),
         },
         [
-          label({ htmlFor: snapshotLabelId, style: { marginRight: '1rem' } }, ['Snapshot:']),
+          label({ htmlFor: snapshotLabelId, style: { marginRight: '1rem' } }, ['Version:']),
           div({ style: { width: 100 } }, [
             h(Select, {
               id: snapshotLabelId,
@@ -241,7 +241,7 @@ export const WorkflowsContainer = (props: WorkflowContainerProps) => {
             ['Export to Workspace']
           ),
           div({ style: { marginLeft: '1rem', marginRight: '0.5rem' } }, [
-            h(SnapshotActionMenu, {
+            h(VersionActionMenu, {
               disabled: !snapshot,
               isSnapshotOwner,
               onEditPermissions: () => setPermissionsModalOpen(true),
@@ -275,13 +275,13 @@ export const WorkflowsContainer = (props: WorkflowContainerProps) => {
         onDismiss: () => setExportingWorkflow(false),
       }),
     showDeleteModal &&
-      h(DeleteSnapshotModal, {
+      h(DeleteVersionModal, {
         namespace,
         name,
         snapshotId: `${selectedSnapshot}`,
         onConfirm: _.flow(
           Utils.withBusyState(setBusy),
-          withErrorReporting('Error deleting snapshot')
+          withErrorReporting('Error deleting version')
         )(async () => {
           setShowDeleteModal(false);
           await deleteSnapshot();
@@ -291,7 +291,7 @@ export const WorkflowsContainer = (props: WorkflowContainerProps) => {
       }),
     permissionsModalOpen &&
       h(PermissionsModal, {
-        snapshotOrNamespace: 'Snapshot',
+        versionOrNamespace: 'Version',
         namespace,
         setPermissionsModalOpen,
         refresh: loadSnapshot,
@@ -299,12 +299,12 @@ export const WorkflowsContainer = (props: WorkflowContainerProps) => {
       }),
     showCloneModal &&
       h(CreateWorkflowModal, {
-        title: 'Create new method',
+        title: 'Create new workflow',
         defaultName: name.concat('_copy'),
         defaultWdl: snapshot!.payload,
         defaultDocumentation: snapshot!.documentation,
         defaultSynopsis: snapshot!.synopsis,
-        buttonActionName: 'Create new method',
+        buttonActionName: 'Create new workflow',
         postMethodProvider,
         onSuccess: (namespace: string, name: string, snapshotId: number) => {
           // when the user has owner permissions on the original method, there is an interesting situation where
@@ -342,15 +342,15 @@ export const WorkflowsContainer = (props: WorkflowContainerProps) => {
         onDismiss: () => setShowEditWorkflowModal(false),
       }),
     busy && spinnerOverlay,
-    snapshotNotFound && h(NotFoundMessage, { subject: 'snapshot' }),
+    snapshotNotFound && h(NotFoundMessage, { subject: 'version' }),
     snapshot && div({ style: { flex: 1, display: 'flex', flexDirection: 'column' } }, [children]),
   ]);
 };
 
 const NotFoundMessage = (props: NotFoundMessageProps) => {
   const { subject } = props;
-  const isMethodMessage = subject === 'method';
-  const fullSubject = isMethodMessage ? subject : 'method snapshot';
+  const isMethodMessage = subject === 'workflow';
+  const fullSubject = isMethodMessage ? subject : 'workflow version';
 
   const suggestedAction = isMethodMessage
     ? h(
@@ -358,9 +358,9 @@ const NotFoundMessage = (props: NotFoundMessageProps) => {
         {
           href: Nav.getLink('workflows'),
         },
-        ['Return to Methods List']
+        ['Return to Workflows List']
       )
-    : p([strong(['Please select a different snapshot from the dropdown above.'])]);
+    : p([strong(['Please select a different version from the dropdown above.'])]);
 
   return div({ style: { padding: '2rem', flexGrow: 1 } }, [
     h2([`Could not display ${subject}`]),
@@ -373,8 +373,8 @@ const NotFoundMessage = (props: NotFoundMessageProps) => {
     ]),
     p([
       `To view ${
-        isMethodMessage ? 'a snapshot of an existing method' : 'an existing method snapshot'
-      }, an owner of the snapshot must give you permission to view it or make it publicly readable.`,
+        isMethodMessage ? 'a version of an existing workflow' : 'an existing workflow version'
+      }, an owner of the version must give you permission to view it or make it publicly readable.`,
     ]),
     p([`The ${subject} may also have been deleted by one of its owners.`]),
     suggestedAction,

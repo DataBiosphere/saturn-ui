@@ -4,8 +4,8 @@ import React from 'react';
 import { PermissionsProvider } from 'src/libs/ajax/methods/providers/PermissionsProvider';
 import { reportError } from 'src/libs/error';
 import { renderWithAppContexts, SelectHelper } from 'src/testing/test-utils';
-import { PermissionsModal } from 'src/workflows/methods/modals/PermissionsModal';
-import { WorkflowsPermissions } from 'src/workflows/methods/workflows-acl-utils';
+import { PermissionsModal } from 'src/workflows/modals/PermissionsModal';
+import { WorkflowsPermissions } from 'src/workflows/workflows-acl-utils';
 
 jest.mock('src/libs/ajax');
 
@@ -82,7 +82,7 @@ describe('PermissionsModal', () => {
       renderWithAppContexts(
         <PermissionsModal
           namespace='namespace'
-          snapshotOrNamespace='Snapshot'
+          versionOrNamespace='Version'
           setPermissionsModalOpen={jest.fn()}
           refresh={jest.fn()}
           permissionsProvider={permissionsProviderSuccess}
@@ -91,7 +91,7 @@ describe('PermissionsModal', () => {
     });
 
     // ASSERT
-    expect(screen.getByText('Edit snapshot permissions'));
+    expect(screen.getByText('Edit Version permissions'));
     expect(screen.getByText('Note: Sharing with user groups is not supported.'));
     expect(screen.getByText('User'));
     expect(screen.getByRole('textbox', { name: 'User' }));
@@ -109,7 +109,7 @@ describe('PermissionsModal', () => {
       renderWithAppContexts(
         <PermissionsModal
           namespace='my-namespace'
-          snapshotOrNamespace='Namespace'
+          versionOrNamespace='Namespace'
           setPermissionsModalOpen={jest.fn()}
           refresh={jest.fn()}
           permissionsProvider={permissionsProviderSuccess}
@@ -137,7 +137,7 @@ describe('PermissionsModal', () => {
       renderWithAppContexts(
         <PermissionsModal
           namespace='namespace'
-          snapshotOrNamespace='Snapshot'
+          versionOrNamespace='Version'
           setPermissionsModalOpen={jest.fn()}
           refresh={jest.fn()}
           permissionsProvider={permissionsProviderSuccess}
@@ -172,7 +172,7 @@ describe('PermissionsModal', () => {
       renderWithAppContexts(
         <PermissionsModal
           namespace='namespace'
-          snapshotOrNamespace='Snapshot'
+          versionOrNamespace='Version'
           setPermissionsModalOpen={jest.fn()}
           refresh={jest.fn()}
           permissionsProvider={permissionsProviderSuccess}
@@ -219,7 +219,7 @@ describe('PermissionsModal', () => {
       renderWithAppContexts(
         <PermissionsModal
           namespace='namespace'
-          snapshotOrNamespace='Snapshot'
+          versionOrNamespace='Version'
           setPermissionsModalOpen={jest.fn()}
           refresh={jest.fn()}
           permissionsProvider={permissionsProviderSuccess}
@@ -257,7 +257,7 @@ describe('PermissionsModal', () => {
       renderWithAppContexts(
         <PermissionsModal
           namespace='namespace'
-          snapshotOrNamespace='Snapshot'
+          versionOrNamespace='Version'
           setPermissionsModalOpen={jest.fn()}
           refresh={jest.fn()}
           permissionsProvider={permissionsProviderSuccess}
@@ -280,7 +280,7 @@ describe('PermissionsModal', () => {
       renderWithAppContexts(
         <PermissionsModal
           namespace='namespace'
-          snapshotOrNamespace='Snapshot'
+          versionOrNamespace='Version'
           setPermissionsModalOpen={jest.fn()}
           refresh={jest.fn()}
           permissionsProvider={permissionsProviderSuccess}
@@ -309,7 +309,7 @@ describe('PermissionsModal', () => {
       renderWithAppContexts(
         <PermissionsModal
           namespace='namespace'
-          snapshotOrNamespace='Snapshot'
+          versionOrNamespace='Version'
           setPermissionsModalOpen={jest.fn()}
           refresh={jest.fn()}
           permissionsProvider={permissionsProviderSuccess}
@@ -351,7 +351,7 @@ describe('PermissionsModal', () => {
       renderWithAppContexts(
         <PermissionsModal
           namespace='namespace'
-          snapshotOrNamespace='Snapshot'
+          versionOrNamespace='Version'
           setPermissionsModalOpen={jest.fn()}
           refresh={jest.fn()}
           permissionsProvider={mockProvider}
@@ -387,7 +387,7 @@ describe('PermissionsModal', () => {
       renderWithAppContexts(
         <PermissionsModal
           namespace='namespace'
-          snapshotOrNamespace='Snapshot'
+          versionOrNamespace='Version'
           setPermissionsModalOpen={jest.fn()}
           refresh={jest.fn()}
           permissionsProvider={permissionsProviderSuccess}
@@ -426,7 +426,7 @@ describe('PermissionsModal', () => {
       renderWithAppContexts(
         <PermissionsModal
           namespace='namespace'
-          snapshotOrNamespace='Snapshot'
+          versionOrNamespace='Version'
           setPermissionsModalOpen={mockSetPermissionsModalOpen}
           refresh={mockRefresh}
           permissionsProvider={permissionsProviderSuccess}
@@ -453,7 +453,7 @@ describe('PermissionsModal', () => {
       renderWithAppContexts(
         <PermissionsModal
           namespace='namespace'
-          snapshotOrNamespace='Snapshot'
+          versionOrNamespace='Version'
           setPermissionsModalOpen={mockSetPermissionsModalOpen}
           refresh={mockRefresh}
           permissionsProvider={permissionsProviderSuccess}
@@ -478,7 +478,7 @@ describe('PermissionsModal', () => {
       renderWithAppContexts(
         <PermissionsModal
           namespace='namespace'
-          snapshotOrNamespace='Snapshot'
+          versionOrNamespace='Version'
           setPermissionsModalOpen={mockSetPermissionsModalOpen}
           refresh={mockRefresh}
           permissionsProvider={permissionsProviderError}
@@ -501,7 +501,7 @@ describe('PermissionsModal', () => {
       renderWithAppContexts(
         <PermissionsModal
           namespace='namespace'
-          snapshotOrNamespace='Namespace'
+          versionOrNamespace='Namespace'
           setPermissionsModalOpen={mockSetPermissionsModalOpen}
           refresh={mockRefresh}
           permissionsProvider={permissionsProviderForbidden}
@@ -524,7 +524,7 @@ describe('PermissionsModal', () => {
       renderWithAppContexts(
         <PermissionsModal
           namespace='namespace'
-          snapshotOrNamespace='Snapshot'
+          versionOrNamespace='Version'
           setPermissionsModalOpen={mockSetPermissionsModalOpen}
           refresh={mockRefresh}
           permissionsProvider={permissionsProviderError}

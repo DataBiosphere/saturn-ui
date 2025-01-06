@@ -13,7 +13,7 @@ import {
   WdlBoxSection,
   workflowModalCommonConstraints,
   WorkflowModalCommonProps,
-} from 'src/workflows/methods/modals/WorkflowModalCommon';
+} from 'src/workflows/modals/WorkflowModalCommon';
 import validate from 'validate.js';
 
 export interface EditWorkflowModalProps extends WorkflowModalCommonProps {
@@ -100,7 +100,7 @@ export const EditWorkflowModal = (props: EditWorkflowModalProps) => {
       title={title}
       width='75rem'
       okButton={SubmitWorkflowModalButton({
-        buttonActionName: 'Create new snapshot',
+        buttonActionName: 'Create new version',
         validationErrors,
         onSubmitWorkflow,
       })}
@@ -133,7 +133,7 @@ export const EditWorkflowModal = (props: EditWorkflowModalProps) => {
         />
         <div style={{ paddingTop: '1.5rem' }}>
           <LabeledCheckbox checked={redactPreviousSnapshot} onChange={setRedactPreviousSnapshot}>
-            <span style={{ marginLeft: '0.5rem' }}>Delete snapshot {snapshotId}</span>
+            <span style={{ marginLeft: '0.5rem' }}>Delete version {snapshotId}</span>
           </LabeledCheckbox>
         </div>
         {busy && <SpinnerOverlay />}

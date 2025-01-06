@@ -21,8 +21,8 @@ import { useCancellation, useOnMount } from 'src/libs/react-utils';
 import { getTerraUser } from 'src/libs/state';
 import * as Utils from 'src/libs/utils';
 import { withBusyState } from 'src/libs/utils';
-import { CreateWorkflowModal } from 'src/workflows/methods/modals/CreateWorkflowModal';
-import { PermissionsModal } from 'src/workflows/methods/modals/PermissionsModal';
+import { CreateWorkflowModal } from 'src/workflows/modals/CreateWorkflowModal';
+import { PermissionsModal } from 'src/workflows/modals/PermissionsModal';
 
 // Note: The first tab key in this array will determine the default tab selected
 // if the tab query parameter is not present or has an invalid value (and when
@@ -37,7 +37,7 @@ const defaultTabKey: TabKey = tabKeys[0];
 
 /**
  * Represents a list of method definitions grouped into two
- * categories — My Methods and Public Methods — corresponding
+ * categories — My Workflows and Public Workflows — corresponding
  * to the tabs above the workflows table.
  */
 type GroupedWorkflows = Record<TabKey, MethodDefinition[]>;
@@ -139,7 +139,7 @@ export const WorkflowList = (props: WorkflowListProps) => {
     setSort(newSort);
   };
 
-  const tabNames: Record<TabKey, string> = { mine: 'My Methods', public: 'Public Methods' };
+  const tabNames: Record<TabKey, string> = { mine: 'My Workflows', public: 'Public Workflows' };
 
   const getTabDisplayNames = (
     workflows: GroupedWorkflows | null | undefined,
@@ -179,7 +179,7 @@ export const WorkflowList = (props: WorkflowListProps) => {
         });
       } catch (error) {
         setWorkflows(null);
-        notify('error', 'Error loading methods', { detail: error instanceof Response ? await error.text() : error });
+        notify('error', 'Error loading workflows', { detail: error instanceof Response ? await error.text() : error });
       }
     });
 
@@ -222,11 +222,11 @@ export const WorkflowList = (props: WorkflowListProps) => {
 
   return (
     <FooterWrapper>
-      <TopBar title='Broad Methods Repository' href=''>
+      <TopBar title='Terra Workflow Repository' href=''>
         {null /* no additional content to display in the top bar */}
       </TopBar>
       <TabBar
-        aria-label='methods list menu'
+        aria-label='workflows list menu'
         activeTab={selectedTab}
         tabNames={tabKeys}
         displayNames={getTabDisplayNames(workflows, selectedTab)}
@@ -242,8 +242,8 @@ export const WorkflowList = (props: WorkflowListProps) => {
         <div style={{ display: 'flex' }}>
           <DelayedSearchInput
             style={{ width: 500, display: 'flex', justifyContent: 'flex-start' }}
-            placeholder='SEARCH METHODS'
-            aria-label='Search methods'
+            placeholder='SEARCH WORKFLOWS'
+            aria-label='Search workflows'
             onChange={(val) => updateQuery({ newFilter: val })}
             value={filter}
           />
@@ -253,7 +253,7 @@ export const WorkflowList = (props: WorkflowListProps) => {
                 setCreateWorkflowModalOpen(true);
               }}
             >
-              Create New Method
+              Create New Workflow
             </ButtonPrimary>
           </div>
         </div>
@@ -285,7 +285,7 @@ export const WorkflowList = (props: WorkflowListProps) => {
         </div>
         {editNamespacePermissionsModalOpen && (
           <PermissionsModal
-            snapshotOrNamespace='Namespace'
+            versionOrNamespace='Namespace'
             namespace={namespacePermissionsToEdit}
             setPermissionsModalOpen={setEditNamespacePermissionsModalOpen}
             refresh={() => {}} // there is no need to refresh the page as permissions are always fetched when opening PermissionsModal
@@ -312,7 +312,7 @@ export const WorkflowList = (props: WorkflowListProps) => {
         )}
         {createWorkflowModalOpen && (
           <CreateWorkflowModal
-            title='Create New Method'
+            title='Create New Workflow'
             buttonActionName='Upload'
             postMethodProvider={postMethodProvider}
             onSuccess={navigateToWorkflow}
@@ -368,7 +368,7 @@ const getColumns = (
       field: 'name',
       headerRenderer: () => (
         <WorkflowTableHeader sort={sort} field='name' onSort={onSort}>
-          Method
+          Workflow
         </WorkflowTableHeader>
       ),
       cellRenderer: ({ rowIndex }) => {
@@ -417,7 +417,7 @@ const getColumns = (
       field: 'numSnapshots',
       headerRenderer: () => (
         <WorkflowTableHeader sort={sort} field='numSnapshots' onSort={onSort}>
-          Snapshots
+          Versions
         </WorkflowTableHeader>
       ),
       cellRenderer: ({ rowIndex }) => {
@@ -433,8 +433,8 @@ const getColumns = (
 export const navPaths = [
   {
     name: 'workflows',
-    path: '/methods',
+    path: '/workflows',
     component: WorkflowList,
-    title: 'Broad Methods Repository',
+    title: 'Terra Workflow Repository',
   },
 ];

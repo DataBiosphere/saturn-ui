@@ -5,11 +5,11 @@ import React from 'react';
 import { MethodResponse } from 'src/libs/ajax/methods/methods-models';
 import { PostMethodProvider } from 'src/libs/ajax/methods/providers/PostMethodProvider';
 import { renderWithAppContexts as render } from 'src/testing/test-utils';
-import { CreateWorkflowModal } from 'src/workflows/methods/modals/CreateWorkflowModal';
+import { CreateWorkflowModal } from 'src/workflows/modals/CreateWorkflowModal';
 
-type WDLEditorExports = typeof import('src/workflows/methods/WDLEditor');
-jest.mock('src/workflows/methods/WDLEditor', (): WDLEditorExports => {
-  const mockWDLEditorModule = jest.requireActual('src/workflows/methods/WDLEditor.mock');
+type WDLEditorExports = typeof import('src/workflows/WDLEditor');
+jest.mock('src/workflows/WDLEditor', (): WDLEditorExports => {
+  const mockWDLEditorModule = jest.requireActual('src/workflows/WDLEditor.mock');
   return {
     WDLEditor: mockWDLEditorModule.MockWDLEditor,
   };
@@ -50,7 +50,7 @@ describe('CreateWorkflowModal', () => {
     await act(async () => {
       render(
         <CreateWorkflowModal
-          title='Create New Method'
+          title='Create New Workflow'
           buttonActionName='Upload'
           postMethodProvider={successPostMethodProvider}
           onSuccess={jest.fn()}
@@ -60,14 +60,14 @@ describe('CreateWorkflowModal', () => {
     });
 
     // Assert
-    expect(screen.getByText('Create New Method'));
+    expect(screen.getByText('Create New Workflow'));
     expect(screen.getByText('Namespace *'));
     expect(screen.getByText('Name *'));
     expect(screen.getByText('WDL *'));
     expect(screen.getByRole('button', { name: 'Load WDL from file' }));
     expect(screen.getByText('Documentation'));
     expect(screen.getByText('Synopsis (80 characters max)'));
-    expect(screen.getByText('Snapshot comment'));
+    expect(screen.getByText('Version comment'));
     expect(screen.getByRole('button', { name: 'Cancel' }));
     expect(screen.getByRole('button', { name: 'Upload' }));
 
@@ -76,7 +76,7 @@ describe('CreateWorkflowModal', () => {
     expect(screen.getByTestId('wdl editor')).toHaveDisplayValue('');
     expect(screen.getByRole('textbox', { name: 'Documentation' })).toHaveDisplayValue('');
     expect(screen.getByRole('textbox', { name: 'Synopsis (80 characters max)' })).toHaveDisplayValue('');
-    expect(screen.getByRole('textbox', { name: 'Snapshot comment' })).toHaveDisplayValue('');
+    expect(screen.getByRole('textbox', { name: 'Version comment' })).toHaveDisplayValue('');
   });
 
   it('shows an error and disables the action button when the namespace and name inputs are empty', async () => {
@@ -84,7 +84,7 @@ describe('CreateWorkflowModal', () => {
     await act(async () => {
       render(
         <CreateWorkflowModal
-          title='Create New Method'
+          title='Create New Workflow'
           buttonActionName='Upload'
           defaultWdl='a'
           postMethodProvider={successPostMethodProvider}
@@ -125,7 +125,7 @@ describe('CreateWorkflowModal', () => {
     await act(async () => {
       render(
         <CreateWorkflowModal
-          title='Create New Method'
+          title='Create New Workflow'
           buttonActionName='Upload'
           defaultNamespace=','
           defaultName=','
@@ -160,7 +160,7 @@ describe('CreateWorkflowModal', () => {
     await act(async () => {
       render(
         <CreateWorkflowModal
-          title='Create New Method'
+          title='Create New Workflow'
           buttonActionName='Upload'
           defaultNamespace={longStringNamespace}
           defaultName={longStringName}
@@ -189,7 +189,7 @@ describe('CreateWorkflowModal', () => {
     await act(async () => {
       render(
         <CreateWorkflowModal
-          title='Create New Method'
+          title='Create New Workflow'
           buttonActionName='Upload'
           defaultNamespace='a'
           defaultName='a'
@@ -220,7 +220,7 @@ describe('CreateWorkflowModal', () => {
     await act(async () => {
       render(
         <CreateWorkflowModal
-          title='Create New Method'
+          title='Create New Workflow'
           buttonActionName='Upload'
           defaultNamespace='a'
           defaultName='a'
@@ -255,7 +255,7 @@ describe('CreateWorkflowModal', () => {
     await act(async () => {
       render(
         <CreateWorkflowModal
-          title='Create New Method'
+          title='Create New Workflow'
           buttonActionName='Upload'
           defaultNamespace='namespace'
           defaultName='name'
@@ -291,7 +291,7 @@ describe('CreateWorkflowModal', () => {
     await act(async () => {
       render(
         <CreateWorkflowModal
-          title='Create New Method'
+          title='Create New Workflow'
           buttonActionName='Upload'
           defaultNamespace='testnamespace'
           defaultName='testname'
@@ -312,7 +312,7 @@ describe('CreateWorkflowModal', () => {
     fireEvent.change(screen.getByRole('textbox', { name: 'Synopsis (80 characters max)' }), {
       target: { value: 'new synopsis' },
     });
-    fireEvent.change(screen.getByRole('textbox', { name: 'Snapshot comment' }), { target: { value: 'new comment' } });
+    fireEvent.change(screen.getByRole('textbox', { name: 'Version comment' }), { target: { value: 'new comment' } });
 
     await user.click(screen.getByRole('button', { name: 'Upload' }));
 
@@ -341,7 +341,7 @@ describe('CreateWorkflowModal', () => {
     await act(async () => {
       render(
         <CreateWorkflowModal
-          title='Create New Method'
+          title='Create New Workflow'
           buttonActionName='Upload'
           defaultNamespace='testnamespace'
           defaultName='testname'
@@ -361,7 +361,7 @@ describe('CreateWorkflowModal', () => {
     expect(screen.getByTestId('wdl editor')).toHaveDisplayValue('workflow hi {}');
     expect(screen.getByRole('textbox', { name: 'Documentation' })).toHaveDisplayValue('test docs');
     expect(screen.getByRole('textbox', { name: 'Synopsis (80 characters max)' })).toHaveDisplayValue('test synopsis');
-    expect(screen.getByRole('textbox', { name: 'Snapshot comment' })).toHaveDisplayValue('');
+    expect(screen.getByRole('textbox', { name: 'Version comment' })).toHaveDisplayValue('');
 
     // Act
     await user.click(screen.getByRole('button', { name: 'Upload' }));
@@ -391,7 +391,7 @@ describe('CreateWorkflowModal', () => {
     await act(async () => {
       render(
         <CreateWorkflowModal
-          title='Create New Method'
+          title='Create New Workflow'
           buttonActionName='Upload'
           defaultNamespace='namespace'
           defaultName='name'
@@ -424,7 +424,7 @@ describe('CreateWorkflowModal', () => {
     await act(async () => {
       render(
         <CreateWorkflowModal
-          title='Create New Method'
+          title='Create New Workflow'
           buttonActionName='Upload'
           defaultNamespace='namespace'
           defaultName='name'
@@ -457,7 +457,7 @@ describe('CreateWorkflowModal', () => {
     await act(async () => {
       render(
         <CreateWorkflowModal
-          title='Create New Method'
+          title='Create New Workflow'
           buttonActionName='Upload'
           defaultNamespace='namespace'
           defaultName='name'
@@ -488,12 +488,12 @@ describe('CreateWorkflowModal', () => {
     await act(async () => {
       render(
         <CreateWorkflowModal
-          title='Create new method'
+          title='Create new workflow'
           defaultName='groot-scientific-workflow_copy'
           defaultWdl='workflow do-great-stuff {}'
           defaultDocumentation='I am Groot'
           defaultSynopsis='I am Groot'
-          buttonActionName='Create new method'
+          buttonActionName='Create new workflow'
           postMethodProvider={successPostMethodProvider}
           onSuccess={mockOnSuccess}
           onDismiss={mockOnDismiss}
@@ -507,9 +507,9 @@ describe('CreateWorkflowModal', () => {
     expect(screen.getByTestId('wdl editor')).toHaveDisplayValue('workflow do-great-stuff {}');
     expect(screen.getByRole('textbox', { name: 'Documentation' })).toHaveDisplayValue('I am Groot');
     expect(screen.getByRole('textbox', { name: 'Synopsis (80 characters max)' })).toHaveDisplayValue('I am Groot');
-    expect(screen.getByRole('textbox', { name: 'Snapshot comment' })).toHaveDisplayValue('');
+    expect(screen.getByRole('textbox', { name: 'Version comment' })).toHaveDisplayValue('');
 
-    const cloneMethodButton = screen.getByRole('button', { name: 'Create new method' });
+    const cloneMethodButton = screen.getByRole('button', { name: 'Create new workflow' });
 
     // Assert
     expect(cloneMethodButton).toHaveAttribute('aria-disabled', 'true');
@@ -518,13 +518,13 @@ describe('CreateWorkflowModal', () => {
     fireEvent.change(screen.getByRole('textbox', { name: 'Namespace *' }), {
       target: { value: 'groot-test-namespace' },
     });
-    // user enters value for 'Snapshot comment' text box
-    fireEvent.change(screen.getByRole('textbox', { name: 'Snapshot comment' }), {
+    // user enters value for 'Version comment' text box
+    fireEvent.change(screen.getByRole('textbox', { name: 'Version comment' }), {
       target: { value: "Groot's brand new snapshot" },
     });
 
     // Act
-    await user.click(screen.getByRole('button', { name: 'Create new method' }));
+    await user.click(screen.getByRole('button', { name: 'Create new workflow' }));
 
     // Assert
     expect(successPostMethodProvider.postMethod).toHaveBeenCalledTimes(1);

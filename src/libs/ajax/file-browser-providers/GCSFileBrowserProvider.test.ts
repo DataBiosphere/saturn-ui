@@ -49,8 +49,8 @@ describe('GCSFileBrowserProvider', () => {
           undefined,
           () => ({
             kind: 'storage#objects',
-            items: [gcsObject('a-file.txt'), gcsObject('b-file.txt')],
-            prefixes: ['a-prefix/'],
+            items: [gcsObject('a-file.txt'), gcsObject('b-file.txt'), gcsObject('c-file.txt')],
+            prefixes: ['a-prefix/', 'b-prefix/', 'c-prefix/'],
             nextPageToken: '2',
           }),
         ],
@@ -58,16 +58,8 @@ describe('GCSFileBrowserProvider', () => {
           '2',
           () => ({
             kind: 'storage#objects',
-            items: [gcsObject('c-file.txt'), gcsObject('d-file.txt')],
-            prefixes: ['b-prefix/'],
-            nextPageToken: '3',
-          }),
-        ],
-        [
-          '3',
-          () => ({
-            kind: 'storage#objects',
-            prefixes: ['c-prefix/', 'd-prefix/'],
+            items: [gcsObject('d-file.txt')],
+            prefixes: ['d-prefix/'],
           }),
         ],
         [
@@ -102,7 +94,7 @@ describe('GCSFileBrowserProvider', () => {
     ];
     expect(firstResponse.items).toEqual(expectedFirstPageFiles);
     expect(firstResponse.hasNextPage).toBe(true);
-    expect(numGCSRequestsAfterFirstResponse).toBe(2);
+    expect(numGCSRequestsAfterFirstResponse).toBe(1);
 
     const expectedSecondPageFiles: FileBrowserFile[] = [
       expectedFile('a-file.txt'),
@@ -112,7 +104,7 @@ describe('GCSFileBrowserProvider', () => {
     ];
     expect(secondResponse.items).toEqual(expectedSecondPageFiles);
     expect(secondResponse.hasNextPage).toBe(false);
-    expect(numGCSRequestsAfterSecondResponse).toBe(3);
+    expect(numGCSRequestsAfterSecondResponse).toBe(2);
   });
 
   it('pages through directories (prefixes)', async () => {
@@ -133,7 +125,7 @@ describe('GCSFileBrowserProvider', () => {
     ];
     expect(firstResponse.items).toEqual(expectedFirstPageDirectories);
     expect(firstResponse.hasNextPage).toBe(true);
-    expect(numGCSRequestsAfterFirstResponse).toBe(3);
+    expect(numGCSRequestsAfterFirstResponse).toBe(1);
 
     const expectedSecondPageDirectories: FileBrowserDirectory[] = [
       { path: 'a-prefix/' },
@@ -143,7 +135,7 @@ describe('GCSFileBrowserProvider', () => {
     ];
     expect(secondResponse.items).toEqual(expectedSecondPageDirectories);
     expect(secondResponse.hasNextPage).toBe(false);
-    expect(numGCSRequestsAfterSecondResponse).toBe(3);
+    expect(numGCSRequestsAfterSecondResponse).toBe(2);
   });
 
   it('gets a signed URL for downloads', async () => {

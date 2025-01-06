@@ -4,7 +4,7 @@ import {
   namespacePermissionsProvider,
   snapshotPermissionsProvider,
 } from 'src/libs/ajax/methods/providers/PermissionsProvider';
-import { WorkflowsPermissions } from 'src/workflows/methods/workflows-acl-utils';
+import { WorkflowsPermissions } from 'src/workflows/workflows-acl-utils';
 
 jest.mock('src/libs/ajax/methods/Methods');
 

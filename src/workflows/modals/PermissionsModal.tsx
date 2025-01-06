@@ -27,11 +27,11 @@ import {
   WorkflowAccessLevel,
   WorkflowsPermissions,
   WorkflowUserPermissions,
-} from 'src/workflows/methods/workflows-acl-utils';
+} from 'src/workflows/workflows-acl-utils';
 import validate from 'validate.js';
 
 type WorkflowPermissionsModalProps = {
-  snapshotOrNamespace: 'Snapshot' | 'Namespace';
+  versionOrNamespace: 'Version' | 'Namespace';
   namespace: string;
   setPermissionsModalOpen: (b: boolean) => void;
   refresh: () => void;
@@ -166,7 +166,7 @@ const CurrentUsers = (props: CurrentUsersProps) => {
 };
 
 export const PermissionsModal = (props: WorkflowPermissionsModalProps) => {
-  const { snapshotOrNamespace, namespace, setPermissionsModalOpen, refresh, permissionsProvider } = props;
+  const { versionOrNamespace, namespace, setPermissionsModalOpen, refresh, permissionsProvider } = props;
   const signal: AbortSignal = useCancellation();
   const [searchValue, setSearchValue] = useState<string>('');
   const [permissions, setPermissions] = useState<WorkflowsPermissions>([]);
@@ -238,10 +238,10 @@ export const PermissionsModal = (props: WorkflowPermissionsModalProps) => {
   });
 
   const modalTitle =
-    snapshotOrNamespace === 'Snapshot' ? 'Edit snapshot permissions' : `Edit permissions for namespace ${namespace}`;
+    versionOrNamespace === 'Version' ? 'Edit version permissions' : `Edit permissions for namespace ${namespace}`;
   const noEditPermissionsMsg =
-    snapshotOrNamespace === 'Snapshot'
-      ? 'You do not have permissions to edit snapshot settings.'
+    versionOrNamespace === 'Version'
+      ? 'You do not have permissions to edit version settings.'
       : 'You do not have permissions to edit namespace settings.';
 
   return (

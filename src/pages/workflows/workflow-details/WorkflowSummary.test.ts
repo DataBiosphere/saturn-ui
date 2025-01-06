@@ -1,7 +1,7 @@
 import { fireEvent, screen } from '@testing-library/react';
 import { h } from 'react-hyperscript-helpers';
 import { snapshotStore } from 'src/libs/state';
-import { BaseWorkflowSummary } from 'src/pages/methods/workflow-details/WorkflowSummary';
+import { BaseWorkflowSummary } from 'src/pages/workflows/workflow-details/WorkflowSummary';
 import { renderWithAppContexts } from 'src/testing/test-utils';
 
 jest.mock('src/libs/notifications');
@@ -44,7 +44,7 @@ describe('WorkflowSummary Component', () => {
     // ** ASSERT **
     expect(screen.getByText('Synopsis')).toBeInTheDocument();
     expect(screen.getByText('Documentation')).toBeInTheDocument();
-    expect(screen.getByText('Snapshot Information')).toBeInTheDocument();
+    expect(screen.getByText('Version Information')).toBeInTheDocument();
     expect(screen.getByText('Owners')).toBeInTheDocument();
     expect(screen.getByText('Import URL')).toBeInTheDocument();
   });
@@ -69,14 +69,14 @@ describe('WorkflowSummary Component', () => {
     renderWithAppContexts(h(BaseWorkflowSummary));
 
     // ** ASSERT **
-    const snapshotInfoCollapsable = screen.getByRole('button', { name: 'Snapshot Information' });
+    const snapshotInfoCollapsable = screen.getByRole('button', { name: 'Version Information' });
     expect(snapshotInfoCollapsable).toHaveAttribute('aria-expanded', 'true');
 
     expect(screen.getByText('Creation Date'));
     expect(screen.getByText('10/20/2017'));
     expect(screen.getByText('Publicly Readable'));
     expect(screen.getByText('Public'));
-    expect(screen.getByText('Snapshot Comment'));
+    expect(screen.getByText('Version Comment'));
     // Using queryAllBy here because of the comment and tooltip containing the same text
     expect(screen.queryAllByText('a fake snapshot'));
   });

@@ -7,7 +7,7 @@ import * as breadcrumbs from 'src/components/breadcrumbs';
 import WDLViewer from 'src/components/WDLViewer';
 import { forwardRefWithName } from 'src/libs/react-utils';
 import { snapshotStore } from 'src/libs/state';
-import { wrapWorkflows } from 'src/pages/methods/workflow-details/WorkflowWrapper';
+import { wrapWorkflows } from 'src/pages/workflows/workflow-details/WorkflowWrapper';
 
 export const BaseWorkflowWdl = () => {
   const { name, snapshotId, payload } = useStore(snapshotStore);
@@ -46,7 +46,7 @@ const WorkflowWdl = _.flow(
 export const navPaths = [
   {
     name: 'workflow-wdl',
-    path: '/methods/:namespace/:name/:snapshotId/wdl',
+    path: '/workflows/:namespace/:name/:snapshotId/wdl',
     component: (props) => h(WorkflowWdl, { ...props, tabName: 'wdl' }),
     title: ({ name }) => `${name} - WDL`,
   },

@@ -2,19 +2,19 @@ import { act, screen } from '@testing-library/react';
 import userEvent, { UserEvent } from '@testing-library/user-event';
 import React from 'react';
 import { renderWithAppContexts as render } from 'src/testing/test-utils';
-import SnapshotActionMenu from 'src/workflows/methods/SnapshotActionMenu';
+import VersionActionMenu from 'src/workflows/VersionActionMenu';
 
 const mockOnDelete = jest.fn();
 const mockOnEditPermissions = jest.fn();
 const mockOnClone = jest.fn();
 const mockOnEdit = jest.fn();
 
-describe('snapshot action menu', () => {
+describe('version action menu', () => {
   it('honors the disabled prop', async () => {
     // Act
     await act(async () => {
       render(
-        <SnapshotActionMenu
+        <VersionActionMenu
           disabled
           isSnapshotOwner
           onEditPermissions={mockOnEditPermissions}
@@ -26,7 +26,7 @@ describe('snapshot action menu', () => {
     });
 
     // Assert
-    const snapshotActionMenu = screen.getByRole('button', { name: 'Snapshot action menu' });
+    const snapshotActionMenu = screen.getByRole('button', { name: 'Version action menu' });
 
     expect(snapshotActionMenu).toHaveAttribute('disabled');
     expect(snapshotActionMenu).toHaveAttribute('aria-disabled');
@@ -39,7 +39,7 @@ describe('snapshot action menu', () => {
     // Act
     await act(async () => {
       render(
-        <SnapshotActionMenu
+        <VersionActionMenu
           isSnapshotOwner
           onEditPermissions={mockOnEditPermissions}
           onDelete={mockOnDelete}
@@ -50,7 +50,7 @@ describe('snapshot action menu', () => {
     });
 
     // Assert
-    const snapshotActionMenu = screen.getByRole('button', { name: 'Snapshot action menu' });
+    const snapshotActionMenu = screen.getByRole('button', { name: 'Version action menu' });
 
     expect(snapshotActionMenu).not.toHaveAttribute('disabled');
     expect(snapshotActionMenu).toHaveAttribute('aria-disabled', 'false');
@@ -58,7 +58,7 @@ describe('snapshot action menu', () => {
     // Act
     await user.click(snapshotActionMenu);
 
-    const editPermissionsButton = screen.getByRole('button', { name: 'Edit snapshot permissions' });
+    const editPermissionsButton = screen.getByRole('button', { name: 'Edit version permissions' });
 
     await user.pointer({ target: editPermissionsButton });
 
@@ -68,7 +68,7 @@ describe('snapshot action menu', () => {
     expect(screen.queryByRole('tooltip')).not.toBeInTheDocument();
 
     // Act
-    const deleteSnapshotButton = screen.getByRole('button', { name: 'Delete snapshot' });
+    const deleteSnapshotButton = screen.getByRole('button', { name: 'Delete version' });
 
     await user.pointer({ target: deleteSnapshotButton });
 
@@ -103,7 +103,7 @@ describe('snapshot action menu', () => {
     // Act
     await act(async () => {
       render(
-        <SnapshotActionMenu
+        <VersionActionMenu
           isSnapshotOwner={false}
           onEditPermissions={mockOnEditPermissions}
           onDelete={mockOnDelete}
@@ -114,7 +114,7 @@ describe('snapshot action menu', () => {
     });
 
     // Assert
-    const snapshotActionMenu = screen.getByRole('button', { name: 'Snapshot action menu' });
+    const snapshotActionMenu = screen.getByRole('button', { name: 'Version action menu' });
 
     expect(snapshotActionMenu).not.toHaveAttribute('disabled');
     expect(snapshotActionMenu).toHaveAttribute('aria-disabled', 'false');
@@ -122,7 +122,7 @@ describe('snapshot action menu', () => {
     // Act
     await user.click(snapshotActionMenu);
 
-    const editPermissionsButton = screen.getByRole('button', { name: 'Edit snapshot permissions' });
+    const editPermissionsButton = screen.getByRole('button', { name: 'Edit version permissions' });
 
     await user.pointer({ target: editPermissionsButton });
 
@@ -132,7 +132,7 @@ describe('snapshot action menu', () => {
     expect(screen.getByRole('tooltip')).toBeInTheDocument();
 
     // Act
-    const deleteSnapshotButton = screen.getByRole('button', { name: 'Delete snapshot' });
+    const deleteSnapshotButton = screen.getByRole('button', { name: 'Delete version' });
 
     await user.pointer({ target: deleteSnapshotButton });
 
@@ -162,7 +162,7 @@ describe('snapshot action menu', () => {
   });
 });
 
-describe('snapshot action menu edit snapshot permissions button', () => {
+describe('version action menu edit version permissions button', () => {
   it('closes and calls the onEditPermissions callback when you press it', async () => {
     // Arrange
     const user: UserEvent = userEvent.setup();
@@ -170,7 +170,7 @@ describe('snapshot action menu edit snapshot permissions button', () => {
     // Act
     await act(async () => {
       render(
-        <SnapshotActionMenu
+        <VersionActionMenu
           isSnapshotOwner
           onEditPermissions={mockOnEditPermissions}
           onDelete={mockOnDelete}
@@ -180,16 +180,16 @@ describe('snapshot action menu edit snapshot permissions button', () => {
       );
     });
 
-    await user.click(screen.getByRole('button', { name: 'Snapshot action menu' }));
-    await user.click(screen.getByRole('button', { name: 'Edit snapshot permissions' }));
+    await user.click(screen.getByRole('button', { name: 'Version action menu' }));
+    await user.click(screen.getByRole('button', { name: 'Edit version permissions' }));
 
-    expect(screen.queryByRole('button', { name: 'Edit snapshot permissions' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Edit version permissions' })).not.toBeInTheDocument();
     expect(mockOnEditPermissions).toHaveBeenCalled();
     expect(mockOnDelete).not.toHaveBeenCalled();
   });
 });
 
-describe('snapshot action menu delete snapshot button', () => {
+describe('version action menu delete version button', () => {
   it('closes and calls the onDelete callback when you press it', async () => {
     // Arrange
     const user: UserEvent = userEvent.setup();
@@ -197,7 +197,7 @@ describe('snapshot action menu delete snapshot button', () => {
     // Act
     await act(async () => {
       render(
-        <SnapshotActionMenu
+        <VersionActionMenu
           isSnapshotOwner
           onEditPermissions={mockOnEditPermissions}
           onDelete={mockOnDelete}
@@ -207,17 +207,17 @@ describe('snapshot action menu delete snapshot button', () => {
       );
     });
 
-    await user.click(screen.getByRole('button', { name: 'Snapshot action menu' }));
-    await user.click(screen.getByRole('button', { name: 'Delete snapshot' }));
+    await user.click(screen.getByRole('button', { name: 'Version action menu' }));
+    await user.click(screen.getByRole('button', { name: 'Delete version' }));
 
     // Assert
-    expect(screen.queryByRole('button', { name: 'Delete snapshot' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Delete version' })).not.toBeInTheDocument();
     expect(mockOnDelete).toHaveBeenCalled();
     expect(mockOnEditPermissions).not.toHaveBeenCalled();
   });
 });
 
-describe('snapshot action menu save as button', () => {
+describe('version action menu save as button', () => {
   it('closes and calls the onClone callback when clicked', async () => {
     // Arrange
     const user: UserEvent = userEvent.setup();
@@ -225,7 +225,7 @@ describe('snapshot action menu save as button', () => {
     // Act
     await act(async () => {
       render(
-        <SnapshotActionMenu
+        <VersionActionMenu
           isSnapshotOwner
           onEditPermissions={mockOnEditPermissions}
           onDelete={mockOnDelete}
@@ -235,7 +235,7 @@ describe('snapshot action menu save as button', () => {
       );
     });
 
-    await user.click(screen.getByRole('button', { name: 'Snapshot action menu' }));
+    await user.click(screen.getByRole('button', { name: 'Version action menu' }));
     await user.click(screen.getByRole('button', { name: 'Save as' }));
 
     // Assert
@@ -244,7 +244,7 @@ describe('snapshot action menu save as button', () => {
   });
 });
 
-describe('snapshot action menu edit button', () => {
+describe('version action menu edit button', () => {
   it('closes and calls the onEdit callback when clicked', async () => {
     // Arrange
     const user: UserEvent = userEvent.setup();
@@ -252,7 +252,7 @@ describe('snapshot action menu edit button', () => {
     // Act
     await act(async () => {
       render(
-        <SnapshotActionMenu
+        <VersionActionMenu
           isSnapshotOwner
           onEditPermissions={mockOnEditPermissions}
           onDelete={mockOnDelete}
@@ -262,7 +262,7 @@ describe('snapshot action menu edit button', () => {
       );
     });
 
-    await user.click(screen.getByRole('button', { name: 'Snapshot action menu' }));
+    await user.click(screen.getByRole('button', { name: 'Version action menu' }));
     await user.click(screen.getByRole('button', { name: 'Edit' }));
 
     // Assert

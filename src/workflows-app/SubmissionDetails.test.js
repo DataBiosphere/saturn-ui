@@ -2,7 +2,7 @@ import { act, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import _ from 'lodash/fp';
 import { h } from 'react-hyperscript-helpers';
-import { useFilesInDirectory } from 'src/components/file-browser/file-browser-hooks';
+import { useDirectoriesInDirectory, useFilesInDirectory } from 'src/components/file-browser/file-browser-hooks';
 import FileBrowser from 'src/components/file-browser/FileBrowser';
 import FilesTable from 'src/components/file-browser/FilesTable';
 import { Ajax } from 'src/libs/ajax';
@@ -58,6 +58,7 @@ jest.mock('src/libs/config', () => ({
 
 jest.mock('src/components/file-browser/file-browser-hooks', () => ({
   ...jest.requireActual('src/components/file-browser/file-browser-hooks'),
+  useDirectoriesInDirectory: jest.fn(),
   useFilesInDirectory: jest.fn(),
 }));
 
@@ -1602,6 +1603,11 @@ describe('Submission Details page', () => {
   it('navigates to a sub-directory of the root', () => {
     // Arrange
     const mockFileBrowserProvider = {};
+    const directories = [
+      {
+        path: 'workspace-services/cbas/terra-app-/fetch_sra_to_bam/d16721eb-8745-4aa2-b71e-9ade2d6575aa/folder/',
+      },
+    ];
     const files = [
       {
         path: 'workspace-services/cbas/terra-app-/fetch_sra_to_bam/d16721eb-8745-4aa2-b71e-9ade2d6575aa/',
@@ -1613,6 +1619,14 @@ describe('Submission Details page', () => {
       },
     ];
 
+    const useDirectoriesInDirectoryResult = {
+      state: { directories, status: 'Ready' },
+      hasNextPage: false,
+      loadNextPage: () => Promise.resolve(),
+      loadAllRemainingItems: () => Promise.resolve(),
+      reload: () => Promise.resolve(),
+    };
+
     const useFilesInDirectoryResult = {
       state: { files, status: 'Ready' },
       hasNextPage: false,
@@ -1621,6 +1635,7 @@ describe('Submission Details page', () => {
       reload: () => Promise.resolve(),
     };
 
+    asMockedFn(useDirectoriesInDirectory).mockReturnValue(useDirectoriesInDirectoryResult);
     asMockedFn(useFilesInDirectory).mockReturnValue(useFilesInDirectoryResult);
 
     // Act
@@ -1638,22 +1653,8 @@ describe('Submission Details page', () => {
     );
 
     // Assert
-    expect(FilesTable).toHaveBeenCalledWith(
-      expect.objectContaining({
-        files: [
-          {
-            path: 'workspace-services/cbas/terra-app-/fetch_sra_to_bam/d16721eb-8745-4aa2-b71e-9ade2d6575aa/',
-            url: 'gs://test-bucket/file.txt',
-            contentType: 'text/plain',
-            size: 1024,
-            createdAt: 1667408400000,
-            updatedAt: 1667408400000,
-          },
-        ],
-      }),
-      expect.anything()
-    );
-    screen.getByText('Loaded 1 files in d16721eb-8745-4aa2-b71e-9ade2d6575aa');
+    expect(FilesTable).toHaveBeenCalledWith(expect.objectContaining({ directories, files }), expect.anything());
+    screen.getByText('Loaded 1 directories and 1 files in d16721eb-8745-4aa2-b71e-9ade2d6575aa');
     screen.getByText('d16721eb-8745-4aa2-b71e-9ade2d6575aa');
   });
 });
