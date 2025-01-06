@@ -31,17 +31,18 @@ const updatedMockPermissions: WorkflowsPermissions = [
 ];
 
 type MethodsNamespaceAjaxNeeds = Pick<MethodsAjaxContract, 'getNamespacePermissions' | 'setNamespacePermissions'>;
+type MethodObjContract = MethodsAjaxContract['method'];
 
 const mockSnapshotAjax = () => {
   const mockGetSnapshotPermissions = jest.fn().mockReturnValue(mockPermissions);
   const mockSetSnapshotPermissions = jest.fn().mockReturnValue(updatedMockPermissions);
   asMockedFn(Methods).mockReturnValue({
     method: jest.fn(() => {
-      return partial<ReturnType<MethodsAjaxContract['method']>>({
+      return partial<ReturnType<MethodObjContract>>({
         permissions: mockGetSnapshotPermissions,
         setPermissions: mockSetSnapshotPermissions,
       });
-    }) as MethodsAjaxContract['method'],
+    }) as MethodObjContract,
   } as MethodsAjaxContract);
 };
 
