@@ -5,8 +5,8 @@ import React from 'react';
 import { Ajax, AjaxContract } from 'src/libs/ajax';
 import { reportError } from 'src/libs/error';
 import { asMockedFn, renderWithAppContexts, SelectHelper } from 'src/testing/test-utils';
-import { PermissionsModal } from 'src/workflows/methods/modals/PermissionsModal';
-import { WorkflowsPermissions } from 'src/workflows/methods/workflows-acl-utils';
+import { PermissionsModal } from 'src/workflows/modals/PermissionsModal';
+import { WorkflowsPermissions } from 'src/workflows/workflows-acl-utils';
 
 jest.mock('src/libs/ajax');
 
@@ -82,7 +82,7 @@ describe('PermissionsModal', () => {
         <PermissionsModal
           name='test'
           namespace='namespace'
-          snapshotOrNamespace='Snapshot'
+          versionOrNamespace='Version'
           selectedSnapshot={3}
           setPermissionsModalOpen={jest.fn()}
           refresh={jest.fn()}
@@ -91,7 +91,7 @@ describe('PermissionsModal', () => {
     });
 
     // ASSERT
-    expect(screen.getByText('Edit Snapshot Permissions'));
+    expect(screen.getByText('Edit Version Permissions'));
     expect(screen.getByText('Note: Sharing with user groups is not supported.'));
     expect(screen.getByText('User'));
     expect(screen.getByRole('textbox', { name: 'User' }));
@@ -112,7 +112,7 @@ describe('PermissionsModal', () => {
         <PermissionsModal
           name='test'
           namespace='namespace'
-          snapshotOrNamespace='Snapshot'
+          versionOrNamespace='Version'
           selectedSnapshot={3}
           setPermissionsModalOpen={jest.fn()}
           refresh={jest.fn()}
@@ -149,7 +149,7 @@ describe('PermissionsModal', () => {
         <PermissionsModal
           name='test'
           namespace='namespace'
-          snapshotOrNamespace='Snapshot'
+          versionOrNamespace='Version'
           selectedSnapshot={3}
           setPermissionsModalOpen={jest.fn()}
           refresh={jest.fn()}
@@ -194,7 +194,7 @@ describe('PermissionsModal', () => {
         <PermissionsModal
           name='test'
           namespace='namespace'
-          snapshotOrNamespace='Snapshot'
+          versionOrNamespace='Version'
           selectedSnapshot={3}
           setPermissionsModalOpen={jest.fn()}
           refresh={jest.fn()}
@@ -230,7 +230,7 @@ describe('PermissionsModal', () => {
         <PermissionsModal
           name='test'
           namespace='namespace'
-          snapshotOrNamespace='Snapshot'
+          versionOrNamespace='Version'
           selectedSnapshot={3}
           setPermissionsModalOpen={jest.fn()}
           refresh={jest.fn()}
@@ -255,7 +255,7 @@ describe('PermissionsModal', () => {
         <PermissionsModal
           name='test'
           namespace='namespace'
-          snapshotOrNamespace='Snapshot'
+          versionOrNamespace='Version'
           selectedSnapshot={3}
           setPermissionsModalOpen={jest.fn()}
           refresh={jest.fn()}
@@ -286,7 +286,7 @@ describe('PermissionsModal', () => {
         <PermissionsModal
           name='test'
           namespace='namespace'
-          snapshotOrNamespace='Snapshot'
+          versionOrNamespace='Version'
           selectedSnapshot={3}
           setPermissionsModalOpen={jest.fn()}
           refresh={jest.fn()}
@@ -328,7 +328,7 @@ describe('PermissionsModal', () => {
         <PermissionsModal
           name='test'
           namespace='namespace'
-          snapshotOrNamespace='Snapshot'
+          versionOrNamespace='Version'
           selectedSnapshot={3}
           setPermissionsModalOpen={jest.fn()}
           refresh={jest.fn()}
@@ -362,7 +362,7 @@ describe('PermissionsModal', () => {
         <PermissionsModal
           name='test'
           namespace='namespace'
-          snapshotOrNamespace='Snapshot'
+          versionOrNamespace='Version'
           selectedSnapshot={3}
           setPermissionsModalOpen={jest.fn()}
           refresh={jest.fn()}
@@ -399,7 +399,7 @@ describe('PermissionsModal', () => {
         <PermissionsModal
           name='test'
           namespace='namespace'
-          snapshotOrNamespace='Snapshot'
+          versionOrNamespace='Version'
           selectedSnapshot={3}
           setPermissionsModalOpen={mockSetPermissionsModalOpen}
           refresh={mockRefresh}
@@ -429,7 +429,7 @@ describe('PermissionsModal', () => {
         <PermissionsModal
           name='test'
           namespace='namespace'
-          snapshotOrNamespace='Snapshot'
+          versionOrNamespace='Version'
           selectedSnapshot={3}
           setPermissionsModalOpen={mockSetPermissionsModalOpen}
           refresh={mockRefresh}
@@ -461,7 +461,7 @@ describe('PermissionsModal', () => {
         <PermissionsModal
           name='test'
           namespace='namespace'
-          snapshotOrNamespace='Snapshot'
+          versionOrNamespace='Version'
           selectedSnapshot={3}
           setPermissionsModalOpen={mockSetPermissionsModalOpen}
           refresh={mockRefresh}
@@ -492,7 +492,7 @@ describe('PermissionsModal', () => {
         <PermissionsModal
           name='test'
           namespace='namespace'
-          snapshotOrNamespace='Snapshot'
+          versionOrNamespace='Version'
           selectedSnapshot={3}
           setPermissionsModalOpen={mockSetPermissionsModalOpen}
           refresh={mockRefresh}

@@ -7,7 +7,7 @@ import { TextArea, TextInput, ValidatedInput } from 'src/components/input';
 import colors from 'src/libs/colors';
 import { FormLabel } from 'src/libs/forms';
 import * as Utils from 'src/libs/utils';
-import { WDLEditor } from 'src/workflows/methods/WDLEditor';
+import { WDLEditor } from 'src/workflows/WDLEditor';
 
 export interface WorkflowModalCommonProps {
   /** The title to be shown at the top of the modal. */
@@ -110,7 +110,7 @@ export const SynopsisSnapshotSection = (props: SynopsisSnapshotSectionProps) => 
       </div>
       <div style={{ paddingTop: '1.5rem' }}>
         <div style={{ marginBottom: '0.1667em' }}>
-          <FormLabel htmlFor={snapshotCommentInputId}>Snapshot comment</FormLabel>
+          <FormLabel htmlFor={snapshotCommentInputId}>Version comment</FormLabel>
         </div>
         <TextInput id={snapshotCommentInputId} value={snapshotComment} onChange={setSnapshotComment} />
       </div>

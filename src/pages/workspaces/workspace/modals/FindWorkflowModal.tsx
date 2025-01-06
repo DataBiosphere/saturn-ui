@@ -8,6 +8,7 @@ import { isFeaturePreviewEnabled } from 'src/libs/feature-previews';
 import { FIRECLOUD_UI_MIGRATION } from 'src/libs/feature-previews-config';
 import * as Nav from 'src/libs/nav';
 import * as Utils from 'src/libs/utils';
+import { CuratedWorkflowDetails, curatedWorkflowsList } from 'src/pages/library/workflows/curated-workflows-utils';
 
 interface WorkflowSourceCardProps {
   title: string;
@@ -39,37 +40,8 @@ const WorkflowSourceCard = (props: WorkflowSourceCardProps) => {
   );
 };
 
-interface CuratedWorkflowDetails {
-  key: string; // used as a key for list items
-  title: string;
-  url: string;
-}
-
 const CuratedDockstoreWorkflowsSection = () => {
   const dockstoreUrlRoot: string = getConfig().dockstoreUrlRoot;
-
-  const curatedWorkflowsList: Array<CuratedWorkflowDetails> = [
-    {
-      key: 'gatk',
-      title: 'GATK Best Practices',
-      url: `${dockstoreUrlRoot}/organizations/BroadInstitute/collections/GATKWorkflows`,
-    },
-    {
-      key: 'longRead',
-      title: 'Long Read Pipelines',
-      url: `${dockstoreUrlRoot}/organizations/BroadInstitute/collections/LongReadPipelines`,
-    },
-    {
-      key: 'warp',
-      title: 'WDL Analysis Research Pipelines',
-      url: `${dockstoreUrlRoot}/organizations/BroadInstitute/collections/WARPpipelines`,
-    },
-    {
-      key: 'vg',
-      title: 'Viral Genomics',
-      url: `${dockstoreUrlRoot}/organizations/BroadInstitute/collections/pgs`,
-    },
-  ];
 
   return (
     <div>
@@ -84,7 +56,7 @@ const CuratedDockstoreWorkflowsSection = () => {
               </Link>
             </div>
           );
-        }, curatedWorkflowsList)}
+        }, curatedWorkflowsList(dockstoreUrlRoot))}
       </div>
     </div>
   );
@@ -115,7 +87,7 @@ export const FindWorkflowModal = (props: FindWorkflowModalProps) => {
         </div>
         <div style={{ flex: 1, marginLeft: 20 }}>
           <WorkflowSourceCard
-            title='Broad Methods Repository'
+            title='Terra Workflow Repository'
             description='A repository of WDL workflows that offers private workflows hosted in the platform.'
             url={workflowsRepoUrl}
             openInNewTab={false}

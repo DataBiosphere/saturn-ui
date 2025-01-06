@@ -1,7 +1,7 @@
 import React, { ReactNode } from 'react';
 import { DeleteConfirmationModal } from 'src/components/common';
 
-interface DeleteSnapshotModalProps {
+interface DeleteVersionModalProps {
   /** The namespace of the workflow snapshot to be deleted (for display). */
   namespace: string;
 
@@ -28,18 +28,18 @@ interface DeleteSnapshotModalProps {
  * The onConfirm prop is passed directly to the underlying modal; this component
  * does not already include the API call to perform the snapshot deletion.
  */
-const DeleteSnapshotModal = (props: DeleteSnapshotModalProps): ReactNode => {
+const DeleteVersionModal = (props: DeleteVersionModalProps): ReactNode => {
   const { namespace, name, snapshotId, onConfirm, onDismiss } = props;
 
   return (
     <DeleteConfirmationModal
-      objectType='snapshot'
+      objectType='version'
       objectName={`${namespace}/${name}/${snapshotId}`}
       onConfirm={onConfirm}
       onDismiss={onDismiss}
     >
       <p>
-        Are you sure you want to delete snapshot <b>{snapshotId}</b> of the method{' '}
+        Are you sure you want to delete version <b>{snapshotId}</b> of the workflow{' '}
         <b>
           {namespace}/{name}
         </b>
@@ -47,7 +47,7 @@ const DeleteSnapshotModal = (props: DeleteSnapshotModalProps): ReactNode => {
          */}
         ?
       </p>
-      <p>Exports of this snapshot in workspaces will no longer run.</p>
+      <p>Exports of this version in workspaces will no longer run.</p>
       <p>
         <strong>This cannot be undone.</strong>
       </p>
@@ -55,4 +55,4 @@ const DeleteSnapshotModal = (props: DeleteSnapshotModalProps): ReactNode => {
   );
 };
 
-export default DeleteSnapshotModal;
+export default DeleteVersionModal;

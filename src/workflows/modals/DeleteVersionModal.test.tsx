@@ -2,7 +2,7 @@ import { act, screen, within } from '@testing-library/react';
 import userEvent, { UserEvent } from '@testing-library/user-event';
 import React from 'react';
 import { renderWithAppContexts as render } from 'src/testing/test-utils';
-import DeleteSnapshotModal from 'src/workflows/methods/modals/DeleteSnapshotModal';
+import DeleteVersionModal from 'src/workflows/modals/DeleteVersionModal';
 
 const mockOnConfirm = jest.fn();
 const mockOnDismiss = jest.fn();
@@ -12,7 +12,7 @@ describe('delete snapshot modal', () => {
     // Act
     await act(async () => {
       render(
-        <DeleteSnapshotModal
+        <DeleteVersionModal
           namespace='testnamespace'
           name='methodname'
           snapshotId='3'
@@ -23,7 +23,7 @@ describe('delete snapshot modal', () => {
     });
 
     // Assert
-    const dialog = screen.getByRole('dialog', { name: 'Delete snapshot' });
+    const dialog = screen.getByRole('dialog', { name: 'Delete version' });
     expect(dialog).toBeInTheDocument();
     expect(within(dialog).getByText('3', { exact: false })).toBeInTheDocument();
     expect(within(dialog).getByText('testnamespace', { exact: false })).toBeInTheDocument();
@@ -37,7 +37,7 @@ describe('delete snapshot modal', () => {
     // Act
     await act(async () => {
       render(
-        <DeleteSnapshotModal
+        <DeleteVersionModal
           namespace='testnamespace'
           name='methodname'
           snapshotId='3'
@@ -47,7 +47,7 @@ describe('delete snapshot modal', () => {
       );
     });
 
-    await user.click(screen.getByRole('button', { name: /delete snapshot/i }));
+    await user.click(screen.getByRole('button', { name: /delete version/i }));
 
     // Assert
     expect(mockOnConfirm).toHaveBeenCalled();
@@ -61,7 +61,7 @@ describe('delete snapshot modal', () => {
     // Act
     await act(async () => {
       render(
-        <DeleteSnapshotModal
+        <DeleteVersionModal
           namespace='testnamespace'
           name='methodname'
           snapshotId='3'
