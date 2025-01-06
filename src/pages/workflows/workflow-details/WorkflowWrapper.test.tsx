@@ -14,7 +14,7 @@ import { goToPath } from 'src/libs/nav';
 import * as Nav from 'src/libs/nav';
 import { forwardRefWithName } from 'src/libs/react-utils';
 import { snapshotsListStore, snapshotStore, TerraUser, TerraUserState, userStore } from 'src/libs/state';
-import { WorkflowsContainer, wrapWorkflows } from 'src/pages/methods/workflow-details/WorkflowWrapper';
+import { WorkflowsContainer, wrapWorkflows } from 'src/pages/workflows/workflow-details/WorkflowWrapper';
 import { asMockedFn, MockedFn, partial, renderWithAppContexts as render, SelectHelper } from 'src/testing/test-utils';
 import { useWorkspaces } from 'src/workspaces/common/state/useWorkspaces';
 import { AzureContext, WorkspaceInfo, WorkspaceWrapper } from 'src/workspaces/utils';
@@ -25,9 +25,9 @@ jest.mock('src/libs/notifications');
 
 type NavExports = typeof import('src/libs/nav');
 
-type WDLEditorExports = typeof import('src/workflows/methods/WDLEditor');
-jest.mock('src/workflows/methods/WDLEditor', (): WDLEditorExports => {
-  const mockWDLEditorModule = jest.requireActual('src/workflows/methods/WDLEditor.mock');
+type WDLEditorExports = typeof import('src/workflows/WDLEditor');
+jest.mock('src/workflows/WDLEditor', (): WDLEditorExports => {
+  const mockWDLEditorModule = jest.requireActual('src/workflows/WDLEditor.mock');
   return {
     WDLEditor: mockWDLEditorModule.MockWDLEditor,
   };

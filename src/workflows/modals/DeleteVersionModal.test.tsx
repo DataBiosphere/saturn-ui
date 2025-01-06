@@ -2,7 +2,7 @@ import { act, screen, within } from '@testing-library/react';
 import userEvent, { UserEvent } from '@testing-library/user-event';
 import React from 'react';
 import { renderWithAppContexts as render } from 'src/testing/test-utils';
-import DeleteSnapshotModal from 'src/workflows/methods/modals/DeleteSnapshotModal';
+import DeleteVersionModal from 'src/workflows/modals/DeleteVersionModal';
 
 const mockOnConfirm = jest.fn();
 const mockOnDismiss = jest.fn();
@@ -12,7 +12,7 @@ describe('delete snapshot modal', () => {
     // Act
     await act(async () => {
       render(
-        <DeleteSnapshotModal
+        <DeleteVersionModal
           namespace='testnamespace'
           name='methodname'
           snapshotId='3'
@@ -37,7 +37,7 @@ describe('delete snapshot modal', () => {
     // Act
     await act(async () => {
       render(
-        <DeleteSnapshotModal
+        <DeleteVersionModal
           namespace='testnamespace'
           name='methodname'
           snapshotId='3'
@@ -61,7 +61,7 @@ describe('delete snapshot modal', () => {
     // Act
     await act(async () => {
       render(
-        <DeleteSnapshotModal
+        <DeleteVersionModal
           namespace='testnamespace'
           name='methodname'
           snapshotId='3'

@@ -7,7 +7,7 @@ import { TextArea, TextInput, ValidatedInput } from 'src/components/input';
 import colors from 'src/libs/colors';
 import { FormLabel } from 'src/libs/forms';
 import * as Utils from 'src/libs/utils';
-import { WDLEditor } from 'src/workflows/methods/WDLEditor';
+import { WDLEditor } from 'src/workflows/WDLEditor';
 
 export interface WorkflowModalCommonProps {
   /** The title to be shown at the top of the modal. */

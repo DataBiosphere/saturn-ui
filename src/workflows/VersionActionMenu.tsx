@@ -38,7 +38,7 @@ export interface SnapshotActionMenuProps {
  *
  * Currently supported actions: edit permissions, delete version, clone version, edit workflow
  */
-const SnapshotActionMenu = (props: SnapshotActionMenuProps): ReactNode => {
+const VersionActionMenu = (props: SnapshotActionMenuProps): ReactNode => {
   const { disabled, isSnapshotOwner, onEditPermissions, onDelete, onClone, onEdit } = props;
 
   const notSnapshotOwnerTooltip = 'You must be an owner of this snapshot';
@@ -94,4 +94,4 @@ const SnapshotActionMenu = (props: SnapshotActionMenuProps): ReactNode => {
   );
 };
 
-export default SnapshotActionMenu;
+export default VersionActionMenu;
