@@ -13,7 +13,7 @@ import React, { CSSProperties, Dispatch, SetStateAction, useRef, useState } from
 import { IdContainer, LabeledCheckbox } from 'src/components/common';
 import { ValidatedInput } from 'src/components/input';
 import { getPopupRoot } from 'src/components/popup-utils';
-import { Ajax } from 'src/libs/ajax';
+import { PermissionsProvider } from 'src/libs/ajax/methods/providers/PermissionsProvider';
 import colors from 'src/libs/colors';
 import { reportError } from 'src/libs/error';
 import { FormLabel } from 'src/libs/forms';
@@ -33,10 +33,9 @@ import validate from 'validate.js';
 type WorkflowPermissionsModalProps = {
   versionOrNamespace: 'Version' | 'Namespace';
   namespace: string;
-  name: string;
-  selectedSnapshot: number;
   setPermissionsModalOpen: (b: boolean) => void;
   refresh: () => void;
+  permissionsProvider: PermissionsProvider;
 };
 
 type UserProps = {
@@ -83,7 +82,7 @@ const UserSelectInput = (props: UserSelectProps) => {
 
   return (
     <div style={{ display: 'flex', marginTop: '0.25rem' }}>
-      <div style={{ width: 200 }}>
+      <div style={{ width: 300 }}>
         <Select<WorkflowAccessLevel>
           aria-label={`selected role ${role}`}
           value={role}
@@ -167,7 +166,7 @@ const CurrentUsers = (props: CurrentUsersProps) => {
 };
 
 export const PermissionsModal = (props: WorkflowPermissionsModalProps) => {
-  const { versionOrNamespace, namespace, name, selectedSnapshot, setPermissionsModalOpen, refresh } = props;
+  const { versionOrNamespace, namespace, setPermissionsModalOpen, refresh, permissionsProvider } = props;
   const signal: AbortSignal = useCancellation();
   const [searchValue, setSearchValue] = useState<string>('');
   const [permissions, setPermissions] = useState<WorkflowsPermissions>([]);
@@ -179,18 +178,24 @@ export const PermissionsModal = (props: WorkflowPermissionsModalProps) => {
   const errors = validate({ searchValue }, constraints(userEmails), {
     prettify: (v) => ({ searchValue: 'User' }[v] || validate.prettify(v)),
   });
+  const [noEditPermissions, setNoEditPermissions] = useState<boolean>(false);
 
   useOnMount(() => {
     const loadWorkflowPermissions = withBusyState(setWorking, async () => {
       try {
-        const workflowPermissions: WorkflowsPermissions = await Ajax(signal)
-          .Methods.method(namespace, name, selectedSnapshot)
-          .permissions();
+        const workflowPermissions: WorkflowsPermissions = await permissionsProvider.getPermissions(namespace, {
+          signal,
+        });
         setPermissions(workflowPermissions);
         setOriginalPermissions(workflowPermissions);
       } catch (error) {
-        await reportError('Error loading permissions.', error);
-        setPermissionsModalOpen(false);
+        // user doesn't have permissions to edit the namespace/version permissions
+        if (error instanceof Response && error.status === 403) {
+          setNoEditPermissions(true);
+        } else {
+          await reportError('Error loading permissions.', error);
+          setPermissionsModalOpen(false);
+        }
       }
     });
 
@@ -223,7 +228,7 @@ export const PermissionsModal = (props: WorkflowPermissionsModalProps) => {
     const permissionUpdates: WorkflowsPermissions = [...permissions, ...toBeDeletedPermissionUpdates];
 
     try {
-      await Ajax(signal).Methods.method(namespace, name, selectedSnapshot).setPermissions(permissionUpdates);
+      await permissionsProvider.updatePermissions(namespace, permissionUpdates, { signal });
       refresh();
       setPermissionsModalOpen(false);
     } catch (error) {
@@ -232,65 +237,74 @@ export const PermissionsModal = (props: WorkflowPermissionsModalProps) => {
     }
   });
 
+  const modalTitle =
+    versionOrNamespace === 'Version' ? 'Edit version permissions' : `Edit permissions for namespace ${namespace}`;
+  const noEditPermissionsMsg =
+    versionOrNamespace === 'Version'
+      ? 'You do not have permissions to edit version settings.'
+      : 'You do not have permissions to edit namespace settings.';
+
   return (
-    <Modal
-      title={`Edit ${versionOrNamespace} Permissions`}
-      onDismiss={() => setPermissionsModalOpen(false)}
-      width='30rem'
-      showButtons={false}
-    >
-      <div>
-        <span style={{ display: 'flex', alignItems: 'center' }}>
-          <Icon size={19} color={colors.warning()} icon='warning-standard' />
-          <span style={{ marginLeft: '1ch' }}>Note: Sharing with user groups is not supported.</span>
-        </span>
-        <div style={{ display: 'flex', alignItems: 'flex-end' }}>
-          <IdContainer>
-            {(id) => (
-              <div style={{ flexGrow: 1, marginRight: '1rem' }}>
-                <FormLabel htmlFor={id} style={{ ...Style.elements.sectionHeader, margin: '1rem 0 0.5rem 0' }}>
-                  User
-                </FormLabel>
-                <ValidatedInput
-                  inputProps={{
-                    id,
-                    autoFocus: true,
-                    placeholder: 'Add a user',
-                    value: searchValue,
-                    onChange: (v) => {
-                      setSearchValue(v);
-                      setUserValueModified(true);
-                    },
-                  }}
-                  error={Utils.summarizeErrors(userValueModified && errors?.searchValue)}
-                />
-              </div>
-            )}
-          </IdContainer>
-          <ButtonPrimary disabled={errors} onClick={() => addUser(searchValue)}>
-            Add
-          </ButtonPrimary>
-        </div>
-      </div>
-      <CurrentUsers allPermissions={permissions} setAllPermissions={setPermissions} />
-      <div style={{ ...modalStyles.buttonRow, justifyContent: 'space-between' }}>
+    <Modal title={modalTitle} onDismiss={() => setPermissionsModalOpen(false)} width='600px' showButtons={false} showX>
+      {noEditPermissions && (
+        <div style={{ color: colors.danger(1), fontSize: 15, paddingTop: '10px' }}>{noEditPermissionsMsg}</div>
+      )}
+      {!working && !noEditPermissions && (
         <div>
-          <LabeledCheckbox
-            checked={publicAccessLevel !== 'NO ACCESS'}
-            onChange={(v: boolean) => {
-              updatePublicUser(v);
-            }}
-          >
-            <span style={{ marginLeft: '0.3rem' }}>Make Publicly Readable?</span>
-          </LabeledCheckbox>
+          <div>
+            <span style={{ display: 'flex', alignItems: 'center' }}>
+              <Icon size={19} color={colors.warning()} icon='warning-standard' />
+              <span style={{ marginLeft: '1ch' }}>Note: Sharing with user groups is not supported.</span>
+            </span>
+            <div style={{ display: 'flex', alignItems: 'flex-end' }}>
+              <IdContainer>
+                {(id) => (
+                  <div style={{ flexGrow: 1, marginRight: '1rem' }}>
+                    <FormLabel htmlFor={id} style={{ ...Style.elements.sectionHeader, margin: '1rem 0 0.5rem 0' }}>
+                      User
+                    </FormLabel>
+                    <ValidatedInput
+                      inputProps={{
+                        id,
+                        autoFocus: true,
+                        placeholder: 'Add a user',
+                        value: searchValue,
+                        onChange: (v) => {
+                          setSearchValue(v);
+                          setUserValueModified(true);
+                        },
+                      }}
+                      error={Utils.summarizeErrors(userValueModified && errors?.searchValue)}
+                    />
+                  </div>
+                )}
+              </IdContainer>
+              <ButtonPrimary disabled={errors} onClick={() => addUser(searchValue)}>
+                Add
+              </ButtonPrimary>
+            </div>
+          </div>
+          <CurrentUsers allPermissions={permissions} setAllPermissions={setPermissions} />
+          <div style={{ ...modalStyles.buttonRow, justifyContent: 'space-between' }}>
+            <div>
+              <LabeledCheckbox
+                checked={publicAccessLevel !== 'NO ACCESS'}
+                onChange={(v: boolean) => {
+                  updatePublicUser(v);
+                }}
+              >
+                <span style={{ marginLeft: '0.3rem' }}>Make Publicly Readable?</span>
+              </LabeledCheckbox>
+            </div>
+            <span>
+              <ButtonSecondary style={{ marginRight: '1rem' }} onClick={() => setPermissionsModalOpen(false)}>
+                Cancel
+              </ButtonSecondary>
+              <ButtonPrimary onClick={save}>Save</ButtonPrimary>
+            </span>
+          </div>
         </div>
-        <span>
-          <ButtonSecondary style={{ marginRight: '1rem' }} onClick={() => setPermissionsModalOpen(false)}>
-            Cancel
-          </ButtonSecondary>
-          <ButtonPrimary onClick={save}>Save</ButtonPrimary>
-        </span>
-      </div>
+      )}
       {working && <SpinnerOverlay />}
     </Modal>
   );

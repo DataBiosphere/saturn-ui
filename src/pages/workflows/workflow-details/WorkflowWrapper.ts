@@ -10,6 +10,7 @@ import { TopBar } from 'src/components/TopBar';
 import { Methods } from 'src/libs/ajax/methods/Methods';
 import { Snapshot } from 'src/libs/ajax/methods/methods-models';
 import { editMethodProvider } from 'src/libs/ajax/methods/providers/EditMethodProvider';
+import { snapshotPermissionsProvider } from 'src/libs/ajax/methods/providers/PermissionsProvider';
 import { postMethodProvider } from 'src/libs/ajax/methods/providers/PostMethodProvider';
 import { makeExportWorkflowFromMethodsRepoProvider } from 'src/libs/ajax/workspaces/providers/ExportWorkflowToWorkspaceProvider';
 import { ErrorCallback, withErrorReporting } from 'src/libs/error';
@@ -292,10 +293,9 @@ export const WorkflowsContainer = (props: WorkflowContainerProps) => {
       h(PermissionsModal, {
         versionOrNamespace: 'Version',
         namespace,
-        name,
-        selectedSnapshot,
         setPermissionsModalOpen,
         refresh: loadSnapshot,
+        permissionsProvider: snapshotPermissionsProvider(name, selectedSnapshot),
       }),
     showCloneModal &&
       h(CreateWorkflowModal, {

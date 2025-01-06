@@ -1,10 +1,9 @@
-import { DeepPartial } from '@terra-ui-packages/core-utils';
 import { act, fireEvent, screen } from '@testing-library/react';
 import userEvent, { UserEvent } from '@testing-library/user-event';
 import React from 'react';
-import { Ajax, AjaxContract } from 'src/libs/ajax';
+import { PermissionsProvider } from 'src/libs/ajax/methods/providers/PermissionsProvider';
 import { reportError } from 'src/libs/error';
-import { asMockedFn, renderWithAppContexts, SelectHelper } from 'src/testing/test-utils';
+import { renderWithAppContexts, SelectHelper } from 'src/testing/test-utils';
 import { PermissionsModal } from 'src/workflows/modals/PermissionsModal';
 import { WorkflowsPermissions } from 'src/workflows/workflows-acl-utils';
 
@@ -51,47 +50,75 @@ const mockPermissions: WorkflowsPermissions = [
     user: 'user2@bar.com',
   },
 ];
-const mockWorkflowPermissions = jest.fn().mockReturnValue(Promise.resolve(mockPermissions));
+const mockGetPermissions = jest.fn().mockReturnValue(Promise.resolve(mockPermissions));
 const mockSetPermissions = jest.fn();
 
-interface AjaxMocks {
-  permissionsImpl?: jest.Mock;
-  setPermissionsImpl?: jest.Mock;
-}
+const permissionsProviderSuccess: PermissionsProvider = {
+  getPermissions: mockGetPermissions,
+  updatePermissions: mockSetPermissions,
+};
 
-const mockAjax = (mocks: AjaxMocks = {}) => {
-  const { permissionsImpl, setPermissionsImpl } = mocks;
-  const mockAjax: DeepPartial<AjaxContract> = {
-    Methods: {
-      method: jest.fn().mockReturnValue({
-        permissions: permissionsImpl || mockWorkflowPermissions,
-        setPermissions: setPermissionsImpl || mockSetPermissions,
-      }),
-    },
-  };
-  asMockedFn(Ajax).mockImplementation(() => mockAjax as AjaxContract);
+const permissionsProviderError: PermissionsProvider = {
+  getPermissions: jest.fn().mockImplementation(() => {
+    throw new Error('BOOM');
+  }),
+  updatePermissions: jest.fn().mockImplementation(() => {
+    throw new Error('BOOM');
+  }),
+};
+
+const permissionsProviderForbidden: PermissionsProvider = {
+  getPermissions: jest.fn().mockImplementation(() => {
+    throw new Response(JSON.stringify('No access'), { status: 403 });
+  }),
+  updatePermissions: mockSetPermissions,
 };
 
 describe('PermissionsModal', () => {
-  it('loads the correct title and basic elements', async () => {
+  it('loads the correct title and basic elements for version permissions', async () => {
     // ARRANGE
-    mockAjax();
 
     await act(async () => {
       renderWithAppContexts(
         <PermissionsModal
-          name='test'
           namespace='namespace'
           versionOrNamespace='Version'
-          selectedSnapshot={3}
           setPermissionsModalOpen={jest.fn()}
           refresh={jest.fn()}
+          permissionsProvider={permissionsProviderSuccess}
         />
       );
     });
 
     // ASSERT
-    expect(screen.getByText('Edit Version Permissions'));
+    expect(screen.getByText('Edit version permissions'));
+    expect(screen.getByText('Note: Sharing with user groups is not supported.'));
+    expect(screen.getByText('User'));
+    expect(screen.getByRole('textbox', { name: 'User' }));
+    expect(screen.getByRole('button', { name: 'Add' }));
+    expect(screen.getByText('Current Users'));
+    expect(screen.getByRole('checkbox', { name: 'Make Publicly Readable?' }));
+    expect(screen.getByRole('button', { name: 'Cancel' }));
+    expect(screen.getByRole('button', { name: 'Save' }));
+  });
+
+  it('loads the correct title and basic elements for namespace permissions', async () => {
+    // ARRANGE
+
+    await act(async () => {
+      renderWithAppContexts(
+        <PermissionsModal
+          namespace='my-namespace'
+          versionOrNamespace='Namespace'
+          setPermissionsModalOpen={jest.fn()}
+          refresh={jest.fn()}
+          permissionsProvider={permissionsProviderSuccess}
+        />
+      );
+    });
+
+    // ASSERT
+    expect(screen.getByText('Edit permissions for namespace my-namespace'));
     expect(screen.getByText('Note: Sharing with user groups is not supported.'));
     expect(screen.getByText('User'));
     expect(screen.getByRole('textbox', { name: 'User' }));
@@ -104,25 +131,23 @@ describe('PermissionsModal', () => {
 
   it('loads users with proper permissions', async () => {
     // ARRANGE
-    mockAjax();
     const user = userEvent.setup();
 
     await act(async () => {
       renderWithAppContexts(
         <PermissionsModal
-          name='test'
           namespace='namespace'
           versionOrNamespace='Version'
-          selectedSnapshot={3}
           setPermissionsModalOpen={jest.fn()}
           refresh={jest.fn()}
+          permissionsProvider={permissionsProviderSuccess}
         />
       );
     });
 
     // ASSERT
-    expect(Ajax().Methods.method).toHaveBeenCalledWith('namespace', 'test', 3);
-    expect(mockWorkflowPermissions).toHaveBeenCalled();
+    expect(mockGetPermissions).toHaveBeenCalled();
+    expect(mockGetPermissions).toHaveBeenCalledWith('namespace', expect.any(Object));
 
     expect(screen.getByText('user1@foo.com'));
     expect(screen.getByText('user2@bar.com'));
@@ -141,18 +166,16 @@ describe('PermissionsModal', () => {
 
   it('adds a new user and permissions', async () => {
     // ARRANGE
-    mockAjax();
     const user = userEvent.setup();
 
     await act(async () => {
       renderWithAppContexts(
         <PermissionsModal
-          name='test'
           namespace='namespace'
           versionOrNamespace='Version'
-          selectedSnapshot={3}
           setPermissionsModalOpen={jest.fn()}
           refresh={jest.fn()}
+          permissionsProvider={permissionsProviderSuccess}
         />
       );
     });
@@ -177,27 +200,29 @@ describe('PermissionsModal', () => {
     await user.click(saveButton);
 
     expect(mockSetPermissions).toHaveBeenCalledTimes(1);
-    expect(mockSetPermissions).toHaveBeenCalledWith([
-      { role: 'OWNER', user: 'user1@foo.com' },
-      { role: 'READER', user: 'user2@bar.com' },
-      { role: 'OWNER', user: 'newuser@boo.com' },
-    ]);
+    expect(mockSetPermissions).toHaveBeenCalledWith(
+      'namespace',
+      [
+        { role: 'OWNER', user: 'user1@foo.com' },
+        { role: 'READER', user: 'user2@bar.com' },
+        { role: 'OWNER', user: 'newuser@boo.com' },
+      ],
+      expect.any(Object)
+    );
   });
 
   it('removes a user and their permissions', async () => {
     // ARRANGE
-    mockAjax();
     const user = userEvent.setup();
 
     await act(async () => {
       renderWithAppContexts(
         <PermissionsModal
-          name='test'
           namespace='namespace'
           versionOrNamespace='Version'
-          selectedSnapshot={3}
           setPermissionsModalOpen={jest.fn()}
           refresh={jest.fn()}
+          permissionsProvider={permissionsProviderSuccess}
         />
       );
     });
@@ -214,26 +239,28 @@ describe('PermissionsModal', () => {
     await user.click(saveButton);
 
     expect(mockSetPermissions).toHaveBeenCalledTimes(1);
-    expect(mockSetPermissions).toHaveBeenCalledWith([
-      { role: 'OWNER', user: 'user1@foo.com' },
-      { role: 'NO ACCESS', user: 'user2@bar.com' },
-    ]);
+    expect(mockSetPermissions).toHaveBeenCalledWith(
+      'namespace',
+      [
+        { role: 'OWNER', user: 'user1@foo.com' },
+        { role: 'NO ACCESS', user: 'user2@bar.com' },
+      ],
+      expect.any(Object)
+    );
   });
 
   it('does not allow the current user to edit their own permissions', async () => {
     // ARRANGE
-    mockAjax();
     const user: UserEvent = userEvent.setup();
 
     await act(async () => {
       renderWithAppContexts(
         <PermissionsModal
-          name='test'
           namespace='namespace'
           versionOrNamespace='Version'
-          selectedSnapshot={3}
           setPermissionsModalOpen={jest.fn()}
           refresh={jest.fn()}
+          permissionsProvider={permissionsProviderSuccess}
         />
       );
     });
@@ -248,17 +275,15 @@ describe('PermissionsModal', () => {
 
   it('gives an error with invalid user email', async () => {
     // ARRANGE
-    mockAjax();
 
     await act(async () => {
       renderWithAppContexts(
         <PermissionsModal
-          name='test'
           namespace='namespace'
           versionOrNamespace='Version'
-          selectedSnapshot={3}
           setPermissionsModalOpen={jest.fn()}
           refresh={jest.fn()}
+          permissionsProvider={permissionsProviderSuccess}
         />
       );
     });
@@ -278,18 +303,16 @@ describe('PermissionsModal', () => {
 
   it('gives an error with a user email that already exists', async () => {
     // ARRANGE
-    mockAjax();
     const user: UserEvent = userEvent.setup();
 
     await act(async () => {
       renderWithAppContexts(
         <PermissionsModal
-          name='test'
           namespace='namespace'
           versionOrNamespace='Version'
-          selectedSnapshot={3}
           setPermissionsModalOpen={jest.fn()}
           refresh={jest.fn()}
+          permissionsProvider={permissionsProviderSuccess}
         />
       );
     });
@@ -318,20 +341,20 @@ describe('PermissionsModal', () => {
 
   it('lets you make a public workflow private', async () => {
     // ARRANGE
-    mockAjax({
-      permissionsImpl: jest.fn().mockResolvedValue(mockPublicSnapshotPermissions),
-    });
     const user: UserEvent = userEvent.setup();
+    const mockProvider = {
+      getPermissions: jest.fn().mockReturnValue(Promise.resolve(mockPublicSnapshotPermissions)),
+      updatePermissions: mockSetPermissions,
+    };
 
     await act(async () => {
       renderWithAppContexts(
         <PermissionsModal
-          name='test'
           namespace='namespace'
           versionOrNamespace='Version'
-          selectedSnapshot={3}
           setPermissionsModalOpen={jest.fn()}
           refresh={jest.fn()}
+          permissionsProvider={mockProvider}
         />
       );
     });
@@ -345,27 +368,29 @@ describe('PermissionsModal', () => {
 
     await user.click(screen.getByRole('button', { name: 'Save' }));
     expect(mockSetPermissions).toHaveBeenCalledTimes(1);
-    expect(mockSetPermissions).toHaveBeenCalledWith([
-      { role: 'NO ACCESS', user: 'public' },
-      { role: 'OWNER', user: 'user1@foo.com' },
-      { role: 'READER', user: 'user2@bar.com' },
-    ]);
+    expect(mockSetPermissions).toHaveBeenCalledWith(
+      'namespace',
+      [
+        { role: 'NO ACCESS', user: 'public' },
+        { role: 'OWNER', user: 'user1@foo.com' },
+        { role: 'READER', user: 'user2@bar.com' },
+      ],
+      expect.any(Object)
+    );
   });
 
   it('lets you make a private workflow public', async () => {
     // ARRANGE
-    mockAjax();
     const user: UserEvent = userEvent.setup();
 
     await act(async () => {
       renderWithAppContexts(
         <PermissionsModal
-          name='test'
           namespace='namespace'
           versionOrNamespace='Version'
-          selectedSnapshot={3}
           setPermissionsModalOpen={jest.fn()}
           refresh={jest.fn()}
+          permissionsProvider={permissionsProviderSuccess}
         />
       );
     });
@@ -379,16 +404,19 @@ describe('PermissionsModal', () => {
 
     await user.click(screen.getByRole('button', { name: 'Save' }));
     expect(mockSetPermissions).toHaveBeenCalledTimes(1);
-    expect(mockSetPermissions).toHaveBeenCalledWith([
-      { role: 'READER', user: 'public' },
-      { role: 'OWNER', user: 'user1@foo.com' },
-      { role: 'READER', user: 'user2@bar.com' },
-    ]);
+    expect(mockSetPermissions).toHaveBeenCalledWith(
+      'namespace',
+      [
+        { role: 'READER', user: 'public' },
+        { role: 'OWNER', user: 'user1@foo.com' },
+        { role: 'READER', user: 'user2@bar.com' },
+      ],
+      expect.any(Object)
+    );
   });
 
   it('closes the modal when you press the cancel button', async () => {
     // ARRANGE
-    mockAjax();
     const user: UserEvent = userEvent.setup();
 
     const mockSetPermissionsModalOpen = jest.fn();
@@ -397,12 +425,11 @@ describe('PermissionsModal', () => {
     await act(async () => {
       renderWithAppContexts(
         <PermissionsModal
-          name='test'
           namespace='namespace'
           versionOrNamespace='Version'
-          selectedSnapshot={3}
           setPermissionsModalOpen={mockSetPermissionsModalOpen}
           refresh={mockRefresh}
+          permissionsProvider={permissionsProviderSuccess}
         />
       );
     });
@@ -418,21 +445,18 @@ describe('PermissionsModal', () => {
 
   it('closes the modal and calls the refresh callback when you save permissions', async () => {
     // ARRANGE
-    mockAjax();
     const user: UserEvent = userEvent.setup();
-
     const mockSetPermissionsModalOpen = jest.fn();
     const mockRefresh = jest.fn();
 
     await act(async () => {
       renderWithAppContexts(
         <PermissionsModal
-          name='test'
           namespace='namespace'
           versionOrNamespace='Version'
-          selectedSnapshot={3}
           setPermissionsModalOpen={mockSetPermissionsModalOpen}
           refresh={mockRefresh}
+          permissionsProvider={permissionsProviderSuccess}
         />
       );
     });
@@ -447,24 +471,17 @@ describe('PermissionsModal', () => {
 
   it('displays an error popup and closes the modal if there is an error loading permissions', async () => {
     // ARRANGE
-    mockAjax({
-      permissionsImpl: jest.fn().mockImplementation(() => {
-        throw new Error('BOOM');
-      }),
-    });
-
     const mockSetPermissionsModalOpen = jest.fn();
     const mockRefresh = jest.fn();
 
     await act(async () => {
       renderWithAppContexts(
         <PermissionsModal
-          name='test'
           namespace='namespace'
           versionOrNamespace='Version'
-          selectedSnapshot={3}
           setPermissionsModalOpen={mockSetPermissionsModalOpen}
           refresh={mockRefresh}
+          permissionsProvider={permissionsProviderError}
         />
       );
     });
@@ -475,13 +492,29 @@ describe('PermissionsModal', () => {
     expect(mockRefresh).not.toHaveBeenCalled();
   });
 
+  it('displays an error message is user does not have edit permissions', async () => {
+    // ARRANGE
+    const mockSetPermissionsModalOpen = jest.fn();
+    const mockRefresh = jest.fn();
+
+    await act(async () => {
+      renderWithAppContexts(
+        <PermissionsModal
+          namespace='namespace'
+          versionOrNamespace='Namespace'
+          setPermissionsModalOpen={mockSetPermissionsModalOpen}
+          refresh={mockRefresh}
+          permissionsProvider={permissionsProviderForbidden}
+        />
+      );
+    });
+
+    // ASSERT
+    expect(screen.getByText('You do not have permissions to edit namespace settings.')).toBeInTheDocument();
+  });
+
   it('displays an error popup and closes the modal if there is an error saving permissions', async () => {
     // ARRANGE
-    mockAjax({
-      setPermissionsImpl: jest.fn().mockImplementation(() => {
-        throw new Error('BOOM');
-      }),
-    });
     const user: UserEvent = userEvent.setup();
 
     const mockSetPermissionsModalOpen = jest.fn();
@@ -490,12 +523,11 @@ describe('PermissionsModal', () => {
     await act(async () => {
       renderWithAppContexts(
         <PermissionsModal
-          name='test'
           namespace='namespace'
           versionOrNamespace='Version'
-          selectedSnapshot={3}
           setPermissionsModalOpen={mockSetPermissionsModalOpen}
           refresh={mockRefresh}
+          permissionsProvider={permissionsProviderError}
         />
       );
     });
