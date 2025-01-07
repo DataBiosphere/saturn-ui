@@ -291,7 +291,7 @@ export const WorkflowsContainer = (props: WorkflowContainerProps) => {
       }),
     permissionsModalOpen &&
       h(PermissionsModal, {
-        versionOrNamespace: 'Version',
+        versionOrCollection: 'Version',
         namespace,
         setPermissionsModalOpen,
         refresh: loadSnapshot,

@@ -50,7 +50,7 @@ validate.validators.maxNamespaceNameCombinedLength = <OtherFieldName extends str
   attributes: Record<OtherFieldName, string>
 ): string | null =>
   value.length + attributes[options.otherField].length > 250
-    ? '^Namespace and name are too long (maximum is 250 characters total)' // ^ character prevents attribute from being prepended
+    ? '^Collection name and workflow name are too long (maximum is 250 characters total)' // ^ character prevents attribute from being prepended
     : null;
 
 const createWorkflowModalConstraints = {
@@ -77,7 +77,7 @@ const createWorkflowModalConstraints = {
   },
 };
 
-interface NamespaceNameSectionProps {
+interface CollectionAndNameSectionProps {
   namespace: string | undefined;
   name: string | undefined;
   setWorkflowNamespace: (value: string) => void;
@@ -85,7 +85,7 @@ interface NamespaceNameSectionProps {
   errors: any;
 }
 
-const NamespaceNameSection = (props: NamespaceNameSectionProps) => {
+const CollectionAndNameSection = (props: CollectionAndNameSectionProps) => {
   const { namespace, name, setWorkflowNamespace, setWorkflowName, errors } = props;
   const [namespaceModified, setNamespaceModified] = useState<boolean>(false);
   const [nameModified, setNameModified] = useState<boolean>(false);
@@ -98,7 +98,7 @@ const NamespaceNameSection = (props: NamespaceNameSectionProps) => {
       <div style={{ flexWrap: 'wrap', flexGrow: 1, flexBasis: '400px' }}>
         <div style={{ marginBottom: '0.1667em' }}>
           <FormLabel htmlFor={namespaceInputId} required>
-            Namespace
+            Collection Name
           </FormLabel>
           <ValidatedInput
             inputProps={{
@@ -117,7 +117,7 @@ const NamespaceNameSection = (props: NamespaceNameSectionProps) => {
       <div style={{ flexWrap: 'wrap', flexGrow: 1, flexBasis: '400px' }}>
         <div style={{ marginBottom: '0.1667em' }}>
           <FormLabel htmlFor={nameInputId} required>
-            Name
+            Workflow Name
           </FormLabel>
           <ValidatedInput
             inputProps={{
@@ -137,7 +137,7 @@ const NamespaceNameSection = (props: NamespaceNameSectionProps) => {
 };
 
 /**
- * Component for inputting workflow information to facilitate creating new workflow or cloning a workflow snapshot.
+ * Component for inputting workflow information to facilitate creating new workflow or cloning a workflow version.
  */
 export const CreateWorkflowModal = (props: CreateWorkflowModalProps) => {
   const {
@@ -165,7 +165,8 @@ export const CreateWorkflowModal = (props: CreateWorkflowModalProps) => {
 
   const validationErrors = validate({ namespace, name, synopsis, wdl }, createWorkflowModalConstraints, {
     prettify: (v) =>
-      ({ namespace: 'Namespace', name: 'Name', synopsis: 'Synopsis', wdl: 'WDL' }[v] || validate.prettify(v)),
+      ({ namespace: 'Collection Name', name: 'Workflow Name', synopsis: 'Synopsis', wdl: 'WDL' }[v] ||
+      validate.prettify(v)),
   });
 
   const onSubmitWorkflow = withBusyState(setBusy, async () => {
@@ -190,7 +191,7 @@ export const CreateWorkflowModal = (props: CreateWorkflowModalProps) => {
     >
       <div style={{ padding: '0.5rem 0' }}>
         <div style={{ display: 'flex', alignItems: 'flex-end', flexWrap: 'wrap', gap: '16px' }}>
-          <NamespaceNameSection
+          <CollectionAndNameSection
             namespace={namespace}
             name={name}
             setWorkflowNamespace={setNamespace}

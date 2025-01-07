@@ -285,7 +285,7 @@ export const WorkflowList = (props: WorkflowListProps) => {
         </div>
         {editNamespacePermissionsModalOpen && (
           <PermissionsModal
-            versionOrNamespace='Namespace'
+            versionOrCollection='Collection'
             namespace={namespacePermissionsToEdit}
             setPermissionsModalOpen={setEditNamespacePermissionsModalOpen}
             refresh={() => {}} // there is no need to refresh the page as permissions are always fetched when opening PermissionsModal
@@ -347,7 +347,7 @@ const getColumns = (
             content={
               <MenuButton tooltipSide='right' onClick={() => onEditNamespacePermissions(namespace)}>
                 {makeMenuIcon('edit')}
-                Edit namespace permissions
+                Edit collection permissions
               </MenuButton>
             }
           >
