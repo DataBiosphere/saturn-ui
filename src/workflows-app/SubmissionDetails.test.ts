@@ -5,9 +5,21 @@ import { h } from 'react-hyperscript-helpers';
 import { useDirectoriesInDirectory, useFilesInDirectory } from 'src/components/file-browser/file-browser-hooks';
 import FileBrowser from 'src/components/file-browser/FileBrowser';
 import FilesTable from 'src/components/file-browser/FilesTable';
-import { Ajax } from 'src/libs/ajax';
+import {
+  AzureBlobByUriContract,
+  AzureBlobResult,
+  AzureStorage,
+  AzureStorageContract,
+  SasInfo,
+  StorageDetails,
+} from 'src/libs/ajax/AzureStorage';
+import FileBrowserProvider from 'src/libs/ajax/file-browser-providers/FileBrowserProvider';
+import { Apps, AppsAjaxContract } from 'src/libs/ajax/leonardo/Apps';
+import { Metrics, MetricsContract } from 'src/libs/ajax/Metrics';
+import { Cbas, CbasAjaxContract } from 'src/libs/ajax/workflows-app/Cbas';
+import { CromwellApp, CromwellAppAjaxContract, WorkflowsContract } from 'src/libs/ajax/workflows-app/CromwellApp';
 import { getLink } from 'src/libs/nav';
-import { asMockedFn, renderWithAppContexts as render, SelectHelper } from 'src/testing/test-utils';
+import { asMockedFn, MockedFn, partial, renderWithAppContexts as render, SelectHelper } from 'src/testing/test-utils';
 import { metadata as runDetailsMetadata } from 'src/workflows-app/fixtures/test-workflow';
 import { BaseSubmissionDetails } from 'src/workflows-app/SubmissionDetails';
 import {
@@ -32,49 +44,92 @@ const cbasUrlRoot = 'https://lz-abc/terra-app-abc/cbas';
 const cromwellUrlRoot = 'https://lz-abc/terra-app-abc/cromwell';
 const wdsUrlRoot = 'https://lz-abc/wds-abc-c07807929cd1/';
 
+const defaultSasToken = '1234-this-is-a-mock-sas-token-5678';
+const defaultBlobResult: AzureBlobResult = {
+  uri: 'https://someBlobFilePath.blob.core.windows.net/cromwell/user-inputs/inputFile.txt',
+  sasToken: defaultSasToken,
+  fileName: 'inputFile.txt',
+  name: 'inputFile.txt',
+  workspaceId: 'user-inputs',
+  lastModified: 'Mon, 22 May 2023 17:12:58 GMT',
+  size: '324',
+  textContent: 'this is the text of a mock file',
+  azureSasStorageUrl: 'https://someBlobFilePath.blob.core.windows.net/cromwell/user-inputs/inputFile.txt',
+};
+
 // Necessary to mock the AJAX module.
-jest.mock('src/libs/ajax');
-jest.mock('src/libs/notifications');
+jest.mock('src/libs/ajax/AzureStorage');
 jest.mock('src/libs/ajax/leonardo/Apps');
-jest.mock('src/libs/nav', () => ({
-  getCurrentUrl: jest.fn().mockReturnValue(new URL('https://app.terra.bio')),
-  getLink: jest.fn(),
-  goToPath: jest.fn(),
-}));
-jest.mock('src/libs/state', () => ({
-  ...jest.requireActual('src/libs/state'),
-  getTerraUser: jest.fn(),
-}));
+jest.mock('src/libs/ajax/workflows-app/Cbas');
+jest.mock('src/libs/ajax/workflows-app/CromwellApp');
+jest.mock('src/libs/ajax/Metrics');
+
+jest.mock('src/libs/notifications');
+
+type NavExports = typeof import('src/libs/nav');
+jest.mock(
+  'src/libs/nav',
+  (): NavExports => ({
+    ...jest.requireActual<NavExports>('src/libs/nav'),
+    getCurrentUrl: jest.fn(() => new URL('https://app.terra.bio')),
+    getLink: jest.fn(),
+    goToPath: jest.fn(),
+  })
+);
+
+type StateExports = typeof import('src/libs/state');
+jest.mock(
+  'src/libs/state',
+  (): StateExports => ({
+    ...jest.requireActual<StateExports>('src/libs/state'),
+    getTerraUser: jest.fn(),
+  })
+);
+
 // Mocking feature preview setup
-jest.mock('src/libs/feature-previews', () => ({
-  ...jest.requireActual('src/libs/feature-previews'),
-  isFeaturePreviewEnabled: jest.fn(),
-}));
+type FeaturePreviewsExports = typeof import('src/libs/feature-previews');
+jest.mock(
+  'src/libs/feature-previews',
+  (): FeaturePreviewsExports => ({
+    ...jest.requireActual<FeaturePreviewsExports>('src/libs/feature-previews'),
+    isFeaturePreviewEnabled: jest.fn(),
+  })
+);
 
-jest.mock('src/libs/config', () => ({
-  ...jest.requireActual('src/libs/config'),
-  getConfig: jest.fn().mockReturnValue({ cbasUrlRoot, cromwellUrlRoot, wdsUrlRoot }),
-}));
+type ConfigExports = typeof import('src/libs/config');
+jest.mock(
+  'src/libs/config',
+  (): ConfigExports => ({
+    ...jest.requireActual<ConfigExports>('src/libs/config'),
+    getConfig: jest.fn(() => ({ cbasUrlRoot, cromwellUrlRoot, wdsUrlRoot })),
+  })
+);
 
-jest.mock('src/components/file-browser/file-browser-hooks', () => ({
-  ...jest.requireActual('src/components/file-browser/file-browser-hooks'),
-  useDirectoriesInDirectory: jest.fn(),
-  useFilesInDirectory: jest.fn(),
-}));
+type FileBrowserHooksExports = typeof import('src/components/file-browser/file-browser-hooks');
+jest.mock(
+  'src/components/file-browser/file-browser-hooks',
+  (): FileBrowserHooksExports => ({
+    ...jest.requireActual<FileBrowserHooksExports>('src/components/file-browser/file-browser-hooks'),
+    useDirectoriesInDirectory: jest.fn(),
+    useFilesInDirectory: jest.fn(),
+  })
+);
 
-jest.mock('src/components/file-browser/FilesTable', () => {
+type FilesTableExports = typeof import('src/components/file-browser/FilesTable') & { __esModule: true };
+jest.mock('src/components/file-browser/FilesTable', (): FilesTableExports => {
   const { div } = jest.requireActual('react-hyperscript-helpers');
   return {
-    ...jest.requireActual('src/components/file-browser/FilesTable'),
+    ...jest.requireActual<FilesTableExports>('src/components/file-browser/FilesTable'),
     __esModule: true,
-    default: jest.fn().mockReturnValue(div()),
+    default: jest.fn(() => div()),
   };
 });
 
 // The test does not allot space for the table on the input/output modal, so this mock
 // creates space for the table thereby allowing it to render and preventing test failures.
+type ReactVirtualizedExports = typeof import('react-virtualized');
 jest.mock('react-virtualized', () => {
-  const actual = jest.requireActual('react-virtualized');
+  const actual = jest.requireActual<ReactVirtualizedExports>('react-virtualized');
 
   const { AutoSizer } = actual;
   class MockAutoSizer extends AutoSizer {
@@ -92,7 +147,46 @@ jest.mock('react-virtualized', () => {
   };
 });
 
-const captureEvent = jest.fn();
+const captureEvent: MockedFn<MetricsContract['captureEvent']> = jest.fn();
+
+interface MockCbasArgs {
+  getRuns?: MockedFn<CbasAjaxContract['runs']['get']>;
+  getRunsSets?: MockedFn<CbasAjaxContract['runSets']['get']>;
+  getMethods?: MockedFn<CbasAjaxContract['methods']['getById']>;
+}
+const mockCbas = (fns: MockCbasArgs) => {
+  asMockedFn(Cbas).mockReturnValue(
+    partial<CbasAjaxContract>({
+      runs: {
+        get: fns.getRuns || jest.fn(),
+      },
+      runSets: partial<CbasAjaxContract['runSets']>({
+        get: fns.getRunsSets || jest.fn(),
+      }),
+      methods: partial<CbasAjaxContract['methods']>({
+        getById: fns.getMethods || jest.fn(),
+      }),
+    })
+  );
+};
+
+interface MockCbasWithArgs {
+  runs?: Awaited<ReturnType<Required<MockCbasArgs>['getRuns']>>;
+  runSets?: Awaited<ReturnType<Required<MockCbasArgs>['getRunsSets']>>;
+  methods?: Awaited<ReturnType<Required<MockCbasArgs>['getMethods']>>;
+}
+
+const mockCbasWith = (results: MockCbasWithArgs): Required<MockCbasArgs> => {
+  const { runs, runSets, methods } = results;
+  const args: Required<MockCbasArgs> = {
+    getRuns: runs ? jest.fn(async (_root, _id) => runs) : jest.fn(),
+    getRunsSets: runSets ? jest.fn(async (_root) => runSets) : jest.fn(),
+    getMethods: methods ? jest.fn(async (_root, _id) => methods) : jest.fn(),
+  };
+  mockCbas(args);
+
+  return args;
+};
 
 describe('Submission Details page', () => {
   beforeEach(() => {
@@ -102,59 +196,42 @@ describe('Submission Details page', () => {
     // (see https://github.com/bvaughn/react-virtualized/issues/493 and https://stackoverflow.com/a/62214834)
     Object.defineProperty(HTMLElement.prototype, 'offsetHeight', { configurable: true, value: 1000 });
     Object.defineProperty(HTMLElement.prototype, 'offsetWidth', { configurable: true, value: 800 });
+
+    // arrange ajax data call defaults
+    asMockedFn(Apps).mockReturnValue(
+      partial<AppsAjaxContract>({
+        // TODO: remove any type: mockAzureApps type does not match what lsitAppsV2 actually returns
+        listAppsV2: jest.fn(async () => mockAzureApps as any),
+      })
+    );
+    asMockedFn(CromwellApp).mockReturnValue(
+      partial<CromwellAppAjaxContract>({
+        workflows: () => partial<WorkflowsContract>({ metadata: jest.fn(async () => runDetailsMetadata) }),
+      })
+    );
+    asMockedFn(AzureStorage).mockReturnValue(
+      partial<AzureStorageContract>({
+        blobByUri: jest.fn(() =>
+          partial<AzureBlobByUriContract>({
+            getMetadataAndTextContent: async () => defaultBlobResult,
+          })
+        ),
+        details: jest.fn(async () =>
+          partial<StorageDetails>({
+            sas: partial<SasInfo>({ token: defaultSasToken }),
+          })
+        ),
+      })
+    );
+    asMockedFn(Metrics).mockReturnValue(partial<MetricsContract>({ captureEvent }));
   });
 
   it('should correctly display previous 2 runs', async () => {
-    const getRuns = jest.fn(() => Promise.resolve(mockRunsData));
-    const getRunsSets = jest.fn(() => Promise.resolve(runSetData));
-    const getMethods = jest.fn(() => Promise.resolve(methodData));
-    const mockLeoResponse = jest.fn(() => Promise.resolve(mockAzureApps));
-    Ajax.mockImplementation(() => {
-      return {
-        Cbas: {
-          runs: {
-            get: getRuns,
-          },
-          runSets: {
-            get: getRunsSets,
-          },
-          methods: {
-            getById: getMethods,
-          },
-        },
-        Apps: {
-          listAppsV2: mockLeoResponse,
-        },
-        Metrics: {
-          captureEvent,
-        },
-        CromwellApp: {
-          workflows: () => {
-            return {
-              metadata: jest.fn(() => {
-                return Promise.resolve(runDetailsMetadata);
-              }),
-            };
-          },
-        },
-        AzureStorage: {
-          blobByUri: jest.fn(() => ({
-            getMetadataAndTextContent: () =>
-              Promise.resolve({
-                uri: 'https://someBlobFilePath.blob.core.windows.net/cromwell/user-inputs/inputFile.txt',
-                sasToken: '1234-this-is-a-mock-sas-token-5678',
-                fileName: 'inputFile.txt',
-                name: 'inputFile.txt',
-                lastModified: 'Mon, 22 May 2023 17:12:58 GMT',
-                size: '324',
-                contentType: 'text/plain',
-                textContent: 'this is the text of a mock file',
-                azureSasStorageUrl: 'https://someBlobFilePath.blob.core.windows.net/cromwell/user-inputs/inputFile.txt',
-              }),
-          })),
-          details: jest.fn().mockResolvedValue({ sas: { token: '1234-this-is-a-mock-sas-token-5678' } }),
-        },
-      };
+    // Arrange
+    const { getRuns, getRunsSets, getMethods } = mockCbasWith({
+      runs: mockRunsData,
+      runSets: runSetData,
+      methods: methodData,
     });
 
     // Act
@@ -206,48 +283,19 @@ describe('Submission Details page', () => {
   });
 
   it('should correctly display Queued runs', async () => {
-    const getRuns = jest.fn(() => Promise.resolve(mockQueuedRunsData));
-    const getRunsSets = jest.fn(() => Promise.resolve(queuedRunSetData));
-    const getMethods = jest.fn(() => Promise.resolve(methodData));
-    const mockLeoResponse = jest.fn(() => Promise.resolve(mockCollaborativeAzureApps));
-    Ajax.mockImplementation(() => {
-      return {
-        Cbas: {
-          runs: {
-            get: getRuns,
-          },
-          runSets: {
-            get: getRunsSets,
-          },
-          methods: {
-            getById: getMethods,
-          },
-        },
-        Apps: {
-          listAppsV2: mockLeoResponse,
-        },
-        Metrics: {
-          captureEvent,
-        },
-        AzureStorage: {
-          blobByUri: jest.fn(() => ({
-            getMetadataAndTextContent: () =>
-              Promise.resolve({
-                uri: 'https://someBlobFilePath.blob.core.windows.net/cromwell/user-inputs/inputFile.txt',
-                sasToken: '1234-this-is-a-mock-sas-token-5678',
-                fileName: 'inputFile.txt',
-                name: 'inputFile.txt',
-                lastModified: 'Mon, 22 May 2023 17:12:58 GMT',
-                size: '324',
-                contentType: 'text/plain',
-                textContent: 'this is the text of a mock file',
-                azureSasStorageUrl: 'https://someBlobFilePath.blob.core.windows.net/cromwell/user-inputs/inputFile.txt',
-              }),
-          })),
-          details: jest.fn().mockResolvedValue({ sas: { token: '1234-this-is-a-mock-sas-token-5678' } }),
-        },
-      };
+    // Arrange
+    const { getRuns, getRunsSets, getMethods } = mockCbasWith({
+      runs: mockQueuedRunsData,
+      runSets: queuedRunSetData,
+      methods: methodData,
     });
+
+    asMockedFn(Apps).mockReturnValue(
+      partial<AppsAjaxContract>({
+        // TODO: remove any type: mockCollaborativeAzureApps type does not match what lsitAppsV2 actually returns
+        listAppsV2: jest.fn(async () => mockCollaborativeAzureApps as any),
+      })
+    );
 
     // Act
     await act(async () => {
@@ -300,56 +348,11 @@ describe('Submission Details page', () => {
   });
 
   it('should display standard message when there are no saved workflows', async () => {
-    const getRuns = jest.fn(() => Promise.resolve([]));
-    const getRunsSets = jest.fn(() => Promise.resolve(runSetData));
-    const getMethods = jest.fn(() => Promise.resolve(methodData));
-    const mockLeoResponse = jest.fn(() => Promise.resolve(mockAzureApps));
-    Ajax.mockImplementation(() => {
-      return {
-        Cbas: {
-          runs: {
-            get: getRuns,
-          },
-          runSets: {
-            get: getRunsSets,
-          },
-          methods: {
-            getById: getMethods,
-          },
-        },
-        Apps: {
-          listAppsV2: mockLeoResponse,
-        },
-        Metrics: {
-          captureEvent,
-        },
-        CromwellApp: {
-          workflows: () => {
-            return {
-              metadata: jest.fn(() => {
-                return Promise.resolve(runDetailsMetadata);
-              }),
-            };
-          },
-        },
-        AzureStorage: {
-          blobByUri: jest.fn(() => ({
-            getMetadataAndTextContent: () =>
-              Promise.resolve({
-                uri: 'https://someBlobFilePath.blob.core.windows.net/cromwell/user-inputs/inputFile.txt',
-                sasToken: '1234-this-is-a-mock-sas-token-5678',
-                fileName: 'inputFile.txt',
-                name: 'inputFile.txt',
-                lastModified: 'Mon, 22 May 2023 17:12:58 GMT',
-                size: '324',
-                contentType: 'text/plain',
-                textContent: 'this is the text of a mock file',
-                azureSasStorageUrl: 'https://someBlobFilePath.blob.core.windows.net/cromwell/user-inputs/inputFile.txt',
-              }),
-          })),
-          details: jest.fn().mockResolvedValue({ sas: { token: '1234-this-is-a-mock-sas-token-5678' } }),
-        },
-      };
+    // Arrange
+    const { getRuns, getRunsSets, getMethods } = mockCbasWith({
+      runs: [],
+      runSets: runSetData,
+      methods: methodData,
     });
 
     // Act
@@ -379,50 +382,10 @@ describe('Submission Details page', () => {
   });
 
   it('should sort by duration column properly', async () => {
+    // Arrange
     const user = userEvent.setup();
-    const getRuns = jest.fn(() => Promise.resolve(mockRunsData));
-    const mockLeoResponse = jest.fn(() => Promise.resolve(mockAzureApps));
-    Ajax.mockImplementation(() => {
-      return {
-        Cbas: {
-          runs: {
-            get: getRuns,
-          },
-        },
-        Apps: {
-          listAppsV2: mockLeoResponse,
-        },
-        Metrics: {
-          captureEvent,
-        },
-        CromwellApp: {
-          workflows: () => {
-            return {
-              metadata: jest.fn(() => {
-                return Promise.resolve(runDetailsMetadata);
-              }),
-            };
-          },
-        },
-        AzureStorage: {
-          blobByUri: jest.fn(() => ({
-            getMetadataAndTextContent: () =>
-              Promise.resolve({
-                uri: 'https://someBlobFilePath.blob.core.windows.net/cromwell/user-inputs/inputFile.txt',
-                sasToken: '1234-this-is-a-mock-sas-token-5678',
-                fileName: 'inputFile.txt',
-                name: 'inputFile.txt',
-                lastModified: 'Mon, 22 May 2023 17:12:58 GMT',
-                size: '324',
-                contentType: 'text/plain',
-                textContent: 'this is the text of a mock file',
-                azureSasStorageUrl: 'https://someBlobFilePath.blob.core.windows.net/cromwell/user-inputs/inputFile.txt',
-              }),
-          })),
-          details: jest.fn().mockResolvedValue({ sas: { token: '1234-this-is-a-mock-sas-token-5678' } }),
-        },
-      };
-    });
+
+    mockCbasWith({ runs: mockRunsData });
 
     // Act
     await act(async () => {
@@ -484,53 +447,12 @@ describe('Submission Details page', () => {
   });
 
   it('display run set details', async () => {
-    const getRuns = jest.fn(() => Promise.resolve(mockRunsData));
-    const getRunsSets = jest.fn(() => Promise.resolve(runSetData));
-    const getMethods = jest.fn(() => Promise.resolve(methodData));
-    Ajax.mockImplementation(() => {
-      return {
-        Cbas: {
-          runs: {
-            get: getRuns,
-          },
-          runSets: {
-            get: getRunsSets,
-          },
-          methods: {
-            getById: getMethods,
-          },
-        },
-        Metrics: {
-          captureEvent,
-        },
-        CromwellApp: {
-          workflows: () => {
-            return {
-              metadata: jest.fn(() => {
-                return Promise.resolve(runDetailsMetadata);
-              }),
-            };
-          },
-        },
-        AzureStorage: {
-          blobByUri: jest.fn(() => ({
-            getMetadataAndTextContent: () =>
-              Promise.resolve({
-                uri: 'https://someBlobFilePath.blob.core.windows.net/cromwell/user-inputs/inputFile.txt',
-                sasToken: '1234-this-is-a-mock-sas-token-5678',
-                fileName: 'inputFile.txt',
-                name: 'inputFile.txt',
-                lastModified: 'Mon, 22 May 2023 17:12:58 GMT',
-                size: '324',
-                contentType: 'text/plain',
-                textContent: 'this is the text of a mock file',
-                azureSasStorageUrl: 'https://someBlobFilePath.blob.core.windows.net/cromwell/user-inputs/inputFile.txt',
-              }),
-          })),
-          details: jest.fn().mockResolvedValue({ sas: { token: '1234-this-is-a-mock-sas-token-5678' } }),
-        },
-      };
+    const { getRunsSets, getMethods } = mockCbasWith({
+      runs: mockRunsData,
+      runSets: runSetData,
+      methods: methodData,
     });
+
     // Act
     await act(async () => {
       render(
@@ -569,53 +491,12 @@ describe('Submission Details page', () => {
   });
 
   it('should correctly select and change results', async () => {
+    // Arrange
     const user = userEvent.setup();
-    const getRuns = jest.fn(() => Promise.resolve(mockRunsData));
-    const getRunsSets = jest.fn(() => Promise.resolve(runSetData));
-    const getMethods = jest.fn(() => Promise.resolve(methodData));
-    Ajax.mockImplementation(() => {
-      return {
-        Cbas: {
-          runs: {
-            get: getRuns,
-          },
-          runSets: {
-            get: getRunsSets,
-          },
-          methods: {
-            getById: getMethods,
-          },
-        },
-        Metrics: {
-          captureEvent,
-        },
-        CromwellApp: {
-          workflows: () => {
-            return {
-              metadata: jest.fn(() => {
-                return Promise.resolve(runDetailsMetadata);
-              }),
-            };
-          },
-        },
-        AzureStorage: {
-          blobByUri: jest.fn(() => ({
-            getMetadataAndTextContent: () =>
-              Promise.resolve({
-                uri: 'https://someBlobFilePath.blob.core.windows.net/cromwell/user-inputs/inputFile.txt',
-                sasToken: '1234-this-is-a-mock-sas-token-5678',
-                fileName: 'inputFile.txt',
-                name: 'inputFile.txt',
-                lastModified: 'Mon, 22 May 2023 17:12:58 GMT',
-                size: '324',
-                contentType: 'text/plain',
-                textContent: 'this is the text of a mock file',
-                azureSasStorageUrl: 'https://someBlobFilePath.blob.core.windows.net/cromwell/user-inputs/inputFile.txt',
-              }),
-          })),
-          details: jest.fn().mockResolvedValue({ sas: { token: '1234-this-is-a-mock-sas-token-5678' } }),
-        },
-      };
+    const { getRuns, getRunsSets, getMethods } = mockCbasWith({
+      runs: mockRunsData,
+      runSets: runSetData,
+      methods: methodData,
     });
 
     // Act
@@ -664,6 +545,7 @@ describe('Submission Details page', () => {
   });
 
   it('should correctly display a very recently started run', async () => {
+    // Arrange
     const recentRunsData = {
       runs: [
         {
@@ -682,46 +564,7 @@ describe('Submission Details page', () => {
         },
       ],
     };
-
-    const getRecentRunsMethod = jest.fn(() => Promise.resolve(recentRunsData));
-    Ajax.mockImplementation(() => {
-      return {
-        Cbas: {
-          runs: {
-            get: getRecentRunsMethod,
-          },
-        },
-        Metrics: {
-          captureEvent,
-        },
-        CromwellApp: {
-          workflows: () => {
-            return {
-              metadata: jest.fn(() => {
-                return Promise.resolve(runDetailsMetadata);
-              }),
-            };
-          },
-        },
-        AzureStorage: {
-          blobByUri: jest.fn(() => ({
-            getMetadataAndTextContent: () =>
-              Promise.resolve({
-                uri: 'https://someBlobFilePath.blob.core.windows.net/cromwell/user-inputs/inputFile.txt',
-                sasToken: '1234-this-is-a-mock-sas-token-5678',
-                fileName: 'inputFile.txt',
-                name: 'inputFile.txt',
-                lastModified: 'Mon, 22 May 2023 17:12:58 GMT',
-                size: '324',
-                contentType: 'text/plain',
-                textContent: 'this is the text of a mock file',
-                azureSasStorageUrl: 'https://someBlobFilePath.blob.core.windows.net/cromwell/user-inputs/inputFile.txt',
-              }),
-          })),
-          details: jest.fn().mockResolvedValue({ sas: { token: '1234-this-is-a-mock-sas-token-5678' } }),
-        },
-      };
-    });
+    mockCbasWith({ runs: recentRunsData });
 
     // Act
     await act(async () => {
@@ -760,6 +603,7 @@ describe('Submission Details page', () => {
   });
 
   it('should correctly display a run with undefined engine id', async () => {
+    // Arrange
     const recentRunsData = {
       runs: [
         {
@@ -778,37 +622,7 @@ describe('Submission Details page', () => {
         },
       ],
     };
-
-    const getRecentRunsMethod = jest.fn(() => Promise.resolve(recentRunsData));
-    Ajax.mockImplementation(() => {
-      return {
-        Cbas: {
-          runs: {
-            get: getRecentRunsMethod,
-          },
-        },
-        Metrics: {
-          captureEvent,
-        },
-        AzureStorage: {
-          blobByUri: jest.fn(() => ({
-            getMetadataAndTextContent: () =>
-              Promise.resolve({
-                uri: 'https://someBlobFilePath.blob.core.windows.net/cromwell/user-inputs/inputFile.txt',
-                sasToken: '1234-this-is-a-mock-sas-token-5678',
-                fileName: 'inputFile.txt',
-                name: 'inputFile.txt',
-                lastModified: 'Mon, 22 May 2023 17:12:58 GMT',
-                size: '324',
-                contentType: 'text/plain',
-                textContent: 'this is the text of a mock file',
-                azureSasStorageUrl: 'https://someBlobFilePath.blob.core.windows.net/cromwell/user-inputs/inputFile.txt',
-              }),
-          })),
-          details: jest.fn().mockResolvedValue({ sas: { token: '1234-this-is-a-mock-sas-token-5678' } }),
-        },
-      };
-    });
+    mockCbasWith({ runs: recentRunsData });
 
     // Act
     await act(async () => {
@@ -847,45 +661,8 @@ describe('Submission Details page', () => {
   });
 
   it('should indicate fully updated polls', async () => {
-    const getRecentRunsMethod = jest.fn(() => Promise.resolve(simpleRunsData));
-    Ajax.mockImplementation(() => {
-      return {
-        Cbas: {
-          runs: {
-            get: getRecentRunsMethod,
-          },
-        },
-        Metrics: {
-          captureEvent,
-        },
-        CromwellApp: {
-          workflows: () => {
-            return {
-              metadata: jest.fn(() => {
-                return Promise.resolve(runDetailsMetadata);
-              }),
-            };
-          },
-        },
-        AzureStorage: {
-          blobByUri: jest.fn(() => ({
-            getMetadataAndTextContent: () =>
-              Promise.resolve({
-                uri: 'https://someBlobFilePath.blob.core.windows.net/cromwell/user-inputs/inputFile.txt',
-                sasToken: '1234-this-is-a-mock-sas-token-5678',
-                fileName: 'inputFile.txt',
-                name: 'inputFile.txt',
-                lastModified: 'Mon, 22 May 2023 17:12:58 GMT',
-                size: '324',
-                contentType: 'text/plain',
-                textContent: 'this is the text of a mock file',
-                azureSasStorageUrl: 'https://someBlobFilePath.blob.core.windows.net/cromwell/user-inputs/inputFile.txt',
-              }),
-          })),
-          details: jest.fn().mockResolvedValue({ sas: { token: '1234-this-is-a-mock-sas-token-5678' } }),
-        },
-      };
-    });
+    // Arrange
+    mockCbasWith({ runs: simpleRunsData });
 
     // Act
     await act(async () => {
@@ -903,45 +680,9 @@ describe('Submission Details page', () => {
   });
 
   it('should indicate incompletely updated polls', async () => {
-    const getRecentRunsMethod = jest.fn(() => Promise.resolve(_.merge(simpleRunsData, { fully_updated: false })));
-    Ajax.mockImplementation(() => {
-      return {
-        Cbas: {
-          runs: {
-            get: getRecentRunsMethod,
-          },
-        },
-        Metrics: {
-          captureEvent,
-        },
-        CromwellApp: {
-          workflows: () => {
-            return {
-              metadata: jest.fn(() => {
-                return Promise.resolve(runDetailsMetadata);
-              }),
-            };
-          },
-        },
-        AzureStorage: {
-          blobByUri: jest.fn(() => ({
-            getMetadataAndTextContent: () =>
-              Promise.resolve({
-                uri: 'https://someBlobFilePath.blob.core.windows.net/cromwell/user-inputs/inputFile.txt',
-                sasToken: '1234-this-is-a-mock-sas-token-5678',
-                fileName: 'inputFile.txt',
-                name: 'inputFile.txt',
-                lastModified: 'Mon, 22 May 2023 17:12:58 GMT',
-                size: '324',
-                contentType: 'text/plain',
-                textContent: 'this is the text of a mock file',
-                azureSasStorageUrl: 'https://someBlobFilePath.blob.core.windows.net/cromwell/user-inputs/inputFile.txt',
-              }),
-          })),
-          details: jest.fn().mockResolvedValue({ sas: { token: '1234-this-is-a-mock-sas-token-5678' } }),
-        },
-      };
-    });
+    // Arrange
+    const updatedRunsData = _.merge(simpleRunsData, { fully_updated: false });
+    mockCbasWith({ runs: updatedRunsData });
 
     // Act
     await act(async () => {
@@ -955,62 +696,18 @@ describe('Submission Details page', () => {
       );
     });
 
-    expect(screen.getByText('Some workflow statuses are not up to date. Refreshing the page may update more statuses.')).toBeInTheDocument();
+    expect(
+      screen.getByText('Some workflow statuses are not up to date. Refreshing the page may update more statuses.')
+    ).toBeInTheDocument();
   });
 
   it('should display inputs on the Inputs tab', async () => {
     // Arrange
     const user = userEvent.setup();
-    const getRuns = jest.fn(() => Promise.resolve(mockRunsData));
-    const getRunsSets = jest.fn(() => Promise.resolve(runSetData));
-    const getMethods = jest.fn(() => Promise.resolve(methodData));
-    const mockLeoResponse = jest.fn(() => Promise.resolve(mockAzureApps));
-    Ajax.mockImplementation(() => {
-      return {
-        Cbas: {
-          runs: {
-            get: getRuns,
-          },
-          runSets: {
-            get: getRunsSets,
-          },
-          methods: {
-            getById: getMethods,
-          },
-        },
-        Apps: {
-          listAppsV2: mockLeoResponse,
-        },
-        Metrics: {
-          captureEvent,
-        },
-        CromwellApp: {
-          workflows: () => {
-            return {
-              metadata: jest.fn(() => {
-                return Promise.resolve(runDetailsMetadata);
-              }),
-            };
-          },
-        },
-        AzureStorage: {
-          blobByUri: jest.fn(() => ({
-            getMetadataAndTextContent: () =>
-              Promise.resolve({
-                uri: 'https://someBlobFilePath.blob.core.windows.net/cromwell/user-inputs/inputFile.txt',
-                sasToken: '1234-this-is-a-mock-sas-token-5678',
-                fileName: 'inputFile.txt',
-                name: 'inputFile.txt',
-                lastModified: 'Mon, 22 May 2023 17:12:58 GMT',
-                size: '324',
-                contentType: 'text/plain',
-                textContent: 'this is the text of a mock file',
-                azureSasStorageUrl: 'https://someBlobFilePath.blob.core.windows.net/cromwell/user-inputs/inputFile.txt',
-              }),
-          })),
-          details: jest.fn().mockResolvedValue({ sas: { token: '1234-this-is-a-mock-sas-token-5678' } }),
-        },
-      };
+    mockCbasWith({
+      runs: mockRunsData,
+      runSets: runSetData,
+      methods: methodData,
     });
 
     // Act
@@ -1055,56 +752,10 @@ describe('Submission Details page', () => {
   it('Inputs tab handles literal values', async () => {
     // Arrange
     const user = userEvent.setup();
-    const getRuns = jest.fn(() => Promise.resolve(mockRunsData));
-    const getRunsSets = jest.fn(() => Promise.resolve(runSetDataWithLiteral));
-    const getMethods = jest.fn(() => Promise.resolve(methodData));
-    const mockLeoResponse = jest.fn(() => Promise.resolve(mockAzureApps));
-    Ajax.mockImplementation(() => {
-      return {
-        Cbas: {
-          runs: {
-            get: getRuns,
-          },
-          runSets: {
-            get: getRunsSets,
-          },
-          methods: {
-            getById: getMethods,
-          },
-        },
-        Apps: {
-          listAppsV2: mockLeoResponse,
-        },
-        Metrics: {
-          captureEvent,
-        },
-        CromwellApp: {
-          workflows: () => {
-            return {
-              metadata: jest.fn(() => {
-                return Promise.resolve(runDetailsMetadata);
-              }),
-            };
-          },
-        },
-        AzureStorage: {
-          blobByUri: jest.fn(() => ({
-            getMetadataAndTextContent: () =>
-              Promise.resolve({
-                uri: 'https://someBlobFilePath.blob.core.windows.net/cromwell/user-inputs/inputFile.txt',
-                sasToken: '1234-this-is-a-mock-sas-token-5678',
-                fileName: 'inputFile.txt',
-                name: 'inputFile.txt',
-                lastModified: 'Mon, 22 May 2023 17:12:58 GMT',
-                size: '324',
-                contentType: 'text/plain',
-                textContent: 'this is the text of a mock file',
-                azureSasStorageUrl: 'https://someBlobFilePath.blob.core.windows.net/cromwell/user-inputs/inputFile.txt',
-              }),
-          })),
-          details: jest.fn().mockResolvedValue({ sas: { token: '1234-this-is-a-mock-sas-token-5678' } }),
-        },
-      };
+    mockCbasWith({
+      runs: mockRunsData,
+      runSets: runSetDataWithLiteral,
+      methods: methodData,
     });
 
     // Act
@@ -1139,62 +790,16 @@ describe('Submission Details page', () => {
   });
 
   it('should display outputs on the Outputs tab', async () => {
+    // Arrange
     // Add output definition to temporary runset data variable
     const tempRunSetData = runSetData;
     tempRunSetData.run_sets[0].output_definition = runSetResponse.run_sets[0].output_definition;
 
-    // Arrange
     const user = userEvent.setup();
-    const getRuns = jest.fn(() => Promise.resolve(mockRunsData));
-    const getRunsSets = jest.fn(() => Promise.resolve(tempRunSetData));
-    const getMethods = jest.fn(() => Promise.resolve(methodData));
-    const mockLeoResponse = jest.fn(() => Promise.resolve(mockAzureApps));
-    Ajax.mockImplementation(() => {
-      return {
-        Cbas: {
-          runs: {
-            get: getRuns,
-          },
-          runSets: {
-            get: getRunsSets,
-          },
-          methods: {
-            getById: getMethods,
-          },
-        },
-        Apps: {
-          listAppsV2: mockLeoResponse,
-        },
-        Metrics: {
-          captureEvent,
-        },
-        CromwellApp: {
-          workflows: () => {
-            return {
-              metadata: jest.fn(() => {
-                return Promise.resolve(runDetailsMetadata);
-              }),
-            };
-          },
-        },
-        AzureStorage: {
-          blobByUri: jest.fn(() => ({
-            getMetadataAndTextContent: () =>
-              Promise.resolve({
-                uri: 'https://someBlobFilePath.blob.core.windows.net/cromwell/user-inputs/inputFile.txt',
-                sasToken: '1234-this-is-a-mock-sas-token-5678',
-                fileName: 'inputFile.txt',
-                name: 'inputFile.txt',
-                lastModified: 'Mon, 22 May 2023 17:12:58 GMT',
-                size: '324',
-                contentType: 'text/plain',
-                textContent: 'this is the text of a mock file',
-                azureSasStorageUrl: 'https://someBlobFilePath.blob.core.windows.net/cromwell/user-inputs/inputFile.txt',
-              }),
-          })),
-          details: jest.fn().mockResolvedValue({ sas: { token: '1234-this-is-a-mock-sas-token-5678' } }),
-        },
-      };
+    mockCbasWith({
+      runs: mockRunsData,
+      runSets: tempRunSetData,
+      methods: methodData,
     });
 
     // Act
@@ -1242,56 +847,10 @@ describe('Submission Details page', () => {
   it('should open the log viewer modal when Execution Logs button is clicked', async () => {
     // Arrange
     const user = userEvent.setup();
-    const getRuns = jest.fn(() => Promise.resolve(mockRunsData));
-    const getRunsSets = jest.fn(() => Promise.resolve(runSetData));
-    const getMethods = jest.fn(() => Promise.resolve(methodData));
-    const mockLeoResponse = jest.fn(() => Promise.resolve(mockAzureApps));
-    Ajax.mockImplementation(() => {
-      return {
-        Cbas: {
-          runs: {
-            get: getRuns,
-          },
-          runSets: {
-            get: getRunsSets,
-          },
-          methods: {
-            getById: getMethods,
-          },
-        },
-        Apps: {
-          listAppsV2: mockLeoResponse,
-        },
-        CromwellApp: {
-          workflows: () => {
-            return {
-              metadata: jest.fn(() => {
-                return Promise.resolve(runDetailsMetadata);
-              }),
-            };
-          },
-        },
-        AzureStorage: {
-          blobByUri: jest.fn(() => ({
-            getMetadataAndTextContent: () =>
-              Promise.resolve({
-                uri: 'https://someBlobFilePath.blob.core.windows.net/cromwell/user-inputs/inputFile.txt',
-                sasToken: '1234-this-is-a-mock-sas-token-5678',
-                fileName: 'inputFile.txt',
-                name: 'inputFile.txt',
-                lastModified: 'Mon, 22 May 2023 17:12:58 GMT',
-                size: '324',
-                contentType: 'text/plain',
-                textContent: 'this is the text of a mock file',
-                azureSasStorageUrl: 'https://someBlobFilePath.blob.core.windows.net/cromwell/user-inputs/inputFile.txt',
-              }),
-          })),
-          details: jest.fn().mockResolvedValue({ sas: { token: '1234-this-is-a-mock-sas-token-5678' } }),
-        },
-        Metrics: {
-          captureEvent,
-        },
-      };
+    mockCbasWith({
+      runs: mockRunsData,
+      runSets: runSetData,
+      methods: methodData,
     });
 
     // Act
@@ -1327,56 +886,10 @@ describe('Submission Details page', () => {
   it('should open the task data modal when Inputs button is clicked', async () => {
     // Arrange
     const user = userEvent.setup();
-    const getRuns = jest.fn(() => Promise.resolve(mockRunsData));
-    const getRunsSets = jest.fn(() => Promise.resolve(runSetData));
-    const getMethods = jest.fn(() => Promise.resolve(methodData));
-    const mockLeoResponse = jest.fn(() => Promise.resolve(mockAzureApps));
-    Ajax.mockImplementation(() => {
-      return {
-        Cbas: {
-          runs: {
-            get: getRuns,
-          },
-          runSets: {
-            get: getRunsSets,
-          },
-          methods: {
-            getById: getMethods,
-          },
-        },
-        Apps: {
-          listAppsV2: mockLeoResponse,
-        },
-        CromwellApp: {
-          workflows: () => {
-            return {
-              metadata: jest.fn(() => {
-                return Promise.resolve(runDetailsMetadata);
-              }),
-            };
-          },
-        },
-        AzureStorage: {
-          blobByUri: jest.fn(() => ({
-            getMetadataAndTextContent: () =>
-              Promise.resolve({
-                uri: 'https://someBlobFilePath.blob.core.windows.net/cromwell/user-inputs/inputFile.txt',
-                sasToken: '1234-this-is-a-mock-sas-token-5678',
-                fileName: 'inputFile.txt',
-                name: 'inputFile.txt',
-                lastModified: 'Mon, 22 May 2023 17:12:58 GMT',
-                size: '324',
-                contentType: 'text/plain',
-                textContent: 'this is the text of a mock file',
-                azureSasStorageUrl: 'https://someBlobFilePath.blob.core.windows.net/cromwell/user-inputs/inputFile.txt',
-              }),
-          })),
-          details: jest.fn().mockResolvedValue({ sas: { token: '1234-this-is-a-mock-sas-token-5678' } }),
-        },
-        Metrics: {
-          captureEvent,
-        },
-      };
+    mockCbasWith({
+      runs: mockRunsData,
+      runSets: runSetData,
+      methods: methodData,
     });
 
     // Act
@@ -1420,56 +933,10 @@ describe('Submission Details page', () => {
   it('should open the task data modal when Outputs button is clicked', async () => {
     // Arrange
     const user = userEvent.setup();
-    const getRuns = jest.fn(() => Promise.resolve(mockRunsData));
-    const getRunsSets = jest.fn(() => Promise.resolve(runSetData));
-    const getMethods = jest.fn(() => Promise.resolve(methodData));
-    const mockLeoResponse = jest.fn(() => Promise.resolve(mockAzureApps));
-    Ajax.mockImplementation(() => {
-      return {
-        Cbas: {
-          runs: {
-            get: getRuns,
-          },
-          runSets: {
-            get: getRunsSets,
-          },
-          methods: {
-            getById: getMethods,
-          },
-        },
-        Apps: {
-          listAppsV2: mockLeoResponse,
-        },
-        CromwellApp: {
-          workflows: () => {
-            return {
-              metadata: jest.fn(() => {
-                return Promise.resolve(runDetailsMetadata);
-              }),
-            };
-          },
-        },
-        AzureStorage: {
-          blobByUri: jest.fn(() => ({
-            getMetadataAndTextContent: () =>
-              Promise.resolve({
-                uri: 'https://someBlobFilePath.blob.core.windows.net/cromwell/user-inputs/inputFile.txt',
-                sasToken: '1234-this-is-a-mock-sas-token-5678',
-                fileName: 'inputFile.txt',
-                name: 'inputFile.txt',
-                lastModified: 'Mon, 22 May 2023 17:12:58 GMT',
-                size: '324',
-                contentType: 'text/plain',
-                textContent: 'this is the text of a mock file',
-                azureSasStorageUrl: 'https://someBlobFilePath.blob.core.windows.net/cromwell/user-inputs/inputFile.txt',
-              }),
-          })),
-          details: jest.fn().mockResolvedValue({ sas: { token: '1234-this-is-a-mock-sas-token-5678' } }),
-        },
-        Metrics: {
-          captureEvent,
-        },
-      };
+    mockCbasWith({
+      runs: mockRunsData,
+      runSets: runSetData,
+      methods: methodData,
     });
 
     // Act
@@ -1521,57 +988,29 @@ describe('Submission Details page', () => {
 
   it('should generate the correect link when clicking on a workflow ID', async () => {
     const user = userEvent.setup();
-    const getRuns = jest.fn(() => Promise.resolve(mockRunsData));
-    const getRunsSets = jest.fn(() => Promise.resolve(runSetData));
-    const getMethods = jest.fn(() => Promise.resolve(methodData));
-    const mockLeoResponse = jest.fn(() => Promise.resolve(mockAzureApps));
-    Ajax.mockImplementation(() => {
-      return {
-        Cbas: {
-          runs: {
-            get: getRuns,
-          },
-          runSets: {
-            get: getRunsSets,
-          },
-          methods: {
-            getById: getMethods,
-          },
-        },
-        Apps: {
-          listAppsV2: mockLeoResponse,
-        },
-        CromwellApp: {
-          workflows: () => {
-            return {
-              metadata: jest.fn(() => {
-                return Promise.resolve(runDetailsMetadata);
-              }),
-            };
-          },
-        },
-        Metrics: {
-          captureEvent,
-        },
-        AzureStorage: {
-          blobByUri: jest.fn(() => ({
-            getMetadataAndTextContent: () =>
-              Promise.resolve({
-                uri: 'https://someBlobFilePath.blob.core.windows.net/cromwell/user-inputs/inputFile.txt',
-                sasToken: '1234-this-is-a-mock-sas-token-5678',
-                fileName: 'inputFile.txt',
-                name: 'inputFile.txt',
-                lastModified: 'Mon, 22 May 2023 17:12:58 GMT',
-                size: '324',
-                contentType: 'text/plain',
-                textContent: 'this is the text of a mock file terra-app-123456',
-                azureSasStorageUrl: 'https://someBlobFilePath.blob.core.windows.net/cromwell/user-inputs/inputFile.txt',
-              }),
-          })),
-          details: jest.fn().mockResolvedValue({ sas: { token: '1234-this-is-a-mock-sas-token-5678' } }),
-        },
-      };
+    const { getRuns, getRunsSets, getMethods } = mockCbasWith({
+      runs: mockRunsData,
+      runSets: runSetData,
+      methods: methodData,
     });
+
+    asMockedFn(AzureStorage).mockReturnValue(
+      partial<AzureStorageContract>({
+        blobByUri: jest.fn(() =>
+          partial<AzureBlobByUriContract>({
+            getMetadataAndTextContent: async () => ({
+              ...defaultBlobResult,
+              textContent: 'this is the text of a mock file terra-app-123456',
+            }),
+          })
+        ),
+        details: jest.fn(async () =>
+          partial<StorageDetails>({
+            sas: partial<SasInfo>({ token: defaultSasToken }),
+          })
+        ),
+      })
+    );
 
     // Act
     await act(async () => {
@@ -1602,7 +1041,7 @@ describe('Submission Details page', () => {
 
   it('navigates to a sub-directory of the root', () => {
     // Arrange
-    const mockFileBrowserProvider = {};
+    const mockFileBrowserProvider = partial<FileBrowserProvider>({});
     const directories = [
       {
         path: 'workspace-services/cbas/terra-app-/fetch_sra_to_bam/d16721eb-8745-4aa2-b71e-9ade2d6575aa/folder/',
@@ -1619,7 +1058,7 @@ describe('Submission Details page', () => {
       },
     ];
 
-    const useDirectoriesInDirectoryResult = {
+    const useDirectoriesInDirectoryResult: ReturnType<typeof useDirectoriesInDirectory> = {
       state: { directories, status: 'Ready' },
       hasNextPage: false,
       loadNextPage: () => Promise.resolve(),
@@ -1627,7 +1066,7 @@ describe('Submission Details page', () => {
       reload: () => Promise.resolve(),
     };
 
-    const useFilesInDirectoryResult = {
+    const useFilesInDirectoryResult: ReturnType<typeof useFilesInDirectory> = {
       state: { files, status: 'Ready' },
       hasNextPage: false,
       loadNextPage: () => Promise.resolve(),

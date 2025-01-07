@@ -5,7 +5,8 @@ import { useCallback, useEffect, useState } from 'react';
 import { div, h, span } from 'react-hyperscript-helpers';
 import { ButtonOutline } from 'src/components/common';
 import { centeredSpinner, icon } from 'src/components/icons';
-import { Ajax } from 'src/libs/ajax';
+import { convert } from 'src/libs/ajax/azure-storage-utils';
+import { AzureBlobContent, AzureStorage } from 'src/libs/ajax/AzureStorage';
 import { useCancellation } from 'src/libs/react-utils';
 import { newTabLinkProps } from 'src/libs/utils';
 import { VerticalTabBar } from 'src/workflows-app/components/VerticalTabBar';
@@ -44,12 +45,7 @@ export type LogViewerProps = {
 /**
  * Represents data that has been fetched using an Azure Blob URI
  */
-export type FetchedLogData = {
-  /** The character data of the log file */
-  textContent: string | undefined;
-  /** The URI to use for downloading the log file. May or may not have sas token appended, depending on if the file is public or private.  */
-  downloadUri: string | undefined;
-};
+export type FetchedLogData = AzureBlobContent;
 
 const logLoadingErrorMessage =
   "Log file could not be loaded. If the workflow or task is still in progress, the log file likely hasn't been generated yet. Some logs may be unavailable if the workflow or task failed before they could be generated.";
@@ -85,9 +81,8 @@ export const LogViewer = (logProps: LogViewerProps) => {
         return null;
       }
       try {
-        const response = await Ajax(signal).AzureStorage.blobByUri(azureBlobUri).getMetadataAndTextContent();
-        const uri = _.isEmpty(response.azureSasStorageUrl) ? response.azureStorageUrl : response.azureSasStorageUrl;
-        return { textContent: response.textContent, downloadUri: uri };
+        const response = await AzureStorage(signal).blobByUri(azureBlobUri).getMetadataAndTextContent();
+        return convert.azureBlobResult.toAzureBlobContent(response);
       } catch (e) {
         return null;
       }
