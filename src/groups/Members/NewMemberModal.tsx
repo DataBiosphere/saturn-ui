@@ -1,30 +1,19 @@
-import { ButtonPrimary, Icon, Modal, SpinnerOverlay, TooltipTrigger, useUniqueId } from '@terra-ui-packages/components';
+import { ButtonPrimary, Modal, SpinnerOverlay } from '@terra-ui-packages/components';
 import _ from 'lodash/fp';
 import React, { useState } from 'react';
-import { LabeledCheckbox } from 'src/components/common';
-import { AutocompleteTextInput } from 'src/components/input';
+import { validateUserEmails } from 'src/billing/utils';
+import { EmailSelect } from 'src/groups/Members/EmailSelect';
+import { RoleSelect } from 'src/groups/Members/RoleSelect';
 import { Groups } from 'src/libs/ajax/Groups';
 import { User } from 'src/libs/ajax/User';
 import { Workspaces } from 'src/libs/ajax/workspaces/Workspaces';
 import colors from 'src/libs/colors';
 import { withErrorReporting } from 'src/libs/error';
-import { FormLabel } from 'src/libs/forms';
 import { useCancellation, useOnMount } from 'src/libs/react-utils';
 import { cond, summarizeErrors, withBusyState } from 'src/libs/utils';
-import validate from 'validate.js';
-
-const styles = {
-  suggestionContainer: {
-    display: 'flex',
-    alignItems: 'center',
-    padding: '0.5rem 1rem',
-    margin: '0 -1rem',
-    borderBottom: `1px solid ${colors.dark(0.4)}`,
-  },
-};
 
 interface NewMemberModalProps {
-  addFunction: (roles: string[], email: string) => Promise<unknown>;
+  addFunction: (roles: string[], emails: string[]) => Promise<unknown>;
   addUnregisteredUser?: boolean;
   adminLabel: string;
   memberLabel: string;
@@ -33,6 +22,7 @@ interface NewMemberModalProps {
   onDismiss: () => void;
   footer?: React.ReactNode[];
 }
+
 export const NewMemberModal = (props: NewMemberModalProps) => {
   const {
     addFunction,
@@ -44,10 +34,11 @@ export const NewMemberModal = (props: NewMemberModalProps) => {
     onDismiss,
     footer,
   } = props;
-  const [userEmail, setUserEmail] = useState('');
+  const [userEmails, setUserEmails] = useState<string[]>([]);
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [confirmAddUser, setConfirmAddUser] = useState(false);
-  const [roles, setRoles] = useState<string[]>([memberLabel]);
+  const [inviteEmail, setInviteEmail] = useState('');
+  const [role, setRole] = useState<string>(memberLabel);
   const [submitError, setSubmitError] = useState(undefined);
   const [busy, setBusy] = useState(false);
 
@@ -67,7 +58,7 @@ export const NewMemberModal = (props: NewMemberModalProps) => {
   const submit = async () => {
     // only called by invite and add, which set busy & catch errors
     try {
-      await addFunction(roles, userEmail);
+      await addFunction([role], userEmails);
       onSuccess();
     } catch (error: any) {
       if ('status' in error && error.status >= 400 && error.status <= 499) {
@@ -82,23 +73,32 @@ export const NewMemberModal = (props: NewMemberModalProps) => {
     withErrorReporting('Error adding user'),
     withBusyState(setBusy)
   )(async () => {
-    await User(signal).inviteUser(userEmail);
+    await User(signal).inviteUser(inviteEmail);
     await submit();
   });
 
-  const addUser = _.flow(
+  const addUsers = _.flow(
     withErrorReporting('Error adding user'),
     withBusyState(setBusy)
   )(async () => {
-    addUnregisteredUser && !(await User(signal).isUserRegistered(userEmail)) ? setConfirmAddUser(true) : await submit();
+    if (!addUnregisteredUser) {
+      await submit();
+      return;
+    }
+
+    for (const userEmail of userEmails) {
+      const isRegistered = await User(signal).isUserRegistered(userEmail);
+      if (!isRegistered) {
+        setConfirmAddUser(true);
+        setInviteEmail(userEmail);
+        return;
+      }
+    }
+
+    await submit();
   });
 
-  const errors = validate({ userEmail }, { userEmail: { email: true } });
-  const isAdmin = _.includes(adminLabel, roles);
-
-  const canAdd = (value) => value !== userEmail || !errors;
-
-  const emailInputId = useUniqueId();
+  const errors = validateUserEmails(userEmails);
 
   return cond(
     [
@@ -110,7 +110,7 @@ export const NewMemberModal = (props: NewMemberModalProps) => {
           cancelText='No'
           onDismiss={() => setConfirmAddUser(false)}
         >
-          Add <b>{userEmail}</b> to the group anyway?
+          Add <b>{inviteEmail}</b> to the group anyway?
           {busy && <SpinnerOverlay />}
         </Modal>
       ),
@@ -120,41 +120,20 @@ export const NewMemberModal = (props: NewMemberModalProps) => {
         onDismiss={onDismiss}
         title={title}
         okButton={
-          <ButtonPrimary tooltip={summarizeErrors(errors)} onClick={addUser} disabled={!!errors}>
-            Add User
+          <ButtonPrimary tooltip={summarizeErrors(errors)} onClick={addUsers} disabled={!!errors}>
+            Add Users
           </ButtonPrimary>
         }
+        width={720}
       >
-        <FormLabel id={emailInputId} required>
-          User email
-        </FormLabel>
-        <AutocompleteTextInput
-          labelId={emailInputId}
-          autoFocus
-          openOnFocus={false}
-          value={userEmail}
-          onChange={setUserEmail}
-          renderSuggestion={(suggestion) => (
-            <div style={styles.suggestionContainer}>
-              <div style={{ flex: 1 }}>
-                {!canAdd(suggestion) && (
-                  <TooltipTrigger content='Not a valid email address'>
-                    <Icon icon='warning-standard' style={{ color: colors.danger(), marginRight: '0.5rem' }} />
-                  </TooltipTrigger>
-                )}
-                {suggestion}
-              </div>
-            </div>
-          )}
-          suggestions={[...(!!userEmail && !suggestions.includes(userEmail) ? [userEmail] : []), ...suggestions]}
-          style={{ fontSize: 16 }}
-          type={undefined}
-        />
-        <FormLabel>Role</FormLabel>
-        <LabeledCheckbox checked={isAdmin} onChange={() => setRoles([isAdmin ? memberLabel : adminLabel])}>
-          {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
-          <label style={{ margin: '0 2rem 0 0.25rem' }}>Can manage users ({adminLabel})</label>
-        </LabeledCheckbox>
+        <div style={{ display: 'flex', alignItems: 'flex-end', gap: '1.5rem' }}>
+          <div style={{ flex: 2, width: '500px', alignSelf: 'flex-start', marginTop: '0.75rem' }}>
+            <EmailSelect options={suggestions} emails={userEmails} setEmails={setUserEmails} />
+          </div>
+          <div style={{ flex: '1', alignSelf: 'flex-start' }}>
+            <RoleSelect options={[memberLabel, adminLabel]} role={role} setRole={setRole} />
+          </div>
+        </div>
         {footer && <div style={{ marginTop: '1rem' }}>{footer}</div>}
         {submitError && (
           <div style={{ marginTop: '0.5rem', textAlign: 'right', color: colors.danger() }}>{submitError}</div>

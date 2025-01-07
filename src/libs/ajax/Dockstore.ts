@@ -1,4 +1,3 @@
-import * as qs from 'qs';
 import { fetchOk } from 'src/libs/ajax/fetch/fetch-core';
 
 import { fetchDockstore } from './ajax-common';
@@ -44,10 +43,6 @@ export type DockstoreWorkflow = {
   versions: DockstoreWorkflowVersion[];
 };
 
-type ListToolsParams = {
-  organization?: string;
-};
-
 // %23 = '#', %2F = '/'
 const workflowVersionsPath = ({ path, isTool }: DockstoreWorkflowDescriptor) => {
   return `api/ga4gh/v1/tools/${isTool ? '' : '%23workflow%2F'}${encodeURIComponent(path)}/versions`;
@@ -68,10 +63,6 @@ export const Dockstore = (signal?: AbortSignal) => ({
     const wdlPath = `${workflowVersionsPath({ path, isTool: false })}/${encodeURIComponent(version)}/WDL/descriptor`;
     const { url } = await fetchDockstore(wdlPath, { signal }).then((res) => res.json());
     return url;
-  },
-
-  listTools: (params: ListToolsParams = {}): Promise<DockstoreWorkflow[]> => {
-    return fetchDockstore(`api/ga4gh/v1/tools?${qs.stringify(params)}`, { signal }).then((res) => res.json());
   },
 });
 

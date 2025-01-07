@@ -218,9 +218,16 @@ export const Directory = (props: DirectoryProps) => {
   } = props;
   const isSelected = path === selectedDirectory;
 
-  // Automatically expand root directory.
-  const [isExpanded, setIsExpanded] = useState(path === '');
+  const [isExpanded, setIsExpanded] = useState(false);
   const [hasLoadedContents, setHasLoadedContents] = useState(false);
+
+  useEffect(() => {
+    // Expand the selected directory and its parents
+    const isSelectedOrParent = path === selectedDirectory.substring(0, path.length);
+    if (isSelectedOrParent) {
+      setIsExpanded(true);
+    }
+  }, [path, selectedDirectory]);
 
   return li(
     {

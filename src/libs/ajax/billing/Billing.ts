@@ -171,11 +171,9 @@ export const Billing = (signal?: AbortSignal) => ({
     return res.json();
   },
 
-  addProjectUser: async (projectName: string, roles: BillingRole[], email: string): Promise<Response> => {
-    let userRoles: BillingProjectMember[] = [];
-    roles.forEach((role) => {
-      userRoles = _.concat(userRoles, [{ email, role }]);
-    });
+  addProjectUsers: async (projectName: string, roles: BillingRole[], emails: string[]): Promise<Response> => {
+    const userRoles: BillingProjectMember[] = _.flatMap((email) => roles.map((role) => ({ email, role })), emails);
+
     return await fetchRawls(
       `billing/v2/${projectName}/members?inviteUsersNotFound=true`,
       _.mergeAll([authOpts(), jsonBody({ membersToAdd: userRoles, membersToRemove: [] }), { signal, method: 'PATCH' }])
@@ -200,7 +198,7 @@ export const Billing = (signal?: AbortSignal) => ({
   ): Promise<void[] | void> => {
     const billing = Billing();
     if (!_.isEqual(oldRoles, newRoles)) {
-      await billing.addProjectUser(projectName, _.difference(newRoles, oldRoles), email);
+      await billing.addProjectUsers(projectName, _.difference(newRoles, oldRoles), [email]);
       return billing.removeProjectUser(projectName, _.difference(oldRoles, newRoles), email);
     }
   },

@@ -14,7 +14,7 @@ const mockMethodResponse: MethodResponse = {
   documentation: 'documentation',
   synopsis: 'synopsis',
   entityType: 'Workflow',
-  snapshotComment: 'snapshot comment',
+  snapshotComment: 'version comment',
   snapshotId: 4,
   namespace: 'groot-namespace',
   payload: 'workflow myGreatWorkflow {}',
@@ -53,7 +53,7 @@ describe('EditMethodProvider', () => {
       'synopsis',
       'documentation',
       'workflow myGreatWorkflow {}',
-      'snapshot comment',
+      'version comment',
       { signal }
     );
 
@@ -66,7 +66,7 @@ describe('EditMethodProvider', () => {
         payload: 'workflow myGreatWorkflow {}',
         documentation: 'documentation',
         synopsis: 'synopsis',
-        snapshotComment: 'snapshot comment',
+        snapshotComment: 'version comment',
       },
       true
     );
