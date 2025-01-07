@@ -61,8 +61,8 @@ describe('CreateWorkflowModal', () => {
 
     // Assert
     expect(screen.getByText('Create New Workflow'));
-    expect(screen.getByText('Namespace *'));
-    expect(screen.getByText('Name *'));
+    expect(screen.getByText('Collection name *'));
+    expect(screen.getByText('Workflow name *'));
     expect(screen.getByText('WDL *'));
     expect(screen.getByRole('button', { name: 'Load WDL from file' }));
     expect(screen.getByText('Documentation'));
@@ -71,8 +71,8 @@ describe('CreateWorkflowModal', () => {
     expect(screen.getByRole('button', { name: 'Cancel' }));
     expect(screen.getByRole('button', { name: 'Upload' }));
 
-    expect(screen.getByRole('textbox', { name: 'Namespace *' })).toHaveDisplayValue('');
-    expect(screen.getByRole('textbox', { name: 'Name *' })).toHaveDisplayValue('');
+    expect(screen.getByRole('textbox', { name: 'Collection name *' })).toHaveDisplayValue('');
+    expect(screen.getByRole('textbox', { name: 'Workflow name *' })).toHaveDisplayValue('');
     expect(screen.getByTestId('wdl editor')).toHaveDisplayValue('');
     expect(screen.getByRole('textbox', { name: 'Documentation' })).toHaveDisplayValue('');
     expect(screen.getByRole('textbox', { name: 'Synopsis (80 characters max)' })).toHaveDisplayValue('');
@@ -102,11 +102,11 @@ describe('CreateWorkflowModal', () => {
     // Act
 
     // errors only need to appear after the inputs have been modified
-    fireEvent.change(screen.getByRole('textbox', { name: 'Namespace *' }), { target: { value: 'n' } });
-    fireEvent.change(screen.getByRole('textbox', { name: 'Name *' }), { target: { value: 'n' } });
+    fireEvent.change(screen.getByRole('textbox', { name: 'Collection name *' }), { target: { value: 'n' } });
+    fireEvent.change(screen.getByRole('textbox', { name: 'Workflow name *' }), { target: { value: 'n' } });
 
-    fireEvent.change(screen.getByRole('textbox', { name: 'Namespace *' }), { target: { value: '' } });
-    fireEvent.change(screen.getByRole('textbox', { name: 'Name *' }), { target: { value: '' } });
+    fireEvent.change(screen.getByRole('textbox', { name: 'Collection name *' }), { target: { value: '' } });
+    fireEvent.change(screen.getByRole('textbox', { name: 'Workflow name *' }), { target: { value: '' } });
 
     // Assert
 
@@ -114,8 +114,8 @@ describe('CreateWorkflowModal', () => {
     // the error messages shown in the modal (under the inputs and in the
     // button tooltip) do not easily correspond to those found by the testing
     // framework
-    expect(screen.getAllByText("Namespace can't be blank"));
-    expect(screen.getAllByText("Name can't be blank"));
+    expect(screen.getAllByText("Collection name can't be blank"));
+    expect(screen.getAllByText("Workflow name can't be blank"));
 
     expect(uploadButton).toHaveAttribute('aria-disabled', 'true');
   });
@@ -145,8 +145,8 @@ describe('CreateWorkflowModal', () => {
     // the error messages shown in the modal (under the inputs and in the
     // button tooltip) do not easily correspond to those found by the testing
     // framework
-    expect(screen.getAllByText('Namespace can only contain letters, numbers, underscores, dashes, and periods'));
-    expect(screen.getAllByText('Name can only contain letters, numbers, underscores, dashes, and periods'));
+    expect(screen.getAllByText('Collection name can only contain letters, numbers, underscores, dashes, and periods'));
+    expect(screen.getAllByText('Workflow name can only contain letters, numbers, underscores, dashes, and periods'));
 
     expect(uploadButton).toHaveAttribute('aria-disabled', 'true');
   });
@@ -179,7 +179,7 @@ describe('CreateWorkflowModal', () => {
     // the error messages shown in the modal (under the inputs and in the
     // button tooltip) do not easily correspond to those found by the testing
     // framework
-    expect(screen.getAllByText('Namespace and name are too long (maximum is 250 characters total)'));
+    expect(screen.getAllByText('Collection and workflow name are too long (maximum is 250 characters total)'));
 
     expect(uploadButton).toHaveAttribute('aria-disabled', 'true');
   });
@@ -305,8 +305,8 @@ describe('CreateWorkflowModal', () => {
       );
     });
 
-    fireEvent.change(screen.getByRole('textbox', { name: 'Namespace *' }), { target: { value: 'newnamespace' } });
-    fireEvent.change(screen.getByRole('textbox', { name: 'Name *' }), { target: { value: 'newname' } });
+    fireEvent.change(screen.getByRole('textbox', { name: 'Collection name *' }), { target: { value: 'newnamespace' } });
+    fireEvent.change(screen.getByRole('textbox', { name: 'Workflow name *' }), { target: { value: 'newname' } });
     fireEvent.change(screen.getByTestId('wdl editor'), { target: { value: 'workflow new {}' } });
     fireEvent.change(screen.getByRole('textbox', { name: 'Documentation' }), { target: { value: 'new docs' } });
     fireEvent.change(screen.getByRole('textbox', { name: 'Synopsis (80 characters max)' }), {
@@ -356,8 +356,8 @@ describe('CreateWorkflowModal', () => {
     });
 
     // Assert
-    expect(screen.getByRole('textbox', { name: 'Namespace *' })).toHaveDisplayValue('testnamespace');
-    expect(screen.getByRole('textbox', { name: 'Name *' })).toHaveDisplayValue('testname');
+    expect(screen.getByRole('textbox', { name: 'Collection name *' })).toHaveDisplayValue('testnamespace');
+    expect(screen.getByRole('textbox', { name: 'Workflow name *' })).toHaveDisplayValue('testname');
     expect(screen.getByTestId('wdl editor')).toHaveDisplayValue('workflow hi {}');
     expect(screen.getByRole('textbox', { name: 'Documentation' })).toHaveDisplayValue('test docs');
     expect(screen.getByRole('textbox', { name: 'Synopsis (80 characters max)' })).toHaveDisplayValue('test synopsis');
@@ -502,8 +502,10 @@ describe('CreateWorkflowModal', () => {
     });
 
     // Assert
-    expect(screen.getByRole('textbox', { name: 'Namespace *' })).toHaveDisplayValue('');
-    expect(screen.getByRole('textbox', { name: 'Name *' })).toHaveDisplayValue('groot-scientific-workflow_copy');
+    expect(screen.getByRole('textbox', { name: 'Collection name *' })).toHaveDisplayValue('');
+    expect(screen.getByRole('textbox', { name: 'Workflow name *' })).toHaveDisplayValue(
+      'groot-scientific-workflow_copy'
+    );
     expect(screen.getByTestId('wdl editor')).toHaveDisplayValue('workflow do-great-stuff {}');
     expect(screen.getByRole('textbox', { name: 'Documentation' })).toHaveDisplayValue('I am Groot');
     expect(screen.getByRole('textbox', { name: 'Synopsis (80 characters max)' })).toHaveDisplayValue('I am Groot');
@@ -515,7 +517,7 @@ describe('CreateWorkflowModal', () => {
     expect(cloneMethodButton).toHaveAttribute('aria-disabled', 'true');
 
     // user enters value for 'Namespace' text box
-    fireEvent.change(screen.getByRole('textbox', { name: 'Namespace *' }), {
+    fireEvent.change(screen.getByRole('textbox', { name: 'Collection name *' }), {
       target: { value: 'groot-test-namespace' },
     });
     // user enters value for 'Version comment' text box

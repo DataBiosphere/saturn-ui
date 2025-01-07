@@ -50,7 +50,7 @@ validate.validators.maxNamespaceNameCombinedLength = <OtherFieldName extends str
   attributes: Record<OtherFieldName, string>
 ): string | null =>
   value.length + attributes[options.otherField].length > 250
-    ? '^Collection name and workflow name are too long (maximum is 250 characters total)' // ^ character prevents attribute from being prepended
+    ? '^Collection and workflow name are too long (maximum is 250 characters total)' // ^ character prevents attribute from being prepended
     : null;
 
 const createWorkflowModalConstraints = {
@@ -98,7 +98,7 @@ const CollectionAndNameSection = (props: CollectionAndNameSectionProps) => {
       <div style={{ flexWrap: 'wrap', flexGrow: 1, flexBasis: '400px' }}>
         <div style={{ marginBottom: '0.1667em' }}>
           <FormLabel htmlFor={namespaceInputId} required>
-            Collection Name
+            Collection name
           </FormLabel>
           <ValidatedInput
             inputProps={{
@@ -117,7 +117,7 @@ const CollectionAndNameSection = (props: CollectionAndNameSectionProps) => {
       <div style={{ flexWrap: 'wrap', flexGrow: 1, flexBasis: '400px' }}>
         <div style={{ marginBottom: '0.1667em' }}>
           <FormLabel htmlFor={nameInputId} required>
-            Workflow Name
+            Workflow name
           </FormLabel>
           <ValidatedInput
             inputProps={{
@@ -137,7 +137,7 @@ const CollectionAndNameSection = (props: CollectionAndNameSectionProps) => {
 };
 
 /**
- * Component for inputting workflow information to facilitate creating new workflow or cloning a workflow version.
+ * Component for inputting workflow information to facilitate creating new workflow or cloning a workflow snapshot.
  */
 export const CreateWorkflowModal = (props: CreateWorkflowModalProps) => {
   const {
@@ -165,7 +165,7 @@ export const CreateWorkflowModal = (props: CreateWorkflowModalProps) => {
 
   const validationErrors = validate({ namespace, name, synopsis, wdl }, createWorkflowModalConstraints, {
     prettify: (v) =>
-      ({ namespace: 'Collection Name', name: 'Workflow Name', synopsis: 'Synopsis', wdl: 'WDL' }[v] ||
+      ({ namespace: 'Collection name', name: 'Workflow name', synopsis: 'Synopsis', wdl: 'WDL' }[v] ||
       validate.prettify(v)),
   });
 
