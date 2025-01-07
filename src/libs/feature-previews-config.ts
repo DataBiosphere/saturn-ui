@@ -99,7 +99,7 @@ const featurePreviewsConfig: readonly FeaturePreview[] = [
     id: FIRECLOUD_UI_MIGRATION,
     title: 'Terra Workflow Repository Improvements',
     description:
-      "Enabling this feature will gives users access to the new Terra Workflow Repository UI. This replaces the Broad Methods Repository UI (and doesn't affect any workflows previously created).",
+      'Enabling this feature will allow creating and editing workflows with the built-in Terra Workflow Repository UI. This replaces the external Broad Methods Repository. Changes made in Terra are reflected in the external Broad Methods Repository, and vice-versa.',
     feedbackUrl: `mailto:dsp-analysis@broadinstitute.org?subject=${encodeURIComponent(
       'Feedback on Terra Workflow Repository Improvements'
     )}`,
