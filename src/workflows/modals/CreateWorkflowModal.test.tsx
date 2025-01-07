@@ -179,7 +179,7 @@ describe('CreateWorkflowModal', () => {
     // the error messages shown in the modal (under the inputs and in the
     // button tooltip) do not easily correspond to those found by the testing
     // framework
-    expect(screen.getAllByText('Collection and workflow name are too long (maximum is 250 characters total)'));
+    expect(screen.getAllByText('Collection and workflow names are too long (maximum is 250 characters total)'));
 
     expect(uploadButton).toHaveAttribute('aria-disabled', 'true');
   });

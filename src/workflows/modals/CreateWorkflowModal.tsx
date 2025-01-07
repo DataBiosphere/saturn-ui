@@ -50,7 +50,7 @@ validate.validators.maxNamespaceNameCombinedLength = <OtherFieldName extends str
   attributes: Record<OtherFieldName, string>
 ): string | null =>
   value.length + attributes[options.otherField].length > 250
-    ? '^Collection and workflow name are too long (maximum is 250 characters total)' // ^ character prevents attribute from being prepended
+    ? '^Collection and workflow names are too long (maximum is 250 characters total)' // ^ character prevents attribute from being prepended
     : null;
 
 const createWorkflowModalConstraints = {
