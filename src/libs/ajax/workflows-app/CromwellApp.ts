@@ -36,12 +36,21 @@ export const CromwellApp = (signal) => ({
       callB: thatCallFqn,
       indexB: thatIndex !== -1 ? thatIndex : undefined,
     };
-    const res = await fetchFromProxy(cromwellUrlRoot)(`api/workflows/v1/callcaching/diff?${qs.stringify(params)}`, _.merge(authOpts(), { signal }));
+    const res = await fetchFromProxy(cromwellUrlRoot)(
+      `api/workflows/v1/callcaching/diff?${qs.stringify(params)}`,
+      _.merge(authOpts(), { signal })
+    );
     return res.json();
   },
   engineStatus: async (cromwellUrlRoot) => {
-    const res = await fetchFromProxy(cromwellUrlRoot)('engine/v1/status', _.mergeAll([authOpts(), { signal, method: 'GET' }]));
+    const res = await fetchFromProxy(cromwellUrlRoot)(
+      'engine/v1/status',
+      _.mergeAll([authOpts(), { signal, method: 'GET' }])
+    );
 
     return res.json();
   },
 });
+
+export type CromwellAppAjaxContract = ReturnType<typeof CromwellApp>;
+export type WorkflowsContract = ReturnType<CromwellAppAjaxContract['workflows']>;

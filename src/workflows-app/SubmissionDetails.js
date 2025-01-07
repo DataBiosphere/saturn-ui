@@ -4,8 +4,9 @@ import { div, h, h2, h3 } from 'react-hyperscript-helpers';
 import { Link } from 'src/components/common';
 import { centeredSpinner, icon } from 'src/components/icons';
 import { SimpleTabBar } from 'src/components/tabBars';
-import { Ajax } from 'src/libs/ajax';
+import { AzureStorage } from 'src/libs/ajax/AzureStorage';
 import { useMetricsEvent } from 'src/libs/ajax/metrics/useMetrics';
+import { Cbas } from 'src/libs/ajax/workflows-app/Cbas';
 import Events from 'src/libs/events';
 import * as Nav from 'src/libs/nav';
 import { notify } from 'src/libs/notifications';
@@ -53,7 +54,7 @@ export const BaseSubmissionDetails = ({ name, namespace, workspace, submissionId
   const loadMethodsData = useCallback(
     async (cbasUrlRoot, methodId, methodVersion) => {
       try {
-        const methodsResponse = await Ajax(signal).Cbas.methods.getById(cbasUrlRoot, methodId, methodVersion);
+        const methodsResponse = await Cbas(signal).methods.getById(cbasUrlRoot, methodId, methodVersion);
         const allMethods = methodsResponse.methods;
         if (allMethods) {
           setMethodsData(allMethods);
@@ -70,7 +71,7 @@ export const BaseSubmissionDetails = ({ name, namespace, workspace, submissionId
   const loadRuns = useCallback(
     async (cbasUrlRoot) => {
       try {
-        return await Ajax(signal).Cbas.runs.get(cbasUrlRoot, submissionId);
+        return await Cbas(signal).runs.get(cbasUrlRoot, submissionId);
       } catch (error) {
         notify('error', 'Error loading saved workflows', { detail: error instanceof Response ? await error.text() : error });
       }
@@ -90,7 +91,7 @@ export const BaseSubmissionDetails = ({ name, namespace, workspace, submissionId
   const loadRunSets = useCallback(
     async (cbasUrlRoot) => {
       try {
-        const runSets = await Ajax(signal).Cbas.runSets.get(cbasUrlRoot);
+        const runSets = await Cbas(signal).runSets.get(cbasUrlRoot);
         const newRunSetData = runSets.run_sets.find((runSet) => runSet.run_set_id === submissionId);
         setRunSetData(runSets.run_sets);
         setConfiguredInputDefinition(maybeParseJSON(newRunSetData.input_definition));
@@ -173,7 +174,7 @@ export const BaseSubmissionDetails = ({ name, namespace, workspace, submissionId
 
   useOnMount(() => {
     const fetchSasToken = async () => {
-      const { sas } = await Ajax(signal).AzureStorage.details(workspaceId);
+      const { sas } = await AzureStorage(signal).details(workspaceId);
       setSasToken(sas.token);
     };
 
