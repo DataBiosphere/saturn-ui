@@ -12,6 +12,7 @@ import * as Utils from 'src/libs/utils';
 
 const ImportStatus = () => {
   const jobs = useStore(asyncImportJobStore);
+  console.log('jobs', jobs);
   return h(
     Fragment,
     _.map(

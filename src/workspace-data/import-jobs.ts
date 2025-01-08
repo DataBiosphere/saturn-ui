@@ -20,6 +20,7 @@ const isJobInWorkspace = (job: AsyncImportJob, workspace: WorkspaceWrapper): boo
 
 export const useImportJobs = (workspace: WorkspaceWrapper): UseImportJobsResult => {
   const allRunningJobs = useStore(asyncImportJobStore);
+  console.log('allRunningJobs', allRunningJobs);
 
   const signal = useCancellation();
   const refresh = useCallback(async () => {

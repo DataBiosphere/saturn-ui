@@ -76,6 +76,7 @@ export const ImportData = (props: ImportDataProps): ReactNode => {
         jobId,
         wdsProxyUrl: wdsUrl,
       };
+      console.log('newJob', newJob);
       asyncImportJobStore.update(Utils.append<AsyncImportJob>(newJob));
       notifyDataImportProgress(jobId);
     } else {
