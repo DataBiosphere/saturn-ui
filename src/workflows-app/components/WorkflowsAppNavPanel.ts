@@ -1,5 +1,5 @@
 import _ from 'lodash/fp';
-import { CSSProperties, useEffect, useState } from 'react';
+import React, { CSSProperties, useEffect, useState } from 'react';
 import { div, h, h2, span } from 'react-hyperscript-helpers';
 import { ErrorAlert } from 'src/alerts/ErrorAlert';
 import { AnalysesData } from 'src/analysis/Analyses';
@@ -76,23 +76,24 @@ type WorkflowsAppNavPanelProps = {
   launching: boolean;
   createWorkflowsApp: Function;
   pageReady: boolean;
-  setLoading: Function;
-  signal: Function;
+  setLoading: (value: boolean) => void;
+  signal?: AbortSignal;
 };
 
-export const WorkflowsAppNavPanel = ({
-  pageReady,
-  launcherDisabled,
-  launching,
-  loading,
-  name,
-  namespace,
-  workspace,
-  analysesData,
-  createWorkflowsApp,
-  setLoading,
-  signal,
-}: WorkflowsAppNavPanelProps) => {
+export const WorkflowsAppNavPanel: React.FC<WorkflowsAppNavPanelProps> = (props): React.ReactNode => {
+  const {
+    pageReady,
+    launcherDisabled,
+    launching,
+    loading,
+    name,
+    namespace,
+    workspace,
+    analysesData,
+    createWorkflowsApp,
+    setLoading,
+    signal,
+  } = props;
   const [selectedSubHeader, setSelectedSubHeader] = useQueryParameter('tab');
   const { captureEvent } = useMetricsEvent();
   const [statusModalVisible, setStatusModalVisible] = useState(false);
@@ -338,7 +339,6 @@ export const WorkflowsAppNavPanel = ({
               h(ImportGithub, {
                 setLoading,
                 signal,
-                onDismiss: null,
                 workspace,
                 name,
                 namespace,

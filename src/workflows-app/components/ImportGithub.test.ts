@@ -1,13 +1,15 @@
 import { fireEvent, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { h } from 'react-hyperscript-helpers';
-import { Ajax } from 'src/libs/ajax';
-import { AppProxyUrlStatus, workflowsAppStore } from 'src/libs/state';
-import { renderWithAppContexts as render } from 'src/testing/test-utils';
-import ImportGithub from 'src/workflows-app/components/ImportGithub';
+import { Cbas, CbasAjaxContract } from 'src/libs/ajax/workflows-app/Cbas';
+import { AzureWorkspace, AzureWorkspaceInfo } from 'src/libs/ajax/workspaces/workspace-models';
+import { AppProxyUrlStatus, workflowsAppStore, WorkflowsAppStoreState } from 'src/libs/state';
+import { asMockedFn, MockedFn, partial, renderWithAppContexts as render } from 'src/testing/test-utils';
+import ImportGithub, { ImportGithubProps } from 'src/workflows-app/components/ImportGithub';
 
-jest.mock('src/libs/ajax');
 jest.mock('src/libs/ajax/leonardo/Apps');
+jest.mock('src/libs/ajax/workflows-app/Cbas');
+
 jest.mock('src/libs/notifications');
 jest.mock('src/libs/nav', () => ({
   getCurrentUrl: jest.fn().mockReturnValue(new URL('https://app.terra.bio')),
@@ -21,24 +23,55 @@ jest.mock('src/libs/state', () => ({
   ...jest.requireActual('src/libs/state'),
   getTerraUser: jest.fn(),
 }));
-jest.mock('src/libs/ajax/metrics/useMetrics', () => ({
-  ...jest.requireActual('src/libs/ajax/metrics/useMetrics'),
-  useMetricsEvent: jest.fn(() => ({ captureEvent: jest.fn() })),
-}));
+
+type UseMetricsExports = typeof import('src/libs/ajax/metrics/useMetrics');
+jest.mock(
+  'src/libs/ajax/metrics/useMetrics',
+  (): UseMetricsExports => ({
+    ...jest.requireActual<UseMetricsExports>('src/libs/ajax/metrics/useMetrics'),
+    useMetricsEvent: jest.fn(() => ({ captureEvent: jest.fn() })),
+  })
+);
 
 describe('Add a Workflow Link', () => {
-  const workspace = {
-    workspace: {
+  const workspace = partial<AzureWorkspace>({
+    workspace: partial<AzureWorkspaceInfo>({
       namespace: 'test',
       name: 'test',
       cloudPlatform: 'Azure',
       workspaceId: '79201ea6-519a-4077-a9a4-75b2a7c4cdeb',
-    },
-  };
+    }),
+  });
+
+  const defaultImporGithubProps = (): ImportGithubProps => ({
+    workspace,
+    namespace: 'MyNamespace',
+    setLoading: jest.fn(),
+    name: 'MyName',
+    setSelectedSubHeader: jest.fn(),
+  });
+
+  const postMethodFunction: MockedFn<CbasAjaxContract['methods']['post']> = jest.fn(async (_root, _payload) => ({
+    method_id: 'abc123',
+  }));
+
+  asMockedFn(Cbas).mockReturnValue(
+    partial<CbasAjaxContract>({
+      methods: partial<CbasAjaxContract['methods']>({ post: postMethodFunction }),
+    })
+  );
 
   it('should render text inputs/headers', async () => {
     // ** ACT **
-    render(h(ImportGithub, { onDismiss: jest.fn() }));
+    render(
+      h(ImportGithub, {
+        workspace,
+        namespace: 'MyNamespace',
+        setLoading: jest.fn(),
+        name: 'MyName',
+        setSelectedSubHeader: jest.fn(),
+      })
+    );
 
     const urlLink = screen.getByText('Workflow Link *');
     const workflowName = screen.getByText('Workflow Name *');
@@ -50,27 +83,19 @@ describe('Add a Workflow Link', () => {
   });
 
   it('should submit github.com links for a running Workflows app', async () => {
-    const githubLink = 'https://github.com/broadinstitute/cromwell/blob/develop/wdl/transforms/draft3/src/test/cases/simple_task.wdl';
-    const postMethodFunction = jest.fn(() => Promise.resolve({ method_id: 'abc123' }));
+    const githubLink =
+      'https://github.com/broadinstitute/cromwell/blob/develop/wdl/transforms/draft3/src/test/cases/simple_task.wdl';
     const user = userEvent.setup();
 
-    await Ajax.mockImplementation(() => {
-      return {
-        Cbas: {
-          methods: {
-            post: jest.fn(postMethodFunction),
-          },
-        },
-      };
-    });
-
-    workflowsAppStore.set({
-      workspaceId: '79201ea6-519a-4077-a9a4-75b2a7c4cdeb',
-      cbasProxyUrlState: { status: AppProxyUrlStatus.Ready, state: 'https://lz-abc/terra-app-abc/cbas' },
-    });
+    workflowsAppStore.set(
+      partial<WorkflowsAppStoreState>({
+        workspaceId: '79201ea6-519a-4077-a9a4-75b2a7c4cdeb',
+        cbasProxyUrlState: { status: AppProxyUrlStatus.Ready, state: 'https://lz-abc/terra-app-abc/cbas' },
+      })
+    );
 
     // ** ACT **
-    render(h(ImportGithub, { setLoading: jest.fn(), signal: jest.fn(), onDismiss: jest.fn(), workspace }));
+    render(h(ImportGithub, { ...defaultImporGithubProps() }));
 
     const urlLink = screen.getByPlaceholderText('Paste Github link');
     const workflowName = screen.getByPlaceholderText('Workflow Name');
@@ -79,7 +104,7 @@ describe('Add a Workflow Link', () => {
     expect(addToWorkspaceButtonDisabled.getAttribute('aria-disabled')).toBe('true');
 
     fireEvent.change(urlLink, { target: { value: githubLink } });
-    expect(workflowName.value).toBe('simple_task');
+    expect((workflowName as HTMLInputElement).value).toBe('simple_task');
     const addToWorkspaceButtonEnabled = screen.getByLabelText('Add to Workspace button');
     expect(addToWorkspaceButtonEnabled.getAttribute('aria-disabled')).toBe('false');
     await user.click(addToWorkspaceButtonEnabled);
@@ -97,34 +122,26 @@ describe('Add a Workflow Link', () => {
   });
 
   it('should accept raw github.com links for a running Workflows app', async () => {
-    const rawGithubLink = 'https://raw.githubusercontent.com/broadinstitute/cromwell/develop/wdl/transforms/draft3/src/test/cases/simple_task.wdl';
-    const postMethodFunction = jest.fn(() => Promise.resolve({ method_id: 'abc123' }));
+    const rawGithubLink =
+      'https://raw.githubusercontent.com/broadinstitute/cromwell/develop/wdl/transforms/draft3/src/test/cases/simple_task.wdl';
     const user = userEvent.setup();
 
-    await Ajax.mockImplementation(() => {
-      return {
-        Cbas: {
-          methods: {
-            post: jest.fn(postMethodFunction),
-          },
-        },
-      };
-    });
-
-    workflowsAppStore.set({
-      workspaceId: '79201ea6-519a-4077-a9a4-75b2a7c4cdeb',
-      cbasProxyUrlState: { status: AppProxyUrlStatus.Ready, state: 'https://lz-abc/terra-app-abc/cbas' },
-    });
+    workflowsAppStore.set(
+      partial<WorkflowsAppStoreState>({
+        workspaceId: '79201ea6-519a-4077-a9a4-75b2a7c4cdeb',
+        cbasProxyUrlState: { status: AppProxyUrlStatus.Ready, state: 'https://lz-abc/terra-app-abc/cbas' },
+      })
+    );
 
     // ** ACT **
-    render(h(ImportGithub, { setLoading: jest.fn(), signal: jest.fn(), onDismiss: jest.fn(), workspace }));
+    render(h(ImportGithub, { ...defaultImporGithubProps() }));
 
     const urlLink = screen.getByPlaceholderText('Paste Github link');
     const workflowName = screen.getByPlaceholderText('Workflow Name');
 
     fireEvent.change(urlLink, { target: { value: rawGithubLink } });
     // Expect autofill
-    expect(workflowName.value).toBe('simple_task');
+    expect((workflowName as HTMLInputElement).value).toBe('simple_task');
     // User change name
     await user.clear(workflowName);
     fireEvent.change(workflowName, { target: { value: 'Test workflow again' } });
@@ -143,21 +160,8 @@ describe('Add a Workflow Link', () => {
   });
 
   it('should fail when given a non github link', async () => {
-    const postMethodFunction = jest.fn(() => Promise.resolve({ method_id: 'abc123' }));
-
-    await Ajax.mockImplementation(() => {
-      return {
-        Cbas: {
-          methods: {
-            post: postMethodFunction,
-          },
-        },
-      };
-    });
-
-    const onDismiss = jest.fn();
     // ** ACT **
-    render(h(ImportGithub, { setLoading: jest.fn(), signal: jest.fn(), onDismiss }));
+    render(h(ImportGithub, { ...defaultImporGithubProps() }));
 
     const urlLink = screen.getByPlaceholderText('Paste Github link');
     const workflowName = screen.getByPlaceholderText('Workflow Name');
@@ -171,31 +175,25 @@ describe('Add a Workflow Link', () => {
 
   it('should not be able to import workflow if CBAS proxy url is not ready', async () => {
     // ** ARRANGE **
-    const postMethodFunction = jest.fn(() => Promise.resolve({ method_id: 'abc123' }));
     const user = userEvent.setup();
 
-    await Ajax.mockImplementation(() => {
-      return {
-        Cbas: {
-          methods: {
-            post: jest.fn(postMethodFunction),
-          },
-        },
-      };
-    });
-
-    workflowsAppStore.set({
-      workspaceId: '79201ea6-519a-4077-a9a4-75b2a7c4cdeb',
-      cbasProxyUrlState: { status: AppProxyUrlStatus.None, state: '' },
-    });
+    workflowsAppStore.set(
+      partial<WorkflowsAppStoreState>({
+        workspaceId: '79201ea6-519a-4077-a9a4-75b2a7c4cdeb',
+        cbasProxyUrlState: { status: AppProxyUrlStatus.None, state: '' },
+      })
+    );
 
     // ** ACT **
-    render(h(ImportGithub, { setLoading: jest.fn(), signal: jest.fn(), onDismiss: jest.fn(), workspace }));
+    render(h(ImportGithub, { ...defaultImporGithubProps() }));
 
     const urlLink = screen.getByPlaceholderText('Paste Github link');
 
     fireEvent.change(urlLink, {
-      target: { value: 'https://github.com/broadinstitute/cromwell/blob/develop/wdl/transforms/draft3/src/test/cases/simple_task.wdl' },
+      target: {
+        value:
+          'https://github.com/broadinstitute/cromwell/blob/develop/wdl/transforms/draft3/src/test/cases/simple_task.wdl',
+      },
     });
     const addToWorkspaceButtonEnabled = screen.getByLabelText('Add to Workspace button');
     expect(addToWorkspaceButtonEnabled.getAttribute('aria-disabled')).toBe('false');
@@ -206,34 +204,27 @@ describe('Add a Workflow Link', () => {
   });
 
   it('shows modal on successful import', async () => {
-    const githubLink = 'https://github.com/broadinstitute/cromwell/blob/develop/wdl/transforms/draft3/src/test/cases/simple_task.wdl';
-    const postMethodFunction = jest.fn(() => Promise.resolve({ method_id: 'abc123' }));
+    // Arrange
+    const githubLink =
+      'https://github.com/broadinstitute/cromwell/blob/develop/wdl/transforms/draft3/src/test/cases/simple_task.wdl';
     const user = userEvent.setup();
 
-    await Ajax.mockImplementation(() => {
-      return {
-        Cbas: {
-          methods: {
-            post: jest.fn(postMethodFunction),
-          },
-        },
-      };
-    });
-
-    workflowsAppStore.set({
-      workspaceId: '79201ea6-519a-4077-a9a4-75b2a7c4cdeb',
-      cbasProxyUrlState: { status: AppProxyUrlStatus.Ready, state: 'https://lz-abc/terra-app-abc/cbas' },
-    });
+    workflowsAppStore.set(
+      partial<WorkflowsAppStoreState>({
+        workspaceId: '79201ea6-519a-4077-a9a4-75b2a7c4cdeb',
+        cbasProxyUrlState: { status: AppProxyUrlStatus.Ready, state: 'https://lz-abc/terra-app-abc/cbas' },
+      })
+    );
 
     // ** ACT **
-    render(h(ImportGithub, { setLoading: jest.fn(), signal: jest.fn(), onDismiss: jest.fn(), workspace }));
+    render(h(ImportGithub, { ...defaultImporGithubProps() }));
 
     const urlLink = screen.getByPlaceholderText('Paste Github link');
     const workflowName = screen.getByPlaceholderText('Workflow Name');
 
     fireEvent.change(urlLink, { target: { value: githubLink } });
     // Expect autofill
-    expect(workflowName.value).toBe('simple_task');
+    expect((workflowName as HTMLInputElement).value).toBe('simple_task');
 
     const addToWorkspaceButtonEnabled = screen.getByLabelText('Add to Workspace button');
     await user.click(addToWorkspaceButtonEnabled);

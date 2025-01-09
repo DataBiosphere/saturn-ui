@@ -1,11 +1,12 @@
-import { DeepPartial } from '@terra-ui-packages/core-utils';
 import { act, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { h } from 'react-hyperscript-helpers';
 import { appAccessScopes, appToolLabels } from 'src/analysis/utils/tool-utils';
-import { Ajax } from 'src/libs/ajax';
+import { Apps, AppsAjaxContract } from 'src/libs/ajax/leonardo/Apps';
+import { ListAppItem } from 'src/libs/ajax/leonardo/models/app-models';
+import { Cbas, CbasAjaxContract } from 'src/libs/ajax/workflows-app/Cbas';
 import { getTerraUser, workflowsAppStore } from 'src/libs/state';
-import { asMockedFn, renderWithAppContexts as render } from 'src/testing/test-utils';
+import { asMockedFn, MockedFn, partial, renderWithAppContexts as render } from 'src/testing/test-utils';
 import { SubmitWorkflowModal } from 'src/workflows-app/components/SubmitWorkflowModal';
 import { methodDataWithVersions } from 'src/workflows-app/utils/mock-data';
 import {
@@ -18,9 +19,8 @@ import {
   searchResponseFOO,
 } from 'src/workflows-app/utils/mock-responses';
 
-jest.mock('src/libs/ajax');
-
-type AjaxContract = ReturnType<typeof Ajax>;
+jest.mock('src/libs/ajax/leonardo/Apps');
+jest.mock('src/libs/ajax/workflows-app/Cbas');
 
 jest.mock('src/libs/notifications');
 
@@ -47,10 +47,14 @@ jest.mock('src/libs/utils', () => ({
   }),
 }));
 
-jest.mock('src/libs/ajax/metrics/useMetrics', () => ({
-  ...jest.requireActual('src/libs/ajax/metrics/useMetrics'),
-  useMetricsEvent: jest.fn(() => ({ captureEvent: jest.fn() })),
-}));
+type UseMetricsExports = typeof import('src/libs/ajax/metrics/useMetrics');
+jest.mock(
+  'src/libs/ajax/metrics/useMetrics',
+  (): UseMetricsExports => ({
+    ...jest.requireActual<UseMetricsExports>('src/libs/ajax/metrics/useMetrics'),
+    useMetricsEvent: jest.fn(() => ({ captureEvent: jest.fn() })),
+  })
+);
 
 jest.mock('src/libs/feature-previews', () => ({
   ...jest.requireActual('src/libs/feature-previews'),
@@ -165,31 +169,31 @@ describe('SubmitWorkflowModal', () => {
     const user = userEvent.setup();
     const postRunSetFunction = jest.fn();
     const createAppV2 = jest.fn();
-    const listAppsV2 = cromwellRunnerStates.reduce(
+    const listAppsV2: MockedFn<AppsAjaxContract['listAppsV2']> = cromwellRunnerStates.reduce(
       (prev, current) =>
-        prev.mockImplementationOnce(() =>
+        prev.mockImplementationOnce((_id) =>
           Promise.resolve([
             mockWdsApp,
             appToSubmitTo,
             ...(current !== 'NONE' ? [mockCromwellRunner(current, userEmail)] : []),
-          ])
+          ] as ListAppItem[])
         ),
-      jest.fn(() => Promise.resolve([appToSubmitTo, mockWdsApp]))
+      jest.fn((_id) => Promise.resolve([appToSubmitTo, mockWdsApp] as ListAppItem[]))
     );
 
-    asMockedFn<() => DeepPartial<AjaxContract>>(Ajax).mockImplementation(() => {
-      return {
-        Apps: {
-          createAppV2,
-          listAppsV2,
-        },
-        Cbas: {
-          runSets: {
-            post: postRunSetFunction,
-          },
-        },
-      };
-    });
+    asMockedFn(Apps).mockReturnValue(
+      partial<AppsAjaxContract>({
+        createAppV2,
+        listAppsV2,
+      })
+    );
+    asMockedFn(Cbas).mockReturnValue(
+      partial<CbasAjaxContract>({
+        runSets: partial<CbasAjaxContract['runSets']>({
+          post: postRunSetFunction,
+        }),
+      })
+    );
 
     // ** ACT **
     await act(async () =>
