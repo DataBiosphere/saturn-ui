@@ -31,7 +31,7 @@ import {
 import validate from 'validate.js';
 
 type WorkflowPermissionsModalProps = {
-  versionOrNamespace: 'Version' | 'Namespace';
+  versionOrCollection: 'Version' | 'Collection';
   namespace: string;
   setPermissionsModalOpen: (b: boolean) => void;
   refresh: () => void;
@@ -165,8 +165,16 @@ const CurrentUsers = (props: CurrentUsersProps) => {
   );
 };
 
+/**
+ * Component for editing version or collection permissions.
+ * Note: During the migration and release of the new Terra Workflow Repository UI, some terminology changes were
+ *       introduced. As a result, certain terms in the UI may differ from those used in the code. Below are few
+ *       terms in this component that have been renamed (or is referred as) specifically for user-facing purposes:
+ *          namespace -> collection
+ *          snapshot  -> version
+ */
 export const PermissionsModal = (props: WorkflowPermissionsModalProps) => {
-  const { versionOrNamespace, namespace, setPermissionsModalOpen, refresh, permissionsProvider } = props;
+  const { versionOrCollection, namespace, setPermissionsModalOpen, refresh, permissionsProvider } = props;
   const signal: AbortSignal = useCancellation();
   const [searchValue, setSearchValue] = useState<string>('');
   const [permissions, setPermissions] = useState<WorkflowsPermissions>([]);
@@ -238,11 +246,11 @@ export const PermissionsModal = (props: WorkflowPermissionsModalProps) => {
   });
 
   const modalTitle =
-    versionOrNamespace === 'Version' ? 'Edit version permissions' : `Edit permissions for namespace ${namespace}`;
+    versionOrCollection === 'Version' ? 'Edit version permissions' : `Edit permissions for collection ${namespace}`;
   const noEditPermissionsMsg =
-    versionOrNamespace === 'Version'
+    versionOrCollection === 'Version'
       ? 'You do not have permissions to edit version settings.'
-      : 'You do not have permissions to edit namespace settings.';
+      : 'You do not have permissions to edit collection settings.';
 
   return (
     <Modal title={modalTitle} onDismiss={() => setPermissionsModalOpen(false)} width='600px' showButtons={false} showX>
