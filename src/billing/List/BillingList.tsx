@@ -1,4 +1,4 @@
-import { Clickable, SpinnerOverlay } from '@terra-ui-packages/components';
+import { SpinnerOverlay } from '@terra-ui-packages/components';
 import { withHandlers } from '@terra-ui-packages/core-utils';
 import _ from 'lodash/fp';
 import * as qs from 'qs';
@@ -6,13 +6,14 @@ import React, { CSSProperties, ReactNode, useEffect, useRef, useState } from 're
 import * as Auth from 'src/auth/auth';
 import { CreateBillingProjectControl } from 'src/billing/List/CreateBillingProjectControl';
 import { GCPNewBillingProjectModal } from 'src/billing/List/GCPNewBillingProjectModal';
-import { ProjectListItem, ProjectListItemProps } from 'src/billing/List/ProjectListItem';
+import { listItemStyle, ProjectListItem, ProjectListItemProps } from 'src/billing/List/ProjectListItem';
 import { AzureBillingProjectWizard } from 'src/billing/NewBillingProjectWizard/AzureBillingProjectWizard/AzureBillingProjectWizard';
 import { GCPBillingProjectWizard } from 'src/billing/NewBillingProjectWizard/GCPBillingProjectWizard/GCPBillingProjectWizard';
 import ProjectDetail from 'src/billing/Project';
 import { billingRoles, isCreating, isDeleting } from 'src/billing/utils';
 import { BillingProject, GoogleBillingAccount } from 'src/billing-core/models';
 import Collapse from 'src/components/Collapse';
+import { Clickable } from 'src/components/common';
 import { Billing } from 'src/libs/ajax/billing/Billing';
 import { Metrics } from 'src/libs/ajax/Metrics';
 import colors from 'src/libs/colors';
@@ -308,25 +309,53 @@ export const BillingList = (props: BillingListProps) => {
           <CreateBillingProjectControl showCreateProjectModal={showCreateProjectModal} />
         </div>
         {isFeaturePreviewEnabled(CONSOLIDATED_SPEND_REPORT) && (
-          <Clickable
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              color: colors.accent(1.1),
-              ...(type === 'consolidatedSpendReport' ? { backgroundColor: colors.dark(0.1) } : {}),
-              ...(type === 'consolidatedSpendReport' ? { fontWeight: 'bold' } : {}),
-              marginLeft: '2rem',
-              marginRight: '2rem',
-              padding: '.5rem .5rem .5rem',
-            }}
-            href={`${Nav.getLink('billing')}?${qs.stringify({
-              type: 'consolidatedSpendReport',
-            })}`}
-            aria-current={false}
-            onClick={void Metrics().captureEvent(Events.billingViewConsolidatedSpendReport)}
-          >
-            <span style={{ wordBreak: 'break-all' }}>Consolidated Spend Report</span>
-          </Clickable>
+          <div role='list'>
+            <div role='listitem'>
+              <div
+                style={{ ...listItemStyle(type === 'consolidatedSpendReport', false) }}
+                // onMouseEnter={() => setHovered(true)}
+                // onMouseLeave={() => setHovered(false)}
+              >
+                <Clickable
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    color: type === 'consolidatedSpendReport' ? colors.accent(1.1) : colors.accent(),
+                  }}
+                  href={`${Nav.getLink('billing')}?${qs.stringify({
+                    type: 'consolidatedSpendReport',
+                  })}`}
+                  //   onClick={
+                  //     () => void Metrics().captureEvent(Events.billingProjectOpenFromList, extractBillingDetails(props.project))
+                  //     // (isActive = !isActive)
+                  //   }
+                  aria-current={type === 'consolidatedSpendReport' ? 'location' : false}
+                >
+                  Consolidated Spend Report
+                </Clickable>
+              </div>
+            </div>
+          </div>
+
+          // <Clickable
+          //   style={{
+          //     display: 'flex',
+          //     alignItems: 'center',
+          //     color: colors.accent(1.1),
+          //     ...(type === 'consolidatedSpendReport' ? { backgroundColor: colors.dark(0.1) } : {}),
+          //     ...(type === 'consolidatedSpendReport' ? { fontWeight: 'bold' } : {}),
+          //     marginLeft: '2rem',
+          //     marginRight: '2rem',
+          //     padding: '.5rem .5rem .5rem',
+          //   }}
+          //   href={`${Nav.getLink('billing')}?${qs.stringify({
+          //     type: 'consolidatedSpendReport',
+          //   })}`}
+          //   aria-current={false}
+          //   onClick={void Metrics().captureEvent(Events.billingViewConsolidatedSpendReport)}
+          // >
+          //   <span style={{ wordBreak: 'break-all' }}>Consolidated Spend Report</span>
+          // </Clickable>
         )}
         <BillingProjectSubheader title='Owned by You'>
           <div role='list'>

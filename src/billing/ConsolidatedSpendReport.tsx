@@ -276,7 +276,7 @@ export const ConsolidatedSpendReport = (props: ConsolidatedSpendReportProps): Re
             return {
               ...spendItem.workspace,
               workspaceId: `${spendItem.workspace.namespace}-${spendItem.workspace.name}`,
-              authorizationDomain: [],
+              authorizationDomain: workspaceDetails?.workspace.authorizationDomain,
               createdDate: workspaceDetails?.workspace.createdDate,
               createdBy: workspaceDetails?.workspace.createdBy,
               lastModified: workspaceDetails?.workspace.lastModified,
