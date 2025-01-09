@@ -89,6 +89,15 @@ interface WorkflowListProps {
   };
 }
 
+/**
+ * Note: During the migration and release of the new Terra Workflow Repository UI, some terminology changes were
+ *       introduced. As a result, certain terms in the UI may differ from those used in the code. Below are the
+ *       terms in this component that have been renamed (or is referred as) specifically for user-facing purposes:
+ *          method    -> workflow
+ *          namespace -> collection
+ *          name      -> workflow name
+ *          snapshot  -> version
+ */
 // TODO: consider wrapping query updates in useEffect
 export const WorkflowList = (props: WorkflowListProps) => {
   const { queryParams = {} } = props;

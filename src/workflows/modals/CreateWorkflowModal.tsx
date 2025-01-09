@@ -77,7 +77,7 @@ const createWorkflowModalConstraints = {
   },
 };
 
-interface CollectionAndNameSectionProps {
+interface CollectionAndWfNameSectionProps {
   namespace: string | undefined;
   name: string | undefined;
   setWorkflowNamespace: (value: string) => void;
@@ -85,7 +85,7 @@ interface CollectionAndNameSectionProps {
   errors: any;
 }
 
-const CollectionAndNameSection = (props: CollectionAndNameSectionProps) => {
+const CollectionAndWfNameSection = (props: CollectionAndWfNameSectionProps) => {
   const { namespace, name, setWorkflowNamespace, setWorkflowName, errors } = props;
   const [namespaceModified, setNamespaceModified] = useState<boolean>(false);
   const [nameModified, setNameModified] = useState<boolean>(false);
@@ -138,6 +138,13 @@ const CollectionAndNameSection = (props: CollectionAndNameSectionProps) => {
 
 /**
  * Component for inputting workflow information to facilitate creating new workflow or cloning a workflow snapshot.
+ * Note: During the migration and release of the new Terra Workflow Repository UI, some terminology changes were
+ *       introduced. As a result, certain terms in the UI may differ from those used in the code. Below are the
+ *       terms in this component that have been renamed (or is referred as) specifically for user-facing purposes:
+ *          method    -> workflow
+ *          namespace -> collection
+ *          name      -> workflow name
+ *          snapshot  -> version
  */
 export const CreateWorkflowModal = (props: CreateWorkflowModalProps) => {
   const {
@@ -191,7 +198,7 @@ export const CreateWorkflowModal = (props: CreateWorkflowModalProps) => {
     >
       <div style={{ padding: '0.5rem 0' }}>
         <div style={{ display: 'flex', alignItems: 'flex-end', flexWrap: 'wrap', gap: '16px' }}>
-          <CollectionAndNameSection
+          <CollectionAndWfNameSection
             namespace={namespace}
             name={name}
             setWorkflowNamespace={setNamespace}

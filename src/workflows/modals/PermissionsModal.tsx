@@ -165,6 +165,14 @@ const CurrentUsers = (props: CurrentUsersProps) => {
   );
 };
 
+/**
+ * Component for editing version or collection permissions.
+ * Note: During the migration and release of the new Terra Workflow Repository UI, some terminology changes were
+ *       introduced. As a result, certain terms in the UI may differ from those used in the code. Below are few
+ *       terms in this component that have been renamed (or is referred as) specifically for user-facing purposes:
+ *          namespace -> collection
+ *          snapshot  -> version
+ */
 export const PermissionsModal = (props: WorkflowPermissionsModalProps) => {
   const { versionOrCollection, namespace, setPermissionsModalOpen, refresh, permissionsProvider } = props;
   const signal: AbortSignal = useCancellation();
