@@ -39,6 +39,7 @@ export interface SearchRequest {
   limit: number;
   sort: 'asc' | 'desc';
   sortAttribute?: string;
+  filter?: { ids?: string[]; query?: string };
 }
 
 export type RecordAttributes = Record<string, unknown>; // truly "unknown" here; the backend Java representation is Map<String, Object>
@@ -176,7 +177,7 @@ export class WdsDataTableProvider implements DataTableProvider {
       supportsAttributeClearing: false,
       supportsExport: false,
       supportsPointCorrection: false,
-      supportsFiltering: false,
+      supportsFiltering: this.isCapabilityEnabled('search.filter.query.column.exact'),
       supportsRowSelection: false,
       supportsPerColumnDatatype: true,
     };
@@ -240,6 +241,32 @@ export class WdsDataTableProvider implements DataTableProvider {
     );
   };
 
+  // Copying from https://github.com/bripkens/lucene/blob/master/lib/escaping.js
+  // This library is not maintained, but we want the same functionality
+  protected prefixCharWithBackslashes = (char: string): string => {
+    return `\\${char}`;
+  };
+
+  escape = (s: string): string => {
+    return s.replace(/[+\-!(){}[\]^"?:\\&|'/\s*~]/g, this.prefixCharWithBackslashes);
+  };
+
+  protected transformQuery = (query: string): string => {
+    return this.escape(query).replace('=', ':');
+  };
+
+  protected queryOptionsToSearchRequest = (queryOptions: EntityQueryOptions): SearchRequest => {
+    const baseRequest: SearchRequest = {
+      offset: (queryOptions.pageNumber - 1) * queryOptions.itemsPerPage,
+      limit: queryOptions.itemsPerPage,
+      sort: queryOptions.sortDirection,
+    };
+    if (queryOptions.sortField !== 'name') baseRequest.sortAttribute = queryOptions.sortField;
+    if (queryOptions.columnFilter !== '')
+      baseRequest.filter = { query: this.transformQuery(queryOptions.columnFilter) };
+    return baseRequest;
+  };
+
   protected transformPage = (
     wdsPage: RecordQueryResponse,
     recordType: string,
@@ -287,14 +314,7 @@ export class WdsDataTableProvider implements DataTableProvider {
       this.proxyUrl,
       this.workspaceId,
       entityType,
-      _.merge(
-        {
-          offset: (queryOptions.pageNumber - 1) * queryOptions.itemsPerPage,
-          limit: queryOptions.itemsPerPage,
-          sort: queryOptions.sortDirection,
-        },
-        queryOptions.sortField === 'name' ? {} : { sortAttribute: queryOptions.sortField }
-      )
+      this.queryOptionsToSearchRequest(queryOptions)
     );
     return this.transformPage(wdsPage, entityType, queryOptions, metadata);
   };

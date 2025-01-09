@@ -749,6 +749,78 @@ describe('WdsDataTableProvider', () => {
         expect(actual.resultMetadata.unfilteredCount).toBe(2);
       });
     });
+    it('transforms a filter request', () => {
+      // Arrange
+      const provider = new TestableWdsProvider();
+      const signal = new AbortController().signal;
+
+      const metadata: EntityMetadata = {
+        item: {
+          count: 7,
+          attributeNames: ['stringAttr', 'numberAttr'],
+          attributes: [
+            {
+              name: 'stringAttr',
+              datatype: 'STRING',
+            },
+            {
+              name: 'numberAttr',
+              datatype: 'NUMBER',
+            },
+          ],
+          idName: 'sample_id',
+        },
+      };
+
+      const queryOptionsWithFilter: EntityQueryOptions = {
+        pageNumber: 2,
+        itemsPerPage: 50,
+        sortField: 'stringAttr',
+        sortDirection: 'desc',
+        snapshotName: '',
+        googleProject: '',
+        activeTextFilter: '',
+        filterOperator: '',
+        columnFilter: 'numberAttr=-22',
+      };
+      const expectedSearchRequest: SearchRequest = {
+        offset: 50,
+        limit: 50,
+        sort: 'desc',
+        sortAttribute: 'stringAttr',
+        filter: { query: 'numberAttr:\\-22' },
+      };
+
+      // Act
+      return provider.getPage(signal, recordType, queryOptionsWithFilter, metadata).then(() => {
+        // Assert
+        expect(getRecords.mock.calls.length).toBe(1);
+        expect(getRecords).toBeCalledWith(testProxyUrl, uuid, recordType, expectedSearchRequest);
+      });
+    });
+  });
+  describe('escape', () => {
+    // Arrange
+    const provider = new TestableWdsProvider();
+
+    // Assert
+    it('must not escape when not necessary', () => {
+      expect(provider.escape('foo')).toBe('foo');
+      expect(provider.escape('>32')).toBe('>32');
+    });
+
+    it('must escape typical reserved characters', () => {
+      expect(provider.escape('[32]')).toBe('\\[32\\]');
+      expect(provider.escape('foo:bar')).toBe('foo\\:bar');
+    });
+
+    it('must escape phrases', () => {
+      expect(provider.escape('foo"bar')).toBe('foo\\"bar');
+    });
+
+    it('must escape line breaks', () => {
+      expect(provider.escape('a\nb')).toBe('a\\\nb');
+    });
   });
   describe('deleteTable', () => {
     it('restructures a WDS response', () => {
