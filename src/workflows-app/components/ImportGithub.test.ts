@@ -43,7 +43,7 @@ describe('Add a Workflow Link', () => {
     }),
   });
 
-  const defaultImporGithubProps = (): ImportGithubProps => ({
+  const defaultImportGithubProps = (): ImportGithubProps => ({
     workspace,
     namespace: 'MyNamespace',
     setLoading: jest.fn(),
@@ -95,7 +95,7 @@ describe('Add a Workflow Link', () => {
     );
 
     // ** ACT **
-    render(h(ImportGithub, { ...defaultImporGithubProps() }));
+    render(h(ImportGithub, { ...defaultImportGithubProps() }));
 
     const urlLink = screen.getByPlaceholderText('Paste Github link');
     const workflowName = screen.getByPlaceholderText('Workflow Name');
@@ -134,7 +134,7 @@ describe('Add a Workflow Link', () => {
     );
 
     // ** ACT **
-    render(h(ImportGithub, { ...defaultImporGithubProps() }));
+    render(h(ImportGithub, { ...defaultImportGithubProps() }));
 
     const urlLink = screen.getByPlaceholderText('Paste Github link');
     const workflowName = screen.getByPlaceholderText('Workflow Name');
@@ -161,7 +161,7 @@ describe('Add a Workflow Link', () => {
 
   it('should fail when given a non github link', async () => {
     // ** ACT **
-    render(h(ImportGithub, { ...defaultImporGithubProps() }));
+    render(h(ImportGithub, { ...defaultImportGithubProps() }));
 
     const urlLink = screen.getByPlaceholderText('Paste Github link');
     const workflowName = screen.getByPlaceholderText('Workflow Name');
@@ -185,7 +185,7 @@ describe('Add a Workflow Link', () => {
     );
 
     // ** ACT **
-    render(h(ImportGithub, { ...defaultImporGithubProps() }));
+    render(h(ImportGithub, { ...defaultImportGithubProps() }));
 
     const urlLink = screen.getByPlaceholderText('Paste Github link');
 
@@ -217,7 +217,7 @@ describe('Add a Workflow Link', () => {
     );
 
     // ** ACT **
-    render(h(ImportGithub, { ...defaultImporGithubProps() }));
+    render(h(ImportGithub, { ...defaultImportGithubProps() }));
 
     const urlLink = screen.getByPlaceholderText('Paste Github link');
     const workflowName = screen.getByPlaceholderText('Workflow Name');
