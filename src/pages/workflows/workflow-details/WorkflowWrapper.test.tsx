@@ -465,8 +465,8 @@ describe('workflows container', () => {
 
     // Assert
     expect(dialog).toBeInTheDocument();
-    expect(within(dialog).getByRole('textbox', { name: 'Namespace *' })).toHaveDisplayValue('');
-    expect(within(dialog).getByRole('textbox', { name: 'Name *' })).toHaveDisplayValue('testname_copy');
+    expect(within(dialog).getByRole('textbox', { name: 'Collection name *' })).toHaveDisplayValue('');
+    expect(within(dialog).getByRole('textbox', { name: 'Workflow name *' })).toHaveDisplayValue('testname_copy');
     expect(within(dialog).getByRole('textbox', { name: 'Documentation' })).toHaveDisplayValue('mock documentation');
     expect(within(dialog).getByRole('textbox', { name: 'Synopsis (80 characters max)' })).toHaveDisplayValue('');
     expect(within(dialog).getByRole('textbox', { name: 'Version comment' })).toHaveDisplayValue('');
@@ -500,15 +500,15 @@ describe('workflows container', () => {
 
     // Assert
     expect(dialog).toBeInTheDocument();
-    expect(within(dialog).getByRole('textbox', { name: 'Namespace *' })).toHaveDisplayValue('');
-    expect(within(dialog).getByRole('textbox', { name: 'Name *' })).toHaveDisplayValue('testname_copy');
+    expect(within(dialog).getByRole('textbox', { name: 'Collection name *' })).toHaveDisplayValue('');
+    expect(within(dialog).getByRole('textbox', { name: 'Workflow name *' })).toHaveDisplayValue('testname_copy');
     expect(within(dialog).getByRole('textbox', { name: 'Documentation' })).toHaveDisplayValue('mock documentation');
     expect(within(dialog).getByRole('textbox', { name: 'Synopsis (80 characters max)' })).toHaveDisplayValue('');
     expect(within(dialog).getByRole('textbox', { name: 'Version comment' })).toHaveDisplayValue('');
     expect(within(dialog).getByTestId('wdl editor')).toHaveDisplayValue(mockSnapshot.payload.toString());
 
     // Act
-    fireEvent.change(screen.getByRole('textbox', { name: 'Namespace *' }), {
+    fireEvent.change(screen.getByRole('textbox', { name: 'Collection name *' }), {
       target: { value: 'groot-new-namespace' },
     });
     fireEvent.change(screen.getByRole('textbox', { name: 'Version comment' }), {
@@ -599,10 +599,13 @@ describe('workflows container', () => {
 
     // Assert
     expect(dialog).toBeInTheDocument();
-    expect(within(dialog).getByRole('textbox', { name: 'Namespace' })).toHaveAttribute('placeholder', 'testnamespace');
-    expect(within(dialog).getByRole('textbox', { name: 'Namespace' })).toHaveAttribute('disabled');
-    expect(within(dialog).getByRole('textbox', { name: 'Name' })).toHaveAttribute('placeholder', 'testname');
-    expect(within(dialog).getByRole('textbox', { name: 'Name' })).toHaveAttribute('disabled');
+    expect(within(dialog).getByRole('textbox', { name: 'Collection name' })).toHaveAttribute(
+      'placeholder',
+      'testnamespace'
+    );
+    expect(within(dialog).getByRole('textbox', { name: 'Collection name' })).toHaveAttribute('disabled');
+    expect(within(dialog).getByRole('textbox', { name: 'Workflow name' })).toHaveAttribute('placeholder', 'testname');
+    expect(within(dialog).getByRole('textbox', { name: 'Workflow name' })).toHaveAttribute('disabled');
     expect(within(dialog).getByRole('textbox', { name: 'Documentation' })).toHaveDisplayValue('mock documentation');
     expect(within(dialog).getByRole('textbox', { name: 'Synopsis (80 characters max)' })).toHaveDisplayValue('');
     expect(within(dialog).getByRole('textbox', { name: 'Version comment' })).toHaveDisplayValue('');

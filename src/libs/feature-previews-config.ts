@@ -97,12 +97,13 @@ const featurePreviewsConfig: readonly FeaturePreview[] = [
   },
   {
     id: FIRECLOUD_UI_MIGRATION,
-    title: 'Firecloud UI Feature Migration',
-    description: 'Enabling this feature will update replaceable links to Firecloud UI with new links to Terra UI',
-    feedbackUrl: `mailto:dsp-workflow-management@broadinstitute.org?subject=${encodeURIComponent(
-      'Feedback on deprecating Firecloud UI'
+    title: 'Terra Workflow Repository Improvements',
+    description:
+      'Enabling this feature will allow creating and editing workflows with the built-in Terra Workflow Repository UI. This replaces the external Broad Methods Repository. Changes made in Terra are reflected in the external Broad Methods Repository, and vice-versa.',
+    feedbackUrl: `mailto:dsp-analysis@broadinstitute.org?subject=${encodeURIComponent(
+      'Feedback on Terra Workflow Repository Improvements'
     )}`,
-    lastUpdated: '3/22/2024',
+    lastUpdated: '1/7/2025',
     articleUrl: 'https://support.terra.bio/hc/en-us/articles/31191238873243',
   },
   {

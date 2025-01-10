@@ -82,7 +82,7 @@ describe('PermissionsModal', () => {
       renderWithAppContexts(
         <PermissionsModal
           namespace='namespace'
-          versionOrNamespace='Version'
+          versionOrCollection='Version'
           setPermissionsModalOpen={jest.fn()}
           refresh={jest.fn()}
           permissionsProvider={permissionsProviderSuccess}
@@ -109,7 +109,7 @@ describe('PermissionsModal', () => {
       renderWithAppContexts(
         <PermissionsModal
           namespace='my-namespace'
-          versionOrNamespace='Namespace'
+          versionOrCollection='Collection'
           setPermissionsModalOpen={jest.fn()}
           refresh={jest.fn()}
           permissionsProvider={permissionsProviderSuccess}
@@ -118,7 +118,7 @@ describe('PermissionsModal', () => {
     });
 
     // ASSERT
-    expect(screen.getByText('Edit permissions for namespace my-namespace'));
+    expect(screen.getByText('Edit permissions for collection my-namespace'));
     expect(screen.getByText('Note: Sharing with user groups is not supported.'));
     expect(screen.getByText('User'));
     expect(screen.getByRole('textbox', { name: 'User' }));
@@ -137,7 +137,7 @@ describe('PermissionsModal', () => {
       renderWithAppContexts(
         <PermissionsModal
           namespace='namespace'
-          versionOrNamespace='Version'
+          versionOrCollection='Version'
           setPermissionsModalOpen={jest.fn()}
           refresh={jest.fn()}
           permissionsProvider={permissionsProviderSuccess}
@@ -172,7 +172,7 @@ describe('PermissionsModal', () => {
       renderWithAppContexts(
         <PermissionsModal
           namespace='namespace'
-          versionOrNamespace='Version'
+          versionOrCollection='Version'
           setPermissionsModalOpen={jest.fn()}
           refresh={jest.fn()}
           permissionsProvider={permissionsProviderSuccess}
@@ -219,7 +219,7 @@ describe('PermissionsModal', () => {
       renderWithAppContexts(
         <PermissionsModal
           namespace='namespace'
-          versionOrNamespace='Version'
+          versionOrCollection='Version'
           setPermissionsModalOpen={jest.fn()}
           refresh={jest.fn()}
           permissionsProvider={permissionsProviderSuccess}
@@ -257,7 +257,7 @@ describe('PermissionsModal', () => {
       renderWithAppContexts(
         <PermissionsModal
           namespace='namespace'
-          versionOrNamespace='Version'
+          versionOrCollection='Version'
           setPermissionsModalOpen={jest.fn()}
           refresh={jest.fn()}
           permissionsProvider={permissionsProviderSuccess}
@@ -280,7 +280,7 @@ describe('PermissionsModal', () => {
       renderWithAppContexts(
         <PermissionsModal
           namespace='namespace'
-          versionOrNamespace='Version'
+          versionOrCollection='Version'
           setPermissionsModalOpen={jest.fn()}
           refresh={jest.fn()}
           permissionsProvider={permissionsProviderSuccess}
@@ -309,7 +309,7 @@ describe('PermissionsModal', () => {
       renderWithAppContexts(
         <PermissionsModal
           namespace='namespace'
-          versionOrNamespace='Version'
+          versionOrCollection='Version'
           setPermissionsModalOpen={jest.fn()}
           refresh={jest.fn()}
           permissionsProvider={permissionsProviderSuccess}
@@ -351,7 +351,7 @@ describe('PermissionsModal', () => {
       renderWithAppContexts(
         <PermissionsModal
           namespace='namespace'
-          versionOrNamespace='Version'
+          versionOrCollection='Version'
           setPermissionsModalOpen={jest.fn()}
           refresh={jest.fn()}
           permissionsProvider={mockProvider}
@@ -387,7 +387,7 @@ describe('PermissionsModal', () => {
       renderWithAppContexts(
         <PermissionsModal
           namespace='namespace'
-          versionOrNamespace='Version'
+          versionOrCollection='Version'
           setPermissionsModalOpen={jest.fn()}
           refresh={jest.fn()}
           permissionsProvider={permissionsProviderSuccess}
@@ -426,7 +426,7 @@ describe('PermissionsModal', () => {
       renderWithAppContexts(
         <PermissionsModal
           namespace='namespace'
-          versionOrNamespace='Version'
+          versionOrCollection='Version'
           setPermissionsModalOpen={mockSetPermissionsModalOpen}
           refresh={mockRefresh}
           permissionsProvider={permissionsProviderSuccess}
@@ -453,7 +453,7 @@ describe('PermissionsModal', () => {
       renderWithAppContexts(
         <PermissionsModal
           namespace='namespace'
-          versionOrNamespace='Version'
+          versionOrCollection='Version'
           setPermissionsModalOpen={mockSetPermissionsModalOpen}
           refresh={mockRefresh}
           permissionsProvider={permissionsProviderSuccess}
@@ -478,7 +478,7 @@ describe('PermissionsModal', () => {
       renderWithAppContexts(
         <PermissionsModal
           namespace='namespace'
-          versionOrNamespace='Version'
+          versionOrCollection='Version'
           setPermissionsModalOpen={mockSetPermissionsModalOpen}
           refresh={mockRefresh}
           permissionsProvider={permissionsProviderError}
@@ -501,7 +501,7 @@ describe('PermissionsModal', () => {
       renderWithAppContexts(
         <PermissionsModal
           namespace='namespace'
-          versionOrNamespace='Namespace'
+          versionOrCollection='Collection'
           setPermissionsModalOpen={mockSetPermissionsModalOpen}
           refresh={mockRefresh}
           permissionsProvider={permissionsProviderForbidden}
@@ -510,7 +510,7 @@ describe('PermissionsModal', () => {
     });
 
     // ASSERT
-    expect(screen.getByText('You do not have permissions to edit namespace settings.')).toBeInTheDocument();
+    expect(screen.getByText('You do not have permissions to edit collection settings.')).toBeInTheDocument();
   });
 
   it('displays an error popup and closes the modal if there is an error saving permissions', async () => {
@@ -524,7 +524,7 @@ describe('PermissionsModal', () => {
       renderWithAppContexts(
         <PermissionsModal
           namespace='namespace'
-          versionOrNamespace='Version'
+          versionOrCollection='Version'
           setPermissionsModalOpen={mockSetPermissionsModalOpen}
           refresh={mockRefresh}
           permissionsProvider={permissionsProviderError}

@@ -262,7 +262,7 @@ describe('workflows table', () => {
     expect(methodCells[4]).toHaveTextContent('1');
   });
 
-  it('allows editing permissions for namespace owned by user', async () => {
+  it('allows editing permissions for collection owned by user', async () => {
     // Arrange
     asMockedFn(Methods).mockReturnValue(mockMethods([revaliMethod]));
     const user: UserEvent = userEvent.setup();
@@ -291,14 +291,14 @@ describe('workflows table', () => {
     await user.click(actionsMenu);
 
     // Assert
-    expect(screen.getByText('Edit namespace permissions'));
+    expect(screen.getByText('Edit collection permissions'));
 
     // Act
-    await user.click(screen.getByRole('button', { name: 'Edit namespace permissions' }));
+    await user.click(screen.getByRole('button', { name: 'Edit collection permissions' }));
 
     // Assert
     expect(
-      screen.queryByRole('dialog', { name: /Edit permissions for namespace revali bird namespace/i })
+      screen.queryByRole('dialog', { name: /Edit permissions for collection revali bird namespace/i })
     ).toBeInTheDocument();
   });
 
@@ -960,8 +960,8 @@ describe('create workflow modal', () => {
     expect(within(createWorkflowModal).getByText('Create New Workflow')).toBeInTheDocument();
     expect(within(createWorkflowModal).getByRole('button', { name: 'Upload' })).toBeInTheDocument();
 
-    expect(within(createWorkflowModal).getByRole('textbox', { name: 'Namespace *' })).toHaveDisplayValue('');
-    expect(within(createWorkflowModal).getByRole('textbox', { name: 'Name *' })).toHaveDisplayValue('');
+    expect(within(createWorkflowModal).getByRole('textbox', { name: 'Collection name *' })).toHaveDisplayValue('');
+    expect(within(createWorkflowModal).getByRole('textbox', { name: 'Workflow name *' })).toHaveDisplayValue('');
     expect(within(createWorkflowModal).getByTestId('wdl editor')).toHaveDisplayValue('');
     expect(within(createWorkflowModal).getByRole('textbox', { name: 'Documentation' })).toHaveDisplayValue('');
     expect(
@@ -985,8 +985,10 @@ describe('create workflow modal', () => {
 
     await user.click(screen.getByRole('button', { name: 'Create New Workflow' }));
 
-    fireEvent.change(screen.getByRole('textbox', { name: 'Namespace *' }), { target: { value: 'testnamespace' } });
-    fireEvent.change(screen.getByRole('textbox', { name: 'Name *' }), { target: { value: 'testname' } });
+    fireEvent.change(screen.getByRole('textbox', { name: 'Collection name *' }), {
+      target: { value: 'testnamespace' },
+    });
+    fireEvent.change(screen.getByRole('textbox', { name: 'Workflow name *' }), { target: { value: 'testname' } });
     fireEvent.change(screen.getByTestId('wdl editor'), { target: { value: 'workflow hi {}' } });
     fireEvent.change(screen.getByRole('textbox', { name: 'Documentation' }), { target: { value: 'docs' } });
     fireEvent.change(screen.getByRole('textbox', { name: 'Synopsis (80 characters max)' }), {

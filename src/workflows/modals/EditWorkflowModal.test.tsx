@@ -66,10 +66,10 @@ describe('EditWorkflowModal', () => {
 
     // Assert
     expect(screen.getByText('Edit'));
-    expect(screen.getByRole('textbox', { name: 'Namespace' })).toHaveAttribute('placeholder', 'my-namespace');
-    expect(screen.getByRole('textbox', { name: 'Namespace' })).toHaveAttribute('disabled');
-    expect(screen.getByRole('textbox', { name: 'Name' })).toHaveAttribute('placeholder', 'my-workflow');
-    expect(screen.getByRole('textbox', { name: 'Name' })).toHaveAttribute('disabled');
+    expect(screen.getByRole('textbox', { name: 'Collection name' })).toHaveAttribute('placeholder', 'my-namespace');
+    expect(screen.getByRole('textbox', { name: 'Collection name' })).toHaveAttribute('disabled');
+    expect(screen.getByRole('textbox', { name: 'Workflow name' })).toHaveAttribute('placeholder', 'my-workflow');
+    expect(screen.getByRole('textbox', { name: 'Workflow name' })).toHaveAttribute('disabled');
     expect(screen.getByTestId('wdl editor')).toHaveDisplayValue('workflow doStuff {}');
     expect(screen.getByRole('textbox', { name: 'Documentation' })).toHaveDisplayValue('documentation');
     expect(screen.getByRole('textbox', { name: 'Synopsis (80 characters max)' })).toHaveDisplayValue('synopsis');
