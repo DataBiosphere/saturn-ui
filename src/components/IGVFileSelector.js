@@ -23,6 +23,29 @@ const splitExtension = (fileUrl) => {
   return [base, extension];
 };
 
+/** Get file extension from URL, even if two-part / compound (e.g. "vcf.gz") */
+const getCompoundExtension = (fileUrl) => {
+  const splitPath = fileUrl.split('?')[0].split('.');
+  const numExtensions = splitPath.length > 2 ? 2 : 1;
+  const compoundExtension = splitPath.slice(-1 * numExtensions).join('.');
+  return compoundExtension;
+};
+
+export const getIgvMetricDetails = (selectedFiles, refGenome) => {
+  const igvNumTracks = selectedFiles.length;
+  const igvHasDrsUris = selectedFiles.some((f) => f.isSignedUrl);
+  const igvFileExtensions = selectedFiles.map((f) => getCompoundExtension(f.filePath));
+  const igvIndexExtensions = selectedFiles.map((f) => getCompoundExtension(f.indexFilePath));
+  const igvGenome = refGenome.genome;
+  return {
+    igvNumTracks,
+    igvFileExtensions,
+    igvIndexExtensions,
+    igvHasDrsUris,
+    igvGenome,
+  };
+};
+
 const UUID_PATTERN = '[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}';
 
 const UUID_REGEX = new RegExp(UUID_PATTERN);
@@ -130,17 +153,33 @@ export const getValidIgvFiles = async (values, signal) => {
     }
   });
 
+  const fileUrls = basicFileUrls.map((fus) => {
+    const url = new URL(fus);
+    url.isSignedUrl = false;
+    return url;
+  });
+
   const accessUrls = await resolveValidIgvDrsUris(values, signal);
-  const fileUrlStrings = basicFileUrls.concat(accessUrls);
-  const fileUrls = fileUrlStrings.map((fus) => new URL(fus));
+  accessUrls.forEach((accessUrl) => {
+    const url = new URL(accessUrl);
+
+    // Reliably indicate this is an access URL that should not be modified
+    // downstream, as done e.g. for some requester-pays URLS not resolved
+    // via DRS Hub.
+    url.isSignedUrl = true;
+
+    fileUrls.push(url);
+  });
 
   return fileUrls.flatMap((fileUrl) => {
+    const filePath = fileUrl.href;
+    const isSignedUrl = fileUrl.isSignedUrl;
     if (fileUrl.pathname.endsWith('.bed')) {
-      return [{ filePath: fileUrl.href, indexFilePath: false }];
+      return [{ filePath, indexFilePath: false, isSignedUrl }];
     }
     const indexFileUrl = findIndexForFile(fileUrl, fileUrls);
     if (indexFileUrl !== undefined) {
-      return [{ filePath: fileUrl.href, indexFilePath: indexFileUrl.href }];
+      return [{ filePath, indexFilePath: indexFileUrl.href, isSignedUrl }];
     }
     return [];
   });
