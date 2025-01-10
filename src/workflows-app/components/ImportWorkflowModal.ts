@@ -1,6 +1,6 @@
 import { useThemeFromContext } from '@terra-ui-packages/components';
 import { Modal } from '@terra-ui-packages/components';
-import { CSSProperties } from 'react';
+import React, { CSSProperties } from 'react';
 import { div, h } from 'react-hyperscript-helpers';
 import { ButtonPrimary, ButtonSecondary, Link } from 'src/components/common';
 import { getStyles as getErrorStyles } from 'src/components/ErrorView';
@@ -9,29 +9,31 @@ import * as Nav from 'src/libs/nav';
 import * as Utils from 'src/libs/utils';
 import { WorkspaceWrapper } from 'src/workspaces/utils';
 
-type ImportWorkflowModalProps = {
+export type ImportWorkflowModalProps = {
   importLoading: boolean;
   methodName: string;
   onDismiss: () => void;
   workspace: WorkspaceWrapper;
   namespace: string;
-  setSelectedSubHeader: Function;
+  setSelectedSubHeader: (subHeader: string) => void;
   methodId: string;
   successfulImport: boolean;
   errorMessage: string;
+  name?: string;
 };
 
-export const ImportWorkflowModal = ({
-  importLoading,
-  methodName,
-  onDismiss,
-  workspace,
-  namespace,
-  setSelectedSubHeader,
-  methodId,
-  successfulImport,
-  errorMessage,
-}: ImportWorkflowModalProps) => {
+export const ImportWorkflowModal: React.FC<ImportWorkflowModalProps> = (props): React.ReactNode => {
+  const {
+    importLoading,
+    methodName,
+    onDismiss,
+    workspace,
+    namespace,
+    setSelectedSubHeader,
+    methodId,
+    successfulImport,
+    errorMessage,
+  } = props;
   const { colors } = useThemeFromContext();
   const errorStyles = getErrorStyles(colors);
   const successBody = () => {

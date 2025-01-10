@@ -1,16 +1,17 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { div, h, h2 } from 'react-hyperscript-helpers';
 import { ButtonPrimary } from 'src/components/common';
 import { icon } from 'src/components/icons';
 import { ValidatedInput } from 'src/components/input';
 import { TooltipCell } from 'src/components/table';
 import { useMetricsEvent } from 'src/libs/ajax/metrics/useMetrics';
+import { WorkspaceWrapper } from 'src/libs/ajax/workspaces/workspace-models';
 import colors from 'src/libs/colors';
 import Events, { extractWorkspaceDetails } from 'src/libs/events';
 import { FormLabel } from 'src/libs/forms';
 import * as Utils from 'src/libs/utils';
 import { withBusyState } from 'src/libs/utils';
-import { ImportWorkflowModal } from 'src/workflows-app/components/ImportWorkflowModal';
+import { ImportWorkflowModal, ImportWorkflowModalProps } from 'src/workflows-app/components/ImportWorkflowModal';
 import { getMethodVersionName, submitMethod } from 'src/workflows-app/utils/method-common';
 import validate from 'validate.js';
 
@@ -24,18 +25,29 @@ const constraints = {
   },
 };
 
-const ImportGithub = ({ setLoading, signal, workspace, name, namespace, setSelectedSubHeader }) => {
-  const [methodName, setMethodName] = useState('');
-  const [methodVersionName, setMethodVersionName] = useState('');
-  const [methodUrl, setMethodUrl] = useState('');
-  const [methodUrlModified, setMethodUrlModified] = useState(false);
-  const [methodNameModified, setMethodNameModified] = useState(false);
-  const [methodId, setMethodId] = useState('');
+export interface ImportGithubProps {
+  workspace: WorkspaceWrapper;
+  namespace: string;
+  setSelectedSubHeader: ImportWorkflowModalProps['setSelectedSubHeader'];
+  setLoading: (value: boolean) => void;
+  signal?: AbortSignal;
+  name: string;
+}
 
-  const [importWorkflowModal, setImportWorkflowModal] = useState(false);
-  const [importLoading, setImportLoading] = useState(false);
-  const [successfulImport, setSuccessfulImport] = useState(undefined);
-  const [errorMessage, setErrorMessage] = useState('');
+const ImportGithub: React.FC<ImportGithubProps> = (props): React.ReactNode => {
+  const { setLoading, signal, workspace, name, namespace, setSelectedSubHeader } = props;
+
+  const [methodName, setMethodName] = useState<string>('');
+  const [methodVersionName, setMethodVersionName] = useState<string>('');
+  const [methodUrl, setMethodUrl] = useState<string>('');
+  const [methodUrlModified, setMethodUrlModified] = useState<boolean>(false);
+  const [methodNameModified, setMethodNameModified] = useState<boolean>(false);
+  const [methodId, setMethodId] = useState<string>('');
+
+  const [importWorkflowModal, setImportWorkflowModal] = useState<boolean>(false);
+  const [importLoading, setImportLoading] = useState<boolean>(false);
+  const [successfulImport, setSuccessfulImport] = useState<boolean>(false);
+  const [errorMessage, setErrorMessage] = useState<string>('');
 
   const errors = validate({ methodName, methodUrl }, constraints, {
     prettify: (v) => ({ methodName: 'Method name', methodUrl: 'Workflow url' }[v] || validate.prettify(v)),
@@ -64,7 +76,10 @@ const ImportGithub = ({ setLoading, signal, workspace, name, namespace, setSelec
       div({ style: { display: 'flex', alignItems: 'center' } }, [
         h(FormLabel, { style: { fontWeight: 'bold' }, htmlFor: 'methodurl', required: true }, ['Workflow Link']),
         h(TooltipCell, { tooltip: 'Link must start with https://github.com or https://raw.githubusercontent.com' }, [
-          icon('error-standard', { size: 20, style: { top: '50px', marginLeft: '1rem', color: colors.accent(), cursor: 'help' } }),
+          icon('error-standard', {
+            size: 20,
+            style: { top: '50px', marginLeft: '1rem', color: colors.accent(), cursor: 'help' },
+          }),
         ]),
       ]),
       h(ValidatedInput, {
@@ -123,7 +138,7 @@ const ImportGithub = ({ setLoading, signal, workspace, name, namespace, setSelec
                 },
                 false
               );
-              withBusyState(setLoading, submitMethod(signal, method, workspace, onSuccess, onError));
+              withBusyState(setLoading, () => submitMethod(signal, method, workspace, onSuccess, onError))();
             },
           },
           ['Add to Workspace']
