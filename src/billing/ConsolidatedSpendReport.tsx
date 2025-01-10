@@ -33,21 +33,10 @@ interface ConsolidatedSpendWorkspaceCardHeadersProps {
   onSort: (sort: { field: string; direction: 'asc' | 'desc' }) => void;
 }
 
-// Since the variable names don't match display names for these two columns, we need to map them
-const columnTitleToVariableNameMap = {
-  billingProject: 'namespace',
-  workspaceName: 'name',
-};
-
 const ConsolidatedSpendWorkspaceCardHeaders: React.FC<ConsolidatedSpendWorkspaceCardHeadersProps> = memoWithName(
   'ConsolidatedSpendWorkspaceCardHeaders',
   (props: ConsolidatedSpendWorkspaceCardHeadersProps) => {
     const { sort, onSort } = props;
-
-    const handleSort = (name: string) => {
-      const variableName = columnTitleToVariableNameMap[name];
-      onSort({ field: variableName, direction: sort.direction === 'asc' ? 'desc' : 'asc' });
-    };
 
     return (
       <div
@@ -60,11 +49,11 @@ const ConsolidatedSpendWorkspaceCardHeaders: React.FC<ConsolidatedSpendWorkspace
           marginBottom: '0.5rem',
         }}
       >
-        <div role='columnheader' aria-sort={ariaSort(sort, 'billingProject')} style={{ flex: 1, paddingLeft: '2rem' }}>
-          <HeaderRenderer sort={sort} onSort={() => handleSort('billingProject')} name='billingProject' />
+        <div role='columnheader' aria-sort={ariaSort(sort, 'namespace')} style={{ flex: 1, paddingLeft: '2rem' }}>
+          <HeaderRenderer sort={sort} onSort={onSort} name='namespace' label='Billing Project' />
         </div>
-        <div role='columnheader' aria-sort={ariaSort(sort, 'workspaceName')} style={{ flex: 1 }}>
-          <HeaderRenderer sort={sort} onSort={() => handleSort('workspaceName')} name='workspaceName' />
+        <div role='columnheader' aria-sort={ariaSort(sort, 'name')} style={{ flex: 1 }}>
+          <HeaderRenderer sort={sort} onSort={onSort} name='name' label='Workspace Name' />
         </div>
         <div role='columnheader' aria-sort={ariaSort(sort, 'totalSpend')} style={{ flex: 1 }}>
           <HeaderRenderer sort={sort} onSort={onSort} name='totalSpend' />
