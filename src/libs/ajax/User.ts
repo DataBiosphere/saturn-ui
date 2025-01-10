@@ -4,6 +4,7 @@ import { authOpts } from 'src/auth/auth-session';
 import { fetchOrchestration, fetchSam } from 'src/libs/ajax/ajax-common';
 import { SamUserTermsOfServiceDetails } from 'src/libs/ajax/TermsOfService';
 import { TerraUserProfile } from 'src/libs/state';
+import { SupportSummary } from 'src/support/SupportResourceType';
 
 export interface SamUserRegistrationStatusResponse {
   userSubjectId: string;
@@ -341,6 +342,11 @@ export const User = (signal?: AbortSignal) => {
         `api/users/v1/invite/${encodeURIComponent(email)}`,
         _.merge(authOpts(), { signal, method: 'POST' })
       );
+    },
+
+    getSupportSummary: async (email: string): Promise<SupportSummary> => {
+      const res = await fetchSam(`api/admin/v1/user/email/${email}/supportSummary`, _.merge(authOpts(), { signal }));
+      return res.json();
     },
   };
 };

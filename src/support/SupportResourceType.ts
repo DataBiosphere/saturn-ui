@@ -2,6 +2,7 @@ import { Billing } from 'src/libs/ajax/billing/Billing';
 import { DataRepo } from 'src/libs/ajax/DataRepo';
 import { Groups } from 'src/libs/ajax/Groups';
 import { FullyQualifiedResourceId } from 'src/libs/ajax/SamResources';
+import { User } from 'src/libs/ajax/User';
 import { Workspaces } from 'src/libs/ajax/workspaces/Workspaces';
 
 export type SupportSummary = object;
@@ -16,6 +17,7 @@ export interface SupportResourceType {
   displayName: string;
   resourceType: string;
   loadSupportSummaryFn: ((id: FullyQualifiedResourceId) => Promise<SupportSummary>) | undefined;
+  skipPolicies?: boolean;
 }
 
 // Define the supported resources, add your own here
@@ -44,5 +46,11 @@ export const supportResources: SupportResourceType[] = [
     displayName: 'Snapshot',
     resourceType: 'datasnapshot',
     loadSupportSummaryFn: (id: FullyQualifiedResourceId) => DataRepo().admin().adminRetrieveSnapshot(id.resourceId),
+  },
+  {
+    displayName: 'User',
+    resourceType: 'user',
+    skipPolicies: true,
+    loadSupportSummaryFn: (id: FullyQualifiedResourceId) => User().getSupportSummary(id.resourceId),
   },
 ].sort((a, b) => a.displayName.localeCompare(b.displayName));

@@ -1,10 +1,11 @@
 import { ButtonPrimary } from '@terra-ui-packages/components';
-import React, { Fragment, useState } from 'react';
+import _ from 'lodash/fp';
+import React, { useState } from 'react';
 import { TextInput } from 'src/components/input';
 import colors from 'src/libs/colors';
 import * as Nav from 'src/libs/nav';
 import { ResourcePolicies } from 'src/support/ResourcePolicies';
-import { ResourceTypeSummaryProps } from 'src/support/SupportResourceType';
+import { ResourceTypeSummaryProps, supportResources } from 'src/support/SupportResourceType';
 import { SupportSummary } from 'src/support/SupportSummary';
 
 export const LookupSummaryAndPolicies = (props: ResourceTypeSummaryProps) => {
@@ -19,6 +20,10 @@ export const LookupSummaryAndPolicies = (props: ResourceTypeSummaryProps) => {
   React.useEffect(() => {
     setResourceId('');
   }, [props.fqResourceId.resourceTypeName]);
+
+  // the resourceType may be configured to skip policy retrieval/display
+  const displayPolicies = !_.find((res) => res.resourceType === props.fqResourceId.resourceTypeName, supportResources)
+    ?.skipPolicies;
 
   return (
     <>
@@ -51,7 +56,7 @@ export const LookupSummaryAndPolicies = (props: ResourceTypeSummaryProps) => {
         <ButtonPrimary onClick={() => submit()}>Load</ButtonPrimary>
       </div>
       {!!props.loadSupportSummaryFn && <SupportSummary {...props} />}
-      <ResourcePolicies {...props} />
+      {displayPolicies && <ResourcePolicies {...props} />}
     </>
   );
 };
