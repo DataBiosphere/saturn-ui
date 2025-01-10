@@ -7,7 +7,7 @@ import { DateRangeFilter } from 'src/billing/Filter/DateRangeFilter';
 import { SearchFilter } from 'src/billing/Filter/SearchFilter';
 import { parseCurrencyIfNeeded } from 'src/billing/utils';
 import { BillingProject } from 'src/billing-core/models';
-import { fixedSpinnerOverlay } from 'src/components/common';
+import { ButtonOutline, fixedSpinnerOverlay } from 'src/components/common';
 import { ariaSort, HeaderRenderer } from 'src/components/table';
 import { Ajax } from 'src/libs/ajax';
 import { Billing } from 'src/libs/ajax/billing/Billing';
@@ -181,10 +181,6 @@ export const ConsolidatedSpendReport = (props: ConsolidatedSpendReportProps): Re
   });
   const [allWorkspaces, setAllWorkspaces] = useState<WorkspaceWrapper[]>(props.workspaces);
 
-  // TODO - how to know how many workspaces there are  in total in order to paginate without querying BQ?
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [pageNumber, setPageNumber] = useState(1);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [itemsPerPage, setItemsPerPage] = useState(250);
 
   const signal = useCancellation();
@@ -218,7 +214,7 @@ export const ConsolidatedSpendReport = (props: ConsolidatedSpendReportProps): Re
           'workspace.name',
           'workspace.namespace',
         ],
-        itemsPerPage // TODO what to do here
+        itemsPerPage
       );
       return fetchedWorkspaces;
     };
@@ -227,7 +223,7 @@ export const ConsolidatedSpendReport = (props: ConsolidatedSpendReportProps): Re
       setUpdating(true);
 
       const spendReportStoreLocal = spendReportStore.get();
-      const storedSpendReport = spendReportStoreLocal?.[spendReportLengthInDays];
+      const storedSpendReport = spendReportStoreLocal?.[itemsPerPage]?.[spendReportLengthInDays];
       if (!storedSpendReport || storedSpendReport.startDate !== startDate || storedSpendReport.endDate !== endDate) {
         const setDefaultSpendValues = (workspace: GoogleWorkspaceInfo) => ({
           ...workspace,
@@ -242,7 +238,7 @@ export const ConsolidatedSpendReport = (props: ConsolidatedSpendReportProps): Re
             startDate,
             endDate,
             pageSize: itemsPerPage,
-            offset: itemsPerPage * (pageNumber - 1),
+            offset: 0,
           });
 
           const spendDataItems = (consolidatedSpendReport.spendDetails as AggregatedWorkspaceSpendData[]).map(
@@ -312,7 +308,14 @@ export const ConsolidatedSpendReport = (props: ConsolidatedSpendReportProps): Re
           if (updatedWorkspaces) {
             spendReportStore.update((store) => {
               const newStore: SpendReportStore = { ...store };
-              newStore[spendReportLengthInDays] = { spendReport: updatedWorkspaces, startDate, endDate };
+              if (!newStore[itemsPerPage]) {
+                newStore[itemsPerPage] = {};
+              }
+              newStore[itemsPerPage][spendReportLengthInDays] = {
+                spendReport: updatedWorkspaces,
+                startDate,
+                endDate,
+              };
               return newStore;
             });
             setOwnedWorkspaces(updatedWorkspaces);
@@ -322,7 +325,7 @@ export const ConsolidatedSpendReport = (props: ConsolidatedSpendReportProps): Re
     };
     initialize();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [signal, spendReportLengthInDays, allWorkspaces]);
+  }, [signal, spendReportLengthInDays, allWorkspaces, itemsPerPage]);
 
   return (
     <>
@@ -364,57 +367,51 @@ export const ConsolidatedSpendReport = (props: ConsolidatedSpendReportProps): Re
             style={{ gridRowStart: 1, gridColumnStart: 2, margin: '1.35rem' }}
             onChange={setSearchValue}
           />
+          {ownedWorkspaces.length >= itemsPerPage && (
+            <ButtonOutline
+              aria-label='Show all workspaces'
+              style={{ gridRowStart: 1, gridColumnStart: 3, marginLeft: '2rem', marginTop: '2.5rem', width: '50%' }}
+              tooltip='Spend report defaults to 250 workspaces, click to load remaining'
+              onClick={() => {
+                setItemsPerPage(2500000);
+              }}
+            >
+              <span>Show all workspaces</span>
+            </ButtonOutline>
+          )}
         </div>
         <div aria-live='polite' aria-atomic>
           <span aria-hidden>*</span>
           Total spend includes infrastructure or query costs related to the general operations of Terra.
         </div>
         {!_.isEmpty(filteredOwnedWorkspaces) && (
-          <>
-            <div role='table' aria-label='owned workspaces'>
-              <ConsolidatedSpendWorkspaceCardHeaders onSort={setWorkspaceSort} sort={workspaceSort} />
-              <div style={{ position: 'relative' }}>
-                {_.flow(
-                  _.orderBy(
-                    [(workspace) => parseCurrencyIfNeeded(workspaceSort.field, _.get(workspaceSort.field, workspace))],
-                    [workspaceSort.direction]
-                  ),
-                  _.map((workspace: GoogleWorkspaceInfo) => {
-                    return (
-                      <ConsolidatedSpendWorkspaceCard
-                        workspace={workspace}
-                        billingProject={{
-                          cloudPlatform: 'GCP',
-                          billingAccount: workspace.billingAccount,
-                          projectName: workspace.namespace,
-                          invalidBillingAccount: false,
-                          roles: ['Owner'],
-                          status: 'Ready',
-                        }}
-                        key={workspace.workspaceId}
-                      />
-                    );
-                  })
-                )(filteredOwnedWorkspaces)}
-              </div>
+          <div role='table' aria-label='owned workspaces'>
+            <ConsolidatedSpendWorkspaceCardHeaders onSort={setWorkspaceSort} sort={workspaceSort} />
+            <div style={{ position: 'relative' }}>
+              {_.flow(
+                _.orderBy(
+                  [(workspace) => parseCurrencyIfNeeded(workspaceSort.field, _.get(workspaceSort.field, workspace))],
+                  [workspaceSort.direction]
+                ),
+                _.map((workspace: GoogleWorkspaceInfo) => {
+                  return (
+                    <ConsolidatedSpendWorkspaceCard
+                      workspace={workspace}
+                      billingProject={{
+                        cloudPlatform: 'GCP',
+                        billingAccount: workspace.billingAccount,
+                        projectName: workspace.namespace,
+                        invalidBillingAccount: false,
+                        roles: ['Owner'],
+                        status: 'Ready',
+                      }}
+                      key={workspace.workspaceId}
+                    />
+                  );
+                })
+              )(filteredOwnedWorkspaces)}
             </div>
-            {/* <div style={{ marginBottom: '0.5rem' }}>
-              {
-                // @ts-expect-error
-                <Paginator
-                  filteredDataLength={filteredOwnedWorkspaces.length}
-                  unfilteredDataLength={allWorkspaces.length}
-                  pageNumber={pageNumber}
-                  setPageNumber={setPageNumber}
-                  itemsPerPage={itemsPerPage}
-                  setItemsPerPage={(v) => {
-                    setPageNumber(1);
-                    setItemsPerPage(v);
-                  }}
-                />
-              }
-            </div> */}
-          </>
+          </div>
         )}
         {updating && fixedSpinnerOverlay}
       </div>

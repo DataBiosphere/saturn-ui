@@ -393,9 +393,16 @@ export const workflowsAppStore = atom<WorkflowsAppStoreState>({
 });
 
 export type SpendReportStore = {
-  7?: { spendReport: GoogleWorkspaceInfo[] | undefined; startDate: string; endDate: string };
-  30?: { spendReport: GoogleWorkspaceInfo[] | undefined; startDate: string; endDate: string };
-  90?: { spendReport: GoogleWorkspaceInfo[] | undefined; startDate: string; endDate: string };
+  250?: {
+    7?: { spendReport: GoogleWorkspaceInfo[] | undefined; startDate: string; endDate: string };
+    30?: { spendReport: GoogleWorkspaceInfo[] | undefined; startDate: string; endDate: string };
+    90?: { spendReport: GoogleWorkspaceInfo[] | undefined; startDate: string; endDate: string };
+  };
+  2500000?: {
+    7?: { spendReport: GoogleWorkspaceInfo[] | undefined; startDate: string; endDate: string };
+    30?: { spendReport: GoogleWorkspaceInfo[] | undefined; startDate: string; endDate: string };
+    90?: { spendReport: GoogleWorkspaceInfo[] | undefined; startDate: string; endDate: string };
+  };
 };
 
 export const spendReportStore = atom<SpendReportStore | undefined>(undefined);
