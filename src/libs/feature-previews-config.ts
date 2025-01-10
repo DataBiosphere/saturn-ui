@@ -125,7 +125,7 @@ const featurePreviewsConfig: readonly FeaturePreview[] = [
     feedbackUrl: `mailto:dsp-core-services@broadinstitute.org?subject=${encodeURIComponent(
       'Feedback on Improved Spend Reports'
     )}`,
-    lastUpdated: '11/19/2024',
+    lastUpdated: '01/17/2025',
     articleUrl: 'https://support.terra.bio/hc/en-us/articles/31182586327323',
   },
   {

@@ -10,7 +10,7 @@ import { OidcConfig } from 'src/libs/ajax/OAuth2';
 import { SamTermsOfServiceConfig } from 'src/libs/ajax/TermsOfService';
 import { NihDatasetPermission, SamUserAllowances, SamUserAttributes, SamUserResponse } from 'src/libs/ajax/User';
 import { getLocalStorage, getSessionStorage, staticStorageSlot } from 'src/libs/browser-storage';
-import type { WorkspaceInfo, WorkspaceWrapper } from 'src/workspaces/utils';
+import type { GoogleWorkspaceInfo, WorkspaceInfo, WorkspaceWrapper } from 'src/workspaces/utils';
 
 export const routeHandlersStore = atom<unknown[]>([]);
 
@@ -391,3 +391,18 @@ export const workflowsAppStore = atom<WorkflowsAppStoreState>({
   cbasProxyUrlState: { status: AppProxyUrlStatus.None, state: '' },
   cromwellProxyUrlState: { status: AppProxyUrlStatus.None, state: '' },
 });
+
+export type SpendReportStore = {
+  250?: {
+    7?: { spendReport: GoogleWorkspaceInfo[] | undefined; startDate: string; endDate: string };
+    30?: { spendReport: GoogleWorkspaceInfo[] | undefined; startDate: string; endDate: string };
+    90?: { spendReport: GoogleWorkspaceInfo[] | undefined; startDate: string; endDate: string };
+  };
+  2500000?: {
+    7?: { spendReport: GoogleWorkspaceInfo[] | undefined; startDate: string; endDate: string };
+    30?: { spendReport: GoogleWorkspaceInfo[] | undefined; startDate: string; endDate: string };
+    90?: { spendReport: GoogleWorkspaceInfo[] | undefined; startDate: string; endDate: string };
+  };
+};
+
+export const spendReportStore = atom<SpendReportStore | undefined>(undefined);

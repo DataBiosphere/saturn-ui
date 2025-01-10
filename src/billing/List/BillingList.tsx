@@ -6,19 +6,21 @@ import React, { CSSProperties, ReactNode, useEffect, useRef, useState } from 're
 import * as Auth from 'src/auth/auth';
 import { CreateBillingProjectControl } from 'src/billing/List/CreateBillingProjectControl';
 import { GCPNewBillingProjectModal } from 'src/billing/List/GCPNewBillingProjectModal';
-import { ProjectListItem, ProjectListItemProps } from 'src/billing/List/ProjectListItem';
+import { listItemStyle, ProjectListItem, ProjectListItemProps } from 'src/billing/List/ProjectListItem';
 import { AzureBillingProjectWizard } from 'src/billing/NewBillingProjectWizard/AzureBillingProjectWizard/AzureBillingProjectWizard';
 import { GCPBillingProjectWizard } from 'src/billing/NewBillingProjectWizard/GCPBillingProjectWizard/GCPBillingProjectWizard';
 import ProjectDetail from 'src/billing/Project';
-import { isCreating, isDeleting } from 'src/billing/utils';
-import { billingRoles } from 'src/billing/utils';
+import { billingRoles, isCreating, isDeleting } from 'src/billing/utils';
 import { BillingProject, GoogleBillingAccount } from 'src/billing-core/models';
 import Collapse from 'src/components/Collapse';
+import { Clickable } from 'src/components/common';
 import { Billing } from 'src/libs/ajax/billing/Billing';
 import { Metrics } from 'src/libs/ajax/Metrics';
 import colors from 'src/libs/colors';
 import { reportErrorAndRethrow } from 'src/libs/error';
 import Events from 'src/libs/events';
+import { isFeaturePreviewEnabled } from 'src/libs/feature-previews';
+import { SPEND_REPORTING } from 'src/libs/feature-previews-config';
 import * as Nav from 'src/libs/nav';
 import { useCancellation, useOnMount } from 'src/libs/react-utils';
 import * as StateHistory from 'src/libs/state-history';
@@ -26,6 +28,8 @@ import * as Style from 'src/libs/style';
 import * as Utils from 'src/libs/utils';
 import { useWorkspaces } from 'src/workspaces/common/state/useWorkspaces';
 import { CloudProvider, cloudProviderTypes, WorkspaceWrapper } from 'src/workspaces/utils';
+
+import { ConsolidatedSpendReport } from '../ConsolidatedSpendReport';
 
 const BillingProjectSubheader: React.FC<{ title: string; children: ReactNode }> = ({ title, children }) => (
   <Collapse
@@ -51,6 +55,7 @@ interface RightHandContentProps {
   authorizeAndLoadAccounts: () => Promise<void>;
   setCreatingBillingProjectType: (type: CloudProvider | null) => void;
   reloadBillingProject: (billingProject: BillingProject) => Promise<unknown>;
+  type: string | undefined;
 }
 
 // This is the view of the Billing Project details, or the wizard to create a new billing project.
@@ -68,6 +73,7 @@ const RightHandContent = (props: RightHandContentProps): ReactNode => {
     authorizeAndLoadAccounts,
     setCreatingBillingProjectType,
     reloadBillingProject,
+    type,
   } = props;
   if (!!selectedName && !_.some({ projectName: selectedName }, billingProjects)) {
     return (
@@ -133,14 +139,24 @@ const RightHandContent = (props: RightHandContentProps): ReactNode => {
       />
     );
   }
-  if (!_.isEmpty(projectsOwned) && !selectedName) {
+  if (type === 'consolidatedSpendReport' && !selectedName) {
+    return (
+      <ConsolidatedSpendReport
+        key={type}
+        // @ts-ignore
+        workspaces={allWorkspaces}
+      />
+    );
+  }
+  if (type !== 'consolidatedSpendReport' && !_.isEmpty(projectsOwned) && !selectedName) {
     return <div style={{ margin: '1rem auto 0 auto' } as CSSProperties}>Select a Billing Project</div>;
   }
 };
 
-interface BillingListProps {
+export interface BillingListProps {
   queryParams: {
     selectedName: string | undefined;
+    type: string | undefined;
   };
 }
 
@@ -153,11 +169,12 @@ export const BillingList = (props: BillingListProps) => {
   const [isAuthorizing, setIsAuthorizing] = useState<boolean>(false);
   const [isLoadingAccounts, setIsLoadingAccounts] = useState<boolean>(false);
   const { workspaces: allWorkspaces, loading: workspacesLoading, refresh: refreshWorkspaces } = useWorkspaces();
-
+  const [spendReportHovered, setSpendReportHovered] = useState(false);
   const signal = useCancellation();
   const interval = useRef<number>();
   const selectedName = props.queryParams.selectedName;
   const billingProjectListWidth = 350;
+  const type = props.queryParams.type;
 
   // Helpers
   const loadProjects = _.flow(
@@ -291,6 +308,32 @@ export const BillingList = (props: BillingListProps) => {
           <h2 style={{ fontSize: 16 }}>Billing Projects</h2>
           <CreateBillingProjectControl showCreateProjectModal={showCreateProjectModal} />
         </div>
+        {isFeaturePreviewEnabled(SPEND_REPORTING) && (
+          <div role='list'>
+            <div role='listitem'>
+              <div
+                style={{ ...listItemStyle(type === 'consolidatedSpendReport', spendReportHovered) }}
+                onMouseEnter={() => setSpendReportHovered(true)}
+                onMouseLeave={() => setSpendReportHovered(false)}
+              >
+                <Clickable
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    color: type === 'consolidatedSpendReport' ? colors.accent(1.1) : colors.accent(),
+                  }}
+                  href={`${Nav.getLink('billing')}?${qs.stringify({
+                    type: 'consolidatedSpendReport',
+                  })}`}
+                  onClick={() => void Metrics().captureEvent(Events.billingViewConsolidatedSpendReport)}
+                  aria-current={type === 'consolidatedSpendReport' ? 'location' : false}
+                >
+                  Consolidated Spend Report
+                </Clickable>
+              </div>
+            </div>
+          </div>
+        )}
         <BillingProjectSubheader title='Owned by You'>
           <div role='list'>
             {projectsOwned.map((project) => (
@@ -335,6 +378,7 @@ export const BillingList = (props: BillingListProps) => {
           showAzureBillingProjectWizard={azureUserWithNoBillingProjects || creatingAzureBillingProject}
           setCreatingBillingProjectType={setCreatingBillingProjectType}
           reloadBillingProject={reloadBillingProject}
+          type={type}
         />
       </div>
       {(isLoadingProjects || isAuthorizing || isLoadingAccounts) && <SpinnerOverlay mode='FullScreen' />}

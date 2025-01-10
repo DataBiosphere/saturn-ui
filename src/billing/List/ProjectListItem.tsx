@@ -14,7 +14,7 @@ import * as Nav from 'src/libs/nav';
 import * as Style from 'src/libs/style';
 import { isKnownCloudProvider } from 'src/workspaces/utils';
 
-const listItemStyle = (selected, hovered) => {
+export const listItemStyle = (selected, hovered) => {
   const style = {
     ...Style.navList.itemContainer(selected),
     ...Style.navList.item(selected),
