@@ -20,7 +20,7 @@ import colors from 'src/libs/colors';
 import { reportErrorAndRethrow } from 'src/libs/error';
 import Events from 'src/libs/events';
 import { isFeaturePreviewEnabled } from 'src/libs/feature-previews';
-import { CONSOLIDATED_SPEND_REPORT } from 'src/libs/feature-previews-config';
+import { SPEND_REPORTING } from 'src/libs/feature-previews-config';
 import * as Nav from 'src/libs/nav';
 import { useCancellation, useOnMount } from 'src/libs/react-utils';
 import * as StateHistory from 'src/libs/state-history';
@@ -169,7 +169,7 @@ export const BillingList = (props: BillingListProps) => {
   const [isAuthorizing, setIsAuthorizing] = useState<boolean>(false);
   const [isLoadingAccounts, setIsLoadingAccounts] = useState<boolean>(false);
   const { workspaces: allWorkspaces, loading: workspacesLoading, refresh: refreshWorkspaces } = useWorkspaces();
-
+  const [spendReportHovered, setSpendReportHovered] = useState(false);
   const signal = useCancellation();
   const interval = useRef<number>();
   const selectedName = props.queryParams.selectedName;
@@ -308,13 +308,13 @@ export const BillingList = (props: BillingListProps) => {
           <h2 style={{ fontSize: 16 }}>Billing Projects</h2>
           <CreateBillingProjectControl showCreateProjectModal={showCreateProjectModal} />
         </div>
-        {isFeaturePreviewEnabled(CONSOLIDATED_SPEND_REPORT) && (
+        {isFeaturePreviewEnabled(SPEND_REPORTING) && (
           <div role='list'>
             <div role='listitem'>
               <div
-                style={{ ...listItemStyle(type === 'consolidatedSpendReport', false) }}
-                // onMouseEnter={() => setHovered(true)}
-                // onMouseLeave={() => setHovered(false)}
+                style={{ ...listItemStyle(type === 'consolidatedSpendReport', spendReportHovered) }}
+                onMouseEnter={() => setSpendReportHovered(true)}
+                onMouseLeave={() => setSpendReportHovered(false)}
               >
                 <Clickable
                   style={{
@@ -325,10 +325,7 @@ export const BillingList = (props: BillingListProps) => {
                   href={`${Nav.getLink('billing')}?${qs.stringify({
                     type: 'consolidatedSpendReport',
                   })}`}
-                  //   onClick={
-                  //     () => void Metrics().captureEvent(Events.billingProjectOpenFromList, extractBillingDetails(props.project))
-                  //     // (isActive = !isActive)
-                  //   }
+                  onClick={() => void Metrics().captureEvent(Events.billingViewConsolidatedSpendReport)}
                   aria-current={type === 'consolidatedSpendReport' ? 'location' : false}
                 >
                   Consolidated Spend Report
@@ -336,26 +333,6 @@ export const BillingList = (props: BillingListProps) => {
               </div>
             </div>
           </div>
-
-          // <Clickable
-          //   style={{
-          //     display: 'flex',
-          //     alignItems: 'center',
-          //     color: colors.accent(1.1),
-          //     ...(type === 'consolidatedSpendReport' ? { backgroundColor: colors.dark(0.1) } : {}),
-          //     ...(type === 'consolidatedSpendReport' ? { fontWeight: 'bold' } : {}),
-          //     marginLeft: '2rem',
-          //     marginRight: '2rem',
-          //     padding: '.5rem .5rem .5rem',
-          //   }}
-          //   href={`${Nav.getLink('billing')}?${qs.stringify({
-          //     type: 'consolidatedSpendReport',
-          //   })}`}
-          //   aria-current={false}
-          //   onClick={void Metrics().captureEvent(Events.billingViewConsolidatedSpendReport)}
-          // >
-          //   <span style={{ wordBreak: 'break-all' }}>Consolidated Spend Report</span>
-          // </Clickable>
         )}
         <BillingProjectSubheader title='Owned by You'>
           <div role='list'>
