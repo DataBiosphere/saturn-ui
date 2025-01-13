@@ -1,7 +1,7 @@
 import { useCallback } from 'react';
 import { Workspaces } from 'src/libs/ajax/workspaces/Workspaces';
 import { reportError } from 'src/libs/error';
-import { notify } from 'src/libs/notifications';
+import { clearNotification, notify } from 'src/libs/notifications';
 import { useCancellation, useStore } from 'src/libs/react-utils';
 import { AsyncImportJob, asyncImportJobStore } from 'src/libs/state';
 import { isAzureWorkspace, WorkspaceWrapper } from 'src/workspaces/utils';
@@ -20,7 +20,6 @@ const isJobInWorkspace = (job: AsyncImportJob, workspace: WorkspaceWrapper): boo
 
 export const useImportJobs = (workspace: WorkspaceWrapper): UseImportJobsResult => {
   const allRunningJobs = useStore(asyncImportJobStore);
-  console.log('allRunningJobs', allRunningJobs);
 
   const signal = useCancellation();
   const refresh = useCallback(async () => {
@@ -36,6 +35,24 @@ export const useImportJobs = (workspace: WorkspaceWrapper): UseImportJobsResult 
           .workspace(namespace, name)
           .listImportJobs(true);
 
+        // In cases where jobs failed before this query completes, users won't be notified of failure
+        // But they are momentarily in the job store, so check for them and notify here
+        const jobsToNotify = allRunningJobs.filter(
+          (job) => !runningJobsInWorkspace.some(({ jobId }) => job.jobId === jobId)
+        );
+
+        jobsToNotify.forEach((job) => {
+          Workspaces(signal)
+            .workspace(namespace, name)
+            .getImportJobStatus(job.jobId)
+            .then((fetchedJob) => {
+              if (fetchedJob.status === 'Error') {
+                notify('error', 'Error importing data.', { message: fetchedJob.message });
+                clearNotification(job.jobId);
+              }
+            });
+        });
+
         asyncImportJobStore.update((previousState) => {
           return [
             ...previousState.filter((job) => !isJobInWorkspace(job, workspace)),
@@ -46,7 +63,7 @@ export const useImportJobs = (workspace: WorkspaceWrapper): UseImportJobsResult 
     } catch (error) {
       reportError('Error loading running import jobs in this workspace', error);
     }
-  }, [workspace, signal]);
+  }, [workspace, signal]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const runningJobsInWorkspace = allRunningJobs.filter((job) => isJobInWorkspace(job, workspace));
   return {
