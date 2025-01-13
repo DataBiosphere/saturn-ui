@@ -1,4 +1,4 @@
-import { getValidIgvFiles, getValidIgvFilesFromAttributeValues, isDrsUri } from 'src/components/IGVFileSelector';
+import { getIgvMetricDetails, getValidIgvFiles, getValidIgvFilesFromAttributeValues, isDrsUri } from 'src/components/IGVFileSelector';
 import { DrsUriResolver } from 'src/libs/ajax/drs/DrsUriResolver';
 import { isFeaturePreviewEnabled } from 'src/libs/feature-previews';
 
@@ -25,14 +25,17 @@ describe('getValidIgvFiles', () => {
       {
         filePath: 'gs://bucket/test2.bam',
         indexFilePath: 'gs://bucket/test2.bai',
+        isSignedUrl: false,
       },
       {
         filePath: 'gs://bucket/test3.bam',
         indexFilePath: 'gs://bucket/test3.bam.bai',
+        isSignedUrl: false,
       },
       {
         filePath: 'gs://bucket/test4.sorted.bam',
         indexFilePath: 'gs://bucket/test4.sorted.bam.bai',
+        isSignedUrl: false,
       },
     ]);
   });
@@ -50,10 +53,12 @@ describe('getValidIgvFiles', () => {
       {
         filePath: 'gs://bucket/test2.cram',
         indexFilePath: 'gs://bucket/test2.crai',
+        isSignedUrl: false,
       },
       {
         filePath: 'gs://bucket/test3.cram',
         indexFilePath: 'gs://bucket/test3.cram.crai',
+        isSignedUrl: false,
       },
     ]);
   });
@@ -77,22 +82,27 @@ describe('getValidIgvFiles', () => {
       {
         filePath: 'gs://bucket/test2.vcf',
         indexFilePath: 'gs://bucket/test2.idx',
+        isSignedUrl: false,
       },
       {
         filePath: 'gs://bucket/test3.vcf',
         indexFilePath: 'gs://bucket/test3.vcf.idx',
+        isSignedUrl: false,
       },
       {
         filePath: 'gs://bucket/test4.vcf',
         indexFilePath: 'gs://bucket/test4.tbi',
+        isSignedUrl: false,
       },
       {
         filePath: 'gs://bucket/test5.vcf',
         indexFilePath: 'gs://bucket/test5.vcf.tbi',
+        isSignedUrl: false,
       },
       {
         filePath: 'gs://bucket/test6.vcf.gz',
         indexFilePath: 'gs://bucket/test6.vcf.gz.tbi',
+        isSignedUrl: false,
       },
     ]);
   });
@@ -102,6 +112,7 @@ describe('getValidIgvFiles', () => {
       {
         filePath: 'gs://bucket/test.bed',
         indexFilePath: false,
+        isSignedUrl: false,
       },
     ]);
   });
@@ -111,6 +122,7 @@ describe('getValidIgvFiles', () => {
       {
         filePath: 'gs://bucket/test.bed',
         indexFilePath: false,
+        isSignedUrl: false,
       },
     ]);
   });
@@ -126,6 +138,7 @@ describe('getValidIgvFiles', () => {
         {
           filePath: 'gs://datarepo-ab123456-bucket/cae37a2a-657f-4b04-9fef-59c215020078/5f5f634d-70f3-4914-9c71-9d14c7f98e60/test.bam',
           indexFilePath: 'gs://datarepo-ab123456-bucket/cae37a2a-657f-4b04-9fef-59c215020078/2eeff61f-ae9e-41ae-bb40-909ff6bdfba8/test.bam.bai',
+          isSignedUrl: false,
         },
       ]);
     });
@@ -141,6 +154,7 @@ describe('getValidIgvFiles', () => {
           filePath: 'gs://datarepo-ab123456-bucket/cae37a2a-657f-4b04-9fef-59c215020078/5f5f634d-70f3-4914-9c71-9d14c7f98e60/path/to/test.bam',
           indexFilePath:
             'gs://datarepo-ab123456-bucket/cae37a2a-657f-4b04-9fef-59c215020078/2eeff61f-ae9e-41ae-bb40-909ff6bdfba8/path/to/test.bam.bai',
+          isSignedUrl: false,
         },
       ]);
     });
@@ -155,6 +169,7 @@ describe('getValidIgvFiles', () => {
         {
           filePath: 'gs://datarepo-dev-ab123456-bucket/cae37a2a-657f-4b04-9fef-59c215020078/5f5f634d-70f3-4914-9c71-9d14c7f98e60/test.bam',
           indexFilePath: 'gs://datarepo-dev-ab123456-bucket/cae37a2a-657f-4b04-9fef-59c215020078/2eeff61f-ae9e-41ae-bb40-909ff6bdfba8/test.bam.bai',
+          isSignedUrl: false,
         },
       ]);
     });
@@ -174,14 +189,17 @@ describe('getValidIgvFilesFromAttributeValues', () => {
       {
         filePath: 'gs://bucket/test1.bed',
         indexFilePath: false,
+        isSignedUrl: false,
       },
       {
         filePath: 'gs://bucket/test2.bed',
         indexFilePath: false,
+        isSignedUrl: false,
       },
       {
         filePath: 'gs://bucket/test3.bed',
         indexFilePath: false,
+        isSignedUrl: false,
       },
     ]);
   });
@@ -225,7 +243,7 @@ describe('getValidIgvFilesFromAttributeValues', () => {
   });
 
   it('calls to resolve access URLs when two DRS URIs are found', async () => {
-    // An IGV selection must have a file (e.g. VCF) and an index file (TBI)
+    // An IGV selection generally must have a file (e.g. VCF) and an index file (TBI)
     const fileDrsUri = 'drs://dg.4503:2802a94d-f540-499f-950a-db3c2a9f2dc4';
     const indexFileDrsUri = 'drs://dg.4503:2802a94d-f540-499f-950a-11111111111';
     const fileName = 'foo.vcf.gz';
@@ -268,7 +286,35 @@ describe('getValidIgvFilesFromAttributeValues', () => {
       {
         filePath: 'https://bucket/foo.vcf.gz?requestedBy=user@domain.tls&userProject=my-billing-project&signature=secret',
         indexFilePath: 'https://bucket/foo.vcf.gz.tbi?requestedBy=user@domain.tls&userProject=my-billing-project&signature=secret',
+        isSignedUrl: true,
       },
     ]);
+  });
+
+  it('provides relevant component-specific logging metrics', async () => {
+    const selectedFiles = [
+      {
+        filePath: 'https://bucket/foo.vcf.gz?requestedBy=user@domain.tls&userProject=my-billing-project&signature=secret',
+        indexFilePath: 'https://bucket/foo.vcf.gz.tbi?requestedBy=user@domain.tls&userProject=my-billing-project&signature=secret',
+        isSignedUrl: true,
+      },
+      {
+        filePath: 'gs://datarepo-dev-ab123456-bucket/cae37a2a-657f-4b04-9fef-59c215020078/5f5f634d-70f3-4914-9c71-9d14c7f98e60/test.bam',
+        indexFilePath: 'gs://datarepo-dev-ab123456-bucket/cae37a2a-657f-4b04-9fef-59c215020078/2eeff61f-ae9e-41ae-bb40-909ff6bdfba8/test.bam.bai',
+        isSignedUrl: false,
+      },
+    ];
+
+    const refGenome = { genome: 'hg38' };
+
+    const igvDetails = getIgvMetricDetails(selectedFiles, refGenome);
+
+    expect(igvDetails).toEqual({
+      igvNumTracks: 2,
+      igvFileExtensions: ['vcf.gz', 'bam'],
+      igvIndexExtensions: ['gz.tbi', 'bam.bai'],
+      igvHasDrsUris: true,
+      igvGenome: 'hg38',
+    });
   });
 });

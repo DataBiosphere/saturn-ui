@@ -58,6 +58,15 @@ interface NotFoundMessageProps {
 
 type WrappedWorkflowComponent = (props: WrappedComponentProps) => ReactNode;
 
+/**
+ * Note: During the migration and release of the new Terra Workflow Repository UI, some terminology changes were
+ *       introduced. As a result, certain terms in the UI may differ from those used in the code. Below are the
+ *       terms in this component that have been renamed (or is referred as) specifically for user-facing purposes:
+ *          method    -> workflow
+ *          namespace -> collection
+ *          name      -> workflow name
+ *          snapshot  -> version
+ */
 export const wrapWorkflows = (opts: WrapWorkflowOptions) => {
   const { breadcrumbs, activeTab } = opts;
   return (WrappedComponent: WrappedWorkflowComponent) => {
@@ -291,7 +300,7 @@ export const WorkflowsContainer = (props: WorkflowContainerProps) => {
       }),
     permissionsModalOpen &&
       h(PermissionsModal, {
-        versionOrNamespace: 'Version',
+        versionOrCollection: 'Version',
         namespace,
         setPermissionsModalOpen,
         refresh: loadSnapshot,

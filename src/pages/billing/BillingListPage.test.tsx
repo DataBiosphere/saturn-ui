@@ -36,7 +36,7 @@ jest.mock('src/billing/List/BillingList', () => ({
 
 describe('BillingListPage', () => {
   test('renders the page with default props', () => {
-    render(<BillingListPage queryParams={{ selectedName: undefined }} />);
+    render(<BillingListPage queryParams={{ selectedName: undefined, type: undefined }} />);
 
     // Verify title
     expect(screen.getByText('Billing')).toBeInTheDocument();
@@ -49,7 +49,7 @@ describe('BillingListPage', () => {
   });
 
   test('renders breadcrumbs when selectedName is provided', () => {
-    render(<BillingListPage queryParams={{ selectedName: 'Test Project' }} />);
+    render(<BillingListPage queryParams={{ selectedName: 'Test Project', type: undefined }} />);
 
     // Verify breadcrumbs
     expect(screen.getByText('Billing > Billing Project')).toBeInTheDocument();
@@ -57,7 +57,7 @@ describe('BillingListPage', () => {
   });
 
   test('TopBar renders the correct href when selectedName is provided', () => {
-    render(<BillingListPage queryParams={{ selectedName: 'Test Project' }} />);
+    render(<BillingListPage queryParams={{ selectedName: 'Test Project', type: undefined }} />);
 
     // Verify TopBar link
     const link = screen.getByTestId('topbar-link');
@@ -65,7 +65,7 @@ describe('BillingListPage', () => {
   });
 
   test('TopBar does not render href when selectedName is undefined', () => {
-    render(<BillingListPage queryParams={{ selectedName: undefined }} />);
+    render(<BillingListPage queryParams={{ selectedName: undefined, type: undefined }} />);
 
     // Verify TopBar link absence
     const link = screen.getByTestId('topbar-link');
@@ -73,14 +73,14 @@ describe('BillingListPage', () => {
   });
 
   test('passes correct props to BillingList', () => {
-    render(<BillingListPage queryParams={{ selectedName: 'Test Project' }} />);
+    render(<BillingListPage queryParams={{ selectedName: 'Test Project', type: undefined }} />);
 
     // Verify BillingList is rendered
     expect(screen.getByText('Mocked BillingList')).toBeInTheDocument();
   });
 
   test('TopBar receives correct props', () => {
-    render(<BillingListPage queryParams={{ selectedName: 'Test Project' }} />);
+    render(<BillingListPage queryParams={{ selectedName: 'Test Project', type: undefined }} />);
 
     // Verify TopBar props
     expect(TopBar).toHaveBeenCalledWith(
@@ -93,7 +93,7 @@ describe('BillingListPage', () => {
   });
 
   test('TopBar receives correct props when selectedName is undefined', () => {
-    render(<BillingListPage queryParams={{ selectedName: undefined }} />);
+    render(<BillingListPage queryParams={{ selectedName: undefined, type: undefined }} />);
 
     // Verify TopBar props
     expect(TopBar).toHaveBeenCalledWith(

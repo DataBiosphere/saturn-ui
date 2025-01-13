@@ -10,7 +10,7 @@ import { OidcConfig } from 'src/libs/ajax/OAuth2';
 import { SamTermsOfServiceConfig } from 'src/libs/ajax/TermsOfService';
 import { NihDatasetPermission, SamUserAllowances, SamUserAttributes, SamUserResponse } from 'src/libs/ajax/User';
 import { getLocalStorage, getSessionStorage, staticStorageSlot } from 'src/libs/browser-storage';
-import type { WorkspaceInfo, WorkspaceWrapper } from 'src/workspaces/utils';
+import type { GoogleWorkspaceInfo, WorkspaceInfo, WorkspaceWrapper } from 'src/workspaces/utils';
 
 export const routeHandlersStore = atom<unknown[]>([]);
 
@@ -368,14 +368,41 @@ export const AppProxyUrlStatus = Object.freeze({
   Error: 'Error',
 });
 
+export interface WorkflowsProxyUrlState {
+  status: keyof typeof AppProxyUrlStatus;
+  state: string;
+}
+
+export interface WorkflowsAppStoreState {
+  workspaceId?: string;
+  wdsProxyUrlState: WorkflowsProxyUrlState;
+  cbasProxyUrlState: WorkflowsProxyUrlState;
+  cromwellProxyUrlState: WorkflowsProxyUrlState;
+}
+
 /*
  * Stores the proxy urls for WDS and Azure Workflows apps for a workspace.
  * Status can be one of None, Ready and Error. The proxy url will be in 'state' field when 'status' is Ready.
  * When 'state' is Error the 'state' field will contain the error that was returned from Leo (if any).
  */
-export const workflowsAppStore = atom({
+export const workflowsAppStore = atom<WorkflowsAppStoreState>({
   workspaceId: undefined,
   wdsProxyUrlState: { status: AppProxyUrlStatus.None, state: '' },
   cbasProxyUrlState: { status: AppProxyUrlStatus.None, state: '' },
   cromwellProxyUrlState: { status: AppProxyUrlStatus.None, state: '' },
 });
+
+export type SpendReportStore = {
+  250?: {
+    7?: { spendReport: GoogleWorkspaceInfo[] | undefined; startDate: string; endDate: string };
+    30?: { spendReport: GoogleWorkspaceInfo[] | undefined; startDate: string; endDate: string };
+    90?: { spendReport: GoogleWorkspaceInfo[] | undefined; startDate: string; endDate: string };
+  };
+  2500000?: {
+    7?: { spendReport: GoogleWorkspaceInfo[] | undefined; startDate: string; endDate: string };
+    30?: { spendReport: GoogleWorkspaceInfo[] | undefined; startDate: string; endDate: string };
+    90?: { spendReport: GoogleWorkspaceInfo[] | undefined; startDate: string; endDate: string };
+  };
+};
+
+export const spendReportStore = atom<SpendReportStore | undefined>(undefined);

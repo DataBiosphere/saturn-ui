@@ -109,13 +109,13 @@ export const EditWorkflowModal = (props: EditWorkflowModalProps) => {
         <div style={{ display: 'flex', alignItems: 'flex-end', flexWrap: 'wrap', gap: '16px' }}>
           <div style={{ flexWrap: 'wrap', flexGrow: 1, flexBasis: '400px' }}>
             <div style={{ marginBottom: '0.1667em' }}>
-              <FormLabel htmlFor={namespaceInputId}>Namespace</FormLabel>
+              <FormLabel htmlFor={namespaceInputId}>Collection name</FormLabel>
               <TextInput id={namespaceInputId} placeholder={namespace} disabled />
             </div>
           </div>
           <div style={{ flexWrap: 'wrap', flexGrow: 1, flexBasis: '400px' }}>
             <div style={{ marginBottom: '0.1667em' }}>
-              <FormLabel htmlFor={nameInputId}>Name</FormLabel>
+              <FormLabel htmlFor={nameInputId}>Workflow name</FormLabel>
               <TextInput id={nameInputId} placeholder={name} disabled />
             </div>
           </div>

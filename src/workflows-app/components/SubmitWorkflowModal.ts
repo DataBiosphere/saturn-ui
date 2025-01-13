@@ -1,6 +1,6 @@
 import { Modal, Spinner, useThemeFromContext } from '@terra-ui-packages/components';
 import _ from 'lodash/fp';
-import { CSSProperties, Fragment, useState } from 'react';
+import React, { CSSProperties, Fragment, useState } from 'react';
 import { div, h, span } from 'react-hyperscript-helpers';
 import { ErrorAlert } from 'src/alerts/ErrorAlert';
 import { generateAppName, getCurrentApp } from 'src/analysis/utils/app-utils';
@@ -10,10 +10,11 @@ import { getStyles as getErrorStyles } from 'src/components/ErrorView';
 import { icon } from 'src/components/icons';
 import { TextArea, TextInput } from 'src/components/input';
 import { TextCell } from 'src/components/table';
-import { Ajax } from 'src/libs/ajax';
 import { RecordResponse } from 'src/libs/ajax/data-table-providers/WdsDataTableProvider';
+import { Apps } from 'src/libs/ajax/leonardo/Apps';
 import { App } from 'src/libs/ajax/leonardo/models/app-models';
 import { useMetricsEvent } from 'src/libs/ajax/metrics/useMetrics';
+import { Cbas } from 'src/libs/ajax/workflows-app/Cbas';
 import Events, { extractWorkspaceDetails } from 'src/libs/events';
 import * as Nav from 'src/libs/nav';
 import { notify } from 'src/libs/notifications';
@@ -32,29 +33,30 @@ type SubmitWorkflowModalProps = {
   inputDefinition: InputDefinition[];
   outputDefinition: OutputDefinition[];
   callCachingEnabled: boolean;
-  onDismiss: () => any;
+  onDismiss: () => void;
   name: string;
   namespace: string;
   workspace: WorkspaceWrapper;
 };
 
-export const SubmitWorkflowModal = ({
-  method,
-  methodVersion,
-  recordType,
-  selectedRecords,
-  inputDefinition,
-  outputDefinition,
-  callCachingEnabled,
-  onDismiss,
-  name,
-  namespace,
-  workspace,
-  workspace: {
-    workspace: { workspaceId },
-    canCompute,
-  },
-}: SubmitWorkflowModalProps) => {
+export const SubmitWorkflowModal: React.FC<SubmitWorkflowModalProps> = (props): React.ReactNode => {
+  const {
+    method,
+    methodVersion,
+    recordType,
+    selectedRecords,
+    inputDefinition,
+    outputDefinition,
+    callCachingEnabled,
+    onDismiss,
+    name,
+    namespace,
+    workspace,
+    workspace: {
+      workspace: { workspaceId },
+      canCompute,
+    },
+  } = props;
   const [runSetName, setRunSetName] = useState(
     `${_.kebabCase(method.name)}_${_.kebabCase(recordType)}_${new Date().toISOString().slice(0, -5)}`
   );
@@ -85,7 +87,7 @@ export const SubmitWorkflowModal = ({
     const {
       cbasProxyUrlState: { state: cbasUrl },
     } = await loadAppUrls(workspaceId, 'cbasProxyUrlState');
-    const runSetObject = await Ajax().Cbas.runSets.post(cbasUrl, runSetsPayload);
+    const runSetObject = await Cbas().runSets.post(cbasUrl, runSetsPayload);
     notify('success', 'Workflow successfully submitted', {
       message: 'You may check on the progress of workflow on this page anytime.',
       timeout: 5000,
@@ -108,13 +110,13 @@ export const SubmitWorkflowModal = ({
   const submitToWorkflowsApp = () =>
     poll(async () => {
       try {
-        const appsResponse = await Ajax().Apps.listAppsV2(workspaceId, { role: 'creator' });
+        const appsResponse = await Apps().listAppsV2(workspaceId, { role: 'creator' });
         const appToUse =
           getCurrentApp(appToolLabels.CROMWELL, appsResponse) ??
           getCurrentApp(appToolLabels.CROMWELL_RUNNER_APP, appsResponse);
         if (!appToUse) {
           setIsCromwellRunnerLaunching(true);
-          await Ajax().Apps.createAppV2(
+          await Apps().createAppV2(
             generateAppName(),
             workspaceId,
             appToolLabels.CROMWELL_RUNNER_APP,

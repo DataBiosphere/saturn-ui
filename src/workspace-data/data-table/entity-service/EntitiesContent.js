@@ -11,7 +11,7 @@ import { tools } from 'src/analysis/utils/tool-utils';
 import { ButtonSecondary } from 'src/components/common';
 import { icon } from 'src/components/icons';
 import IGVBrowser from 'src/components/IGVBrowser';
-import IGVFileSelector from 'src/components/IGVFileSelector';
+import IGVFileSelector, { getIgvMetricDetails } from 'src/components/IGVFileSelector';
 import { MenuButton } from 'src/components/MenuButton';
 import { withModalDrawer } from 'src/components/ModalDrawer';
 import { ModalToolButton } from 'src/components/ModalToolButton';
@@ -664,7 +664,11 @@ const EntitiesContent = ({
             setShowToolSelector(false);
             setIgvFiles(selectedFiles);
             setIgvRefGenome(refGenome);
-            void Metrics().captureEvent(Events.workspaceDataOpenWithIGV, extractWorkspaceDetails(workspace.workspace));
+
+            const workspaceDetails = extractWorkspaceDetails(workspace.workspace);
+            const igvDetails = getIgvMetricDetails(selectedFiles, refGenome);
+            const details = Object.assign(igvDetails, workspaceDetails);
+            void Metrics().captureEvent(Events.workspaceDataOpenWithIGV, details);
           },
           entityMetadata,
           entityKey,

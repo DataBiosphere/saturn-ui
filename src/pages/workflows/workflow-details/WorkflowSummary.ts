@@ -16,6 +16,14 @@ import { wrapWorkflows } from 'src/pages/workflows/workflow-details/WorkflowWrap
 import { WorkflowRightBoxSection } from 'src/workflows/WorkflowRightBoxSection';
 import { InfoRow } from 'src/workspaces/dashboard/InfoRow';
 
+/**
+ * Note: During the migration and release of the new Terra Workflow Repository UI, some terminology changes were
+ *       introduced. As a result, certain terms in the UI may differ from those used in the code. Below are few
+ *       terms in this component that have been renamed (or is referred as) specifically for user-facing purposes:
+ *          namespace -> collection
+ *          name      -> workflow name
+ *          snapshot  -> version
+ */
 export const BaseWorkflowSummary = () => {
   const {
     namespace,
