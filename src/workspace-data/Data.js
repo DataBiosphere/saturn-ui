@@ -551,9 +551,7 @@ export const WorkspaceData = _.flow(
     const isGoogleWorkspace = !!googleProject;
     const isAzureWorkspace = !isGoogleWorkspace;
 
-    console.log('useImportJobs');
     const { runningJobs: runningImportJobs, refresh: refreshRunningImportJobs } = useImportJobs(workspace);
-    const importJobsExist = runningImportJobs.length > 0;
     const signal = useCancellation();
 
     const entityServiceDataTableProvider = new EntityServiceDataTableProvider(namespace, name);
@@ -782,13 +780,6 @@ export const WorkspaceData = _.flow(
                       },
                       [
                         runningImportJobs.length > 0 && h(DataImportPlaceholder),
-                        runningImportJobs.length === 0 &&
-                          importJobsExist &&
-                          h(NoDataPlaceholder, {
-                            message: 'Import job disappeared',
-                            buttonText: 'Upload TSV',
-                            onAdd: () => setUploadingFile(true),
-                          }),
                         runningImportJobs.length === 0 &&
                           _.isEmpty(sortedEntityPairs) &&
                           h(NoDataPlaceholder, {
