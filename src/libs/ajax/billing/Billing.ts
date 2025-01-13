@@ -138,6 +138,34 @@ export const Billing = (signal?: AbortSignal) => ({
     return res.json();
   },
 
+  /**
+   * Returns a spend report for each workspace the user has owner permission on, from 12 AM on the startDate to 11:59 PM on the endDate (UTC). Spend details by
+   * Workspace are included.
+   *
+   * @param startDate, a string of the format YYYY-MM-DD, representing the start date of the report.
+   * @param endDate a string of the format YYYY-MM-DD, representing the end date of the report.
+   * @param pageSize how many workspaces to include in each page of the report
+   * @param offset the index of the first workspace to include in the report
+   * @returns {Promise<*>}
+   */
+  getCrossBillingSpendReport: async ({
+    startDate,
+    endDate,
+    pageSize,
+    offset,
+  }: {
+    startDate: string;
+    endDate: string;
+    pageSize: number;
+    offset: number;
+  }): Promise<SpendReport> => {
+    const res = await fetchRawls(
+      `billing/v2/spendReport?${qs.stringify({ startDate, endDate, pageSize, offset }, { arrayFormat: 'repeat' })}`,
+      _.merge(authOpts(), { signal })
+    );
+    return res.json();
+  },
+
   listProjectUsers: async (projectName: string): Promise<BillingProjectMember[]> => {
     const res = await fetchRawls(`billing/v2/${projectName}/members`, _.merge(authOpts(), { signal }));
     return res.json();

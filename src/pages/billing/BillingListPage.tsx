@@ -8,11 +8,13 @@ import * as Style from 'src/libs/style';
 interface BillingListPageProps {
   queryParams: {
     selectedName: string | undefined;
+    type: string | undefined;
   };
 }
 
 export const BillingListPage = (props: BillingListPageProps) => {
   const selectedName = props.queryParams.selectedName;
+  const type = props.queryParams.type;
   const breadcrumbs = 'Billing > Billing Project';
 
   return (
@@ -25,7 +27,7 @@ export const BillingListPage = (props: BillingListPageProps) => {
           </div>
         )}
       </TopBar>
-      <BillingList queryParams={{ selectedName }} />
+      <BillingList queryParams={{ selectedName, type }} />
     </FooterWrapper>
   );
 };
