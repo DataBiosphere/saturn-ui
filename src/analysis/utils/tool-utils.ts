@@ -96,7 +96,7 @@ export const terraSupportedRuntimeImageIds: string[] = [
 const RStudio: RuntimeTool = {
   label: runtimeToolLabels.RStudio,
   ext: ['Rmd', 'R'] as FileExtension[],
-  imageIds: ['RStudio'],
+  imageIds: ['RStudio', 'LegacyRStudio'],
   defaultImageId: 'RStudio',
   defaultExt: 'Rmd' as FileExtension,
 };
