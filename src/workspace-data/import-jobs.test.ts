@@ -1,5 +1,6 @@
 import { act, renderHook } from '@testing-library/react';
 import { WorkspaceContract, Workspaces, WorkspacesAjaxContract } from 'src/libs/ajax/workspaces/Workspaces';
+import { notify } from 'src/libs/notifications';
 import { asyncImportJobStore } from 'src/libs/state';
 import { asMockedFn, MockedFn, partial } from 'src/testing/test-utils';
 import { AzureWorkspace, GoogleWorkspace } from 'src/workspaces/utils';
@@ -7,6 +8,7 @@ import { AzureWorkspace, GoogleWorkspace } from 'src/workspaces/utils';
 import { useImportJobs } from './import-jobs';
 
 jest.mock('src/libs/ajax/workspaces/Workspaces');
+jest.mock('src/libs/notifications');
 
 describe('useImportJobs', () => {
   describe('for Google workspaces', () => {
@@ -55,9 +57,12 @@ describe('useImportJobs', () => {
 
       const listImportJobs: MockedFn<WorkspaceContract['listImportJobs']> = jest.fn();
       listImportJobs.mockResolvedValue([{ jobId: 'job-2' }, { jobId: 'job-3' }]);
+      const getImportJobStatus: MockedFn<WorkspaceContract['getImportJobStatus']> = jest.fn();
+      getImportJobStatus.mockResolvedValue({ jobId: 'workspace-job-2', status: 'Running' });
+
       asMockedFn(Workspaces).mockReturnValue(
         partial<WorkspacesAjaxContract>({
-          workspace: () => partial<WorkspaceContract>({ listImportJobs }),
+          workspace: () => partial<WorkspaceContract>({ listImportJobs, getImportJobStatus }),
         })
       );
 
@@ -69,6 +74,37 @@ describe('useImportJobs', () => {
       // Assert
       expect(listImportJobs).toHaveBeenCalledWith(true);
       expect(hookReturnRef.current.runningJobs).toEqual(['job-2', 'job-3']);
+    });
+
+    it('notifies if a failed job is in import store', async () => {
+      // Arrange
+      asyncImportJobStore.set([
+        { targetWorkspace: { namespace: 'test-workspaces', name: 'google-workspace2' }, jobId: 'job-4' },
+        { targetWorkspace: { namespace: 'test-workspaces', name: 'google-workspace' }, jobId: 'job-2' },
+      ]);
+
+      const listImportJobs: MockedFn<WorkspaceContract['listImportJobs']> = jest.fn();
+      listImportJobs.mockResolvedValue([{ jobId: 'job-1' }, { jobId: 'job-3' }]);
+      const getImportJobStatus: MockedFn<WorkspaceContract['getImportJobStatus']> = jest.fn();
+      getImportJobStatus.mockResolvedValue({ jobId: 'job-2', status: 'Error', message: 'This job failed.' });
+
+      asMockedFn(Workspaces).mockReturnValue(
+        partial<WorkspacesAjaxContract>({
+          workspace: () => partial<WorkspaceContract>({ listImportJobs, getImportJobStatus }),
+        })
+      );
+
+      const { result: hookReturnRef } = renderHook(() => useImportJobs(workspace));
+
+      // Act
+      await act(() => hookReturnRef.current.refresh());
+
+      // Assert
+      expect(getImportJobStatus).toHaveBeenCalledWith('job-2');
+      expect(getImportJobStatus).not.toHaveBeenCalledWith('job-4');
+      expect(notify).toHaveBeenCalledWith('error', 'Error importing data.', {
+        message: 'This job failed.',
+      });
     });
   });
 
