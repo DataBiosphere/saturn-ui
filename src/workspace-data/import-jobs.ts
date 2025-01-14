@@ -38,7 +38,10 @@ export const useImportJobs = (workspace: WorkspaceWrapper): UseImportJobsResult 
         // In cases where jobs failed before this query completes, users won't be notified of failure
         // But they are momentarily in the job store, so check for them and notify here
         const jobsToNotify = allRunningJobs.filter(
-          (job) => !runningJobsInWorkspace.some(({ jobId }) => job.jobId === jobId)
+          (job) =>
+            job.targetWorkspace.namespace === namespace &&
+            job.targetWorkspace.name === name &&
+            !runningJobsInWorkspace.some(({ jobId }) => job.jobId === jobId)
         );
 
         jobsToNotify.forEach((job) => {

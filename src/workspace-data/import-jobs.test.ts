@@ -79,14 +79,14 @@ describe('useImportJobs', () => {
     it('notifies if a failed job is in import store', async () => {
       // Arrange
       asyncImportJobStore.set([
-        { targetWorkspace: { namespace: 'test-workspaces', name: 'google-workspace' }, jobId: 'job-1' },
+        { targetWorkspace: { namespace: 'test-workspaces', name: 'google-workspace2' }, jobId: 'job-4' },
         { targetWorkspace: { namespace: 'test-workspaces', name: 'google-workspace' }, jobId: 'job-2' },
       ]);
 
       const listImportJobs: MockedFn<WorkspaceContract['listImportJobs']> = jest.fn();
       listImportJobs.mockResolvedValue([{ jobId: 'job-1' }, { jobId: 'job-3' }]);
       const getImportJobStatus: MockedFn<WorkspaceContract['getImportJobStatus']> = jest.fn();
-      getImportJobStatus.mockResolvedValue({ jobId: 'job-1', status: 'Error', message: 'This job failed.' });
+      getImportJobStatus.mockResolvedValue({ jobId: 'job-2', status: 'Error', message: 'This job failed.' });
 
       asMockedFn(Workspaces).mockReturnValue(
         partial<WorkspacesAjaxContract>({
@@ -100,6 +100,8 @@ describe('useImportJobs', () => {
       await act(() => hookReturnRef.current.refresh());
 
       // Assert
+      expect(getImportJobStatus).toHaveBeenCalledWith('job-2');
+      expect(getImportJobStatus).not.toHaveBeenCalledWith('job-4');
       expect(notify).toHaveBeenCalledWith('error', 'Error importing data.', {
         message: 'This job failed.',
       });
