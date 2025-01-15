@@ -1,7 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
 import { getCurrentApp } from 'src/analysis/utils/app-utils';
-import { Ajax } from 'src/libs/ajax';
+import { Apps } from 'src/libs/ajax/leonardo/Apps';
 import { GetAppItem, ListAppItem } from 'src/libs/ajax/leonardo/models/app-models';
+import { Cbas } from 'src/libs/ajax/workflows-app/Cbas';
+import { CromwellApp } from 'src/libs/ajax/workflows-app/CromwellApp';
 import { useCallback } from 'use-memo-one';
 
 type UseWorkflowsStatusArgs = {
@@ -111,8 +113,8 @@ export const useWorkflowsStatus = ({ workspaceId }: UseWorkflowsStatusArgs) => {
     }
 
     await Promise.allSettled([
-      Ajax(signal)
-        .Cbas.status(cbasProxyUrl)
+      Cbas(signal)
+        .status(cbasProxyUrl)
         .then((statusResponse) => {
           setStatus((previouStatus) => ({
             ...previouStatus,
@@ -134,8 +136,8 @@ export const useWorkflowsStatus = ({ workspaceId }: UseWorkflowsStatusArgs) => {
           }));
         }),
 
-      Ajax(signal)
-        .CromwellApp.engineStatus(cromwellReaderProxyUrl)
+      CromwellApp(signal)
+        .engineStatus(cromwellReaderProxyUrl)
         .then((statusResponse) => {
           setStatus((previousStatus) => ({
             ...previousStatus,
@@ -187,8 +189,8 @@ export const useWorkflowsStatus = ({ workspaceId }: UseWorkflowsStatusArgs) => {
     }
 
     await Promise.allSettled([
-      Ajax(signal)
-        .CromwellApp.engineStatus(cromwellRunnerProxyUrl)
+      CromwellApp(signal)
+        .engineStatus(cromwellRunnerProxyUrl)
         .then((statusResponse) => {
           setStatus((previousStatus) => ({
             ...previousStatus,
@@ -215,7 +217,7 @@ export const useWorkflowsStatus = ({ workspaceId }: UseWorkflowsStatusArgs) => {
 
     let listAppsResponse: ListAppItem[];
     try {
-      listAppsResponse = await Ajax(signal).Apps.listAppsV2(workspaceId);
+      listAppsResponse = await Apps(signal).listAppsV2(workspaceId);
     } catch (err) {
       setStatus({
         totalVisibleApps: 'unknown',

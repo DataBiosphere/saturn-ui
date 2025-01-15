@@ -3,7 +3,8 @@ import { div, h } from 'react-hyperscript-helpers';
 import { doesWorkspaceSupportCromwellAppForUser, generateAppName, getCurrentApp, getIsAppBusy } from 'src/analysis/utils/app-utils';
 import { appAccessScopes, appToolLabels, appTools } from 'src/analysis/utils/tool-utils';
 import { centeredSpinner } from 'src/components/icons';
-import { Ajax } from 'src/libs/ajax';
+import { Apps } from 'src/libs/ajax/leonardo/Apps';
+import { Metrics } from 'src/libs/ajax/Metrics';
 import { reportError } from 'src/libs/error';
 import Events, { extractWorkspaceDetails } from 'src/libs/events';
 import { useCancellation, usePollingEffect } from 'src/libs/react-utils';
@@ -95,14 +96,9 @@ export const SubmitWorkflow = wrapWorkflowsPage({ name: 'SubmitWorkflow' })(
     const createWorkflowsApp = Utils.withBusyState(setCreating, async () => {
       try {
         setCreating(true);
-        await Ajax().Apps.createAppV2(
-          generateAppName(),
-          workspace.workspace.workspaceId,
-          appToolLabels.WORKFLOWS_APP,
-          appAccessScopes.WORKSPACE_SHARED
-        );
+        await Apps().createAppV2(generateAppName(), workspace.workspace.workspaceId, appToolLabels.WORKFLOWS_APP, appAccessScopes.WORKSPACE_SHARED);
 
-        await Ajax(signal).Metrics.captureEvent(Events.applicationCreate, {
+        await Metrics(signal).captureEvent(Events.applicationCreate, {
           app: appTools.CROMWELL.label,
           ...extractWorkspaceDetails(workspace),
         });
