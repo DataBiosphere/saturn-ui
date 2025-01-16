@@ -7,7 +7,8 @@ import { centeredSpinner, icon } from 'src/components/icons';
 import { MenuButton } from 'src/components/MenuButton';
 import { MenuTrigger } from 'src/components/PopupTrigger';
 import { FlexTable, Paginator, Sortable, tableHeight, TextCell } from 'src/components/table';
-import { Ajax } from 'src/libs/ajax';
+import { User } from 'src/libs/ajax/User';
+import { Cbas } from 'src/libs/ajax/workflows-app/Cbas';
 import colors from 'src/libs/colors';
 import * as Nav from 'src/libs/nav';
 import { notify } from 'src/libs/notifications';
@@ -45,7 +46,7 @@ export const BaseSubmissionHistory = ({ namespace, workspace }, _ref) => {
   const loadRunSets = useCallback(
     async (cbasUrlRoot) => {
       try {
-        const runSets = await Ajax(signal).Cbas.runSets.get(cbasUrlRoot);
+        const runSets = await Cbas(signal).runSets.get(cbasUrlRoot);
         const durationEnhancedRunSets = _.map(
           (r) => _.merge(r, { duration: getDuration(r.state, r.submission_timestamp, r.last_modified_timestamp, isRunSetInTerminalState) }),
           runSets.run_sets
@@ -112,7 +113,7 @@ export const BaseSubmissionHistory = ({ namespace, workspace }, _ref) => {
 
   const cancelRunSet = async (submissionId) => {
     try {
-      await Ajax(signal).Cbas.runSets.cancel(workflowsAppStore.get().cbasProxyUrlState.state, submissionId);
+      await Cbas(signal).runSets.cancel(workflowsAppStore.get().cbasProxyUrlState.state, submissionId);
       notify('success', 'Abort submission request submitted successfully', {
         message: 'You may refresh the page to get most recent status changes.',
         timeout: 5000,
@@ -148,8 +149,8 @@ export const BaseSubmissionHistory = ({ namespace, workspace }, _ref) => {
       }
     };
     loadWorkflowsApp();
-    Ajax()
-      .User.getStatus()
+    User()
+      .getStatus()
       .then((res) => setUserId(res.userSubjectId));
     refresh();
 

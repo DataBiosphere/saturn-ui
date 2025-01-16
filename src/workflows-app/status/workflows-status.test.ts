@@ -1,15 +1,14 @@
-import { abandonedPromise, DeepPartial } from '@terra-ui-packages/core-utils';
-import { Ajax } from 'src/libs/ajax';
+import { abandonedPromise } from '@terra-ui-packages/core-utils';
+import { Apps, AppsAjaxContract } from 'src/libs/ajax/leonardo/Apps';
 import { ListAppItem } from 'src/libs/ajax/leonardo/models/app-models';
-import { asMockedFn, renderHookInAct } from 'src/testing/test-utils';
+import { Cbas, CbasAjaxContract } from 'src/libs/ajax/workflows-app/Cbas';
+import { CromwellApp, CromwellAppAjaxContract } from 'src/libs/ajax/workflows-app/CromwellApp';
+import { asMockedFn, MockedFn, partial, renderHookInAct } from 'src/testing/test-utils';
 import { useWorkflowsStatus } from 'src/workflows-app/status/workflows-status';
 
-type AjaxExports = typeof import('src/libs/ajax');
-jest.mock('src/libs/ajax', (): Partial<AjaxExports> => {
-  return { Ajax: jest.fn() };
-});
-
-type AjaxContract = ReturnType<typeof Ajax>;
+jest.mock('src/libs/ajax/leonardo/Apps');
+jest.mock('src/libs/ajax/workflows-app/Cbas');
+jest.mock('src/libs/ajax/workflows-app/CromwellApp');
 
 const workspaceId = 'test-workspace-id';
 
@@ -103,13 +102,9 @@ const cromwellStatusResponse = { 'Engine Database': { ok: true } };
 describe('useWorkflowsStatus', () => {
   it('fetches Leo apps', async () => {
     // Arrange
-    const listAppsV2 = jest.fn().mockResolvedValue([]);
-    const mockAjax: DeepPartial<AjaxContract> = {
-      Apps: {
-        listAppsV2,
-      },
-    };
-    asMockedFn(Ajax).mockReturnValue(mockAjax as AjaxContract);
+    const listAppsV2: MockedFn<AppsAjaxContract['listAppsV2']> = jest.fn(async (_id) => []);
+
+    asMockedFn(Apps).mockReturnValue(partial<AppsAjaxContract>({ listAppsV2 }));
 
     // Act
     await renderHookInAct(() => useWorkflowsStatus({ workspaceId }));
@@ -121,12 +116,11 @@ describe('useWorkflowsStatus', () => {
   describe('if fetching Leo apps fails', () => {
     it('returns unknown for all fields', async () => {
       // Arrange
-      const mockAjax: DeepPartial<AjaxContract> = {
-        Apps: {
-          listAppsV2: jest.fn().mockRejectedValue(new Error('Something went wrong')),
-        },
-      };
-      asMockedFn(Ajax).mockReturnValue(mockAjax as AjaxContract);
+      const listAppsV2: MockedFn<AppsAjaxContract['listAppsV2']> = jest.fn(async (_id) => {
+        throw new Error('Something went wrong');
+      });
+
+      asMockedFn(Apps).mockReturnValue(partial<AppsAjaxContract>({ listAppsV2 }));
 
       // Act
       const { result: hookReturnRef } = await renderHookInAct(() => useWorkflowsStatus({ workspaceId }));
@@ -158,12 +152,9 @@ describe('useWorkflowsStatus', () => {
     describe('if no apps are present', () => {
       it('returns number of apps and unknown for other fields', async () => {
         // Arrange
-        const mockAjax: DeepPartial<AjaxContract> = {
-          Apps: {
-            listAppsV2: jest.fn().mockResolvedValue([]),
-          },
-        };
-        asMockedFn(Ajax).mockReturnValue(mockAjax as AjaxContract);
+        const listAppsV2: MockedFn<AppsAjaxContract['listAppsV2']> = jest.fn(async (_id) => []);
+
+        asMockedFn(Apps).mockReturnValue(partial<AppsAjaxContract>({ listAppsV2 }));
 
         // Act
         const { result: hookReturnRef } = await renderHookInAct(() => useWorkflowsStatus({ workspaceId }));
@@ -195,18 +186,13 @@ describe('useWorkflowsStatus', () => {
   describe('if workflows app is present', () => {
     it('uses Leo app response to fill in fields while waiting for service status', async () => {
       // Arrange
-      const mockAjax: DeepPartial<AjaxContract> = {
-        Apps: {
-          listAppsV2: jest.fn().mockResolvedValue([workflowsAppObject]),
-        },
-        Cbas: {
-          status: jest.fn().mockReturnValue(abandonedPromise()),
-        },
-        CromwellApp: {
-          engineStatus: jest.fn().mockReturnValue(abandonedPromise()),
-        },
-      };
-      asMockedFn(Ajax).mockReturnValue(mockAjax as AjaxContract);
+      const listAppsV2: MockedFn<AppsAjaxContract['listAppsV2']> = jest.fn(async (_id) => [workflowsAppObject]);
+      const cbasStatus: MockedFn<CbasAjaxContract['status']> = jest.fn((_root) => abandonedPromise());
+      const engineStatus: MockedFn<CromwellAppAjaxContract['engineStatus']> = jest.fn((_root) => abandonedPromise());
+
+      asMockedFn(Apps).mockReturnValue(partial<AppsAjaxContract>({ listAppsV2 }));
+      asMockedFn(Cbas).mockReturnValue(partial<CbasAjaxContract>({ status: cbasStatus }));
+      asMockedFn(CromwellApp).mockReturnValue(partial<CromwellAppAjaxContract>({ engineStatus }));
 
       // Act
       const { result: hookReturnRef } = await renderHookInAct(() => useWorkflowsStatus({ workspaceId }));
@@ -232,24 +218,21 @@ describe('useWorkflowsStatus', () => {
         cromwellRunnerResponsive: 'unknown',
         cromwellRunnerDatabaseConnection: 'unknown',
       });
-      expect(mockAjax.Cbas!.status).toHaveBeenCalledWith(workflowsAppObject.proxyUrls.cbas);
-      expect(mockAjax.CromwellApp!.engineStatus).toHaveBeenCalledWith(workflowsAppObject.proxyUrls['cromwell-reader']);
+      expect(cbasStatus).toHaveBeenCalledWith(workflowsAppObject.proxyUrls.cbas);
+      expect(engineStatus).toHaveBeenCalledWith(workflowsAppObject.proxyUrls['cromwell-reader']);
     });
 
     it('uses CBAS and Cromwell status endpoints', async () => {
       // Arrange
-      const mockAjax: DeepPartial<AjaxContract> = {
-        Apps: {
-          listAppsV2: jest.fn().mockResolvedValue([workflowsAppObject]),
-        },
-        Cbas: {
-          status: jest.fn().mockResolvedValue(cbasStatusResponse),
-        },
-        CromwellApp: {
-          engineStatus: jest.fn().mockResolvedValue(cromwellStatusResponse),
-        },
-      };
-      asMockedFn(Ajax).mockReturnValue(mockAjax as AjaxContract);
+      const listAppsV2: MockedFn<AppsAjaxContract['listAppsV2']> = jest.fn(async (_id) => [workflowsAppObject]);
+      const cbasStatus: MockedFn<CbasAjaxContract['status']> = jest.fn(async (_root) => cbasStatusResponse);
+      const engineStatus: MockedFn<CromwellAppAjaxContract['engineStatus']> = jest.fn(
+        async (_root) => cromwellStatusResponse
+      );
+
+      asMockedFn(Apps).mockReturnValue(partial<AppsAjaxContract>({ listAppsV2 }));
+      asMockedFn(Cbas).mockReturnValue(partial<CbasAjaxContract>({ status: cbasStatus }));
+      asMockedFn(CromwellApp).mockReturnValue(partial<CromwellAppAjaxContract>({ engineStatus }));
 
       // Act
       const { result: hookReturnRef } = await renderHookInAct(() => useWorkflowsStatus({ workspaceId }));
@@ -281,15 +264,11 @@ describe('useWorkflowsStatus', () => {
   describe('if CROMWELL_RUNNER_APP is present', () => {
     it('uses Leo app response to fill in fields while waiting for service status', async () => {
       // Arrange
-      const mockAjax: DeepPartial<AjaxContract> = {
-        Apps: {
-          listAppsV2: jest.fn().mockResolvedValue([cromwellRunnerAppObject]),
-        },
-        CromwellApp: {
-          engineStatus: jest.fn().mockReturnValue(abandonedPromise()),
-        },
-      };
-      asMockedFn(Ajax).mockReturnValue(mockAjax as AjaxContract);
+      const listAppsV2: MockedFn<AppsAjaxContract['listAppsV2']> = jest.fn(async (_id) => [cromwellRunnerAppObject]);
+      const engineStatus: MockedFn<CromwellAppAjaxContract['engineStatus']> = jest.fn((_root) => abandonedPromise());
+
+      asMockedFn(Apps).mockReturnValue(partial<AppsAjaxContract>({ listAppsV2 }));
+      asMockedFn(CromwellApp).mockReturnValue(partial<CromwellAppAjaxContract>({ engineStatus }));
 
       // Act
       const { result: hookReturnRef } = await renderHookInAct(() => useWorkflowsStatus({ workspaceId }));
@@ -315,22 +294,18 @@ describe('useWorkflowsStatus', () => {
         cromwellRunnerResponsive: null,
         cromwellRunnerDatabaseConnection: null,
       });
-      expect(mockAjax.CromwellApp!.engineStatus).toHaveBeenCalledWith(
-        cromwellRunnerAppObject.proxyUrls['cromwell-runner']
-      );
+      expect(engineStatus).toHaveBeenCalledWith(cromwellRunnerAppObject.proxyUrls['cromwell-runner']);
     });
 
     it('fetches values from Cromwell status endpoint', async () => {
       // Arrange
-      const mockAjax: DeepPartial<AjaxContract> = {
-        Apps: {
-          listAppsV2: jest.fn().mockResolvedValue([cromwellRunnerAppObject]),
-        },
-        CromwellApp: {
-          engineStatus: jest.fn().mockResolvedValue(cromwellStatusResponse),
-        },
-      };
-      asMockedFn(Ajax).mockReturnValue(mockAjax as AjaxContract);
+      const listAppsV2: MockedFn<AppsAjaxContract['listAppsV2']> = jest.fn(async (_id) => [cromwellRunnerAppObject]);
+      const engineStatus: MockedFn<CromwellAppAjaxContract['engineStatus']> = jest.fn(
+        async (_root) => cromwellStatusResponse
+      );
+
+      asMockedFn(Apps).mockReturnValue(partial<AppsAjaxContract>({ listAppsV2 }));
+      asMockedFn(CromwellApp).mockReturnValue(partial<CromwellAppAjaxContract>({ engineStatus }));
 
       // Act
       const { result: hookReturnRef } = await renderHookInAct(() => useWorkflowsStatus({ workspaceId }));
@@ -362,18 +337,18 @@ describe('useWorkflowsStatus', () => {
   describe('if both apps are present', () => {
     it('fetches values from CBAS and both Cromwell status endpoints', async () => {
       // Arrange
-      const mockAjax: DeepPartial<AjaxContract> = {
-        Apps: {
-          listAppsV2: jest.fn().mockResolvedValue([workflowsAppObject, cromwellRunnerAppObject]),
-        },
-        Cbas: {
-          status: jest.fn().mockResolvedValue(cbasStatusResponse),
-        },
-        CromwellApp: {
-          engineStatus: jest.fn().mockResolvedValue(cromwellStatusResponse),
-        },
-      };
-      asMockedFn(Ajax).mockReturnValue(mockAjax as AjaxContract);
+      const listAppsV2: MockedFn<AppsAjaxContract['listAppsV2']> = jest.fn(async (_id) => [
+        workflowsAppObject,
+        cromwellRunnerAppObject,
+      ]);
+      const cbasStatus: MockedFn<CbasAjaxContract['status']> = jest.fn(async (_root) => cbasStatusResponse);
+      const engineStatus: MockedFn<CromwellAppAjaxContract['engineStatus']> = jest.fn(
+        async (_root) => cromwellStatusResponse
+      );
+
+      asMockedFn(Apps).mockReturnValue(partial<AppsAjaxContract>({ listAppsV2 }));
+      asMockedFn(Cbas).mockReturnValue(partial<CbasAjaxContract>({ status: cbasStatus }));
+      asMockedFn(CromwellApp).mockReturnValue(partial<CromwellAppAjaxContract>({ engineStatus }));
 
       // Act
       const { result: hookReturnRef } = await renderHookInAct(() => useWorkflowsStatus({ workspaceId }));

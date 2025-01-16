@@ -2,14 +2,20 @@ import { act, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { div, h } from 'react-hyperscript-helpers';
 import { MenuTrigger } from 'src/components/PopupTrigger';
-import { Ajax } from 'src/libs/ajax';
+import { Apps, AppsAjaxContract } from 'src/libs/ajax/leonardo/Apps';
+import { SamUserRegistrationStatusResponse, User, UserContract } from 'src/libs/ajax/User';
+import { Cbas, CbasAjaxContract, CbasRunSetsContract } from 'src/libs/ajax/workflows-app/Cbas';
+import { WorkspaceWrapper } from 'src/libs/ajax/workspaces/workspace-models';
 import { getConfig } from 'src/libs/config';
-import { renderWithAppContexts as render, SelectHelper } from 'src/testing/test-utils';
+import { asMockedFn, MockedFn, partial, renderWithAppContexts as render, SelectHelper } from 'src/testing/test-utils';
 import { BaseSubmissionHistory } from 'src/workflows-app/SubmissionHistory';
 import { mockAbortResponse, mockAzureApps, mockAzureWorkspace } from 'src/workflows-app/utils/mock-responses';
 
 // Necessary to mock the AJAX module.
-jest.mock('src/libs/ajax');
+jest.mock('src/libs/ajax/leonardo/Apps');
+jest.mock('src/libs/ajax/User');
+jest.mock('src/libs/ajax/workflows-app/Cbas');
+
 jest.mock('src/libs/notifications');
 jest.mock('src/libs/ajax/leonardo/Apps');
 jest.mock('src/libs/nav', () => ({
@@ -42,8 +48,12 @@ jest.mock('src/libs/state', () => ({
 // mock out the height and width so that when AutoSizer asks for the width and height of "browser" it can use the mocked
 // values and render the component properly. Without this the tests will be break.
 // (see https://github.com/bvaughn/react-virtualized/issues/493 and https://stackoverflow.com/a/62214834)
-const originalOffsetHeight = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'offsetHeight');
-const originalOffsetWidth = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'offsetWidth');
+const originalOffsetHeight = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'offsetHeight') || {
+  value: undefined,
+};
+const originalOffsetWidth = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'offsetWidth') || {
+  value: undefined,
+};
 
 const runSetData = {
   run_sets: [
@@ -71,14 +81,30 @@ const runSetData = {
 beforeAll(() => {
   Object.defineProperty(HTMLElement.prototype, 'offsetHeight', { configurable: true, value: 1000 });
   Object.defineProperty(HTMLElement.prototype, 'offsetWidth', { configurable: true, value: 800 });
+
+  asMockedFn(Apps).mockReturnValue(
+    partial<AppsAjaxContract>({
+      // TODO: fix mockAzureApps type to match return type of listAppsV2
+      listAppsV2: jest.fn(async () => mockAzureApps as any),
+    })
+  );
+  asMockedFn(User).mockReturnValue(
+    partial<UserContract>({
+      getStatus: jest.fn(async () =>
+        partial<SamUserRegistrationStatusResponse>({
+          userSubjectId: 'user-id-blah-blah',
+        })
+      ),
+    })
+  );
 });
 
 const cbasUrlRoot = 'https://lz-abc/terra-app-abc/cbas';
 const cromwellUrlRoot = 'https://lz-abc/terra-app-abc/cromwell';
 
 beforeEach(() => {
-  getConfig.mockReturnValue({ cbasUrlRoot, cromwellUrlRoot });
-  MenuTrigger.mockImplementation(({ content }) => {
+  asMockedFn(getConfig).mockReturnValue({ cbasUrlRoot, cromwellUrlRoot });
+  asMockedFn(MenuTrigger).mockImplementation(({ content }) => {
     return div({ role: 'menu' }, [content]);
   });
 });
@@ -103,25 +129,15 @@ describe('SubmissionHistory tab', () => {
 
   it('should sort columns properly', async () => {
     const user = userEvent.setup();
-    const getRunSetsMethod = jest.fn(() => Promise.resolve(runSetData));
-    const mockLeoResponse = jest.fn(() => Promise.resolve(mockAzureApps));
-    const mockUserResponse = jest.fn(() => Promise.resolve({ userSubjectId: 'user-id-blah-blah' }));
+    const getRunSetsMethod: MockedFn<CbasRunSetsContract['get']> = jest.fn(async (_root) => runSetData);
 
-    Ajax.mockImplementation(() => {
-      return {
-        Cbas: {
-          runSets: {
-            get: getRunSetsMethod,
-          },
-        },
-        Apps: {
-          listAppsV2: mockLeoResponse,
-        },
-        User: {
-          getStatus: mockUserResponse,
-        },
-      };
-    });
+    asMockedFn(Cbas).mockReturnValue(
+      partial<CbasAjaxContract>({
+        runSets: partial<CbasRunSetsContract>({
+          get: getRunSetsMethod,
+        }),
+      })
+    );
 
     // Act
     await act(async () => {
@@ -178,25 +194,15 @@ describe('SubmissionHistory tab', () => {
 
   it('should display no content message when there are no previous run sets', async () => {
     // Arrange
-    const mockRunSetResponse = jest.fn(() => Promise.resolve([]));
-    const mockLeoResponse = jest.fn(() => Promise.resolve(mockAzureApps));
-    const mockUserResponse = jest.fn(() => Promise.resolve({ userSubjectId: 'user-id-blah-blah' }));
+    const mockRunSetResponse: MockedFn<CbasRunSetsContract['get']> = jest.fn(async (_root) => []);
 
-    Ajax.mockImplementation(() => {
-      return {
-        Cbas: {
-          runSets: {
-            get: mockRunSetResponse,
-          },
-        },
-        Apps: {
-          listAppsV2: mockLeoResponse,
-        },
-        User: {
-          getStatus: mockUserResponse,
-        },
-      };
-    });
+    asMockedFn(Cbas).mockReturnValue(
+      partial<CbasAjaxContract>({
+        runSets: partial<CbasRunSetsContract>({
+          get: mockRunSetResponse,
+        }),
+      })
+    );
 
     // Act
     await act(async () => {
@@ -217,25 +223,16 @@ describe('SubmissionHistory tab', () => {
   });
 
   it('should correctly display previous 2 run sets', async () => {
-    const getRunSetsMethod = jest.fn(() => Promise.resolve(runSetData));
-    const mockLeoResponse = jest.fn(() => Promise.resolve(mockAzureApps));
-    const mockUserResponse = jest.fn(() => Promise.resolve({ userSubjectId: 'user-id-blah-blah' }));
+    // Arrange
+    const getRunSetsMethod: MockedFn<CbasRunSetsContract['get']> = jest.fn(async (_root) => runSetData);
 
-    Ajax.mockImplementation(() => {
-      return {
-        Cbas: {
-          runSets: {
-            get: jest.fn(getRunSetsMethod),
-          },
-        },
-        Apps: {
-          listAppsV2: mockLeoResponse,
-        },
-        User: {
-          getStatus: mockUserResponse,
-        },
-      };
-    });
+    asMockedFn(Cbas).mockReturnValue(
+      partial<CbasAjaxContract>({
+        runSets: partial<CbasRunSetsContract>({
+          get: getRunSetsMethod,
+        }),
+      })
+    );
 
     // Act
     await act(async () => {
@@ -321,25 +318,15 @@ describe('SubmissionHistory tab', () => {
       ],
     };
 
-    const getRunSetsMethod = jest.fn(() => Promise.resolve(runSetData));
-    const mockLeoResponse = jest.fn(() => Promise.resolve(mockAzureApps));
-    const mockUserResponse = jest.fn(() => Promise.resolve({ userSubjectId: 'user-id-blah-blah' }));
+    const getRunSetsMethod: MockedFn<CbasRunSetsContract['get']> = jest.fn(async (_root) => runSetData);
 
-    Ajax.mockImplementation(() => {
-      return {
-        Cbas: {
-          runSets: {
-            get: getRunSetsMethod,
-          },
-        },
-        Apps: {
-          listAppsV2: mockLeoResponse,
-        },
-        User: {
-          getStatus: mockUserResponse,
-        },
-      };
-    });
+    asMockedFn(Cbas).mockReturnValue(
+      partial<CbasAjaxContract>({
+        runSets: partial<CbasRunSetsContract>({
+          get: getRunSetsMethod,
+        }),
+      })
+    );
 
     // Act
     await act(async () => {
@@ -423,25 +410,15 @@ describe('SubmissionHistory tab', () => {
 
   it('should correctly select and change results', async () => {
     const user = userEvent.setup();
-    const getRunSetsMethod = jest.fn(() => Promise.resolve(runSetData));
-    const mockLeoResponse = jest.fn(() => Promise.resolve(mockAzureApps));
-    const mockUserResponse = jest.fn(() => Promise.resolve({ userSubjectId: 'user-id-blah-blah' }));
+    const getRunSetsMethod: MockedFn<CbasRunSetsContract['get']> = jest.fn(async (_root) => runSetData);
 
-    Ajax.mockImplementation(() => {
-      return {
-        Cbas: {
-          runSets: {
-            get: getRunSetsMethod,
-          },
-        },
-        Apps: {
-          listAppsV2: mockLeoResponse,
-        },
-        User: {
-          getStatus: mockUserResponse,
-        },
-      };
-    });
+    asMockedFn(Cbas).mockReturnValue(
+      partial<CbasAjaxContract>({
+        runSets: partial<CbasRunSetsContract>({
+          get: getRunSetsMethod,
+        }),
+      })
+    );
 
     // Act
     await act(async () => {
@@ -494,25 +471,15 @@ describe('SubmissionHistory tab', () => {
 
   it('Gives abort option for actions button', async () => {
     const user = userEvent.setup();
-    const getRunSetsMethod = jest.fn(() => Promise.resolve(simpleRunSetData));
-    const mockLeoResponse = jest.fn(() => Promise.resolve(mockAzureApps));
-    const mockUserResponse = jest.fn(() => Promise.resolve({ userSubjectId: 'user-id-blah-blah' }));
+    const getRunSetsMethod: MockedFn<CbasRunSetsContract['get']> = jest.fn(async (_root) => simpleRunSetData);
 
-    Ajax.mockImplementation(() => {
-      return {
-        Cbas: {
-          runSets: {
-            get: getRunSetsMethod,
-          },
-        },
-        Apps: {
-          listAppsV2: mockLeoResponse,
-        },
-        User: {
-          getStatus: mockUserResponse,
-        },
-      };
-    });
+    asMockedFn(Cbas).mockReturnValue(
+      partial<CbasAjaxContract>({
+        runSets: partial<CbasRunSetsContract>({
+          get: getRunSetsMethod,
+        }),
+      })
+    );
 
     // Act
     await act(async () => {
@@ -543,35 +510,54 @@ describe('SubmissionHistory tab', () => {
     });
   });
 
-  const abortTestCases = [
-    ['abort successfully', { workspace: mockAzureWorkspace, userId: 'foo', runSet: simpleRunSetData, abortAllowed: true }],
-    ['not allow abort for non-submitter', { workspace: mockAzureWorkspace, userId: 'not-foo', runSet: simpleRunSetData, abortAllowed: false }],
-    ['not allow abort for Queued submission', { workspace: mockAzureWorkspace, userId: 'not-foo', runSet: queuedRunSetData, abortAllowed: false }],
+  interface AbortTestCaseArgs {
+    workspace: WorkspaceWrapper;
+    userId: string;
+    // TODO: get some better types from Cbas ajax calls so we can use that instead of "any"
+    runSet: any;
+    abortAllowed: boolean;
+  }
+
+  const abortTestCases: [string, AbortTestCaseArgs][] = [
+    [
+      'abort successfully',
+      { workspace: mockAzureWorkspace, userId: 'foo', runSet: simpleRunSetData, abortAllowed: true },
+    ],
+    [
+      'not allow abort for non-submitter',
+      { workspace: mockAzureWorkspace, userId: 'not-foo', runSet: simpleRunSetData, abortAllowed: false },
+    ],
+    [
+      'not allow abort for Queued submission',
+      { workspace: mockAzureWorkspace, userId: 'not-foo', runSet: queuedRunSetData, abortAllowed: false },
+    ],
   ];
 
   it.each(abortTestCases)('should %s', async (_unused, { workspace, userId, runSet, abortAllowed }) => {
     const user = userEvent.setup();
-    const getRunSetsMethod = jest.fn(() => Promise.resolve(runSet));
-    const cancelSubmissionFunction = jest.fn(() => Promise.resolve(mockAbortResponse));
-    const mockLeoResponse = jest.fn(() => Promise.resolve(mockAzureApps));
-    const mockUserResponse = jest.fn(() => Promise.resolve({ userSubjectId: userId }));
+    const getRunSetsMethod: MockedFn<CbasRunSetsContract['get']> = jest.fn(async (_root) => runSet);
+    const cancelSubmissionFunction: MockedFn<CbasRunSetsContract['cancel']> = jest.fn(
+      async (_root, _id) => mockAbortResponse
+    );
 
-    Ajax.mockImplementation(() => {
-      return {
-        Cbas: {
-          runSets: {
-            get: getRunSetsMethod,
-            cancel: cancelSubmissionFunction,
-          },
-        },
-        Apps: {
-          listAppsV2: mockLeoResponse,
-        },
-        User: {
-          getStatus: mockUserResponse,
-        },
-      };
-    });
+    asMockedFn(Cbas).mockReturnValue(
+      partial<CbasAjaxContract>({
+        runSets: partial<CbasRunSetsContract>({
+          get: getRunSetsMethod,
+          cancel: cancelSubmissionFunction,
+        }),
+      })
+    );
+
+    asMockedFn(User).mockReturnValue(
+      partial<UserContract>({
+        getStatus: jest.fn(async () =>
+          partial<SamUserRegistrationStatusResponse>({
+            userSubjectId: userId,
+          })
+        ),
+      })
+    );
 
     // Act
     await act(async () => {
@@ -608,7 +594,10 @@ describe('SubmissionHistory tab', () => {
 
     if (abortAllowed) {
       expect(cancelSubmissionFunction).toHaveBeenCalled();
-      expect(cancelSubmissionFunction).toBeCalledWith('https://lz-abc/terra-app-abc/cbas', '20000000-0000-0000-0000-200000000002');
+      expect(cancelSubmissionFunction).toBeCalledWith(
+        'https://lz-abc/terra-app-abc/cbas',
+        '20000000-0000-0000-0000-200000000002'
+      );
     } else {
       expect(cancelSubmissionFunction).not.toHaveBeenCalled();
     }
