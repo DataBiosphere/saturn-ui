@@ -159,13 +159,13 @@ export const WorkflowsLibrary = () => {
                     metricEvent={Events.libraryWorkflowsDockstore}
                   />
                 </div>
-                {
-                  // TODO: Change over to Terra workflow repo
-                  // Update `title` to 'Terra Workflow Repository'
-                }
                 <div style={{ marginLeft: 20 }}>
                   <WorkflowSourceBox
-                    title='Broad Methods Repository'
+                    title={
+                      isFeaturePreviewEnabled(FIRECLOUD_UI_MIGRATION)
+                        ? 'Terra Workflow Repository'
+                        : 'Broad Methods Repository'
+                    }
                     description='A repository of WDL workflows that offers quick hosting of public and private workflows.'
                     url={workflowsRepoUrl}
                     logoFilePath={terraLogo}
