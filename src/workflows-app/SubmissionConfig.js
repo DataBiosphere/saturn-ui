@@ -6,7 +6,9 @@ import { ButtonPrimary, Link, Select } from 'src/components/common';
 import { centeredSpinner, icon } from 'src/components/icons';
 import { InfoBox } from 'src/components/InfoBox';
 import StepButtons from 'src/components/StepButtons';
-import { Ajax } from 'src/libs/ajax';
+import { Cbas } from 'src/libs/ajax/workflows-app/Cbas';
+import { WorkflowScript } from 'src/libs/ajax/workflows-app/WorkflowScript';
+import { WorkspaceData } from 'src/libs/ajax/WorkspaceDataService';
 import colors from 'src/libs/colors';
 import * as Nav from 'src/libs/nav';
 import { notify } from 'src/libs/notifications';
@@ -72,7 +74,7 @@ export const BaseSubmissionConfig = (
   const loadRecordsData = useCallback(
     async (recordType, wdsUrlRoot, searchLimit) => {
       try {
-        const searchResult = await Ajax(signal).WorkspaceData.queryRecords(wdsUrlRoot, workspaceId, recordType, searchLimit);
+        const searchResult = await WorkspaceData(signal).queryRecords(wdsUrlRoot, workspaceId, recordType, searchLimit);
         setRecords(searchResult.records);
         setTotalRecordsInActualDataTable(searchResult.totalRecords);
       } catch (error) {
@@ -89,7 +91,7 @@ export const BaseSubmissionConfig = (
   const loadMethodsData = useCallback(
     async (cbasUrlRoot, methodId, methodVersionId) => {
       try {
-        const methodsResponse = await Ajax(signal).Cbas.methods.getById(cbasUrlRoot, methodId);
+        const methodsResponse = await Cbas(signal).methods.getById(cbasUrlRoot, methodId);
         const method = methodsResponse.methods[0];
         if (method) {
           const selectedVersion = _.filter((mv) => mv.method_version_id === methodVersionId, method.method_versions)[0];
@@ -109,7 +111,7 @@ export const BaseSubmissionConfig = (
   const loadRunSet = useCallback(
     async (cbasUrlRoot) => {
       try {
-        const runSet = await Ajax(signal).Cbas.runSets.getForMethod(cbasUrlRoot, methodId, 1);
+        const runSet = await Cbas(signal).runSets.getForMethod(cbasUrlRoot, methodId, 1);
         const newRunSetData = runSet.run_sets[0];
 
         setConfiguredInputDefinition(maybeParseJSON(newRunSetData.input_definition));
@@ -132,7 +134,7 @@ export const BaseSubmissionConfig = (
   const loadCbasSubmissionLimits = useCallback(
     async (cbasUrlRoot) => {
       try {
-        const capabilities = await Ajax(signal).Cbas.capabilities(cbasUrlRoot);
+        const capabilities = await Cbas(signal).capabilities(cbasUrlRoot);
         if (capabilities) {
           const newCapabilities = {
             maxWorkflows: capabilities['submission.limits.maxWorkflows']
@@ -158,7 +160,7 @@ export const BaseSubmissionConfig = (
   const loadRecordTypes = useCallback(
     async (wdsUrlRoot) => {
       try {
-        setRecordTypes(await Ajax(signal).WorkspaceData.describeAllRecordTypes(wdsUrlRoot, workspaceId));
+        setRecordTypes(await WorkspaceData(signal).describeAllRecordTypes(wdsUrlRoot, workspaceId));
       } catch (error) {
         notify('error', 'Error loading data types', { detail: error instanceof Response ? await error.text() : error });
       }
@@ -304,7 +306,7 @@ export const BaseSubmissionConfig = (
       try {
         if (!method.isPrivate) {
           const workflowUrlRaw = await convertToRawUrl(selectedMethodVersion.url, selectedMethodVersion.name, method.source);
-          const script = await Ajax(signal).WorkflowScript.get(workflowUrlRaw);
+          const script = await WorkflowScript(signal).get(workflowUrlRaw);
           setWorkflowScript(script);
         }
       } catch (error) {

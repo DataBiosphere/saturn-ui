@@ -1,4 +1,4 @@
-import { Ajax } from 'src/libs/ajax';
+import { AzureStorage } from 'src/libs/ajax/AzureStorage';
 import { LogInfo } from 'src/workflows-app/components/LogViewer';
 
 export const LogTooltips = {
@@ -113,7 +113,7 @@ export const discoverTesLogs = async (signal, workspaceId: string, tesLogBlobPat
   }
 
   // we're not entirely sure which logs will exist in blob storage, so we fetch all files in the directory of the template TES log and search for the files we want.
-  const allFilesInTesDirectory = await Ajax(signal).AzureStorage.listFiles(
+  const allFilesInTesDirectory = await AzureStorage(signal).listFiles(
     workspaceId,
     parseFullFilepathToContainerDirectory(workspaceId, tesLogBlobPath)
   );

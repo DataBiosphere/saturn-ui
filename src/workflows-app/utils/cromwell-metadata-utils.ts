@@ -1,4 +1,4 @@
-import { Ajax } from 'src/libs/ajax';
+import { CromwellApp } from 'src/libs/ajax/workflows-app/CromwellApp';
 
 export interface WorkflowMetadata {
   actualWorkflowLanguage?: string;
@@ -39,7 +39,7 @@ export type MetadataOptions = {
 };
 
 export const fetchMetadata = async (options: MetadataOptions): Promise<WorkflowMetadata> =>
-  Ajax(options.signal).CromwellApp.workflows(options.workflowId).metadata(options.cromwellProxyUrl, {
+  CromwellApp(options.signal).workflows(options.workflowId).metadata(options.cromwellProxyUrl, {
     includeKey: options.includeKeys,
     excludeKey: options.excludeKeys,
     expandSubWorkflows: options.expandSubWorkflows,

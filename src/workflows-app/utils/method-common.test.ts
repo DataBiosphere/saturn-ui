@@ -1,4 +1,5 @@
-import { Ajax } from 'src/libs/ajax';
+import { Dockstore, DockstoreContract } from 'src/libs/ajax/Dockstore';
+import { asMockedFn, MockedFn, partial } from 'src/testing/test-utils';
 import {
   convertToRawUrl,
   getMethodVersionName,
@@ -12,7 +13,8 @@ jest.mock('src/libs/config', () => ({
   getConfig: jest.fn().mockReturnValue({}),
 }));
 
-jest.mock('src/libs/ajax');
+jest.mock('src/libs/ajax/Dockstore');
+jest.mock('src/libs/ajax/workflows-app/Cbas');
 
 describe('isCovid19Method', () => {
   const testCases = [
@@ -31,51 +33,63 @@ describe('convertToRawUrl', () => {
   const nonDockstoreValidTestCases = [
     // "GitHub" as source
     {
-      methodPath: 'https://raw.githubusercontent.com/broadinstitute/cromwell/develop/wdl/transforms/draft3/src/test/cases/simple_task.wdl',
+      methodPath:
+        'https://raw.githubusercontent.com/broadinstitute/cromwell/develop/wdl/transforms/draft3/src/test/cases/simple_task.wdl',
       methodVersion: 'develop',
       methodSource: 'GitHub',
-      expectedRawUrl: 'https://raw.githubusercontent.com/broadinstitute/cromwell/develop/wdl/transforms/draft3/src/test/cases/simple_task.wdl',
+      expectedRawUrl:
+        'https://raw.githubusercontent.com/broadinstitute/cromwell/develop/wdl/transforms/draft3/src/test/cases/simple_task.wdl',
     },
     {
-      methodPath: 'https://github.com/broadinstitute/cromwell/blob/develop/wdl/transforms/draft3/src/test/cases/simple_task.wdl',
+      methodPath:
+        'https://github.com/broadinstitute/cromwell/blob/develop/wdl/transforms/draft3/src/test/cases/simple_task.wdl',
       methodVersion: 'develop',
       methodSource: 'GitHub',
-      expectedRawUrl: 'https://raw.githubusercontent.com/broadinstitute/cromwell/develop/wdl/transforms/draft3/src/test/cases/simple_task.wdl',
+      expectedRawUrl:
+        'https://raw.githubusercontent.com/broadinstitute/cromwell/develop/wdl/transforms/draft3/src/test/cases/simple_task.wdl',
     },
     // "Github" as source
     {
-      methodPath: 'https://raw.githubusercontent.com/broadinstitute/cromwell/develop/wdl/transforms/draft3/src/test/cases/simple_task.wdl',
+      methodPath:
+        'https://raw.githubusercontent.com/broadinstitute/cromwell/develop/wdl/transforms/draft3/src/test/cases/simple_task.wdl',
       methodVersion: 'develop',
       methodSource: 'Github',
-      expectedRawUrl: 'https://raw.githubusercontent.com/broadinstitute/cromwell/develop/wdl/transforms/draft3/src/test/cases/simple_task.wdl',
+      expectedRawUrl:
+        'https://raw.githubusercontent.com/broadinstitute/cromwell/develop/wdl/transforms/draft3/src/test/cases/simple_task.wdl',
     },
     {
-      methodPath: 'https://github.com/broadinstitute/cromwell/blob/develop/wdl/transforms/draft3/src/test/cases/simple_task.wdl',
+      methodPath:
+        'https://github.com/broadinstitute/cromwell/blob/develop/wdl/transforms/draft3/src/test/cases/simple_task.wdl',
       methodVersion: 'develop',
       methodSource: 'Github',
-      expectedRawUrl: 'https://raw.githubusercontent.com/broadinstitute/cromwell/develop/wdl/transforms/draft3/src/test/cases/simple_task.wdl',
+      expectedRawUrl:
+        'https://raw.githubusercontent.com/broadinstitute/cromwell/develop/wdl/transforms/draft3/src/test/cases/simple_task.wdl',
     },
   ];
 
-  test.each(nonDockstoreValidTestCases)('returns raw URL for GitHub source', ({ methodPath, methodVersion, methodSource, expectedRawUrl }) => {
-    expect(convertToRawUrl(methodPath, methodVersion, methodSource)).toBe(expectedRawUrl);
-  });
+  test.each(nonDockstoreValidTestCases)(
+    'returns raw URL for GitHub source',
+    ({ methodPath, methodVersion, methodSource, expectedRawUrl }) => {
+      expect(convertToRawUrl(methodPath, methodVersion, methodSource)).toBe(expectedRawUrl);
+    }
+  );
 
   it('should call Dockstore to retrieve raw URL', async () => {
     const methodPath = 'github.com/broadinstitute/viral-pipelines/fetch_sra_to_bam';
     const methodVersion = 'master';
     const methodSource = 'Dockstore';
-    const rawUrl = 'https://raw.githubusercontent.com/broadinstitute/viral-pipelines/master/pipes/WDL/workflows/fetch_sra_to_bam.wdl';
+    const rawUrl =
+      'https://raw.githubusercontent.com/broadinstitute/viral-pipelines/master/pipes/WDL/workflows/fetch_sra_to_bam.wdl';
 
-    const mockDockstoreWfSourceMethod = jest.fn(() => Promise.resolve(rawUrl));
+    const mockDockstoreWfSourceMethod: MockedFn<DockstoreContract['getWorkflowSourceUrl']> = jest.fn(
+      async (_path, _version) => rawUrl
+    );
 
-    Ajax.mockImplementation(() => {
-      return {
-        Dockstore: {
-          getWorkflowSourceUrl: mockDockstoreWfSourceMethod,
-        },
-      };
-    });
+    asMockedFn(Dockstore).mockReturnValue(
+      partial<DockstoreContract>({
+        getWorkflowSourceUrl: mockDockstoreWfSourceMethod,
+      })
+    );
 
     const actualUrl = await convertToRawUrl(methodPath, methodVersion, methodSource);
 
@@ -91,8 +105,10 @@ describe('convertToRawUrl', () => {
 
     try {
       convertToRawUrl(methodPath, methodVersion, methodSource);
-    } catch (e) {
-      expect(e.message).toBe("Unknown method source 'MySource'. Currently supported method sources are [GitHub, Dockstore].");
+    } catch (e: any) {
+      expect(e.message).toBe(
+        "Unknown method source 'MySource'. Currently supported method sources are [GitHub, Dockstore]."
+      );
     }
   });
 });
@@ -112,8 +128,14 @@ describe('getMethodVersionName in ImportGithub component', () => {
       url: 'https://github.com/DataBiosphere/topmed-workflows/tree/1.32.0/aligner/functional-equivalence-wdl/FunctionalEquivalence.wdl',
       expectedVersion: '1.32.0',
     }, // from dockstore
-    { url: 'https://github.com/broadinstitute/cromwell/blob/develop/wom/src/test/resources/command_parameters/test.wdl', expectedVersion: 'develop' },
-    { url: 'https://raw.githubusercontent.com/broadinstitute/cromwell/develop/wom/src/test/resources/wc.wdl', expectedVersion: 'develop' },
+    {
+      url: 'https://github.com/broadinstitute/cromwell/blob/develop/wom/src/test/resources/command_parameters/test.wdl',
+      expectedVersion: 'develop',
+    },
+    {
+      url: 'https://raw.githubusercontent.com/broadinstitute/cromwell/develop/wom/src/test/resources/wc.wdl',
+      expectedVersion: 'develop',
+    },
     {
       url: 'https://raw.githubusercontent.com/broadinstitute/warp/VariantCalling_v2.1.2/pipelines/broad/dna_seq/germline/variant_calling/VariantCalling.wdl',
       expectedVersion: 'VariantCalling_v2.1.2',
@@ -126,8 +148,14 @@ describe('getMethodVersionName in ImportGithub component', () => {
       url: 'https://raw.githubusercontent.com/broadinstitute/warp/AnnotationFiltration_v1.2.4/pipelines/broad/annotation_filtration/AnnotationFiltration.wdl',
       expectedVersion: 'AnnotationFiltration_v1.2.4',
     },
-    { url: 'https://github.com/broadinstitute/warp/blob/scATAC_v1.3.0/tasks/skylab/HISAT2.wdl', expectedVersion: 'scATAC_v1.3.0' },
-    { url: 'https://raw.githubusercontent.com/broadinstitute/cromwell/54/wom/src/test/resources/command_parameters/test.wdl', expectedVersion: '54' },
+    {
+      url: 'https://github.com/broadinstitute/warp/blob/scATAC_v1.3.0/tasks/skylab/HISAT2.wdl',
+      expectedVersion: 'scATAC_v1.3.0',
+    },
+    {
+      url: 'https://raw.githubusercontent.com/broadinstitute/cromwell/54/wom/src/test/resources/command_parameters/test.wdl',
+      expectedVersion: '54',
+    },
   ];
 
   test.each(testUrls)('returns expected version for url', ({ url, expectedVersion }) => {
