@@ -94,11 +94,6 @@ const SubmissionWorkflowsTable = ({ workspace, submission }) => {
     sort.direction === 'asc' ? _.identity : _.reverse
   )(workflows);
 
-  // console.log('workflows:');
-  // console.log(workflows);
-  // console.log('filtered workflows:');
-  // console.log(filteredWorkflows);
-
   return h(Fragment, [
     div({ style: { margin: '1rem 0', display: 'flex', alignItems: 'center' } }, [
       h(DelayedSearchInput, {
@@ -373,70 +368,6 @@ const SubmissionDetails = _.flow(
           await delay(60000);
         }
 
-        // const workflow_test = await Workspaces(signal).workspace(namespace, name).submission(submissionId).get()
-        // console.log('workflow_test')
-        // console.log(workflow_test)
-
-        const workflow = {
-          cost: 0,
-          deleteIntermediateOutputFiles: false,
-          ignoreEmptyOutputs: false,
-          memoryRetryMultiplier: 1,
-          methodConfigurationName: 'echo-strings-test_fhJeTf5euI4',
-          methodConfigurationNamespace: 'sschu',
-          status: 'Done',
-          submissionDate: '2025-01-14T14:54:37.117Z',
-          submissionId: 'af87c792-cbdd-4265-a949-589fd057e752',
-          submissionRoot: 'gs://fc-f740009f-f4d1-406a-9e27-18363800c8a8/submissions/af87c792-cbdd-4265-a949-589fd057e752',
-          submitter: 'lmcnatt.terra@gmail.com',
-          useCallCache: false,
-          useReferenceDisks: false,
-          userComment: '',
-          workflows: [
-            {
-              cost: 0.001741,
-              inputResolutions: [
-                {
-                  inputName: 'echo_strings.echo_files.input1',
-                  value: 'true',
-                },
-                {
-                  inputName: 'echo_strings.echo_files.input2',
-                  value: 'false',
-                },
-                {
-                  inputName: 'echo_strings.echo_files.input3',
-                  value: 'true',
-                },
-              ],
-              messages: [],
-              status: 'Succeeded',
-              statusLastChangedDate: '2025-01-14T14:58:12.408Z',
-              workflowId: 'af070512-169e-43f2-b411-0c526f0ed114',
-            },
-            {
-              inputResolutions: [
-                {
-                  inputName: 'echo_strings.echo_files.input1',
-                  value: 'true',
-                },
-                {
-                  inputName: 'echo_strings.echo_files.input2',
-                  value: 'false',
-                },
-                {
-                  inputName: 'echo_strings.echo_files.input3',
-                  value: 'true',
-                },
-              ],
-              messages: [],
-              status: 'Succeeded',
-              statusLastChangedDate: '2025-01-14T14:58:15.408Z',
-              workflowId: 'af070512-169e-43f2-b411-0c526f0ed115',
-            },
-          ],
-        };
-
         const sub = _.update(
           ['workflows'],
           _.map((wf) => {
@@ -465,12 +396,8 @@ const SubmissionDetails = _.flow(
 
             return _.set('asText', wfAsText, wf);
           }),
-          // await Workspaces(signal).workspace(namespace, name).submission(submissionId).get()
-          workflow
+          await Workspaces(signal).workspace(namespace, name).submission(submissionId).get()
         );
-
-        // console.log('sub');
-        // console.log(sub);
 
         setSubmission(sub);
         setUserComment(sub.userComment);
