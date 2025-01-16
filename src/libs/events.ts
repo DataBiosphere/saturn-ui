@@ -85,6 +85,8 @@ const eventsList = {
   featurePreviewToggle: 'featurePreview:toggle',
   // Note: "external" refers to the common Job Manager deployment, not a Job Manager bundled in CromwellApp
   jobManagerOpenExternal: 'job-manager:open-external',
+  libraryWorkflowsDockstore: 'library:workflows:dockstore-click',
+  libraryWorkflowsTerraRepo: 'library:workflows:terraWorkflowRepo-click',
   notebookRename: 'notebook:rename',
   notebookCopy: 'notebook:copy',
   notificationToggle: 'notification:toggle',
@@ -233,7 +235,7 @@ export interface EventWorkspaceDetails {
 /**
  * Extracts name, namespace, cloudPlatform, and policies (if present) from an object.
  *
- * @param workspace - Workspace attributes. These can be provided with a WorkspaceWrapper object, a WorkspaceInfo object, or a plain { namespace, name } object.
+ * @param workspaceObject - Workspace attributes. These can be provided with a WorkspaceWrapper object, a WorkspaceInfo object, or a plain { namespace, name } object.
  */
 export const extractWorkspaceDetails = (workspaceObject: EventWorkspaceAttributes): EventWorkspaceDetails => {
   // If a WorkspaceWrapper is provided, get the inner WorkspaceInfo. Otherwise, use the provided object directly.

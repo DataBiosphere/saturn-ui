@@ -5,9 +5,11 @@ import FooterWrapper from 'src/components/FooterWrapper';
 import { libraryTopMatter } from 'src/components/library-common';
 import terraLogo from 'src/images/brands/terra/logo.svg';
 import dockstoreLogo from 'src/images/library/workflows/dockstore.svg';
+import { Metrics } from 'src/libs/ajax/Metrics';
 import { getEnabledBrand } from 'src/libs/brand-utils';
 import colors from 'src/libs/colors';
 import { getConfig } from 'src/libs/config';
+import Events, { MetricsEventName } from 'src/libs/events';
 import { isFeaturePreviewEnabled } from 'src/libs/feature-previews';
 import { FIRECLOUD_UI_MIGRATION } from 'src/libs/feature-previews-config';
 import * as Nav from 'src/libs/nav';
@@ -51,11 +53,15 @@ interface WorkflowSourceBoxProps {
   description: string;
   url: string;
   logoFilePath: string;
+  metricEvent: MetricsEventName;
 }
 
 const WorkflowSourceBox = (props: WorkflowSourceBoxProps) => {
+  const sendMetrics = () => {
+    void Metrics().captureEvent(props.metricEvent);
+  };
   return (
-    <Clickable href={props.url} {...Utils.newTabLinkProps}>
+    <Clickable href={props.url} {...Utils.newTabLinkProps} onClick={() => sendMetrics()}>
       <div
         style={{
           width: 400,
@@ -150,6 +156,7 @@ export const WorkflowsLibrary = () => {
                     description='A community repository of public workflows that offers publishing features and automatic integration with GitHub.'
                     url={dockstoreUrl}
                     logoFilePath={dockstoreLogo}
+                    metricEvent={Events.libraryWorkflowsDockstore}
                   />
                 </div>
                 {
@@ -162,6 +169,7 @@ export const WorkflowsLibrary = () => {
                     description='A repository of WDL workflows that offers quick hosting of public and private workflows.'
                     url={workflowsRepoUrl}
                     logoFilePath={terraLogo}
+                    metricEvent={Events.libraryWorkflowsTerraRepo}
                   />
                 </div>
               </div>
