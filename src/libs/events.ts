@@ -85,8 +85,8 @@ const eventsList = {
   featurePreviewToggle: 'featurePreview:toggle',
   // Note: "external" refers to the common Job Manager deployment, not a Job Manager bundled in CromwellApp
   jobManagerOpenExternal: 'job-manager:open-external',
-  libraryWorkflowsDockstore: 'library:workflows:dockstore-click',
-  libraryWorkflowsTerraRepo: 'library:workflows:terraWorkflowRepo-click',
+  libraryWorkflowsDockstore: 'library:workflows:dockstoreClick',
+  libraryWorkflowsTerraRepo: 'library:workflows:terraWorkflowRepoClick',
   notebookRename: 'notebook:rename',
   notebookCopy: 'notebook:copy',
   notificationToggle: 'notification:toggle',
