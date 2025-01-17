@@ -39,7 +39,7 @@ export const SupportSummary = (props: ResourceTypeSummaryProps) => {
           } else if (e instanceof Response && e.status === 403) {
             setErrorMessage(`You do not have permission to view ${displayName} summary information or are not on VPN`);
           } else {
-            await reportError('Error loading group summary', e);
+            await reportError(`Error loading ${displayName} summary`, e);
           }
         }
       }
