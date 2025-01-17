@@ -15,7 +15,7 @@ export const isFeaturePreviewEnabled = (id) => !!getLocalPref(featurePreviewPref
 
 export const toggleFeaturePreview = (id, enabled) => {
   setLocalPref(featurePreviewPreferenceKey(id), enabled);
-  Metrics().captureEvent(Events.featurePreviewToggle, { featureId: id, enabled });
+  void Metrics().captureEvent(Events.featurePreviewToggle, { featureId: id, enabled });
 };
 
 const getGroups = async ({ signal } = {}) => {
