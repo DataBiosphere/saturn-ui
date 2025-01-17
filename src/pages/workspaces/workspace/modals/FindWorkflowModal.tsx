@@ -87,7 +87,9 @@ export const FindWorkflowModal = (props: FindWorkflowModalProps) => {
         </div>
         <div style={{ flex: 1, marginLeft: 20 }}>
           <WorkflowSourceCard
-            title='Terra Workflow Repository'
+            title={
+              isFeaturePreviewEnabled(FIRECLOUD_UI_MIGRATION) ? 'Terra Workflow Repository' : 'Broad Methods Repository'
+            }
             description='A repository of WDL workflows that offers private workflows hosted in the platform.'
             url={workflowsRepoUrl}
             openInNewTab={false}
