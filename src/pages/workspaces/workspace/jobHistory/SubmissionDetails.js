@@ -163,7 +163,7 @@ const SubmissionWorkflowsTable = ({ workspace, submission }) => {
                 headerRenderer: () => h(Sortable, { sort, field: 'cost', onSort: setSort }, ['Run Cost']),
                 cellRenderer: ({ rowIndex }) => {
                   const cost = filteredWorkflows[rowIndex].cost;
-                  return cost instanceof String ? h(TextCell, [Utils.formatUSD(filteredWorkflows[rowIndex].cost || 0)]) : cost;
+                  return cost instanceof String ? h(TextCell, [Utils.formatUSD(cost || 0)]) : cost;
                 },
               },
               {
@@ -526,7 +526,7 @@ const SubmissionDetails = _.flow(
                 ),
               ]),
               makeSection('Submitted by', [div([submitter]), Utils.makeCompleteDate(submissionDate)]),
-              makeSection('Total Run Cost', [cost ? Utils.formatUSD(cost) : 'N/A']),
+              makeSection('Total Run Cost', [cost ? Utils.format(cost) : 'N/A']),
               makeSection('Data Entity', [div([entityName]), div([entityType])]),
               makeSection('Submission ID', [
                 h(Link, { href: bucketBrowserUrl(submissionRoot.replace('gs://', '')), ...Utils.newTabLinkProps }, submissionId),
