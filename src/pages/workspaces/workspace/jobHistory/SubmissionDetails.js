@@ -32,8 +32,7 @@ import * as Nav from 'src/libs/nav';
 import { forwardRefWithName, useCancellation } from 'src/libs/react-utils';
 import * as Style from 'src/libs/style';
 import * as Utils from 'src/libs/utils';
-import { downloadIO, downloadWorkflows, ioTask, ioVariable } from 'src/libs/workflow-utils';
-import { WorkflowTableColumnNames } from 'src/libs/workflow-utils';
+import { downloadIO, downloadWorkflows, ioTask, ioVariable, WorkflowTableColumnNames } from 'src/libs/workflow-utils';
 import UpdateUserCommentModal from 'src/pages/workspaces/workspace/jobHistory/UpdateUserCommentModal';
 import { wrapWorkspace } from 'src/workspaces/container/WorkspaceContainer';
 
@@ -78,7 +77,7 @@ const SubmissionWorkflowsTable = ({ workspace, submission }) => {
   const {
     workspace: { namespace, name },
   } = workspace;
-  const { submissionId, submissionRoot, workflows = [], cost } = submission;
+  const { submissionId, submissionRoot, workflows = [] } = submission;
 
   const [statusFilter, setStatusFilter] = useState([]);
   const [textFilter, setTextFilter] = useState('');
@@ -163,8 +162,8 @@ const SubmissionWorkflowsTable = ({ workspace, submission }) => {
                 field: 'cost',
                 headerRenderer: () => h(Sortable, { sort, field: 'cost', onSort: setSort }, ['Run Cost']),
                 cellRenderer: ({ rowIndex }) => {
-                  // handle undefined workflow cost as $0
-                  return cost ? h(TextCell, [Utils.formatUSD(filteredWorkflows[rowIndex].cost || 0)]) : 'N/A';
+                  const cost = filteredWorkflows[rowIndex].cost;
+                  return cost instanceof String ? h(TextCell, [Utils.formatUSD(cost || 0)]) : cost;
                 },
               },
               {
@@ -368,9 +367,12 @@ const SubmissionDetails = _.flow(
         if (!_.isEmpty(submission)) {
           await delay(60000);
         }
+
         const sub = _.update(
           ['workflows'],
           _.map((wf) => {
+            // when the cost isn't reported for the workflow, set it to N/A
+            wf.cost ??= 'N/A';
             const {
               cost,
               inputResolutions,
