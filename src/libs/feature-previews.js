@@ -1,6 +1,7 @@
 import _ from 'lodash/fp';
 import { useState } from 'react';
-import { Ajax } from 'src/libs/ajax';
+import { Groups } from 'src/libs/ajax/Groups';
+import { Metrics } from 'src/libs/ajax/Metrics';
 import { getConfig } from 'src/libs/config';
 import Events from 'src/libs/events';
 import featurePreviewsConfig from 'src/libs/feature-previews-config';
@@ -14,11 +15,11 @@ export const isFeaturePreviewEnabled = (id) => !!getLocalPref(featurePreviewPref
 
 export const toggleFeaturePreview = (id, enabled) => {
   setLocalPref(featurePreviewPreferenceKey(id), enabled);
-  Ajax().Metrics.captureEvent(Events.featurePreviewToggle, { featureId: id, enabled });
+  Metrics().captureEvent(Events.featurePreviewToggle, { featureId: id, enabled });
 };
 
 const getGroups = async ({ signal } = {}) => {
-  const rawGroups = await Ajax(signal).Groups.list();
+  const rawGroups = await Groups(signal).list();
   return _.flow(_.map('groupName'), _.uniq)(rawGroups);
 };
 

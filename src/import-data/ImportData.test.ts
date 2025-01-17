@@ -1,15 +1,21 @@
-import { DeepPartial } from '@terra-ui-packages/core-utils';
-import { partial } from '@terra-ui-packages/test-utils';
 import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { h } from 'react-hyperscript-helpers';
-import { Ajax, AjaxContract } from 'src/libs/ajax';
-import { DataRepo, DataRepoContract, Snapshot } from 'src/libs/ajax/DataRepo';
+import { Billing, BillingContract } from 'src/libs/ajax/billing/Billing';
+import { BillingProject } from 'src/libs/ajax/billing/billing-models';
+import { Catalog, CatalogContract } from 'src/libs/ajax/Catalog';
+import { DataRepo, DataRepoContract, DataRepoSnapshotContract, Snapshot } from 'src/libs/ajax/DataRepo';
+import { FirecloudBucket, FirecloudBucketAjaxContract } from 'src/libs/ajax/firecloud/FirecloudBucket';
+import { Apps, AppsAjaxContract } from 'src/libs/ajax/leonardo/Apps';
+import { ListAppItem } from 'src/libs/ajax/leonardo/models/app-models';
+import { Metrics, MetricsContract } from 'src/libs/ajax/Metrics';
 import { SamResources, SamResourcesContract } from 'src/libs/ajax/SamResources';
+import { WDSJob, WorkspaceData, WorkspaceDataAjaxContract } from 'src/libs/ajax/WorkspaceDataService';
+import { WorkspaceContract, Workspaces, WorkspacesAjaxContract } from 'src/libs/ajax/workspaces/Workspaces';
 import { isFeaturePreviewEnabled } from 'src/libs/feature-previews';
 import { ENABLE_AZURE_PFB_IMPORT, ENABLE_AZURE_TDR_IMPORT } from 'src/libs/feature-previews-config';
 import { useRoute } from 'src/libs/nav';
-import { asMockedFn, renderWithAppContexts as render, SelectHelper } from 'src/testing/test-utils';
+import { asMockedFn, MockedFn, partial, renderWithAppContexts as render, SelectHelper } from 'src/testing/test-utils';
 import { defaultAzureWorkspace, defaultGoogleWorkspace } from 'src/testing/workspace-fixtures';
 import { useWorkspaces } from 'src/workspaces/common/state/useWorkspaces';
 
@@ -26,7 +32,15 @@ jest.mock('src/workspaces/common/state/useWorkspaces', (): UseWorkspacesExports 
   };
 });
 
-jest.mock('src/libs/ajax');
+jest.mock('src/libs/ajax/billing/Billing');
+jest.mock('src/libs/ajax/Catalog');
+jest.mock('src/libs/ajax/firecloud/FirecloudBucket');
+jest.mock('src/libs/ajax/leonardo/Apps');
+jest.mock('src/libs/ajax/Metrics');
+jest.mock('src/libs/ajax/WorkspaceDataService');
+jest.mock('src/libs/ajax/workspaces/Workspaces');
+jest.mock('src/libs/ajax/DataRepo');
+jest.mock('src/libs/ajax/SamResources');
 
 type DataRepoExports = typeof import('src/libs/ajax/DataRepo');
 jest.mock('src/libs/ajax/DataRepo', (): DataRepoExports => {
@@ -115,20 +129,22 @@ interface SetupOptions {
 const setup = async (opts: SetupOptions) => {
   const { queryParams } = opts;
 
-  const mockDataRepo = {
-    snapshot: (snapshotId: string): Partial<ReturnType<DataRepoContract['snapshot']>> => ({
-      details: jest.fn().mockImplementation(() => {
-        if (snapshotId === azureSnapshotFixture.id) {
-          return azureSnapshotFixture;
-        }
-        if (snapshotId === googleSnapshotFixture.id) {
-          return googleSnapshotFixture;
-        }
-        throw new Response('{"message":"Snapshot not found"}', { status: 404 });
-      }),
-    }),
-  };
-  asMockedFn(DataRepo).mockReturnValue(mockDataRepo as unknown as DataRepoContract);
+  asMockedFn(DataRepo).mockReturnValue(
+    partial<DataRepoContract>({
+      snapshot: (snapshotId: string) =>
+        partial<DataRepoSnapshotContract>({
+          details: jest.fn(async () => {
+            if (snapshotId === azureSnapshotFixture.id) {
+              return azureSnapshotFixture;
+            }
+            if (snapshotId === googleSnapshotFixture.id) {
+              return googleSnapshotFixture;
+            }
+            throw new Response('{"message":"Snapshot not found"}', { status: 404 });
+          }),
+        }),
+    })
+  );
 
   asMockedFn(SamResources).mockReturnValue(
     partial<SamResourcesContract>({
@@ -136,57 +152,69 @@ const setup = async (opts: SetupOptions) => {
     })
   );
 
-  const exportDataset = jest.fn().mockResolvedValue(undefined);
+  const exportDataset: MockedFn<CatalogContract['exportDataset']> = jest.fn();
 
-  const importBagit = jest.fn().mockResolvedValue(undefined);
-  const importJob = jest.fn().mockResolvedValue({ jobId: 'new-job' });
-  const importJSON = jest.fn().mockResolvedValue(undefined);
-  const importSnapshot = jest.fn().mockResolvedValue(undefined);
+  const importBagit: MockedFn<WorkspaceContract['importBagit']> = jest.fn();
+  const importJob: MockedFn<WorkspaceContract['importJob']> = jest.fn(async (_url, _type, _options) => ({
+    jobId: 'new-job',
+  }));
+  const importJSON: MockedFn<WorkspaceContract['importJSON']> = jest.fn();
+  const importSnapshot: MockedFn<WorkspaceContract['importSnapshot']> = jest.fn();
 
-  const getWorkspaceApi = jest.fn().mockReturnValue({
-    importBagit,
-    importJob,
-    importJSON,
-    importSnapshot,
-  });
+  const getWorkspaceApi: WorkspacesAjaxContract['workspace'] = jest.fn((_namespace, _name) =>
+    partial<WorkspaceContract>({
+      importBagit,
+      importJob,
+      importJSON,
+      importSnapshot,
+    })
+  );
 
-  const importTdr = jest.fn().mockResolvedValue(undefined);
-  const startImportJob = jest.fn().mockResolvedValue({ jobId: 'new-job' });
+  const startImportJob: MockedFn<WorkspaceDataAjaxContract['startImportJob']> = jest.fn(async (_root, _id, _file) =>
+    partial<WDSJob>({ jobId: 'new-job' })
+  );
 
   const wdsProxyUrl = 'https://proxyurl';
-  const mockAjax: DeepPartial<AjaxContract> = {
-    Apps: {
-      listAppsV2: jest.fn().mockResolvedValue([
-        {
+
+  asMockedFn(Apps).mockReturnValue(
+    partial<AppsAjaxContract>({
+      listAppsV2: jest.fn(async (_id) => [
+        partial<ListAppItem>({
           appType: 'WDS',
           appName: `wds-${defaultAzureWorkspace.workspace.workspaceId}`,
           status: 'RUNNING',
           proxyUrls: { wds: wdsProxyUrl },
           workspaceId: defaultAzureWorkspace.workspace.workspaceId,
-        },
+        }),
       ]),
-    },
-    Billing: {
-      listProjects: jest.fn().mockResolvedValue([{}]),
-    },
-    Catalog: {
+    })
+  );
+  asMockedFn(Billing).mockReturnValue(
+    partial<BillingContract>({
+      listProjects: jest.fn(async () => [partial<BillingProject>({})]),
+    })
+  );
+  asMockedFn(Catalog).mockReturnValue(
+    partial<CatalogContract>({
       exportDataset,
-    },
-    DataRepo: mockDataRepo,
-    FirecloudBucket: {
-      getTemplateWorkspaces: jest.fn().mockResolvedValue([]),
-    },
-    Metrics: {
-      captureEvent: jest.fn(),
-    },
-    WorkspaceData: {
+    })
+  );
+  asMockedFn(FirecloudBucket).mockReturnValue(
+    partial<FirecloudBucketAjaxContract>({
+      getTemplateWorkspaces: jest.fn(async () => []),
+    })
+  );
+  asMockedFn(Metrics).mockReturnValue(partial<MetricsContract>({ captureEvent: jest.fn() }));
+  asMockedFn(WorkspaceData).mockReturnValue(
+    partial<WorkspaceDataAjaxContract>({
       startImportJob,
-    },
-    Workspaces: {
+    })
+  );
+  asMockedFn(Workspaces).mockReturnValue(
+    partial<WorkspacesAjaxContract>({
       workspace: getWorkspaceApi,
-    },
-  };
-  asMockedFn(Ajax).mockImplementation(() => mockAjax as AjaxContract);
+    })
+  );
 
   asMockedFn(useRoute).mockReturnValue({
     query: queryParams,
@@ -206,7 +234,6 @@ const setup = async (opts: SetupOptions) => {
     importJob,
     importJSON,
     importSnapshot,
-    importTdr,
     startImportJob,
     wdsProxyUrl,
   };
@@ -353,7 +380,7 @@ describe('ImportData', () => {
           ...commonSnapshotExportQueryParams,
           snapshotId: googleSnapshotFixture.id,
         };
-        const { getWorkspaceApi, importJob, importTdr } = await setup({ queryParams });
+        const { getWorkspaceApi, importJob } = await setup({ queryParams });
 
         // Act
         await importIntoExistingWorkspace(user, defaultGoogleWorkspace.workspace.name);
@@ -365,7 +392,6 @@ describe('ImportData', () => {
         );
 
         expect(importJob).toHaveBeenCalledWith(queryParams.tdrmanifest, 'tdrexport', { tdrSyncPermissions: true });
-        expect(importTdr).not.toHaveBeenCalled();
       });
 
       it('imports snapshots into Azure workspaces', async () => {

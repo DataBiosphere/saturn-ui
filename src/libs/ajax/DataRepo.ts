@@ -290,3 +290,5 @@ export const DataRepo = (signal?: AbortSignal): DataRepoContract => ({
     result: async () => callDataRepo(`repository/v1/jobs/${jobId}/result`, signal),
   }),
 });
+
+export type DataRepoSnapshotContract = ReturnType<DataRepoContract['snapshot']>;

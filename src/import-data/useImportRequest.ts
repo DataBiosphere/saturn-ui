@@ -1,6 +1,5 @@
 import { delay } from '@terra-ui-packages/core-utils';
 import { useEffect, useState } from 'react';
-import { Ajax } from 'src/libs/ajax';
 import { DataRepo, Snapshot } from 'src/libs/ajax/DataRepo';
 import { SamResources } from 'src/libs/ajax/SamResources';
 import { isFeaturePreviewEnabled } from 'src/libs/feature-previews';
@@ -77,7 +76,7 @@ const getFileImportRequest = (queryParams: QueryParams, type: FileImportRequest[
  */
 const generateSnapshotManifest = async (snapshotId: string): Promise<URL> => {
   const { id } = await DataRepo().snapshot(snapshotId).exportSnapshot();
-  const jobApi = Ajax().DataRepo.job(id);
+  const jobApi = DataRepo().job(id);
   let jobInfo = await jobApi.details();
   while (jobInfo.job_status === 'running') {
     await delay(1000);
