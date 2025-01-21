@@ -51,11 +51,6 @@ export type FeaturePreview = {
    * Optional date string for the last updated date. Shown on the feature previews page.
    */
   readonly lastUpdated?: string;
-
-  /**
-   * Optional URL for an article about the feature. Shown on the feature previews page.
-   */
-  readonly articleUrl?: string;
 };
 
 const featurePreviewsConfig: readonly FeaturePreview[] = [
@@ -64,7 +59,6 @@ const featurePreviewsConfig: readonly FeaturePreview[] = [
     title: 'JupyterLab on GCP',
     description: 'Enabling this feature will allow you to launch notebooks using JupyterLab in GCP workspaces.',
     groups: ['preview-jupyterlab-gcp'],
-    feedbackUrl: `mailto:dsp-sue@broadinstitute.org?subject=${encodeURIComponent('Feedback on JupyterLab (GCP)')}`,
     lastUpdated: '12/22/2022',
   },
   {
@@ -72,7 +66,6 @@ const featurePreviewsConfig: readonly FeaturePreview[] = [
     title: 'Hail Batch App on Azure',
     description: 'Enabling this feature will allow you to launch the Hail Batch app in Azure workspaces.',
     groups: ['preview-hail-batch-azure'],
-    feedbackUrl: `mailto:dsp-sue@broadinstitute.org?subject=${encodeURIComponent('Feedback on Hail Batch (Azure)')}`,
     lastUpdated: '5/22/2023',
   },
   {
@@ -80,9 +73,6 @@ const featurePreviewsConfig: readonly FeaturePreview[] = [
     title: 'Azure PFB Import',
     description: 'Enabling this feature will allow PFB import into Azure workspaces.',
     groups: ['preview-azure-pfb-import'],
-    feedbackUrl: `mailto:dsp-core-services@broadinstitute.org?subject=${encodeURIComponent(
-      'Feedback on Azure PFB Import'
-    )}`,
     lastUpdated: '11/15/2023',
   },
   {
@@ -90,9 +80,6 @@ const featurePreviewsConfig: readonly FeaturePreview[] = [
     title: 'Azure TDR Import',
     description: 'Enabling this feature will allow importing TDR snapshots into Azure workspaces.',
     groups: ['preview-azure-tdr-import'],
-    feedbackUrl: `mailto:dsp-core-services@broadinstitute.org?subject=${encodeURIComponent(
-      'Feedback on Azure TDR snapshot Import'
-    )}`,
     lastUpdated: '12/1/2023',
   },
   {
@@ -100,11 +87,8 @@ const featurePreviewsConfig: readonly FeaturePreview[] = [
     title: 'Terra Workflow Repository Improvements',
     description:
       'Enabling this feature will allow creating and editing workflows with the built-in Terra Workflow Repository UI. This replaces the external Broad Methods Repository. Changes made in Terra are reflected in the external Broad Methods Repository, and vice-versa.',
-    feedbackUrl: `mailto:dsp-analysis@broadinstitute.org?subject=${encodeURIComponent(
-      'Feedback on Terra Workflow Repository Improvements'
-    )}`,
     lastUpdated: '1/7/2025',
-    articleUrl: 'https://support.terra.bio/hc/en-us/articles/31191238873243',
+    feedbackUrl: 'https://support.terra.bio/hc/en-us/articles/31191238873243',
   },
   {
     id: COHORT_BUILDER_CARD,
@@ -112,9 +96,6 @@ const featurePreviewsConfig: readonly FeaturePreview[] = [
     description:
       'Enabling this feature will show the card for the demo cohort builder in the Datasets tab in the Library.',
     groups: ['CohortBuilderUsers'],
-    feedbackUrl: `mailto:dsp-data-exploration@broadinstitute.org?subject=${encodeURIComponent(
-      'Feedback on Cohort Builder Card'
-    )}`,
     lastUpdated: '7/25/2024',
   },
   {
@@ -122,22 +103,16 @@ const featurePreviewsConfig: readonly FeaturePreview[] = [
     title: 'Improved Spend Reports',
     description:
       'Enabling this feature will show billing project owners costs associated with all workspaces in billing projects with spend reporting enabled. Additional updates to spend reports coming soon!',
-    feedbackUrl: `mailto:dsp-core-services@broadinstitute.org?subject=${encodeURIComponent(
-      'Feedback on Improved Spend Reports'
-    )}`,
+    feedbackUrl: 'https://support.terra.bio/hc/en-us/articles/31182586327323',
     lastUpdated: '01/17/2025',
-    articleUrl: 'https://support.terra.bio/hc/en-us/articles/31182586327323',
   },
   {
     id: AUTO_GENERATE_DATA_TABLES,
     title: 'Autogenerate data table for single and paired end sequencing',
     description:
       'Enabling this feature will show a new option in the data uploader to autogenerate a data table instead of uploading your own TSV. This feature will attempt to automatch known file patterns for single and paired end sequencing and autogenerate a data table linking to those files.',
-    feedbackUrl: `mailto:dsp-core-services@broadinstitute.org?subject=${encodeURIComponent(
-      'Feedback on Autogenerate data table for single and paired end sequencing'
-    )}`,
+    feedbackUrl: 'https://support.terra.bio/hc/en-us/articles/31258673632923',
     lastUpdated: '11/26/2024',
-    articleUrl: 'https://support.terra.bio/hc/en-us/articles/31258673632923',
   },
   {
     id: PREVIEW_COST_CAPPING,
@@ -145,20 +120,14 @@ const featurePreviewsConfig: readonly FeaturePreview[] = [
     description:
       'Enabling this feature will show a new workflow configuration option to add a user-configurable cost cap to the workflow. Workflows will be terminated once they exceed the configured value.',
     groups: ['preview-cost-capping'],
-    feedbackUrl: `mailto:dsp-core-services@broadinstitute.org?subject=${encodeURIComponent(
-      'Feedback on Workflow Cost Capping'
-    )}`,
+    feedbackUrl: 'https://support.terra.bio/hc/en-us/articles/31269696049307',
     lastUpdated: '12/6/2024',
-    articleUrl: 'https://support.terra.bio/hc/en-us/articles/31269696049307',
   },
   {
     id: IGV_ENHANCEMENTS,
     title: 'Enhancements to IGV genome browser integration',
     description:
       'Enabling this feature will show improvements that make IGV easier to find and use with data in a workspace.',
-    feedbackUrl: `mailto:dsp-analysis@broadinstitute.org?subject=${encodeURIComponent(
-      'Feedback on enhancements to IGV genome browser integration'
-    )}`,
     lastUpdated: '12/12/2024',
   },
   {
@@ -167,7 +136,6 @@ const featurePreviewsConfig: readonly FeaturePreview[] = [
     description:
       'Enabling this feature allows workflows to be processed by the GCP Batch service, rather than the former Cloud Life Sciences API. All Terra workflows will be transitioned to GCP Batch by mid-2025.',
     groups: ['preview-batch'],
-    feedbackUrl: `mailto:dsp-analysis@broadinstitute.org?subject=${encodeURIComponent('Feedback on GCP Batch')}`,
     lastUpdated: '12/12/2024',
   },
 ];
