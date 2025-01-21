@@ -152,16 +152,6 @@ const featurePreviewsConfig: readonly FeaturePreview[] = [
     articleUrl: 'https://support.terra.bio/hc/en-us/articles/31269696049307',
   },
   {
-    id: IGV_ENHANCEMENTS,
-    title: 'Enhancements to IGV genome browser integration',
-    description:
-      'Enabling this feature will show improvements that make IGV easier to find and use with data in a workspace.',
-    feedbackUrl: `mailto:dsp-analysis@broadinstitute.org?subject=${encodeURIComponent(
-      'Feedback on enhancements to IGV genome browser integration'
-    )}`,
-    lastUpdated: '12/12/2024',
-  },
-  {
     id: GCP_BATCH,
     title: 'Run workflows on GCP Batch',
     description:
