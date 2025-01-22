@@ -21,6 +21,7 @@ export const Groups = (signal?: AbortSignal) => ({
   group: (groupName: string) => {
     const root = `api/groups/v1/${groupName}`;
     const resourceRoot = `api/resources/v1/managed-group/${groupName}`;
+    const resourceRootV2 = 'api/resources/v2';
 
     const addRole = (role: GroupRole, email: string): Promise<void> => {
       return fetchSam(`${root}/${role}/${encodeURIComponent(email)}`, _.merge(authOpts(), { signal, method: 'PUT' }));
@@ -61,7 +62,7 @@ export const Groups = (signal?: AbortSignal) => ({
           },
         ];
         return fetchSam(
-          'api/resources/v2/bulkMembershipUpdate',
+          `${resourceRootV2}/bulkMembershipUpdate`,
           _.mergeAll([authOpts(), { signal, method: 'POST' }, jsonBody(userRoles)])
         );
       },
