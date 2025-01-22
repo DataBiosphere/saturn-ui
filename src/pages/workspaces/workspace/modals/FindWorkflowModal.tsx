@@ -23,7 +23,8 @@ interface WorkflowSourceCardProps {
 const WorkflowSourceCard = (props: WorkflowSourceCardProps) => {
   const sendMetrics = () => {
     // don't send metrics if Broad Methods Repo card and links are shown in UI
-    // TODO: remove this if condition when feature flag FIRECLOUD_UI_MIGRATION is removed
+    // TODO: remove this if condition when feature flag FIRECLOUD_UI_MIGRATION is removed.
+    //       https://broadworkbench.atlassian.net/browse/AN-373
     if (props.title !== 'Broad Methods Repository') {
       void Metrics().captureEvent(props.metricsEventName);
     }
