@@ -1,5 +1,6 @@
 import _ from 'lodash/fp';
-import { Ajax } from 'src/libs/ajax';
+import { Dockstore } from 'src/libs/ajax/Dockstore';
+import { Cbas } from 'src/libs/ajax/workflows-app/Cbas';
 import { notify } from 'src/libs/notifications';
 import { workflowsAppStore } from 'src/libs/state';
 import * as Utils from 'src/libs/utils';
@@ -27,7 +28,7 @@ export const submitMethod = async (signal, method, workspace, onSuccess, onError
         method_version: method.method_version,
         method_url: method.method_url,
       };
-      const methodObject = await Ajax(signal).Cbas.methods.post(workflowsAppStore.get().cbasProxyUrlState.state, methodPayload);
+      const methodObject = await Cbas(signal).methods.post(workflowsAppStore.get().cbasProxyUrlState.state, methodPayload);
 
       onSuccess(methodObject);
     } catch (error) {
@@ -60,7 +61,7 @@ export const convertToRawUrl = (methodPath, methodVersion, methodSource) => {
     ],
     [
       methodSource.toLowerCase() === MethodSource.Dockstore.toLowerCase(),
-      async () => await Ajax().Dockstore.getWorkflowSourceUrl(methodPath, methodVersion),
+      async () => await Dockstore().getWorkflowSourceUrl(methodPath, methodVersion),
     ],
     () => {
       throw new Error(

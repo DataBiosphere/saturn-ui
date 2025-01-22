@@ -14,7 +14,8 @@ export interface MethodDefinition {
 
 /**
  * Corresponds to Agora's MethodResponse schema. Represents information about
- * a method snapshot in the Broad Methods Repository.
+ * Uses Agora backend terms, a method snapshot in the Broad Methods Repository
+ * New UI calls it a workflow version in the Terra Workflow Repository
  */
 export interface Snapshot {
   managers: string[];

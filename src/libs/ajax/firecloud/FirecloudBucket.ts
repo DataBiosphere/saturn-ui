@@ -17,11 +17,6 @@ export const FirecloudBucket = (signal?: AbortSignal) => ({
     return res.json();
   },
 
-  getFeaturedMethods: async () => {
-    const res = await fetchOk(`${getConfig().firecloudBucketRoot}/featured-methods.json`, { signal });
-    return res.json();
-  },
-
   getTemplateWorkspaces: async () => {
     const res = await fetchOk(`${getConfig().firecloudBucketRoot}/template-workspaces.json`, { signal });
     return res.json();

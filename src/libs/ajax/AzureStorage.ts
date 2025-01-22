@@ -10,7 +10,7 @@ import { getConfig } from 'src/libs/config';
 import * as Utils from 'src/libs/utils';
 import { cloudProviderTypes } from 'src/workspaces/utils';
 
-type SasInfo = {
+export type SasInfo = {
   url: string;
   token: string;
 };
@@ -21,7 +21,7 @@ type StorageContainerInfo = {
   resourceId: string;
 };
 
-type StorageDetails = {
+export type StorageDetails = {
   location: string;
   storageContainerName: string;
   sas: SasInfo;
@@ -31,6 +31,33 @@ export interface AzureFileRaw {
   name: string;
   lastModified: string;
   metadata?: AnalysisFileMetadata;
+}
+
+export interface AzureBlobResult {
+  uri: string;
+  sasToken: string;
+  lastModified: string;
+  size: string;
+  azureSasStorageUrl: string;
+  workspaceId: string;
+  fileName: string;
+  name: string;
+  textContent: any;
+}
+
+export interface AzurePublicBlobResult {
+  lastModified: string;
+  size: string;
+  azureStorageUrl: string;
+  fileName: string;
+}
+
+export interface AzureBlobContent {
+  /** The character data of the file */
+  textContent?: string;
+
+  /** The URI to use for downloading the file. May or may not have sas token appended, depending on if the file is public or private.  */
+  downloadUri?: string;
 }
 
 const encodeAzureAnalysisName = (name: string): string => encodeURIComponent(`analyses/${name}`);
@@ -140,8 +167,11 @@ export const AzureStorage = (signal?: AbortSignal) => ({
   },
 
   blobByUri: (azureStorageUrl: string) => {
-    const getBlobByUri = async (method) => {
+    const getBlobByUri = async (method): Promise<AzureBlobResult | AzurePublicBlobResult> => {
       const fileName = _.last(azureStorageUrl.split('/'))?.split('.').join('.');
+      if (!fileName) {
+        throw Error('Invalid azureStorageUrl.  Could not parse file name.');
+      }
 
       try {
         // assumption is made that container name guid in uri always matches the workspace Id guid it is present in
@@ -268,3 +298,4 @@ export const AzureStorage = (signal?: AbortSignal) => ({
 });
 
 export type AzureStorageContract = ReturnType<typeof AzureStorage>;
+export type AzureBlobByUriContract = ReturnType<AzureStorageContract['blobByUri']>;

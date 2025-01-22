@@ -7,7 +7,8 @@ import { ClipboardButton } from 'src/components/ClipboardButton';
 import { ButtonPrimary, Clickable, Link } from 'src/components/common';
 import { icon } from 'src/components/icons';
 import { FlexTable, Paginator, Sortable, tableHeight, TextCell } from 'src/components/table';
-import { Ajax } from 'src/libs/ajax';
+import { convert } from 'src/libs/ajax/azure-storage-utils';
+import { AzureStorage } from 'src/libs/ajax/AzureStorage';
 import colors from 'src/libs/colors';
 import * as Nav from 'src/libs/nav';
 import { useCancellation } from 'src/libs/react-utils';
@@ -234,9 +235,8 @@ const FilterableWorkflowTable = ({
         return null;
       }
       try {
-        const response = await Ajax(signal).AzureStorage.blobByUri(azureBlobUri).getMetadataAndTextContent();
-        const uri = _.isEmpty(response.azureSasStorageUrl) ? response.azureStorageUrl : response.azureSasStorageUrl;
-        return { textContent: response.textContent, downloadUri: uri };
+        const response = await AzureStorage(signal).blobByUri(azureBlobUri).getMetadataAndTextContent();
+        return convert.azureBlobResult.toAzureBlobContent(response);
       } catch (e) {
         return null;
       }

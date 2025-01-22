@@ -47,6 +47,19 @@ export const Methods = (signal?: AbortSignal) => ({
     return res.json();
   },
 
+  getNamespacePermissions: async (namespace: string): Promise<MethodConfigACL> => {
+    const res = await fetchOrchestration(`api/methods/${namespace}/permissions`, _.merge(authOpts(), { signal }));
+    return res.json();
+  },
+
+  setNamespacePermissions: async (namespace: string, payload: MethodConfigACL): Promise<MethodConfigACL> => {
+    const res = await fetchOrchestration(
+      `api/methods/${namespace}/permissions`,
+      _.mergeAll([authOpts(), jsonBody(payload), { signal, method: 'POST' }])
+    );
+    return res.json();
+  },
+
   method: (namespace, name, snapshotId) => {
     const root = `methods/${namespace}/${name}/${snapshotId}`;
 

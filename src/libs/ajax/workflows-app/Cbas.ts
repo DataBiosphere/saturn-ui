@@ -106,4 +106,5 @@ export const Cbas = (signal?: AbortSignal) => ({
 });
 
 export type CbasAjaxContract = ReturnType<typeof Cbas>;
+export type CbasRunSetsContract = CbasAjaxContract['runSets'];
 export type CbasMethodsContract = CbasAjaxContract['methods'];
