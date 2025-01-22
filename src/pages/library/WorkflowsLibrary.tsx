@@ -4,6 +4,7 @@ import React from 'react';
 import FooterWrapper from 'src/components/FooterWrapper';
 import { libraryTopMatter } from 'src/components/library-common';
 import terraLogo from 'src/images/brands/terra/logo.svg';
+import broadLogo from 'src/images/library/workflows/broad-square.svg';
 import dockstoreLogo from 'src/images/library/workflows/dockstore.svg';
 import { Metrics } from 'src/libs/ajax/Metrics';
 import { getEnabledBrand } from 'src/libs/brand-utils';
@@ -29,22 +30,25 @@ const styles = {
 
 interface LogoTileProps {
   logoFilePath: string;
+  logoName: string;
 }
 
 const LogoTile = (props: LogoTileProps) => {
   return (
     <div
       style={{
-        flexShrink: 0,
-        backgroundImage: `url(${props.logoFilePath})`,
-        backgroundRepeat: 'no-repeat',
-        backgroundPosition: 'center',
-        backgroundSize: 50,
-        width: 67,
-        height: 67,
-        marginRight: 13,
+        display: 'inline-flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        flex: 'none',
+        width: 52,
+        height: 52,
+        paddingBottom: '12px',
+        marginTop: '10px',
       }}
-    />
+    >
+      <img src={props.logoFilePath} alt={props.logoName} />
+    </div>
   );
 };
 
@@ -80,7 +84,7 @@ const WorkflowSourceBox = (props: WorkflowSourceBoxProps) => {
         }}
       >
         <div style={{ marginLeft: '10px', marginTop: '4px' }}>
-          <LogoTile logoFilePath={props.logoFilePath} />
+          <LogoTile logoFilePath={props.logoFilePath} logoName={`${props.title} logo`} />
           <div style={{ fontSize: '1rem', fontWeight: 600, color: colors.accent(1.1), marginTop: '5px' }}>
             {props.title}
           </div>
@@ -145,6 +149,7 @@ export const WorkflowsLibrary = () => {
   const workflowsRepoUrl: string = isFeaturePreviewEnabled(FIRECLOUD_UI_MIGRATION)
     ? Nav.getLink('workflows')
     : `${getConfig().firecloudUrlRoot}/?return=${getEnabledBrand().queryName}#methods`;
+  const workflowsRepoLogo = isFeaturePreviewEnabled(FIRECLOUD_UI_MIGRATION) ? terraLogo : broadLogo;
 
   return (
     <FooterWrapper alwaysShow>
@@ -173,7 +178,7 @@ export const WorkflowsLibrary = () => {
                     }
                     description='A repository of WDL workflows that offers quick hosting of public and private workflows.'
                     url={workflowsRepoUrl}
-                    logoFilePath={terraLogo}
+                    logoFilePath={workflowsRepoLogo}
                     metricsEventName={Events.libraryWorkflowsTerraRepo}
                   />
                 </div>
