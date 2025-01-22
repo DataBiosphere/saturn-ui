@@ -1,9 +1,11 @@
 import { icon, Link, Modal } from '@terra-ui-packages/components';
 import _ from 'lodash/fp';
 import React from 'react';
+import { Metrics } from 'src/libs/ajax/Metrics';
 import { getEnabledBrand } from 'src/libs/brand-utils';
 import colors from 'src/libs/colors';
 import { getConfig } from 'src/libs/config';
+import Events, { MetricsEventName } from 'src/libs/events';
 import { isFeaturePreviewEnabled } from 'src/libs/feature-previews';
 import { FIRECLOUD_UI_MIGRATION } from 'src/libs/feature-previews-config';
 import * as Nav from 'src/libs/nav';
@@ -15,9 +17,19 @@ interface WorkflowSourceCardProps {
   description: string;
   url: string;
   openInNewTab: boolean;
+  metricsEventName: MetricsEventName;
 }
 
 const WorkflowSourceCard = (props: WorkflowSourceCardProps) => {
+  const sendMetrics = () => {
+    // don't send metrics if Broad Methods Repo card and links are shown in UI
+    // TODO: remove this if condition when feature flag FIRECLOUD_UI_MIGRATION is removed.
+    //       https://broadworkbench.atlassian.net/browse/AN-373
+    if (props.title !== 'Broad Methods Repository') {
+      void Metrics().captureEvent(props.metricsEventName);
+    }
+  };
+
   return (
     <div
       style={{
@@ -29,7 +41,7 @@ const WorkflowSourceCard = (props: WorkflowSourceCardProps) => {
     >
       <div style={{ marginLeft: '10px' }}>
         <h4>
-          <Link href={props.url} {...(props.openInNewTab ? Utils.newTabLinkProps : {})}>
+          <Link href={props.url} {...(props.openInNewTab ? Utils.newTabLinkProps : {})} onClick={() => sendMetrics()}>
             {props.title}
             {props.openInNewTab && icon('pop-out', { size: 12, style: { marginLeft: '0.25rem', marginBottom: '1px' } })}
           </Link>
@@ -83,6 +95,7 @@ export const FindWorkflowModal = (props: FindWorkflowModalProps) => {
             description=' A community repository of best practice workflows that offers integration with GitHub.'
             url={dockstoreUrl}
             openInNewTab
+            metricsEventName={Events.workspaceFindWorkflowDockstore}
           />
         </div>
         <div style={{ flex: 1, marginLeft: 20 }}>
@@ -93,6 +106,7 @@ export const FindWorkflowModal = (props: FindWorkflowModalProps) => {
             description='A repository of WDL workflows that offers private workflows hosted in the platform.'
             url={workflowsRepoUrl}
             openInNewTab={false}
+            metricsEventName={Events.workspaceFindWorkflowTerraRepo}
           />
         </div>
       </div>
