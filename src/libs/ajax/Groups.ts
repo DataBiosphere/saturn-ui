@@ -58,7 +58,18 @@ export const Groups = (signal?: AbortSignal) => ({
           {
             resourceTypeName: 'managed-group',
             resourceId: groupName,
-            policyUpdates: _.map((role) => ({ policyName: role, addEmails: emails }), roles),
+            policyUpdates: _.map(
+              (role) => ({
+                policyName: role,
+                addUserIds: [],
+                addEmails: emails,
+                addPolicies: [],
+                removeUserIds: [],
+                removeEmails: [],
+                removePolicies: [],
+              }),
+              roles
+            ),
           },
         ];
         return fetchSam(
