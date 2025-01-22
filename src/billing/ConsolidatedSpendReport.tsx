@@ -9,13 +9,13 @@ import { parseCurrencyIfNeeded } from 'src/billing/utils';
 import { BillingProject } from 'src/billing-core/models';
 import { ButtonOutline, fixedSpinnerOverlay } from 'src/components/common';
 import { ariaSort, HeaderRenderer } from 'src/components/table';
-import { Ajax } from 'src/libs/ajax';
 import { Billing } from 'src/libs/ajax/billing/Billing';
 import {
   AggregatedWorkspaceSpendData,
   SpendReport as SpendReportServerResponse,
 } from 'src/libs/ajax/billing/billing-models';
 import { Metrics } from 'src/libs/ajax/Metrics';
+import { Workspaces } from 'src/libs/ajax/workspaces/Workspaces';
 import Events, { extractBillingDetails } from 'src/libs/events';
 import * as Nav from 'src/libs/nav';
 import { memoWithName, useCancellation } from 'src/libs/react-utils';
@@ -203,7 +203,7 @@ export const ConsolidatedSpendReport = (props: ConsolidatedSpendReportProps): Re
     const startDate = subDays(spendReportLengthInDays, new Date()).toISOString().slice(0, 10);
 
     const fetchWorkspaces = async (signal: AbortSignal): Promise<WorkspaceWrapper[]> => {
-      const fetchedWorkspaces = await Ajax(signal).Workspaces.list(
+      const fetchedWorkspaces = await Workspaces(signal).list(
         [
           'workspace.billingAccount',
           'workspace.bucketName',

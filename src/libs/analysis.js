@@ -1,5 +1,5 @@
 import _ from 'lodash/fp';
-import { Ajax } from 'src/libs/ajax';
+import { Workspaces } from 'src/libs/ajax/workspaces/Workspaces';
 import * as Utils from 'src/libs/utils';
 
 export const launch = async ({
@@ -26,8 +26,8 @@ export const launch = async ({
 }) => {
   const createSet = () => {
     onProgress('createSet');
-    return Ajax()
-      .Workspaces.workspace(namespace, name)
+    return Workspaces()
+      .workspace(namespace, name)
       .createEntity({
         name: newSetName,
         entityType: `${selectedEntityType}_set`,
@@ -41,7 +41,7 @@ export const launch = async ({
   };
   onProgress('checkBucketAccess');
   try {
-    await Ajax().Workspaces.workspace(namespace, name).checkBucketAccess(googleProject, bucketName, accessLevel);
+    await Workspaces().workspace(namespace, name).checkBucketAccess(googleProject, bucketName, accessLevel);
   } catch (error) {
     throw new Error(
       'Error confirming workspace bucket access. This may be a transient problem. Please try again in a few minutes. If the problem persists, please contact support.'
@@ -77,8 +77,8 @@ export const launch = async ({
     ]
   );
   onProgress('launch');
-  return Ajax()
-    .Workspaces.workspace(namespace, name)
+  return Workspaces()
+    .workspace(namespace, name)
     .methodConfig(configNamespace, configName)
     .launch({
       entityType: Utils.cond([entityName === undefined, () => undefined], [processSet, () => `${rootEntityType}_set`], () => rootEntityType),
