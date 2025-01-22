@@ -1,5 +1,5 @@
 import { asMockedFn } from '@terra-ui-packages/test-utils';
-import { Ajax } from 'src/libs/ajax';
+import { WorkspaceData } from 'src/libs/ajax/WorkspaceDataService';
 
 import { fetchWDS } from './ajax-common';
 
@@ -49,7 +49,7 @@ describe('WorkspaceData', () => {
       });
 
       // Act
-      const capabilities = await Ajax().WorkspaceData.getCapabilities(wdsProxyUrl);
+      const capabilities = await WorkspaceData().getCapabilities(wdsProxyUrl);
 
       // Assert
       expect(fetchWDS).toHaveBeenCalledWith(wdsProxyUrl);
@@ -63,7 +63,7 @@ describe('WorkspaceData', () => {
       });
 
       // Act
-      const capabilities = await Ajax().WorkspaceData.getCapabilities(wdsProxyUrl);
+      const capabilities = await WorkspaceData().getCapabilities(wdsProxyUrl);
 
       // Assert
       expect(fetchWDS).toHaveBeenCalledWith(wdsProxyUrl);
@@ -77,7 +77,7 @@ describe('WorkspaceData', () => {
       });
 
       // Act
-      const capabilities = await Ajax().WorkspaceData.getCapabilities(wdsProxyUrl);
+      const capabilities = await WorkspaceData().getCapabilities(wdsProxyUrl);
 
       // Assert
       expect(fetchWDS).toHaveBeenCalledWith(wdsProxyUrl);
@@ -91,7 +91,7 @@ describe('WorkspaceData', () => {
       });
 
       // Act
-      const capabilities = await Ajax().WorkspaceData.getCapabilities(wdsProxyUrl);
+      const capabilities = await WorkspaceData().getCapabilities(wdsProxyUrl);
 
       // Assert
       expect(fetchWDS).toHaveBeenCalledWith(wdsProxyUrl);
@@ -105,7 +105,7 @@ describe('WorkspaceData', () => {
       });
 
       // Act
-      const capabilities = await Ajax().WorkspaceData.getCapabilities(wdsProxyUrl);
+      const capabilities = await WorkspaceData().getCapabilities(wdsProxyUrl);
 
       // Assert
       expect(fetchWDS).toHaveBeenCalledWith(wdsProxyUrl);
@@ -121,7 +121,7 @@ describe('WorkspaceData', () => {
       });
 
       // Act
-      const act = async () => Ajax().WorkspaceData.getCapabilities(wdsProxyUrl);
+      const act = async () => WorkspaceData().getCapabilities(wdsProxyUrl);
 
       // Assert
       await expect(act()).rejects.toEqual(
