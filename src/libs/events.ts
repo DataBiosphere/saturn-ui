@@ -131,6 +131,10 @@ const eventsList = {
   workflowImport: 'workflow:import',
   workflowLaunch: 'workflow:launch',
   workflowRerun: 'workflow:rerun',
+  workflowRepoCreateVersion: 'workflow:repository:createVersion',
+  workflowRepoCreateWorkflow: 'workflow:repository:createWorkflow',
+  workflowRepoEditCollection: 'workflow:repository:editCollection',
+  workflowRepoExportWorkflow: 'workflow:repository:exportWorkflow',
   workflowUploadIO: 'workflow:uploadIO',
   workflowUseDefaultOutputs: 'workflow:useDefaultOutputs',
   workflowSetCostCap: 'workflow:setCostCap',
@@ -195,6 +199,8 @@ const eventsList = {
   workspaceStar: 'workspace:star',
   workspaceListFilter: 'workspace:list:filter',
   workspacesListSelectTab: 'workspace:list:tab',
+  workspaceFindWorkflowDockstore: 'workspace:find-workflow:dockstoreClick',
+  workspaceFindWorkflowTerraRepo: 'workspace:find-workflow:terraWorkflowRepoClick',
 } as const;
 
 // Helper type to create BaseMetricsEventName.

@@ -53,13 +53,14 @@ interface WorkflowSourceBoxProps {
   description: string;
   url: string;
   logoFilePath: string;
-  metricEvent: MetricsEventName;
+  metricsEventName: MetricsEventName;
 }
 
 const WorkflowSourceBox = (props: WorkflowSourceBoxProps) => {
   const sendMetrics = () => {
-    void Metrics().captureEvent(props.metricEvent);
+    void Metrics().captureEvent(props.metricsEventName);
   };
+
   return (
     <Clickable href={props.url} {...Utils.newTabLinkProps} onClick={() => sendMetrics()}>
       <div
@@ -135,7 +136,6 @@ const CuratedWorkflowsSection = () => {
 export const WorkflowsLibrary = () => {
   const dockstoreUrl = `${getConfig().dockstoreUrlRoot}/search?_type=workflow&descriptorType=WDL&searchMode=files`;
 
-  // TODO: Change over to Terra workflow repo
   // Set to static `workflows` and remove feature flag
   const workflowsRepoUrl: string = isFeaturePreviewEnabled(FIRECLOUD_UI_MIGRATION)
     ? Nav.getLink('workflows')
@@ -156,7 +156,7 @@ export const WorkflowsLibrary = () => {
                     description='A community repository of public workflows that offers publishing features and automatic integration with GitHub.'
                     url={dockstoreUrl}
                     logoFilePath={dockstoreLogo}
-                    metricEvent={Events.libraryWorkflowsDockstore}
+                    metricsEventName={Events.libraryWorkflowsDockstore}
                   />
                 </div>
                 <div style={{ marginLeft: 20 }}>
@@ -169,7 +169,7 @@ export const WorkflowsLibrary = () => {
                     description='A repository of WDL workflows that offers quick hosting of public and private workflows.'
                     url={workflowsRepoUrl}
                     logoFilePath={terraLogo}
-                    metricEvent={Events.libraryWorkflowsTerraRepo}
+                    metricsEventName={Events.libraryWorkflowsTerraRepo}
                   />
                 </div>
               </div>
