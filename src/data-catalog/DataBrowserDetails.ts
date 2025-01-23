@@ -11,9 +11,10 @@ import { libraryTopMatter } from 'src/components/library-common';
 import { MarkdownViewer } from 'src/components/markdown';
 import { ReactComponent as AzureLogo } from 'src/images/azure.svg';
 import { ReactComponent as GcpLogo } from 'src/images/gcp.svg';
-import { Ajax } from 'src/libs/ajax';
 import { Dataset } from 'src/libs/ajax/Catalog';
+import { DataRepo } from 'src/libs/ajax/DataRepo';
 import { JobModel, JobStatus, jobStatusTypes } from 'src/libs/ajax/DataRepo';
+import { Metrics } from 'src/libs/ajax/Metrics';
 import colors from 'src/libs/colors';
 import { getConfig } from 'src/libs/config';
 import { withErrorReporting } from 'src/libs/error';
@@ -159,7 +160,7 @@ export const SidebarComponent = ({ dataObj, id }: SidebarComponentProps) => {
   const actionTooltip = access === datasetAccessTypes.Granted ? '' : uiMessaging.controlledFeatureTooltip;
 
   const importDataToWorkspace = (dataset) => {
-    Ajax().Metrics.captureEvent(Events.catalogWorkspaceLinkFromDetailsView, {
+    void Metrics().captureEvent(Events.catalogWorkspaceLinkFromDetailsView, {
       id,
       title: dataObj['dct:title'],
       source: dataset['dcat:accessURL'],
@@ -183,7 +184,7 @@ export const SidebarComponent = ({ dataObj, id }: SidebarComponentProps) => {
         async () => {
           setTdrSnapshotPreparePolling(true);
           const jobInfo = (await withErrorReporting('Error exporting dataset')(
-            async () => await Ajax().DataRepo.snapshot(dataset['dct:identifier']).exportSnapshot()
+            async () => await DataRepo().snapshot(dataset['dct:identifier']).exportSnapshot()
           )()) as JobModel;
           setSnapshotExportJobId(jobInfo.id);
         },
@@ -286,7 +287,7 @@ export const SidebarComponent = ({ dataObj, id }: SidebarComponentProps) => {
                     marginTop: 20,
                   },
                   onClick: () => {
-                    Ajax().Metrics.captureEvent(Events.catalogViewPreviewData, {
+                    void Metrics().captureEvent(Events.catalogViewPreviewData, {
                       id: dataObj.id,
                       title: dataObj['dct:title'],
                     });
@@ -394,7 +395,7 @@ const SnapshotExportModal = ({ jobId, dataset, onDismiss, onFailure }: SnapshotE
   );
 
   const checkJobStatus = async () => {
-    const jobInfo = await Ajax(signal).DataRepo.job(jobId).details();
+    const jobInfo = await DataRepo(signal).job(jobId).details();
     const newJobStatus = jobInfo.job_status;
     Utils.switchCase<JobStatus, void>(
       newJobStatus,
@@ -402,12 +403,12 @@ const SnapshotExportModal = ({ jobId, dataset, onDismiss, onFailure }: SnapshotE
         jobStatusTypes.succeeded,
         async () => {
           const jobResult = await withErrorReporting('Error getting export result')(
-            async () => await Ajax().DataRepo.job(jobId).result()
+            async () => await DataRepo().job(jobId).result()
           )();
           // @ts-ignore - this has an unknown response type, but in this case it should
           // include these fields
           const jobResultManifest = jobResult?.format?.parquet?.manifest;
-          Ajax().Metrics.captureEvent(Events.catalogWorkspaceLinkExportFinished);
+          void Metrics().captureEvent(Events.catalogWorkspaceLinkExportFinished);
           jobResultManifest
             ? Nav.history.push({
                 pathname: Nav.getPath('import-data'),

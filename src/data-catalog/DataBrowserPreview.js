@@ -8,7 +8,7 @@ import { centeredSpinner, icon } from 'src/components/icons';
 import { libraryTopMatter } from 'src/components/library-common';
 import ModalDrawer from 'src/components/ModalDrawer';
 import { ColumnSelector, SimpleTable } from 'src/components/table';
-import { Ajax } from 'src/libs/ajax';
+import { Catalog } from 'src/libs/ajax/Catalog';
 import colors from 'src/libs/colors';
 import { withErrorReporting } from 'src/libs/error';
 import * as Nav from 'src/libs/nav';
@@ -112,7 +112,7 @@ const DataBrowserPreview = ({ id }) => {
   useOnMount(() => {
     const loadData = async () => {
       // TODO (DC-283): move to catalog service
-      const { tables: newTables } = await Ajax(signal).Catalog.getDatasetTables(id);
+      const { tables: newTables } = await Catalog(signal).getDatasetTables(id);
 
       const hasData = _.flow(
         _.sortBy('name'),
@@ -135,7 +135,7 @@ const DataBrowserPreview = ({ id }) => {
       Utils.withBusyState(setLoading),
       withErrorReporting('Error loading table')
     )(async () => {
-      const previewTableData = await Ajax(signal).Catalog.getDatasetPreviewTable({ id, tableName: selectedTable });
+      const previewTableData = await Catalog(signal).getDatasetPreviewTable({ id, tableName: selectedTable });
 
       const newDisplayColumns = _.flow(
         Utils.toIndexPairs,
