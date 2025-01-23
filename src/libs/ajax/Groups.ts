@@ -53,13 +53,13 @@ export const Groups = (signal?: AbortSignal) => ({
         return res.json();
       },
 
-      addUsers: (roles: GroupRole[], emails: string[]): Promise<void[]> => {
-        const userRoles = [
+      addUsers: (role: GroupRole, emails: string[]): Promise<void[]> => {
+        const userRole = [
           {
             resourceTypeName: 'managed-group',
             resourceId: groupName,
-            policyUpdates: _.map(
-              (role) => ({
+            policyUpdates: [
+              {
                 policyName: role,
                 addUserIds: [],
                 addEmails: emails,
@@ -67,14 +67,13 @@ export const Groups = (signal?: AbortSignal) => ({
                 removeUserIds: [],
                 removeEmails: [],
                 removePolicies: [],
-              }),
-              roles
-            ),
+              },
+            ],
           },
         ];
         return fetchSam(
           `${resourceRootV2}/bulkMembershipUpdate`,
-          _.mergeAll([authOpts(), { signal, method: 'POST' }, jsonBody(userRoles)])
+          _.mergeAll([authOpts(), { signal, method: 'POST' }, jsonBody(userRole)])
         );
       },
 

@@ -145,10 +145,10 @@ export const GroupDetails = (props: GroupDetailsProps) => {
             memberLabel='member'
             title='Add users to Terra Group'
             addUnregisteredUser
-            addFunction={(roles: string[], emails: string[]) =>
+            addFunction={(role: string, emails: string[]) =>
               Groups()
                 .group(groupName)
-                .addUsers(roles as GroupRole[], emails)
+                .addUsers(role as GroupRole, emails)
             }
             onDismiss={() => setAddingNewMember(false)}
             onSuccess={refresh}
