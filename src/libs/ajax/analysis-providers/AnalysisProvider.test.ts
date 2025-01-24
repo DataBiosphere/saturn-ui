@@ -1,75 +1,58 @@
 import { AbsolutePath } from 'src/analysis/utils/file-utils';
 import { runtimeToolLabels } from 'src/analysis/utils/tool-utils';
-import { Ajax } from 'src/libs/ajax';
 import { AnalysisProvider } from 'src/libs/ajax/analysis-providers/AnalysisProvider';
-import { asMockedFn } from 'src/testing/test-utils';
+import { AzureStorage, AzureStorageContract } from 'src/libs/ajax/AzureStorage';
+import { GoogleStorage, GoogleStorageContract } from 'src/libs/ajax/GoogleStorage';
+import { asMockedFn, MockedFn, partial } from 'src/testing/test-utils';
 import { WorkspaceInfo } from 'src/workspaces/utils';
 
-type AjaxExports = typeof import('src/libs/ajax');
-jest.mock('src/libs/ajax', (): AjaxExports => {
-  return {
-    ...jest.requireActual('src/libs/ajax'),
-    Ajax: jest.fn(),
-  };
-});
+jest.mock('src/libs/ajax/AzureStorage');
+jest.mock('src/libs/ajax/GoogleStorage');
 
-type AjaxContract = ReturnType<typeof Ajax>;
-type AjaxBucketsContract = AjaxContract['Buckets'];
-type AjaxBucketsAnalysisContract = ReturnType<AjaxContract['Buckets']['analysis']>;
-type AjaxAzureStorageContract = AjaxContract['AzureStorage'];
-type AjaxAzureStorageBlobContract = ReturnType<AjaxAzureStorageContract['blob']>;
+type AjaxBucketsAnalysisContract = ReturnType<GoogleStorageContract['analysis']>;
+type AjaxAzureStorageBlobContract = ReturnType<AzureStorageContract['blob']>;
 
 describe('AnalysisProvider - listAnalyses', () => {
   it('handles GCP workspace', async () => {
     // Arrange
-    const mockBuckets: Partial<AjaxBucketsContract> = {
-      listAnalyses: jest.fn(),
-    };
-    asMockedFn((mockBuckets as AjaxBucketsContract).listAnalyses).mockResolvedValue([]);
+    const listAnalyses: MockedFn<GoogleStorageContract['listAnalyses']> = jest.fn();
+    listAnalyses.mockResolvedValue([]);
 
-    const mockAjax: Partial<AjaxContract> = {
-      Buckets: mockBuckets as AjaxBucketsContract,
-    };
-    asMockedFn(Ajax).mockImplementation(() => mockAjax as AjaxContract);
+    asMockedFn(GoogleStorage).mockReturnValue(partial<GoogleStorageContract>({ listAnalyses }));
 
-    const workspaceInfo: Partial<WorkspaceInfo> = {
+    const workspaceInfo = partial<WorkspaceInfo>({
       googleProject: 'GoogleProject123',
       bucketName: 'Bucket123',
       cloudPlatform: 'Gcp',
-    };
+    });
 
     // Act
-    const results = await AnalysisProvider.listAnalyses(workspaceInfo as WorkspaceInfo);
+    const results = await AnalysisProvider.listAnalyses(workspaceInfo);
 
     // Assert
     expect(results).toEqual([]);
-    expect(mockBuckets.listAnalyses).toBeCalledTimes(1);
-    expect(mockBuckets.listAnalyses).toBeCalledWith('GoogleProject123', 'Bucket123');
+    expect(listAnalyses).toBeCalledTimes(1);
+    expect(listAnalyses).toBeCalledWith('GoogleProject123', 'Bucket123');
   });
 
   it('handles Azure workspace', async () => {
     // Arrange
-    const mockAzureStorage: Partial<AjaxAzureStorageContract> = {
-      listNotebooks: jest.fn(),
-    };
-    asMockedFn((mockAzureStorage as AjaxAzureStorageContract).listNotebooks).mockResolvedValue([]);
+    const listNotebooks: MockedFn<AzureStorageContract['listNotebooks']> = jest.fn();
+    listNotebooks.mockResolvedValue([]);
 
-    const mockAjax: Partial<AjaxContract> = {
-      AzureStorage: mockAzureStorage as AjaxAzureStorageContract,
-    };
-    asMockedFn(Ajax).mockImplementation(() => mockAjax as AjaxContract);
+    asMockedFn(AzureStorage).mockReturnValue(partial<AzureStorageContract>({ listNotebooks }));
 
-    const workspaceInfo: Partial<WorkspaceInfo> = {
+    const workspaceInfo = partial<WorkspaceInfo>({
       workspaceId: 'Workspace123',
-    };
+    });
 
     // Act
-    const results = await AnalysisProvider.listAnalyses(workspaceInfo as WorkspaceInfo);
+    const results = await AnalysisProvider.listAnalyses(workspaceInfo);
 
     // Assert
     expect(results).toEqual([]);
-    expect(mockAzureStorage.listNotebooks).toBeCalledTimes(1);
-    expect(mockAzureStorage.listNotebooks).toBeCalledWith('Workspace123');
+    expect(listNotebooks).toBeCalledTimes(1);
+    expect(listNotebooks).toBeCalledWith('Workspace123');
   });
 });
 
