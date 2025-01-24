@@ -4,6 +4,8 @@ import { LabeledCheckbox } from 'src/components/common';
 import ErrorView from 'src/components/ErrorView';
 import { TextInput } from 'src/components/input';
 import { EditMethodProvider } from 'src/libs/ajax/methods/providers/EditMethodProvider';
+import { Metrics } from 'src/libs/ajax/Metrics';
+import Events from 'src/libs/events';
 import { FormLabel } from 'src/libs/forms';
 import { withBusyState } from 'src/libs/utils';
 import {
@@ -88,6 +90,12 @@ export const EditWorkflowModal = (props: EditWorkflowModalProps) => {
         wdl,
         snapshotComment
       );
+
+      void Metrics().captureEvent(Events.workflowRepoCreateVersion, {
+        collectionName: createdWorkflowNamespace,
+        workflowName: createdWorkflowName,
+      });
+
       onSuccess(createdWorkflowNamespace, createdWorkflowName, createdWorkflowSnapshotId);
     } catch (error) {
       setSubmissionError(error instanceof Response ? await error.text() : error);

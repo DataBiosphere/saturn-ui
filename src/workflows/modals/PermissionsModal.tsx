@@ -14,8 +14,10 @@ import { IdContainer, LabeledCheckbox } from 'src/components/common';
 import { ValidatedInput } from 'src/components/input';
 import { getPopupRoot } from 'src/components/popup-utils';
 import { PermissionsProvider } from 'src/libs/ajax/methods/providers/PermissionsProvider';
+import { Metrics } from 'src/libs/ajax/Metrics';
 import colors from 'src/libs/colors';
 import { reportError } from 'src/libs/error';
+import Events from 'src/libs/events';
 import { FormLabel } from 'src/libs/forms';
 import { useCancellation, useOnMount } from 'src/libs/react-utils';
 import { getTerraUser } from 'src/libs/state';
@@ -237,6 +239,12 @@ export const PermissionsModal = (props: WorkflowPermissionsModalProps) => {
 
     try {
       await permissionsProvider.updatePermissions(namespace, permissionUpdates, { signal });
+
+      // send a MixPanel event when user edits collection settings
+      if (versionOrCollection === 'Collection') {
+        void Metrics().captureEvent(Events.workflowRepoEditCollection, { collectionName: namespace });
+      }
+
       refresh();
       setPermissionsModalOpen(false);
     } catch (error) {

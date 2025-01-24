@@ -21,6 +21,7 @@ export const Groups = (signal?: AbortSignal) => ({
   group: (groupName: string) => {
     const root = `api/groups/v1/${groupName}`;
     const resourceRoot = `api/resources/v1/managed-group/${groupName}`;
+    const resourceRootV2 = 'api/resources/v2';
 
     const addRole = (role: GroupRole, email: string): Promise<void> => {
       return fetchSam(`${root}/${role}/${encodeURIComponent(email)}`, _.merge(authOpts(), { signal, method: 'PUT' }));
@@ -52,9 +53,28 @@ export const Groups = (signal?: AbortSignal) => ({
         return res.json();
       },
 
-      addUsers: (roles: GroupRole[], emails: string[]): Promise<void[]> => {
-        const promises = emails.flatMap((email) => roles.map((role) => addRole(role, email)));
-        return Promise.all(promises);
+      addUsers: (role: GroupRole, emails: string[]): Promise<void[]> => {
+        const userRole = [
+          {
+            resourceTypeName: 'managed-group',
+            resourceId: groupName,
+            policyUpdates: [
+              {
+                policyName: role,
+                addUserIds: [],
+                addEmails: emails,
+                addPolicies: [],
+                removeUserIds: [],
+                removeEmails: [],
+                removePolicies: [],
+              },
+            ],
+          },
+        ];
+        return fetchSam(
+          `${resourceRootV2}/bulkMembershipUpdate`,
+          _.mergeAll([authOpts(), { signal, method: 'POST' }, jsonBody(userRole)])
+        );
       },
 
       removeUser: (roles: GroupRole[], email: string): Promise<void[]> => {
