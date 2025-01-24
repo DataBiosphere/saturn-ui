@@ -4,8 +4,8 @@ import { div, h } from 'react-hyperscript-helpers';
 import { ButtonPrimary, spinnerOverlay } from 'src/components/common';
 import FooterWrapper from 'src/components/FooterWrapper';
 import { TopBar } from 'src/components/TopBar';
-import { Catalog } from 'src/libs/ajax/Catalog';
 import {
+  Catalog,
   DataCollection,
   datasetDataUsePermissionTypes,
   DatasetMetadata,
