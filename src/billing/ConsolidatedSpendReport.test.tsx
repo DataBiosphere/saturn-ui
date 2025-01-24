@@ -3,12 +3,18 @@ import { act, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import React from 'react';
 import { Billing, BillingContract } from 'src/libs/ajax/billing/Billing';
+import { reportError } from 'src/libs/error';
 import { renderWithAppContexts } from 'src/testing/test-utils';
 import { WorkspaceWrapper } from 'src/workspaces/utils';
 
 import { ConsolidatedSpendReport } from './ConsolidatedSpendReport';
 
 jest.mock('src/libs/ajax/billing/Billing', () => ({ Billing: jest.fn() }));
+
+jest.mock('src/libs/error', () => ({
+  ...jest.requireActual('src/libs/error'),
+  reportError: jest.fn(),
+}));
 
 jest.mock('src/libs/ajax/Metrics');
 type NavExports = typeof import('src/libs/nav');
@@ -218,6 +224,9 @@ const workspaces = [
 ];
 
 describe('ConsolidatedSpendReport', () => {
+  beforeEach(() => {
+    jest.resetAllMocks();
+  });
   it('displays results of spend query', async () => {
     // Arrange
     const getCrossBillingSpendReport = jest.fn(() => Promise.resolve(spendReport));
@@ -250,5 +259,18 @@ describe('ConsolidatedSpendReport', () => {
     expect(screen.queryByText('workspace3')).toBeNull();
   });
 
+  it('displays a helpful error if the query fails', async () => {
+    // Arrange
+    const getCrossBillingSpendReport = jest.fn().mockRejectedValue(new Error('MyTestError'));
+    asMockedFn(Billing).mockImplementation(
+      () => ({ getCrossBillingSpendReport } as Partial<BillingContract> as BillingContract)
+    );
+
+    // Act
+    await act(async () => renderWithAppContexts(<ConsolidatedSpendReport workspaces={workspaces} />));
+
+    // Assert
+    expect(reportError).toHaveBeenCalled();
+  });
   // TODO: tests for tests for changing time period, tests for caching (once it's implemented)
 });

@@ -16,6 +16,7 @@ import {
 } from 'src/libs/ajax/billing/billing-models';
 import { Metrics } from 'src/libs/ajax/Metrics';
 import { Workspaces } from 'src/libs/ajax/workspaces/Workspaces';
+import { reportError } from 'src/libs/error';
 import Events, { extractBillingDetails } from 'src/libs/events';
 import * as Nav from 'src/libs/nav';
 import { memoWithName, useCancellation } from 'src/libs/react-utils';
@@ -283,8 +284,9 @@ export const ConsolidatedSpendReport = (props: ConsolidatedSpendReportProps): Re
               // ),
             } as GoogleWorkspaceInfo;
           });
-        } catch {
+        } catch (error) {
           // Return default values for each workspace in case of an error
+          await reportError('Error loading spend report', error);
           return ownedWorkspaces.map(setDefaultSpendValues);
         } finally {
           // Ensure updating state is reset regardless of success or failure
