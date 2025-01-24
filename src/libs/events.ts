@@ -85,6 +85,8 @@ const eventsList = {
   featurePreviewToggle: 'featurePreview:toggle',
   // Note: "external" refers to the common Job Manager deployment, not a Job Manager bundled in CromwellApp
   jobManagerOpenExternal: 'job-manager:open-external',
+  libraryWorkflowsDockstore: 'library:workflows:dockstoreClick',
+  libraryWorkflowsTerraRepo: 'library:workflows:terraWorkflowRepoClick',
   notebookRename: 'notebook:rename',
   notebookCopy: 'notebook:copy',
   notificationToggle: 'notification:toggle',
@@ -129,6 +131,10 @@ const eventsList = {
   workflowImport: 'workflow:import',
   workflowLaunch: 'workflow:launch',
   workflowRerun: 'workflow:rerun',
+  workflowRepoCreateVersion: 'workflow:repository:createVersion',
+  workflowRepoCreateWorkflow: 'workflow:repository:createWorkflow',
+  workflowRepoEditCollection: 'workflow:repository:editCollection',
+  workflowRepoExportWorkflow: 'workflow:repository:exportWorkflow',
   workflowUploadIO: 'workflow:uploadIO',
   workflowUseDefaultOutputs: 'workflow:useDefaultOutputs',
   workflowSetCostCap: 'workflow:setCostCap',
@@ -193,6 +199,8 @@ const eventsList = {
   workspaceStar: 'workspace:star',
   workspaceListFilter: 'workspace:list:filter',
   workspacesListSelectTab: 'workspace:list:tab',
+  workspaceFindWorkflowDockstore: 'workspace:find-workflow:dockstoreClick',
+  workspaceFindWorkflowTerraRepo: 'workspace:find-workflow:terraWorkflowRepoClick',
 } as const;
 
 // Helper type to create BaseMetricsEventName.
@@ -233,7 +241,7 @@ export interface EventWorkspaceDetails {
 /**
  * Extracts name, namespace, cloudPlatform, and policies (if present) from an object.
  *
- * @param workspace - Workspace attributes. These can be provided with a WorkspaceWrapper object, a WorkspaceInfo object, or a plain { namespace, name } object.
+ * @param workspaceObject - Workspace attributes. These can be provided with a WorkspaceWrapper object, a WorkspaceInfo object, or a plain { namespace, name } object.
  */
 export const extractWorkspaceDetails = (workspaceObject: EventWorkspaceAttributes): EventWorkspaceDetails => {
   // If a WorkspaceWrapper is provided, get the inner WorkspaceInfo. Otherwise, use the provided object directly.

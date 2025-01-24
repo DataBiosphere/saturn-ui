@@ -110,7 +110,7 @@ describe('NewMemberModal', () => {
       });
       expect(screen.getByText(userRole)).toBeInTheDocument();
       expect(addButton).not.toBeDisabled();
-      expect(mockAddFunction).toHaveBeenCalledWith([userRole], userEmails);
+      expect(mockAddFunction).toHaveBeenCalledWith(userRole, userEmails);
       expect(mockOnSuccess).toHaveBeenCalled();
     });
   });
