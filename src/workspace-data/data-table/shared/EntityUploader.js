@@ -26,6 +26,13 @@ const errorTextStyle = { color: colors.danger(), fontWeight: 'bold', fontSize: 1
 
 const supportsFireCloudDataModel = (entityType) => _.includes(entityType, ['pair', 'participant', 'sample']);
 
+let firstColumn = null;
+
+export const getChangeMessage = (recordType, firstColumn) => {
+  const modifiedFirstColumn = firstColumn.replace(/^entity:/, '');
+  return recordType === modifiedFirstColumn ? `${recordType} changed to ${recordType}_id because the first column header must be an identifier.` : '';
+};
+
 /** Use the first column heading in the TSV as a suggested name for the table. */
 export const getSuggestedTableName = (tsv) => {
   const indexOfFirstSpace = tsv.search(/\s/);
@@ -33,6 +40,7 @@ export const getSuggestedTableName = (tsv) => {
     return undefined;
   }
   const firstColumnHeading = tsv.slice(0, indexOfFirstSpace);
+  firstColumn = firstColumnHeading;
   return firstColumnHeading.replace(/_id$/, '').replace(/^(membership|entity|update):/, '');
 };
 
@@ -72,10 +80,13 @@ export const EntityUploader = ({ onSuccess, onDismiss, namespace, name, entityTy
         name,
       }));
       onSuccess(recordType);
+      const changeMessage = getChangeMessage(recordType, firstColumn);
+      // Show change message when async upload begin
+      !isSyncUpload && changeMessage && notify('warning', changeMessage, { id: `${recordType}_change_message` });
       // Show success message only for synchronous Google Workspace uploads
       isSyncUpload &&
         isGoogleWorkspace &&
-        notify('success', `Data imported successfully to table ${recordType}.`, {
+        notify('success', `Data imported successfully to table ${recordType}. ${changeMessage}`, {
           id: `${recordType}_success`,
         });
       clearNotification(recordType);
