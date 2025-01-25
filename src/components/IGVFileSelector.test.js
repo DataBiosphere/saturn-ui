@@ -1,13 +1,7 @@
 import { getIgvMetricDetails, getValidIgvFiles, getValidIgvFilesFromAttributeValues, isDrsUri } from 'src/components/IGVFileSelector';
 import { DrsUriResolver } from 'src/libs/ajax/drs/DrsUriResolver';
-import { isFeaturePreviewEnabled } from 'src/libs/feature-previews';
 
 jest.mock('src/libs/ajax/drs/DrsUriResolver');
-
-jest.mock('src/libs/feature-previews', () => ({
-  ...jest.requireActual('src/libs/feature-previews'),
-  isFeaturePreviewEnabled: jest.fn(),
-}));
 
 describe('getValidIgvFiles', () => {
   it('allows BAM files with indices', async () => {
@@ -205,15 +199,37 @@ describe('getValidIgvFilesFromAttributeValues', () => {
   });
 
   it('does not consider single DRS URI valid', async () => {
-    // This is a DRS URI with a data GUID namespace, from
-    // https://support.terra.bio/hc/en-us/articles/360039330211-Overview-Interoperable-data-GA4GH-DRS-URIs
-    const drsUri = 'drs://dg.4503:2802a94d-f540-499f-950a-db3c2a9f2dc4';
+    // An IGV selection generally must have a file (e.g. VCF) and an index file (TBI)
+    const fileDrsUri = 'drs://dg.4503:2802a94d-f540-499f-950a-db3c2a9f2dc4';
+    const fileName = 'foo.vcf.gz';
+
+    const fileNameJson = { fileName };
+
+    // The access URL (aka signed URL) can have various parameters to track requester-pay features
+    const accessUrlParams = 'requestedBy=user@domain.tls&userProject=my-billing-project&signature=secret';
+    const fileAccessUrl = `https://bucket/${fileName}?${accessUrlParams}`;
+
+    // DRS URIs get resolved via DRS Hub.
+    // API docs: https://drshub.dsde-prod.broadinstitute.org/#/drsHub/resolveDrs
+    DrsUriResolver.mockImplementation(() => ({
+      getDataObjectMetadata: jest.fn((_, fields) => {
+        if (fields.includes('fileName')) {
+          const mockJson = fileNameJson;
+          return Promise.resolve(mockJson);
+        }
+        if (fields.includes('accessUrl')) {
+          const mockAccessUrl = fileAccessUrl;
+          const mockAccessUrlJson = { accessUrl: { url: mockAccessUrl } };
+          return Promise.resolve(mockAccessUrlJson);
+        }
+      }),
+    }));
 
     expect(
       await getValidIgvFilesFromAttributeValues([
         {
           itemsType: 'AttributeValue',
-          items: ['testString', drsUri, 'testString2'],
+          items: ['testString', fileDrsUri, 'testString2'],
         },
       ])
     ).toEqual([]);
@@ -272,8 +288,6 @@ describe('getValidIgvFilesFromAttributeValues', () => {
         }
       }),
     }));
-
-    isFeaturePreviewEnabled.mockReturnValue(true);
 
     expect(
       await getValidIgvFilesFromAttributeValues([
