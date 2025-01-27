@@ -115,7 +115,7 @@ export interface DailySpendData {
   subAggregation: { aggregationKey: 'Category'; spendData: CategorySpendData[] };
 }
 
-interface AggregatedSpendData {
+export interface AggregatedSpendData {
   aggregationKey: 'Workspace' | 'Category' | 'Daily';
 }
 
