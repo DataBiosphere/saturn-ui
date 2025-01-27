@@ -88,13 +88,13 @@ describe('sign-out', () => {
     const unsetCookiesFn = jest.fn();
     const signOutRedirectFn = jest.fn();
     const hostname = 'https://mycoolhost.horse';
-    const link = 'signout';
+    const link = '/signout';
     const expectedState = btoa(JSON.stringify({ signOutRedirect: currentRoute, signOutCause: 'unspecified' }));
     asMockedFn(oidcStore.get).mockReturnValue({
       userManager: { signoutRedirect: signOutRedirectFn },
     } as unknown as OidcState);
     asMockedFn(leoCookieProvider.unsetCookies).mockImplementation(unsetCookiesFn);
-    asMockedFn(Nav.getPath).mockReturnValue(`/${link}`);
+    asMockedFn(Nav.getPath).mockReturnValue(link);
     asMockedFn(Nav.getWindowOrigin).mockReturnValue(hostname);
     asMockedFn(Nav.getCurrentRoute).mockReturnValue(currentRoute);
     // Act
@@ -102,7 +102,7 @@ describe('sign-out', () => {
     // Assert
     expect(unsetCookiesFn).toHaveBeenCalled();
     expect(signOutRedirectFn).toHaveBeenCalledWith({
-      post_logout_redirect_uri: `${hostname}/${link}`,
+      post_logout_redirect_uri: `${hostname}${link}`,
       extraQueryParams: { state: expectedState },
     });
   });
