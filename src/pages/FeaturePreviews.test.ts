@@ -23,7 +23,7 @@ describe('FeaturePreviews', () => {
           id: 'feature2',
           title: 'Feature #2',
           description: 'Another new feature',
-          feedbackUrl: 'https://example.com/article',
+          feedbackUrl: 'mailto:feature2-feedback@example.com',
           lastUpdated: '2024-11-02',
         },
       ],
@@ -93,7 +93,7 @@ describe('FeaturePreviews', () => {
     const { getAllByText } = render(h(FeaturePreviews));
     const feedbackLinks = getAllByText('Learn more and provide feedback');
     expect(feedbackLinks.length).toBe(1);
-    expect(feedbackLinks[0].getAttribute('href')).toBe('https://example.com/article');
+    expect(feedbackLinks[0].getAttribute('href')).toBe('mailto:feature2-feedback@example.com');
   });
 
   it('should render "Go to Workspaces List" link', () => {
