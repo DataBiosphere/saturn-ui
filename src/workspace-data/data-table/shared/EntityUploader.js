@@ -30,7 +30,9 @@ let firstColumn = null;
 
 export const getChangeMessage = (recordType, firstColumn) => {
   const modifiedFirstColumn = firstColumn.replace(/^entity:/, '');
-  return recordType === modifiedFirstColumn ? `${recordType} changed to ${recordType}_id because the first column header must be an identifier.` : '';
+  return recordType === modifiedFirstColumn
+    ? `Column ${recordType} changed to ${recordType}_id because the first column header must be an identifier.`
+    : '';
 };
 
 /** Use the first column heading in the TSV as a suggested name for the table. */
