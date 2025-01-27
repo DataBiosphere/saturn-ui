@@ -50,11 +50,6 @@ export type FeaturePreview = {
    * Optional date string for the last updated date. Shown on the feature previews page.
    */
   readonly lastUpdated?: string;
-
-  /**
-   * Optional URL for an article about the feature. Shown on the feature previews page.
-   */
-  readonly articleUrl?: string;
 };
 
 const featurePreviewsConfig: readonly FeaturePreview[] = [
@@ -99,11 +94,8 @@ const featurePreviewsConfig: readonly FeaturePreview[] = [
     title: 'Terra Workflow Repository Improvements',
     description:
       'Enabling this feature will allow creating and editing workflows with the built-in Terra Workflow Repository UI. This replaces the external Broad Methods Repository. Changes made in Terra are reflected in the external Broad Methods Repository, and vice-versa.',
-    feedbackUrl: `mailto:dsp-analysis@broadinstitute.org?subject=${encodeURIComponent(
-      'Feedback on Terra Workflow Repository Improvements'
-    )}`,
+    feedbackUrl: 'https://support.terra.bio/hc/en-us/articles/31191238873243',
     lastUpdated: '1/7/2025',
-    articleUrl: 'https://support.terra.bio/hc/en-us/articles/31191238873243',
   },
   {
     id: COHORT_BUILDER_CARD,
@@ -121,22 +113,16 @@ const featurePreviewsConfig: readonly FeaturePreview[] = [
     title: 'Improved Spend Reports',
     description:
       'Enabling this feature will show billing project owners costs associated with all workspaces in billing projects with spend reporting enabled. Additional updates to spend reports coming soon!',
-    feedbackUrl: `mailto:dsp-core-services@broadinstitute.org?subject=${encodeURIComponent(
-      'Feedback on Improved Spend Reports'
-    )}`,
+    feedbackUrl: 'https://support.terra.bio/hc/en-us/articles/31182586327323',
     lastUpdated: '01/17/2025',
-    articleUrl: 'https://support.terra.bio/hc/en-us/articles/31182586327323',
   },
   {
     id: AUTO_GENERATE_DATA_TABLES,
     title: 'Autogenerate data table for single and paired end sequencing',
     description:
       'Enabling this feature will show a new option in the data uploader to autogenerate a data table instead of uploading your own TSV. This feature will attempt to automatch known file patterns for single and paired end sequencing and autogenerate a data table linking to those files.',
-    feedbackUrl: `mailto:dsp-core-services@broadinstitute.org?subject=${encodeURIComponent(
-      'Feedback on Autogenerate data table for single and paired end sequencing'
-    )}`,
+    feedbackUrl: 'https://support.terra.bio/hc/en-us/articles/31258673632923',
     lastUpdated: '11/26/2024',
-    articleUrl: 'https://support.terra.bio/hc/en-us/articles/31258673632923',
   },
   {
     id: PREVIEW_COST_CAPPING,
@@ -144,11 +130,8 @@ const featurePreviewsConfig: readonly FeaturePreview[] = [
     description:
       'Enabling this feature will show a new workflow configuration option to add a user-configurable cost cap to the workflow. Workflows will be terminated once they exceed the configured value.',
     groups: ['preview-cost-capping'],
-    feedbackUrl: `mailto:dsp-core-services@broadinstitute.org?subject=${encodeURIComponent(
-      'Feedback on Workflow Cost Capping'
-    )}`,
+    feedbackUrl: 'https://support.terra.bio/hc/en-us/articles/31269696049307',
     lastUpdated: '12/6/2024',
-    articleUrl: 'https://support.terra.bio/hc/en-us/articles/31269696049307',
   },
   {
     id: GCP_BATCH,
