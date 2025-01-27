@@ -58,6 +58,7 @@ const featurePreviewsConfig: readonly FeaturePreview[] = [
     title: 'JupyterLab on GCP',
     description: 'Enabling this feature will allow you to launch notebooks using JupyterLab in GCP workspaces.',
     groups: ['preview-jupyterlab-gcp'],
+    feedbackUrl: `mailto:dsp-sue@broadinstitute.org?subject=${encodeURIComponent('Feedback on JupyterLab (GCP)')}`,
     lastUpdated: '12/22/2022',
   },
   {
@@ -65,6 +66,7 @@ const featurePreviewsConfig: readonly FeaturePreview[] = [
     title: 'Hail Batch App on Azure',
     description: 'Enabling this feature will allow you to launch the Hail Batch app in Azure workspaces.',
     groups: ['preview-hail-batch-azure'],
+    feedbackUrl: `mailto:dsp-sue@broadinstitute.org?subject=${encodeURIComponent('Feedback on Hail Batch (Azure)')}`,
     lastUpdated: '5/22/2023',
   },
   {
@@ -72,6 +74,9 @@ const featurePreviewsConfig: readonly FeaturePreview[] = [
     title: 'Azure PFB Import',
     description: 'Enabling this feature will allow PFB import into Azure workspaces.',
     groups: ['preview-azure-pfb-import'],
+    feedbackUrl: `mailto:dsp-core-services@broadinstitute.org?subject=${encodeURIComponent(
+      'Feedback on Azure PFB Import'
+    )}`,
     lastUpdated: '11/15/2023',
   },
   {
@@ -79,6 +84,9 @@ const featurePreviewsConfig: readonly FeaturePreview[] = [
     title: 'Azure TDR Import',
     description: 'Enabling this feature will allow importing TDR snapshots into Azure workspaces.',
     groups: ['preview-azure-tdr-import'],
+    feedbackUrl: `mailto:dsp-core-services@broadinstitute.org?subject=${encodeURIComponent(
+      'Feedback on Azure TDR snapshot Import'
+    )}`,
     lastUpdated: '12/1/2023',
   },
   {
@@ -86,8 +94,8 @@ const featurePreviewsConfig: readonly FeaturePreview[] = [
     title: 'Terra Workflow Repository Improvements',
     description:
       'Enabling this feature will allow creating and editing workflows with the built-in Terra Workflow Repository UI. This replaces the external Broad Methods Repository. Changes made in Terra are reflected in the external Broad Methods Repository, and vice-versa.',
-    lastUpdated: '1/7/2025',
     feedbackUrl: 'https://support.terra.bio/hc/en-us/articles/31191238873243',
+    lastUpdated: '1/7/2025',
   },
   {
     id: COHORT_BUILDER_CARD,
@@ -95,6 +103,9 @@ const featurePreviewsConfig: readonly FeaturePreview[] = [
     description:
       'Enabling this feature will show the card for the demo cohort builder in the Datasets tab in the Library.',
     groups: ['CohortBuilderUsers'],
+    feedbackUrl: `mailto:dsp-data-exploration@broadinstitute.org?subject=${encodeURIComponent(
+      'Feedback on Cohort Builder Card'
+    )}`,
     lastUpdated: '7/25/2024',
   },
   {
@@ -128,6 +139,7 @@ const featurePreviewsConfig: readonly FeaturePreview[] = [
     description:
       'Enabling this feature allows workflows to be processed by the GCP Batch service, rather than the former Cloud Life Sciences API. All Terra workflows will be transitioned to GCP Batch by mid-2025.',
     groups: ['preview-batch'],
+    feedbackUrl: `mailto:dsp-analysis@broadinstitute.org?subject=${encodeURIComponent('Feedback on GCP Batch')}`,
     lastUpdated: '12/12/2024',
   },
 ];
