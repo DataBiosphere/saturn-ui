@@ -94,7 +94,7 @@ describe('sign-out', () => {
       userManager: { signoutRedirect: signOutRedirectFn },
     } as unknown as OidcState);
     asMockedFn(leoCookieProvider.unsetCookies).mockImplementation(unsetCookiesFn);
-    asMockedFn(Nav.getLink).mockReturnValue(link);
+    asMockedFn(Nav.getPath).mockReturnValue(`/${link}`);
     asMockedFn(Nav.getWindowOrigin).mockReturnValue(hostname);
     asMockedFn(Nav.getCurrentRoute).mockReturnValue(currentRoute);
     // Act
