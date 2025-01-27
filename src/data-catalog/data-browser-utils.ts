@@ -4,7 +4,7 @@ import { CSSProperties, Fragment, ReactElement, useState } from 'react';
 import { div, h } from 'react-hyperscript-helpers';
 import { ButtonOutline } from 'src/components/common';
 import { icon } from 'src/components/icons';
-import { Ajax } from 'src/libs/ajax';
+import { Catalog } from 'src/libs/ajax/Catalog';
 import { DataCollection, Dataset } from 'src/libs/ajax/Catalog';
 import { getEnabledBrand } from 'src/libs/brand-utils';
 import { withErrorReporting } from 'src/libs/error';
@@ -185,7 +185,7 @@ export const prepareDatasetsForDisplay = (
   );
 
 export const fetchDataCatalog = async (opts: { signal?: AbortSignal } = {}): Promise<Dataset[]> => {
-  const { result: datasets } = await Ajax(opts.signal).Catalog.getDatasets();
+  const { result: datasets } = await Catalog(opts.signal).getDatasets();
   const dataCollectionsToInclude = getEnabledBrand().catalogDataCollectionsToInclude;
   return prepareDatasetsForDisplay(datasets, dataCollectionsToInclude);
 };

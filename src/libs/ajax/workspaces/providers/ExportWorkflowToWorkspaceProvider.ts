@@ -1,6 +1,8 @@
 import { AbortOption } from '@terra-ui-packages/data-client-core';
 import { Ajax } from 'src/libs/ajax';
+import { Metrics } from 'src/libs/ajax/Metrics';
 import { MethodConfiguration, MethodRepoMethod } from 'src/libs/ajax/workspaces/workspace-models';
+import Events, { extractWorkspaceDetails } from 'src/libs/events';
 import { WorkspaceInfo } from 'src/workspaces/utils';
 
 export interface ExportWorkflowToWorkspaceProvider {
@@ -60,13 +62,19 @@ export const makeExportWorkflowFromMethodsRepoProvider = (
       // the user can select their own on the workflow configuration page
       const { rootEntityType, ...template } = await Ajax(signal).Methods.template(sourceMethod);
 
-      return Ajax(signal)
+      await Ajax(signal)
         .Workspaces.workspace(destWorkspace.namespace, destWorkspace.name)
         .importMethodConfig({
           ...template,
           name: destWorkflowName,
           namespace: sourceMethod.methodNamespace,
         });
+
+      void Metrics().captureEvent(Events.workflowRepoExportWorkflow, {
+        ...extractWorkspaceDetails(destWorkspace),
+        sourceWorkflowName: sourceMethod.methodName,
+        sourceCollectionName: sourceMethod.methodNamespace,
+      });
     },
   };
 };

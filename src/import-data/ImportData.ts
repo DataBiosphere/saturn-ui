@@ -3,8 +3,14 @@ import { Fragment, ReactNode, useState } from 'react';
 import { div, h, h2 } from 'react-hyperscript-helpers';
 import { TerraLengthyOperationOverlay } from 'src/branding/TerraLengthyOperationOverlay';
 import { spinnerOverlay } from 'src/components/common';
-import { Ajax } from 'src/libs/ajax';
+import { Billing } from 'src/libs/ajax/billing/Billing';
+import { Catalog } from 'src/libs/ajax/Catalog';
 import { resolveWdsUrl } from 'src/libs/ajax/data-table-providers/WdsDataTableProvider';
+import { FirecloudBucket } from 'src/libs/ajax/firecloud/FirecloudBucket';
+import { Apps } from 'src/libs/ajax/leonardo/Apps';
+import { Metrics } from 'src/libs/ajax/Metrics';
+import { WorkspaceData } from 'src/libs/ajax/WorkspaceDataService';
+import { Workspaces } from 'src/libs/ajax/workspaces/Workspaces';
 import colors from 'src/libs/colors';
 import { withErrorReporting } from 'src/libs/error';
 import Events, { extractWorkspaceDetails } from 'src/libs/events';
@@ -55,9 +61,9 @@ export const ImportData = (props: ImportDataProps): ReactNode => {
       Utils.withBusyState(setIsImporting),
       withErrorReporting('Error loading initial data')
     )(async () => {
-      const templates = await Ajax().FirecloudBucket.getTemplateWorkspaces();
+      const templates = await FirecloudBucket().getTemplateWorkspaces();
       setTemplateWorkspaces(templates);
-      const projects = await Ajax().Billing.listProjects();
+      const projects = await Billing().listProjects();
       setUserHasBillingProjects(projects.length > 0);
     }) as () => Promise<void>;
     void loadTemplateWorkspaces();
@@ -65,9 +71,9 @@ export const ImportData = (props: ImportDataProps): ReactNode => {
 
   const importPFB = async (importRequest: PFBImportRequest, workspace: WorkspaceInfo) => {
     if (workspace.cloudPlatform === 'Azure') {
-      const wdsUrl = await Ajax().Apps.listAppsV2(workspace.workspaceId).then(resolveWdsUrl);
+      const wdsUrl = await Apps().listAppsV2(workspace.workspaceId).then(resolveWdsUrl);
       const { namespace, name } = workspace;
-      const { jobId } = await Ajax().WorkspaceData.startImportJob(wdsUrl, workspace.workspaceId, {
+      const { jobId } = await WorkspaceData().startImportJob(wdsUrl, workspace.workspaceId, {
         url: importRequest.url.toString(),
         type: 'PFB',
       });
@@ -80,8 +86,8 @@ export const ImportData = (props: ImportDataProps): ReactNode => {
       notifyDataImportProgress(jobId);
     } else {
       const { namespace, name } = workspace;
-      const { jobId } = await Ajax()
-        .Workspaces.workspace(namespace, name)
+      const { jobId } = await Workspaces()
+        .workspace(namespace, name)
         .importJob(importRequest.url.toString(), 'pfb', null);
       const newJob: GCPAsyncImportJob = {
         targetWorkspace: { namespace, name },
@@ -94,24 +100,24 @@ export const ImportData = (props: ImportDataProps): ReactNode => {
 
   const importBagit = async (importRequest: BagItImportRequest, workspace: WorkspaceInfo) => {
     const { namespace, name } = workspace;
-    await Ajax().Workspaces.workspace(namespace, name).importBagit(importRequest.url.toString());
+    await Workspaces().workspace(namespace, name).importBagit(importRequest.url.toString());
     notify('success', 'Data imported successfully.', { timeout: 3000 });
   };
 
   const importEntitiesJson = async (importRequest: EntitiesImportRequest, workspace: WorkspaceInfo) => {
     const { namespace, name } = workspace;
-    await Ajax().Workspaces.workspace(namespace, name).importJSON(importRequest.url.toString());
+    await Workspaces().workspace(namespace, name).importJSON(importRequest.url.toString());
     notify('success', 'Data imported successfully.', { timeout: 3000 });
   };
 
   const importTdrExport = async (importRequest: TDRSnapshotExportImportRequest, workspace: WorkspaceInfo) => {
     if (workspace.cloudPlatform === 'Azure') {
       // find wds for this workspace
-      const wdsUrl = await Ajax().Apps.listAppsV2(workspace.workspaceId).then(resolveWdsUrl);
+      const wdsUrl = await Apps().listAppsV2(workspace.workspaceId).then(resolveWdsUrl);
       const { namespace, name } = workspace;
 
       // call import API
-      const { jobId } = await Ajax().WorkspaceData.startImportJob(wdsUrl, workspace.workspaceId, {
+      const { jobId } = await WorkspaceData().startImportJob(wdsUrl, workspace.workspaceId, {
         url: importRequest.manifestUrl.toString(),
         type: 'TDRMANIFEST',
       });
@@ -124,8 +130,8 @@ export const ImportData = (props: ImportDataProps): ReactNode => {
       notifyDataImportProgress(jobId);
     } else {
       const { namespace, name } = workspace;
-      const { jobId } = await Ajax()
-        .Workspaces.workspace(namespace, name)
+      const { jobId } = await Workspaces()
+        .workspace(namespace, name)
         .importJob(importRequest.manifestUrl.toString(), 'tdrexport', {
           tdrSyncPermissions: importRequest.syncPermissions,
         });
@@ -136,15 +142,15 @@ export const ImportData = (props: ImportDataProps): ReactNode => {
 
   const importSnapshot = async (importRequest: TDRSnapshotReferenceImportRequest, workspace: WorkspaceInfo) => {
     const { namespace, name } = workspace;
-    await Ajax()
-      .Workspaces.workspace(namespace, name)
+    await Workspaces()
+      .workspace(namespace, name)
       .importSnapshot(importRequest.snapshot.id, normalizeSnapshotName(importRequest.snapshot.name));
     notify('success', 'Snapshot imported successfully.', { timeout: 3000 });
   };
 
   const exportCatalog = async (importRequest: CatalogDatasetImportRequest, workspace: WorkspaceInfo) => {
     const { workspaceId } = workspace;
-    await Ajax().Catalog.exportDataset({ id: importRequest.datasetId, workspaceId });
+    await Catalog().exportDataset({ id: importRequest.datasetId, workspaceId });
     notify('success', 'Catalog dataset imported successfully.', { timeout: 3000 });
   };
 
@@ -178,7 +184,7 @@ export const ImportData = (props: ImportDataProps): ReactNode => {
     }
 
     const { namespace, name } = workspace;
-    void Ajax().Metrics.captureEvent(Events.workspaceDataImport, {
+    void Metrics().captureEvent(Events.workspaceDataImport, {
       format,
       ...extractWorkspaceDetails(workspace),
       importSource: getImportSource(importRequest),

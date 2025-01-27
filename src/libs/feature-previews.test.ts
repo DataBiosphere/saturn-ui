@@ -1,10 +1,14 @@
-import { Ajax } from 'src/libs/ajax';
+import { CurrentUserGroupMembership, Groups, GroupsContract } from 'src/libs/ajax/Groups';
+import { Metrics, MetricsContract } from 'src/libs/ajax/Metrics';
 import { getConfig } from 'src/libs/config';
 import Events from 'src/libs/events';
 import { getAvailableFeaturePreviews, isFeaturePreviewEnabled, toggleFeaturePreview } from 'src/libs/feature-previews';
 import { getLocalPref, setLocalPref } from 'src/libs/prefs';
+import { asMockedFn, MockedFn, partial } from 'src/testing/test-utils';
 
-jest.mock('src/libs/ajax');
+jest.mock('src/libs/ajax/Groups');
+jest.mock('src/libs/ajax/Metrics');
+
 jest.mock('src/libs/config', () => ({
   ...jest.requireActual('src/libs/config'),
   getConfig: jest.fn().mockReturnValue({}),
@@ -28,67 +32,88 @@ jest.mock('src/libs/feature-previews-config', () => ({
 jest.mock('src/libs/prefs');
 
 beforeEach(() => {
-  getConfig.mockReturnValue({ isProd: true });
+  asMockedFn(getConfig).mockReturnValue({ isProd: true });
 });
 
 describe('isFeaturePreviewEnabled', () => {
   it('reads from local preference', () => {
-    getLocalPref.mockReturnValue(true);
-    expect(isFeaturePreviewEnabled('test-feature')).toBe(true);
+    // Arrange
+    asMockedFn(getLocalPref).mockReturnValue(true);
+
+    // Act
+    const result = isFeaturePreviewEnabled('test-feature');
+
+    // Assert
+    expect(result).toBe(true);
     expect(getLocalPref).toHaveBeenCalledWith('feature-preview/test-feature');
   });
 });
 
 describe('toggleFeaturePreview', () => {
   it('sets local preference', () => {
-    Ajax.mockImplementation(() => ({ Metrics: { captureEvent: jest.fn() } }));
+    // Arrange
+    asMockedFn(Metrics).mockReturnValue(partial<MetricsContract>({ captureEvent: jest.fn() }));
 
+    // Act
     toggleFeaturePreview('test-feature', false);
+
+    // Assert
     expect(setLocalPref).toHaveBeenCalledWith('feature-preview/test-feature', false);
   });
 
   it('captures metrics', () => {
-    const captureEvent = jest.fn();
-    Ajax.mockImplementation(() => ({ Metrics: { captureEvent } }));
+    // Arrange
+    const captureEvent: MockedFn<MetricsContract['captureEvent']> = jest.fn();
+    asMockedFn(Metrics).mockReturnValue(partial<MetricsContract>({ captureEvent }));
 
+    // Act
     toggleFeaturePreview('test-feature', true);
-    expect(captureEvent).toHaveBeenCalledWith(Events.featurePreviewToggle, { featureId: 'test-feature', enabled: true });
+
+    // Assert
+    expect(captureEvent).toHaveBeenCalledWith(Events.featurePreviewToggle, {
+      featureId: 'test-feature',
+      enabled: true,
+    });
   });
 });
 
 describe('getAvailableFeaturePreviews', () => {
   it("should return available feature previews based on user's groups", async () => {
-    getLocalPref.mockReturnValue(false);
+    // Arrange
+    asMockedFn(getLocalPref).mockReturnValue(false);
 
-    Ajax.mockImplementation(() => ({
-      Groups: {
-        list: jest.fn().mockReturnValue(Promise.resolve([])),
-      },
-    }));
+    asMockedFn(Groups).mockReturnValue(
+      partial<GroupsContract>({
+        list: jest.fn(async () => []),
+      })
+    );
 
-    expect(await getAvailableFeaturePreviews()).toEqual([
+    // Act
+    const result1 = await getAvailableFeaturePreviews();
+
+    asMockedFn(Groups).mockReturnValue(
+      partial<GroupsContract>({
+        list: jest.fn(async () => [
+          partial<CurrentUserGroupMembership>({
+            groupName: 'preview-group',
+            groupEmail: 'preview-group@test.firecloud.org',
+            role: 'member',
+          }),
+        ]),
+      })
+    );
+
+    const result2 = await getAvailableFeaturePreviews();
+
+    // Assert
+    expect(result1).toEqual([
       {
         id: 'feature1',
         title: 'Feature #1',
         description: 'A new feature',
       },
     ]);
-
-    Ajax.mockImplementation(() => ({
-      Groups: {
-        list: jest.fn().mockReturnValue(
-          Promise.resolve([
-            {
-              groupName: 'preview-group',
-              groupEmail: 'preview-group@test.firecloud.org',
-              role: 'member',
-            },
-          ])
-        ),
-      },
-    }));
-
-    expect(await getAvailableFeaturePreviews()).toEqual([
+    expect(result2).toEqual([
       {
         id: 'feature1',
         title: 'Feature #1',
@@ -104,15 +129,20 @@ describe('getAvailableFeaturePreviews', () => {
   });
 
   it('should include enabled feature previews regardless of group', async () => {
-    getLocalPref.mockImplementation((key) => key === 'feature-preview/feature2');
+    // Arrange
+    asMockedFn(getLocalPref).mockImplementation((key) => key === 'feature-preview/feature2');
 
-    Ajax.mockImplementation(() => ({
-      Groups: {
-        list: jest.fn().mockReturnValue(Promise.resolve([])),
-      },
-    }));
+    asMockedFn(Groups).mockReturnValue(
+      partial<GroupsContract>({
+        list: jest.fn(async () => []),
+      })
+    );
 
-    expect(await getAvailableFeaturePreviews()).toEqual([
+    // Act
+    const result = await getAvailableFeaturePreviews();
+
+    // Assert
+    expect(result).toEqual([
       {
         id: 'feature1',
         title: 'Feature #1',
@@ -128,16 +158,21 @@ describe('getAvailableFeaturePreviews', () => {
   });
 
   it('should include all feature previews in non-production environments', async () => {
-    getConfig.mockReturnValue({ isProd: false });
-    getLocalPref.mockReturnValue(false);
+    // Arrange
+    asMockedFn(getConfig).mockReturnValue({ isProd: false });
+    asMockedFn(getLocalPref).mockReturnValue(false);
 
-    Ajax.mockImplementation(() => ({
-      Groups: {
-        list: jest.fn().mockReturnValue(Promise.resolve([])),
-      },
-    }));
+    asMockedFn(Groups).mockReturnValue(
+      partial<GroupsContract>({
+        list: jest.fn(async () => []),
+      })
+    );
 
-    expect(await getAvailableFeaturePreviews()).toEqual([
+    // Act
+    const result = await getAvailableFeaturePreviews();
+
+    // Assert
+    expect(result).toEqual([
       {
         id: 'feature1',
         title: 'Feature #1',

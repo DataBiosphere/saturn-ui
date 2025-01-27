@@ -3,6 +3,8 @@ import React, { useState } from 'react';
 import ErrorView from 'src/components/ErrorView';
 import { ValidatedInput } from 'src/components/input';
 import { PostMethodProvider } from 'src/libs/ajax/methods/providers/PostMethodProvider';
+import { Metrics } from 'src/libs/ajax/Metrics';
+import Events from 'src/libs/events';
 import { FormLabel } from 'src/libs/forms';
 import * as Utils from 'src/libs/utils';
 import { withBusyState } from 'src/libs/utils';
@@ -183,6 +185,12 @@ export const CreateWorkflowModal = (props: CreateWorkflowModalProps) => {
         name: createdWorkflowName,
         snapshotId: createdWorkflowSnapshotId,
       } = await postMethodProvider.postMethod(namespace, name, wdl, documentation, synopsis, snapshotComment);
+
+      void Metrics().captureEvent(Events.workflowRepoCreateWorkflow, {
+        collectionName: createdWorkflowNamespace,
+        workflowName: createdWorkflowName,
+      });
+
       onSuccess(createdWorkflowNamespace, createdWorkflowName, createdWorkflowSnapshotId);
     } catch (error) {
       setSubmissionError(error instanceof Response ? await error.text() : error);

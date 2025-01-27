@@ -47,8 +47,8 @@ export const Members = (props: MembersProps): ReactNode => {
           footer={[
             'Warning: Adding any user to this project will mean they can incur costs to the billing associated with this project.',
           ]}
-          addFunction={(roles: string[], emails: string[]) =>
-            Billing().addProjectUsers(billingProjectName, roles as BillingRole[], emails)
+          addFunction={(roles: string, emails: string[]) =>
+            Billing().addProjectUsers(billingProjectName, [roles] as BillingRole[], emails)
           }
           onDismiss={() => setAddingMember(false)}
           onSuccess={() => {

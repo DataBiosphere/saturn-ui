@@ -5,8 +5,8 @@ import { CloudProviderIcon } from 'src/components/CloudProviderIcon';
 import { Link, spinnerOverlay } from 'src/components/common';
 import { icon } from 'src/components/icons';
 import { ColumnSelector, MiniSortable, SimpleTable } from 'src/components/table';
-import { Ajax } from 'src/libs/ajax';
 import { Dataset } from 'src/libs/ajax/Catalog';
+import { Metrics } from 'src/libs/ajax/Metrics';
 import colors from 'src/libs/colors';
 import Events from 'src/libs/events';
 import * as Nav from 'src/libs/nav';
@@ -210,7 +210,7 @@ const DataBrowserTableComponent = ({ sort, setSort, cols, setCols, filteredList 
             Link,
             {
               onClick: () => {
-                Ajax().Metrics.captureEvent(Events.catalogViewDetails, {
+                void Metrics().captureEvent(Events.catalogViewDetails, {
                   id: datum.id,
                   title: datum['dct:title'],
                 });
