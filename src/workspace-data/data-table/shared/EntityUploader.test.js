@@ -125,7 +125,7 @@ describe('getChangeMessage', () => {
     const message = getChangeMessage(recordType, firstColumn);
 
     // Assert
-    expect(message).toBe('sample changed to sample_id because the first column header must be an identifier.');
+    expect(message).toBe('Column sample changed to sample_id because the first column header must be an identifier.');
   });
 
   it('returns change message when recordType matches entity:firstColumn', () => {
@@ -137,7 +137,7 @@ describe('getChangeMessage', () => {
     const message = getChangeMessage(recordType, firstColumn);
 
     // Assert
-    expect(message).toBe('sample changed to sample_id because the first column header must be an identifier.');
+    expect(message).toBe('Column sample changed to sample_id because the first column header must be an identifier.');
   });
 
   it('returns empty string when recordType does not match modified firstColumn', () => {
@@ -192,7 +192,7 @@ describe('EntityUploader notifications', () => {
     }
 
     // Assert
-    expect(notify).toHaveBeenCalledWith('warning', 'sample changed to sample_id because the first column header must be an identifier.', {
+    expect(notify).toHaveBeenCalledWith('warning', 'Column sample changed to sample_id because the first column header must be an identifier.', {
       id: 'sample_change_message',
     });
   });
@@ -214,7 +214,7 @@ describe('EntityUploader notifications', () => {
     // Assert
     expect(notify).toHaveBeenCalledWith(
       'success',
-      'Data imported successfully to table sample. sample changed to sample_id because the first column header must be an identifier.',
+      'Data imported successfully to table sample. Column sample changed to sample_id because the first column header must be an identifier.',
       { id: 'sample_success' }
     );
   });
