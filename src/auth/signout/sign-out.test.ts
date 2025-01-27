@@ -35,7 +35,7 @@ type NavExports = typeof import('src/libs/nav');
 jest.mock('src/libs/nav', (): NavExports => {
   return {
     ...jest.requireActual<NavExports>('src/libs/nav'),
-    getLink: jest.fn().mockReturnValue({ name: 'signout-callback', query: {} }),
+    getPath: jest.fn().mockReturnValue('/signout'),
     goToPath: jest.fn(),
     getWindowOrigin: jest.fn(),
     getCurrentRoute: jest.fn().mockReturnValue(currentRoute),
