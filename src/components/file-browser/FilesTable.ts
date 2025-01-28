@@ -113,7 +113,7 @@ const FilesTable = (props: FilesTableProps) => {
                     h(
                       Link,
                       {
-                        href: directory.url || directory.path,
+                        href: directory.url ?? directory.path,
                         style: {
                           ...(Style.noWrapEllipsis as React.CSSProperties),
                           textDecoration: 'underline',
@@ -129,7 +129,7 @@ const FilesTable = (props: FilesTableProps) => {
                       'aria-label': 'Copy folder URL to clipboard',
                       className: 'cell-hover-only',
                       iconSize: 14,
-                      text: directory.url || directory.path,
+                      text: directory.url ?? directory.path,
                       tooltip: 'Copy folder URL to clipboard',
                       style: { marginLeft: '1ch' },
                     }),
