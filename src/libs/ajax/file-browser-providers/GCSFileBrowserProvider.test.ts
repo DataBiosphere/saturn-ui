@@ -119,19 +119,19 @@ describe('GCSFileBrowserProvider', () => {
 
     // Assert
     const expectedFirstPageDirectories: FileBrowserDirectory[] = [
-      { path: 'a-prefix/' },
-      { path: 'b-prefix/' },
-      { path: 'c-prefix/' },
+      { path: 'a-prefix/', url: 'gs://test-bucket/a-prefix/' },
+      { path: 'b-prefix/', url: 'gs://test-bucket/b-prefix/' },
+      { path: 'c-prefix/', url: 'gs://test-bucket/c-prefix/' },
     ];
     expect(firstResponse.items).toEqual(expectedFirstPageDirectories);
     expect(firstResponse.hasNextPage).toBe(true);
     expect(numGCSRequestsAfterFirstResponse).toBe(1);
 
     const expectedSecondPageDirectories: FileBrowserDirectory[] = [
-      { path: 'a-prefix/' },
-      { path: 'b-prefix/' },
-      { path: 'c-prefix/' },
-      { path: 'd-prefix/' },
+      { path: 'a-prefix/', url: 'gs://test-bucket/a-prefix/' },
+      { path: 'b-prefix/', url: 'gs://test-bucket/b-prefix/' },
+      { path: 'c-prefix/', url: 'gs://test-bucket/c-prefix/' },
+      { path: 'd-prefix/', url: 'gs://test-bucket/d-prefix/' },
     ];
     expect(secondResponse.items).toEqual(expectedSecondPageDirectories);
     expect(secondResponse.hasNextPage).toBe(false);

@@ -28,9 +28,11 @@ describe('FilesTable', () => {
   const directories: FileBrowserDirectory[] = [
     {
       path: 'path/to/folder1/',
+      url: 'gs://test-bucket/path/to/folder1/',
     },
     {
       path: 'path/to/folder2/',
+      url: 'gs://test-bucket/path/to/folder2/',
     },
   ];
 
@@ -154,7 +156,7 @@ describe('FilesTable', () => {
 
     const tableRows = screen.getAllByRole('row').slice(1, 3); // skip header row and files
     const nameCells = tableRows.map((row) => getAllByRole(row, 'cell')[1]);
-    const links = nameCells.map((cell) => getByRole(cell, 'button'));
+    const links = nameCells.map((cell) => getByRole(cell, 'link'));
 
     // Act
     await user.click(links[0]);
@@ -165,9 +167,11 @@ describe('FilesTable', () => {
     expect(onClickDirectory.mock.calls.map((call) => call[0])).toEqual([
       {
         path: 'path/to/folder1/',
+        url: 'gs://test-bucket/path/to/folder1/',
       },
       {
         path: 'path/to/folder2/',
+        url: 'gs://test-bucket/path/to/folder2/',
       },
     ]);
   });
