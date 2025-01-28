@@ -1,7 +1,8 @@
 import { AbortOption } from '@terra-ui-packages/data-client-core';
-import { Ajax } from 'src/libs/ajax';
+import { Methods } from 'src/libs/ajax/methods/Methods';
 import { Metrics } from 'src/libs/ajax/Metrics';
 import { MethodConfiguration, MethodRepoMethod } from 'src/libs/ajax/workspaces/workspace-models';
+import { Workspaces } from 'src/libs/ajax/workspaces/Workspaces';
 import Events, { extractWorkspaceDetails } from 'src/libs/events';
 import { WorkspaceInfo } from 'src/workspaces/utils';
 
@@ -28,8 +29,8 @@ export const makeExportWorkflowFromWorkspaceProvider = (
     export: (destWorkspace: WorkspaceInfo, destWorkflowName: string, options: AbortOption = {}) => {
       const { signal } = options;
 
-      return Ajax(signal)
-        .Workspaces.workspace(currentWorkspace.namespace, currentWorkspace.name)
+      return Workspaces(signal)
+        .workspace(currentWorkspace.namespace, currentWorkspace.name)
         .methodConfig(methodConfig.namespace, methodConfig.name)
         .copyTo({
           destConfigNamespace: destWorkspace.namespace,
@@ -60,10 +61,10 @@ export const makeExportWorkflowFromMethodsRepoProvider = (
 
       // Remove placeholder root entity type from template before importing -
       // the user can select their own on the workflow configuration page
-      const { rootEntityType, ...template } = await Ajax(signal).Methods.template(sourceMethod);
+      const { rootEntityType, ...template } = await Methods(signal).template(sourceMethod);
 
-      await Ajax(signal)
-        .Workspaces.workspace(destWorkspace.namespace, destWorkspace.name)
+      await Workspaces(signal)
+        .workspace(destWorkspace.namespace, destWorkspace.name)
         .importMethodConfig({
           ...template,
           name: destWorkflowName,

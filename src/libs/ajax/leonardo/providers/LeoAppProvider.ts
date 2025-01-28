@@ -1,6 +1,6 @@
 import { AbortOption } from '@terra-ui-packages/data-client-core';
 import { AppWithWorkspace } from 'src/analysis/Environments/Environments.models';
-import { Ajax } from 'src/libs/ajax';
+import { Apps } from 'src/libs/ajax/leonardo/Apps';
 import { GetAppItem, ListAppItem } from 'src/libs/ajax/leonardo/models/app-models';
 
 export type AppBasics = Pick<ListAppItem, 'appName' | 'workspaceId'> & {
@@ -22,7 +22,7 @@ export const leoAppProvider: LeoAppProvider = {
   listWithoutProject: (listArgs: Record<string, string>, options: AbortOption = {}): Promise<ListAppItem[]> => {
     const { signal } = options;
 
-    return Ajax(signal).Apps.listWithoutProject(listArgs);
+    return Apps(signal).listWithoutProject(listArgs);
   },
   delete: (app: AppBasics, options: DeleteAppOptions = {}): Promise<void> => {
     const { cloudProvider, cloudResource } = app.cloudContext;
@@ -30,10 +30,10 @@ export const leoAppProvider: LeoAppProvider = {
 
     const { appName, workspaceId } = app;
     if (cloudProvider === 'GCP') {
-      return Ajax(signal).Apps.app(cloudResource, appName).delete(!!deleteDisk);
+      return Apps(signal).app(cloudResource, appName).delete(!!deleteDisk);
     }
     if (cloudProvider === 'AZURE' && !!workspaceId) {
-      return Ajax(signal).Apps.deleteAppV2(appName, workspaceId);
+      return Apps(signal).deleteAppV2(appName, workspaceId);
     }
     throw new Error(
       `Deleting apps is currently only supported for azure or google apps. Azure apps must have a workspace id. App: ${app.appName} workspaceId: ${workspaceId}`
@@ -47,7 +47,7 @@ export const leoAppProvider: LeoAppProvider = {
       throw new Error('Pausing apps is not supported for azure');
     }
 
-    return Ajax(signal).Apps.app(cloudResource, app.appName).pause();
+    return Apps(signal).app(cloudResource, app.appName).pause();
   },
   get: (app: AppBasics, options: AbortOption = {}): Promise<GetAppItem> => {
     const { cloudResource, cloudProvider } = app.cloudContext;
@@ -55,10 +55,10 @@ export const leoAppProvider: LeoAppProvider = {
     const { workspaceId } = app;
 
     if (cloudProvider === 'GCP') {
-      return Ajax(signal).Apps.app(cloudResource, app.appName).details();
+      return Apps(signal).app(cloudResource, app.appName).details();
     }
     if (cloudProvider === 'AZURE' && !!workspaceId) {
-      return Ajax(signal).Apps.getAppV2(app.appName, workspaceId);
+      return Apps(signal).getAppV2(app.appName, workspaceId);
     }
 
     throw new Error(
