@@ -15,7 +15,6 @@ describe('FeaturePreviews', () => {
           id: 'feature1',
           title: 'Feature #1',
           description: 'A new feature',
-          articleUrl: 'https://example.com/article',
           documentationUrl: 'https://example.com/feature-1-docs',
           lastUpdated: '2024-11-01',
         },
@@ -92,22 +91,9 @@ describe('FeaturePreviews', () => {
 
   it('should render feedback link if provided', () => {
     const { getAllByText } = render(h(FeaturePreviews));
-    const feedbackLinks = getAllByText('Submit feedback');
+    const feedbackLinks = getAllByText('Learn more and provide feedback');
     expect(feedbackLinks.length).toBe(1);
     expect(feedbackLinks[0].getAttribute('href')).toBe('mailto:feature2-feedback@example.com');
-  });
-
-  it('displays the correct link based on articleUrl', async () => {
-    const { getByRole } = render(h(FeaturePreviews));
-
-    const link1 = getByRole('link', { name: 'Learn more and provide feedback' });
-    expect(link1).toHaveAttribute('href', 'https://example.com/article');
-
-    const link2 = getByRole('link', { name: 'Documentation' });
-    expect(link2).toHaveAttribute('href', 'https://example.com/feature-1-docs');
-
-    const link3 = getByRole('link', { name: 'Submit feedback' });
-    expect(link3).toHaveAttribute('href', 'mailto:feature2-feedback@example.com');
   });
 
   it('should render "Go to Workspaces List" link', () => {

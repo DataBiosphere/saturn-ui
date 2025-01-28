@@ -42,7 +42,7 @@ export const doSignOut = async (signOutCause: SignOutCause = 'unspecified'): Pro
   await leoCookieProvider.unsetCookies();
   try {
     const userManager = oidcStore.get().userManager;
-    const redirectUrl = `${Nav.getWindowOrigin()}/${Nav.getLink(signOutCallbackLinkName)}`;
+    const redirectUrl = `${Nav.getWindowOrigin()}${Nav.getPath(signOutCallbackLinkName)}`;
     // This will redirect to the logout callback page, which calls `userSignedOut` and then redirects to the homepage.
     const { name, query, params }: SignOutRedirect = Nav.getCurrentRoute();
     const signOutState: SignOutState = { signOutRedirect: { name, query, params }, signOutCause };
