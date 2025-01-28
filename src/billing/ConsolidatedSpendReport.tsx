@@ -411,6 +411,19 @@ export const ConsolidatedSpendReport = (props: ConsolidatedSpendReportProps): Re
           <span aria-hidden>*</span>
           Total spend includes infrastructure or query costs related to the general operations of Terra.
         </div>
+        <div aria-live='polite' aria-atomic>
+          <span aria-hidden>*</span>
+          {
+            'Workspaces with cost N/A mean Terra is unable to retrieve cost data for that workspace. Check to ensure the '
+          }
+          <Link
+            href='https://support.terra.bio/hc/en-us/articles/10026441196187-How-to-set-up-spend-reporting-for-workflows-in-Terra-Terra-Billing-project-owners-GCP'
+            {...Utils.newTabLinkProps}
+          >
+            billing project’s billing export
+          </Link>
+          {' has been setup.'}
+        </div>
         {!_.isEmpty(filteredOwnedWorkspaces) && (
           <div role='table' aria-label='owned workspaces'>
             <ConsolidatedSpendWorkspaceCardHeaders onSort={setWorkspaceSort} sort={workspaceSort} />
