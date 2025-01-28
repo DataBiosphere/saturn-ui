@@ -308,7 +308,6 @@ export const ConsolidatedSpendReport = (props: ConsolidatedSpendReportProps): Re
           const mappedUnmatchedWorkspaces = unmatchedWorkspaces.map(setDefaultSpendValues);
 
           return [...mappedWorkspaces, ...mappedUnmatchedWorkspaces];
-          // };
         } catch (error) {
           // Return default values for each workspace in case of an error
           await reportError('Error loading spend report', error);
