@@ -119,19 +119,19 @@ describe('GCSFileBrowserProvider', () => {
 
     // Assert
     const expectedFirstPageDirectories: FileBrowserDirectory[] = [
-      { path: 'a-prefix/' },
-      { path: 'b-prefix/' },
-      { path: 'c-prefix/' },
+      { path: 'a-prefix/', url: 'gs://test-bucket/a-prefix/' },
+      { path: 'b-prefix/', url: 'gs://test-bucket/b-prefix/' },
+      { path: 'c-prefix/', url: 'gs://test-bucket/c-prefix/' },
     ];
     expect(firstResponse.items).toEqual(expectedFirstPageDirectories);
     expect(firstResponse.hasNextPage).toBe(true);
     expect(numGCSRequestsAfterFirstResponse).toBe(1);
 
     const expectedSecondPageDirectories: FileBrowserDirectory[] = [
-      { path: 'a-prefix/' },
-      { path: 'b-prefix/' },
-      { path: 'c-prefix/' },
-      { path: 'd-prefix/' },
+      { path: 'a-prefix/', url: 'gs://test-bucket/a-prefix/' },
+      { path: 'b-prefix/', url: 'gs://test-bucket/b-prefix/' },
+      { path: 'c-prefix/', url: 'gs://test-bucket/c-prefix/' },
+      { path: 'd-prefix/', url: 'gs://test-bucket/d-prefix/' },
     ];
     expect(secondResponse.items).toEqual(expectedSecondPageDirectories);
     expect(secondResponse.hasNextPage).toBe(false);
@@ -280,5 +280,24 @@ describe('GCSFileBrowserProvider', () => {
 
     // Assert
     expect(del).toHaveBeenCalledWith('test-project', 'test-bucket', 'foo/bar/baz/');
+  });
+
+  it('retrieves directories in a directory', async () => {
+    // Arrange
+    const provider = GCSFileBrowserProvider({ bucket: 'test-bucket', project: 'test-project', pageSize: 3 });
+
+    // Act
+    const response = await provider.getDirectoriesInDirectory('some/path/');
+    const numGCSRequests = list.mock.calls.length;
+
+    // Assert
+    const expectedDirectories: FileBrowserDirectory[] = [
+      { path: 'a-prefix/', url: 'gs://test-bucket/a-prefix/' },
+      { path: 'b-prefix/', url: 'gs://test-bucket/b-prefix/' },
+      { path: 'c-prefix/', url: 'gs://test-bucket/c-prefix/' },
+    ];
+    expect(response.items).toEqual(expectedDirectories);
+    expect(response.hasNextPage).toBe(true);
+    expect(numGCSRequests).toBe(1);
   });
 });

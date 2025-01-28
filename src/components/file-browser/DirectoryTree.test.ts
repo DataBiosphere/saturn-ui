@@ -26,6 +26,7 @@ describe('Directory', () => {
         level: 0,
         id: 'node-0',
         path: 'path/to/directory/',
+        url: 'gs://path/to/directory/',
         provider: mockFileBrowserProvider,
         reloadRequests: subscribable(),
         rootLabel: 'Workspace bucket',
@@ -45,12 +46,15 @@ describe('Directory', () => {
     const directories = [
       {
         path: 'directory1',
+        url: 'gs://directory1/',
       },
       {
         path: 'directory2',
+        url: 'gs://directory3/',
       },
       {
         path: 'directory3',
+        url: 'gs://directory3/',
       },
     ];
 
@@ -72,6 +76,7 @@ describe('Directory', () => {
           id: 'node-0',
           level: 0,
           path: '',
+          url: 'gs://',
           provider: mockFileBrowserProvider,
           reloadRequests: subscribable(),
           rootLabel: 'Workspace bucket',
@@ -99,18 +104,22 @@ describe('Directory', () => {
           return [
             {
               path: 'directory1/test1',
+              url: 'gs://directory1/test1/',
             },
             {
               path: 'directory1/test2',
+              url: 'gs://directory1/test2/',
             },
           ];
         case 'directory1/test1/':
           return [
             {
               path: 'directory1/test1/abc/',
+              url: 'gs://directory1/test1/abc/',
             },
             {
               path: 'directory1/test1/xyz/',
+              url: 'gs://directory1/test1/xyz/',
             },
           ];
         default:
@@ -135,6 +144,7 @@ describe('Directory', () => {
           id: 'node-0',
           level: 0,
           path: 'directory1/',
+          url: 'gs://directory1/',
           provider: mockFileBrowserProvider,
           reloadRequests: subscribable(),
           rootLabel: 'Workspace bucket',
@@ -162,12 +172,15 @@ describe('Directory', () => {
       const directories = [
         {
           path: 'path/to/directory/subdirectory1',
+          url: 'gs://path/to/directory/subdirectory1/',
         },
         {
           path: 'path/to/directory/subdirectory2',
+          url: 'gs://path/to/directory/subdirectory2/',
         },
         {
           path: 'path/to/directory/subdirectory3',
+          url: 'gs://path/to/directory/subdirectory3/',
         },
       ];
 
@@ -188,6 +201,7 @@ describe('Directory', () => {
           id: 'node-0',
           level: 0,
           path: 'path/to/directory/',
+          url: 'gs://path/to/directory/',
           provider: mockFileBrowserProvider,
           reloadRequests: subscribable(),
           rootLabel: 'Workspace bucket',
@@ -226,12 +240,15 @@ describe('Directory', () => {
     const directories = [
       {
         path: 'path/to/directory/subdirectory1',
+        url: 'gs://path/to/directory/subdirectory1/',
       },
       {
         path: 'path/to/directory/subdirectory2',
+        url: 'gs://path/to/directory/subdirectory2/',
       },
       {
         path: 'path/to/directory/subdirectory3',
+        url: 'gs://path/to/directory/subdirectory3/',
       },
     ];
 
@@ -252,6 +269,7 @@ describe('Directory', () => {
           id: 'node-0',
           level: 0,
           path: 'path/to/directory/',
+          url: 'gs://path/to/directory/',
           provider: mockFileBrowserProvider,
           reloadRequests: subscribable(),
           rootLabel: 'Workspace bucket',
@@ -303,6 +321,7 @@ describe('Directory', () => {
         id: 'node-0',
         level: 0,
         path: 'path/to/directory/',
+        url: 'gs://path/to/directory/',
         provider: mockFileBrowserProvider,
         reloadRequests: subscribable(),
         rootLabel: 'Workspace bucket',
@@ -348,6 +367,7 @@ describe('Directory', () => {
         id: 'node-0',
         level: 0,
         path: 'path/to/directory/',
+        url: 'gs://path/to/directory/',
         provider: mockFileBrowserProvider,
         reloadRequests: subscribable(),
         rootLabel: 'Workspace bucket',
@@ -394,6 +414,7 @@ describe('Directory', () => {
         id: 'node-0',
         level: 0,
         path: 'path/to/directory/',
+        url: 'gs://path/to/directory/',
         provider: mockFileBrowserProvider,
         reloadRequests: subscribable(),
         rootLabel: 'Workspace bucket',
@@ -420,6 +441,7 @@ describe('Directory', () => {
     const directories = [
       {
         path: 'path/to/directory/subdirectory1',
+        url: 'gs://path/to/directory/subdirectory1/',
       },
     ];
 
@@ -445,6 +467,7 @@ describe('Directory', () => {
           id: 'node-0',
           level: 0,
           path: 'path/to/directory/',
+          url: 'gs://path/to/directory/',
           provider: mockFileBrowserProvider,
           reloadRequests: subscribable(),
           rootLabel: 'Workspace bucket',
