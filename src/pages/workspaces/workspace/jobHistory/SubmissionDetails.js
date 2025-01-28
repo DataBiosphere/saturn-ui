@@ -163,7 +163,7 @@ const SubmissionWorkflowsTable = ({ workspace, submission }) => {
                 headerRenderer: () => h(Sortable, { sort, field: 'cost', onSort: setSort }, ['Run Cost']),
                 cellRenderer: ({ rowIndex }) => {
                   const cost = filteredWorkflows[rowIndex].cost;
-                  return cost instanceof String ? h(TextCell, [Utils.formatUSD(cost || 0)]) : cost;
+                  return typeof cost === 'number' ? h(TextCell, [Utils.formatUSD(cost || 0)]) : cost;
                 },
               },
               {

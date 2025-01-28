@@ -4,8 +4,8 @@ import { div, h } from 'react-hyperscript-helpers';
 import { ButtonPrimary, spinnerOverlay } from 'src/components/common';
 import FooterWrapper from 'src/components/FooterWrapper';
 import { TopBar } from 'src/components/TopBar';
-import { Ajax } from 'src/libs/ajax';
 import {
+  Catalog,
   DataCollection,
   datasetDataUsePermissionTypes,
   DatasetMetadata,
@@ -286,7 +286,7 @@ export const CreateDataset = ({ storageSystem, storageSourceId }: CreateDatasetP
                 Utils.withBusyState(setLoading)
               )(async () => {
                 const response = await (
-                  await Ajax().Catalog.upsertDataset(storageSystemState, storageSourceIdState, metadata)
+                  await Catalog().upsertDataset(storageSystemState, storageSourceIdState, metadata)
                 ).json();
                 Nav.goToPath('library-details', { id: response.id });
               })();
