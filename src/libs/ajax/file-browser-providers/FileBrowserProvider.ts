@@ -11,6 +11,7 @@ export interface FileBrowserFile {
 
 export interface FileBrowserDirectory {
   path: string;
+  url?: string;
 }
 
 interface FileBrowserProvider {
