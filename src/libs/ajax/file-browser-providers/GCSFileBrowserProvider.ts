@@ -133,6 +133,7 @@ const GCSFileBrowserProvider = ({
         itemsOrPrefixes: 'prefixes',
         mapItemOrPrefix: (prefix) => ({
           path: `${prefix}`,
+          url: `gs://${bucket}/${prefix}`,
         }),
         // This glob pattern matches prefixes (directories) excluding the given path
         matchGlob: `${path}**?/`,
