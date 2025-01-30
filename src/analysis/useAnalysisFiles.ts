@@ -12,7 +12,7 @@ import {
 } from 'src/analysis/utils/file-utils';
 import { getToolLabelFromFileExtension, ToolLabel } from 'src/analysis/utils/tool-utils';
 import { AnalysisProvider } from 'src/libs/ajax/analysis-providers/AnalysisProvider';
-import { reportError, withErrorReporting } from 'src/libs/error';
+import { reportError } from 'src/libs/error';
 import { useCancellation, useStore } from 'src/libs/react-utils';
 import { workspaceStore } from 'src/libs/state';
 import * as Utils from 'src/libs/utils';
@@ -56,13 +56,15 @@ export const useAnalysisFiles = (): AnalysisFileStore => {
   const [pendingCreate, setPendingCreate] = useLoadedData<true>();
   const [pendingDelete, setPendingDelete] = useLoadedData<true>();
 
-  const refresh = withHandlers(
-    [withErrorReporting('Error loading analysis files'), Utils.withBusyState(setLoading)],
-    async (): Promise<void> => {
+  const refresh = withHandlers([Utils.withBusyState(setLoading)], async (): Promise<void> => {
+    try {
       const analysis = await AnalysisProvider.listAnalyses(workspace!.workspace, signal);
       setAnalyses(analysis);
+    } catch (error) {
+      console.error('Error loading analysis files:', error);
+      throw error;
     }
-  );
+  });
 
   const createAnalysis = async (fullAnalysisName: string, toolLabel: ToolLabel, contents: any): Promise<void> => {
     await setPendingCreate(async () => {
@@ -79,11 +81,6 @@ export const useAnalysisFiles = (): AnalysisFileStore => {
       return true;
     });
   };
-
-  useEffect(() => {
-    refresh();
-  }, [workspace!.workspace]); // eslint-disable-line react-hooks/exhaustive-deps
-  // refresh depends only on workspace.workspace, do not want to refresh on workspace.workspaceInitialized
 
   useEffect(() => {
     if (pendingCreate.status === 'Error') {
