@@ -424,4 +424,21 @@ describe('Analyses', () => {
     const modalTitle = document.getElementById('analysis-modal-title');
     expect(modalTitle).toBeInTheDocument();
   });
+
+  it('calls refreshAnalyses on mount', async () => {
+    // Arrange
+    const refreshAnalysesMock = jest.fn();
+    asMockedFn(useAnalysisFiles).mockReturnValue({
+      ...defaultUseAnalysisStore,
+      refreshFileStore: refreshAnalysesMock,
+    });
+
+    // Act
+    await act(async () => {
+      render(h(BaseAnalyses, defaultAnalysesProps));
+    });
+
+    // Assert
+    expect(refreshAnalysesMock).toHaveBeenCalled();
+  });
 });
