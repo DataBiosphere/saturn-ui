@@ -656,15 +656,17 @@ export const NewWorkspaceModal = withDisplayName(
                         <FormLabel htmlFor={id}>
                           Authorization domain (optional)
                           <InfoBox style={{ marginLeft: '0.25rem' }}>
-                            An authorization domain can only be set when creating a workspace. Once set, it cannot be
-                            changed. Any cloned workspace will automatically inherit the authorization domain(s) from
-                            the original workspace and cannot be removed.
+                            Authorization Domains restrict data access to only specified individuals in a group and are
+                            intended to fulfill requirements you may have for data governed by a compliance standard,
+                            such as federal controlled-access data or HIPAA protected data. They follow all workspace
+                            copies and cannot be removed. For more details, see
                             <Link
                               href='https://support.terra.bio/hc/en-us/articles/360026775691'
                               {...Utils.newTabLinkProps}
                             >
-                              Read more about authorization domains
+                              When to use an Authorization Domain
                             </Link>
+                            .
                           </InfoBox>
                         </FormLabel>
                         <p style={{ marginTop: '.25rem' }}>Additional group management controls</p>
