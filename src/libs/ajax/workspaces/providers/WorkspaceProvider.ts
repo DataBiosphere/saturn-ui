@@ -1,5 +1,5 @@
 import { AbortOption } from '@terra-ui-packages/data-client-core';
-import { Ajax } from 'src/libs/ajax';
+import { Workspaces } from 'src/libs/ajax/workspaces/Workspaces';
 import { WorkspaceWrapper } from 'src/workspaces/utils';
 
 export type FieldsArg = string[];
@@ -16,7 +16,7 @@ export const workspaceProvider: WorkspaceDataProvider = {
   list: async (fieldsArgs: FieldsArg, options: WorkspaceListOptions): Promise<WorkspaceWrapper[]> => {
     const { signal, stringAttributeMaxLength } = options;
 
-    const ws = await Ajax(signal).Workspaces.list(fieldsArgs, stringAttributeMaxLength);
+    const ws = await Workspaces(signal).list(fieldsArgs, stringAttributeMaxLength);
     return ws;
   },
 };

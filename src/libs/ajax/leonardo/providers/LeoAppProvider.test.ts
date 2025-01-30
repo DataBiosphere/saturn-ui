@@ -1,13 +1,11 @@
-import { Ajax } from 'src/libs/ajax';
-import { AppAjaxContract, AppsAjaxContract } from 'src/libs/ajax/leonardo/Apps';
-import { asMockedFn } from 'src/testing/test-utils';
+import { AppAjaxContract, Apps, AppsAjaxContract } from 'src/libs/ajax/leonardo/Apps';
+import { asMockedFn, partial } from 'src/testing/test-utils';
 import { defaultAzureWorkspace } from 'src/testing/workspace-fixtures';
 
 import { AppBasics, leoAppProvider } from './LeoAppProvider';
 
-jest.mock('src/libs/ajax');
+jest.mock('src/libs/ajax/leonardo/Apps');
 
-type AjaxContract = ReturnType<typeof Ajax>;
 type AppNeeds = Pick<AppAjaxContract, 'delete' | 'pause' | 'details'>;
 type AppsNeeds = Pick<AppsAjaxContract, 'app' | 'listWithoutProject' | 'deleteAppV2' | 'getAppV2'>;
 
@@ -16,10 +14,9 @@ interface AjaxMockNeeds {
   app: AppNeeds;
 }
 /**
- * local test utility - mocks the Ajax super-object and the subset of needed multi-contracts it
- * returns with as much type-safety as possible.
+ * local test utility - sets up mocks for needed ajax data-calls with as much type-saftely as possible.
  *
- * @return collection of key contract sub-objects for easy
+ * @return collection of key data-call fns for easy
  * mock overrides and/or method spying/assertions
  */
 const mockAjaxNeeds = (): AjaxMockNeeds => {
@@ -28,18 +25,15 @@ const mockAjaxNeeds = (): AjaxMockNeeds => {
     pause: jest.fn(),
     details: jest.fn(),
   };
-  const mockApp = partialApp as AppAjaxContract;
 
   const partialApps: AppsNeeds = {
-    app: jest.fn(),
+    app: jest.fn(() => partial<AppAjaxContract>(partialApp)),
     listWithoutProject: jest.fn(),
     deleteAppV2: jest.fn(),
     getAppV2: jest.fn(),
   };
-  const mockApps = partialApps as AppsAjaxContract;
 
-  asMockedFn(mockApps.app).mockReturnValue(mockApp);
-  asMockedFn(Ajax).mockReturnValue({ Apps: mockApps } as AjaxContract);
+  asMockedFn(Apps).mockReturnValue(partial<AppsAjaxContract>(partialApps));
 
   return {
     Apps: partialApps,
@@ -58,8 +52,8 @@ describe('leoAppProvider', () => {
       const result = await leoAppProvider.listWithoutProject({ arg: '1' }, { signal });
 
       // Assert;
-      expect(Ajax).toBeCalledTimes(1);
-      expect(Ajax).toBeCalledWith(signal);
+      expect(Apps).toBeCalledTimes(1);
+      expect(Apps).toBeCalledWith(signal);
       expect(ajaxMock.Apps.listWithoutProject).toBeCalledTimes(1);
       expect(ajaxMock.Apps.listWithoutProject).toBeCalledWith({ arg: '1' });
       expect(result).toEqual([]);
@@ -83,8 +77,8 @@ describe('leoAppProvider', () => {
       void (await leoAppProvider.pause(app, { signal: abort.signal }));
 
       // Assert;
-      expect(Ajax).toBeCalledTimes(1);
-      expect(Ajax).toBeCalledWith(abort.signal);
+      expect(Apps).toBeCalledTimes(1);
+      expect(Apps).toBeCalledWith(abort.signal);
       expect(ajaxMock.Apps.app).toBeCalledTimes(1);
       expect(ajaxMock.Apps.app).toBeCalledWith('myGoogleProject', 'myAppName');
       expect(ajaxMock.app.pause).toBeCalledTimes(1);
@@ -108,8 +102,8 @@ describe('leoAppProvider', () => {
       void (await leoAppProvider.delete(app, { signal: abort.signal }));
 
       // Assert;
-      expect(Ajax).toBeCalledTimes(1);
-      expect(Ajax).toBeCalledWith(abort.signal);
+      expect(Apps).toBeCalledTimes(1);
+      expect(Apps).toBeCalledWith(abort.signal);
       expect(ajaxMock.Apps.app).toBeCalledTimes(1);
       expect(ajaxMock.Apps.app).toBeCalledWith('myGoogleProject', 'myAppName');
       expect(ajaxMock.app.delete).toBeCalledTimes(1);
@@ -134,8 +128,8 @@ describe('leoAppProvider', () => {
       void (await leoAppProvider.get(app, { signal: abort.signal }));
 
       // Assert;
-      expect(Ajax).toBeCalledTimes(1);
-      expect(Ajax).toBeCalledWith(abort.signal);
+      expect(Apps).toBeCalledTimes(1);
+      expect(Apps).toBeCalledWith(abort.signal);
       expect(ajaxMock.Apps.app).toBeCalledTimes(1);
       expect(ajaxMock.Apps.app).toBeCalledWith('myGoogleProject', 'myAppName');
       expect(ajaxMock.app.details).toBeCalledTimes(1);
@@ -162,7 +156,7 @@ describe('leoAppProvider', () => {
 
       // Assert
       await expect(shouldThrow()).rejects.toEqual(new Error('Pausing apps is not supported for azure'));
-      expect(Ajax).toBeCalledTimes(0);
+      expect(Apps).toBeCalledTimes(0);
     });
 
     it('handles delete app call', async () => {
@@ -182,8 +176,8 @@ describe('leoAppProvider', () => {
       void (await leoAppProvider.delete(app, { signal: abort.signal }));
 
       // Assert;
-      expect(Ajax).toBeCalledTimes(1);
-      expect(Ajax).toBeCalledWith(abort.signal);
+      expect(Apps).toBeCalledTimes(1);
+      expect(Apps).toBeCalledWith(abort.signal);
       expect(ajaxMock.Apps.deleteAppV2).toBeCalledTimes(1);
       expect(ajaxMock.Apps.deleteAppV2).toBeCalledWith(app.appName, app.workspaceId);
     });
@@ -210,7 +204,7 @@ describe('leoAppProvider', () => {
           `Deleting apps is currently only supported for azure or google apps. Azure apps must have a workspace id. App: ${app.appName} workspaceId: null`
         )
       );
-      expect(Ajax).toBeCalledTimes(0);
+      expect(Apps).toBeCalledTimes(0);
     });
 
     it('handles get app call', async () => {
@@ -230,8 +224,8 @@ describe('leoAppProvider', () => {
       void (await leoAppProvider.get(app, { signal: abort.signal }));
 
       // Assert;
-      expect(Ajax).toBeCalledTimes(1);
-      expect(Ajax).toBeCalledWith(abort.signal);
+      expect(Apps).toBeCalledTimes(1);
+      expect(Apps).toBeCalledWith(abort.signal);
       expect(ajaxMock.Apps.getAppV2).toBeCalledTimes(1);
       expect(ajaxMock.Apps.getAppV2).toBeCalledWith(app.appName, app.workspaceId);
     });
@@ -258,7 +252,7 @@ describe('leoAppProvider', () => {
           `Getting apps is currently only supported for azure or google apps. Azure apps must have a workspace id. App: ${app.appName} workspaceId: null`
         )
       );
-      expect(Ajax).toBeCalledTimes(0);
+      expect(Apps).toBeCalledTimes(0);
     });
   });
 });

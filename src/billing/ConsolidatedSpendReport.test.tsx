@@ -1,14 +1,22 @@
-import { asMockedFn } from '@terra-ui-packages/test-utils';
+import { asMockedFn, MockedFn, partial } from '@terra-ui-packages/test-utils';
 import { act, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import React from 'react';
 import { Billing, BillingContract } from 'src/libs/ajax/billing/Billing';
+import { AggregatedWorkspaceSpendData, SpendReport } from 'src/libs/ajax/billing/billing-models';
+import { reportError } from 'src/libs/error';
+import { spendReportStore } from 'src/libs/state';
 import { renderWithAppContexts } from 'src/testing/test-utils';
 import { WorkspaceWrapper } from 'src/workspaces/utils';
 
 import { ConsolidatedSpendReport } from './ConsolidatedSpendReport';
 
 jest.mock('src/libs/ajax/billing/Billing', () => ({ Billing: jest.fn() }));
+
+jest.mock('src/libs/error', () => ({
+  ...jest.requireActual('src/libs/error'),
+  reportError: jest.fn(),
+}));
 
 jest.mock('src/libs/ajax/Metrics');
 type NavExports = typeof import('src/libs/nav');
@@ -23,7 +31,7 @@ jest.mock(
   })
 );
 
-const spendReport = {
+const spendReport: SpendReport = {
   spendSummary: {
     cost: '1.20',
     credits: '0.00',
@@ -71,7 +79,7 @@ const spendReport = {
           },
         },
       ],
-    },
+    } as AggregatedWorkspaceSpendData,
     {
       aggregationKey: 'Workspace',
       spendData: [
@@ -111,7 +119,7 @@ const spendReport = {
           },
         },
       ],
-    },
+    } as AggregatedWorkspaceSpendData,
   ],
 };
 
@@ -218,12 +226,20 @@ const workspaces = [
 ];
 
 describe('ConsolidatedSpendReport', () => {
+  const getCrossBillingSpendReport: MockedFn<BillingContract['getCrossBillingSpendReport']> = jest.fn();
+
+  beforeEach(() => {
+    asMockedFn(Billing).mockReturnValue(
+      partial<BillingContract>({
+        getCrossBillingSpendReport,
+      })
+    );
+    spendReportStore.reset();
+  });
+
   it('displays results of spend query', async () => {
     // Arrange
-    const getCrossBillingSpendReport = jest.fn(() => Promise.resolve(spendReport));
-    asMockedFn(Billing).mockImplementation(
-      () => ({ getCrossBillingSpendReport } as Partial<BillingContract> as BillingContract)
-    );
+    getCrossBillingSpendReport.mockResolvedValue(spendReport);
 
     // Act
     await act(async () => renderWithAppContexts(<ConsolidatedSpendReport workspaces={workspaces} />));
@@ -236,10 +252,7 @@ describe('ConsolidatedSpendReport', () => {
   it('searches by workspace name', async () => {
     // Arrange
     const user = userEvent.setup();
-    const getCrossBillingSpendReport = jest.fn(() => Promise.resolve(spendReport));
-    asMockedFn(Billing).mockImplementation(
-      () => ({ getCrossBillingSpendReport } as Partial<BillingContract> as BillingContract)
-    );
+    getCrossBillingSpendReport.mockResolvedValue(spendReport);
 
     // Act
     await act(async () => renderWithAppContexts(<ConsolidatedSpendReport workspaces={workspaces} />));
@@ -250,5 +263,67 @@ describe('ConsolidatedSpendReport', () => {
     expect(screen.queryByText('workspace3')).toBeNull();
   });
 
+  it('displays N/A for workspaces that are not included in spend report', async () => {
+    // Arrange
+    const additionalWorkspace: WorkspaceWrapper = {
+      canShare: true,
+      canCompute: true,
+      accessLevel: 'OWNER',
+      policies: [],
+      public: false,
+      workspace: {
+        attributes: {
+          description: '',
+          'tag:tags': {
+            itemsType: 'AttributeValue',
+            items: [],
+          },
+        },
+        authorizationDomain: [],
+        billingAccount: 'billingAccounts/00102A-34B56C-78DEFA',
+        bucketName: 'fc-01111a11-20b2-3033-4044-55c0c5c67890',
+        cloudPlatform: 'Gcp',
+        createdBy: 'user2@gmail.com',
+        createdDate: '2024-10-01T13:55:36.984Z',
+        googleProject: 'terra-dev-fe98dcd0',
+        googleProjectNumber: '123045678019',
+        isLocked: false,
+        lastModified: '2024-12-11T04:32:15.461Z',
+        name: 'workspace4',
+        namespace: 'namespace-1',
+        state: 'Ready',
+        workflowCollectionName: '01111a11-20b2-3033-4044-55c0c5c67890',
+        workspaceId: '01111a11-20b2-3033-4044-55c0c5c67890',
+        workspaceType: 'rawls',
+        workspaceVersion: 'v2',
+      },
+    } as WorkspaceWrapper;
+
+    const modifiedWorkspaces = [...workspaces, additionalWorkspace];
+
+    getCrossBillingSpendReport.mockResolvedValue(spendReport);
+
+    // Act
+    await act(async () => renderWithAppContexts(<ConsolidatedSpendReport workspaces={modifiedWorkspaces} />));
+
+    // Assert
+    expect(screen.queryByText('workspace1')).toBeNull();
+    expect(screen.getByText('workspace4')).not.toBeNull();
+    expect(screen.getAllByText('N/A')).not.toBeNull();
+  });
+
+  it('displays a helpful error if the query fails', async () => {
+    // Arrange
+    const getCrossBillingSpendReport = jest.fn().mockRejectedValue(new Error('MyTestError'));
+    asMockedFn(Billing).mockImplementation(
+      () => ({ getCrossBillingSpendReport } as Partial<BillingContract> as BillingContract)
+    );
+
+    // Act
+    await act(async () => renderWithAppContexts(<ConsolidatedSpendReport workspaces={workspaces} />));
+
+    // Assert
+    expect(reportError).toHaveBeenCalled();
+  });
   // TODO: tests for tests for changing time period, tests for caching (once it's implemented)
 });

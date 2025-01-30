@@ -1,19 +1,19 @@
-import { Ajax, AjaxContract } from 'src/libs/ajax';
-import { MethodsAjaxContract } from 'src/libs/ajax/methods/Methods';
+import { Methods, MethodsAjaxContract } from 'src/libs/ajax/methods/Methods';
+import { Metrics, MetricsContract } from 'src/libs/ajax/Metrics';
 import {
   makeExportWorkflowFromMethodsRepoProvider,
   makeExportWorkflowFromWorkspaceProvider,
 } from 'src/libs/ajax/workspaces/providers/ExportWorkflowToWorkspaceProvider';
 import { MethodConfiguration, MethodRepoMethod } from 'src/libs/ajax/workspaces/workspace-models';
-import { WorkspacesAjaxContract } from 'src/libs/ajax/workspaces/Workspaces';
-import { asMockedFn } from 'src/testing/test-utils';
+import { WorkspaceContract, Workspaces, WorkspacesAjaxContract } from 'src/libs/ajax/workspaces/Workspaces';
+import { asMockedFn, MockedFn, partial } from 'src/testing/test-utils';
 import { WorkspaceInfo } from 'src/workspaces/utils';
 
-jest.mock('src/libs/ajax');
+jest.mock('src/libs/ajax/Metrics');
+jest.mock('src/libs/ajax/methods/Methods');
+jest.mock('src/libs/ajax/workspaces/Workspaces');
 
-type WorkspaceAjaxContract = WorkspacesAjaxContract['workspace'];
-type MethodConfigAjaxContract = ReturnType<WorkspaceAjaxContract>['methodConfig'];
-type TemplateAjaxContract = MethodsAjaxContract['template'];
+type MethodConfigContract = ReturnType<WorkspaceContract['methodConfig']>;
 
 const sourceWorkspace: WorkspaceInfo = {
   workspaceId: 'Workspace1',
@@ -45,26 +45,26 @@ const mockMethodConfiguration: MethodConfiguration = {
   methodRepoMethod: mockMethodRepoMethod,
 };
 
+beforeAll(() => {
+  asMockedFn(Metrics).mockReturnValue(partial<MetricsContract>({ captureEvent: jest.fn() }));
+});
+
 describe('export workflow from workspace provider', () => {
   it('handles export call', async () => {
     // Arrange
-    const mockWorkspace: Partial<WorkspaceAjaxContract> = jest.fn(() => {
-      return {
-        methodConfig: mockMethodConfig,
-      };
-    });
+    const mockCopyTo: MockedFn<MethodConfigContract['copyTo']> = jest.fn();
+    const mockWorkspace: MockedFn<WorkspacesAjaxContract['workspace']> = jest.fn();
+    const mockMethodConfig: MockedFn<WorkspaceContract['methodConfig']> = jest.fn();
 
-    const mockMethodConfig: Partial<MethodConfigAjaxContract> = jest.fn(() => {
-      return { copyTo: mockCopyTo };
-    });
+    mockMethodConfig.mockReturnValue(partial<MethodConfigContract>({ copyTo: mockCopyTo }));
+    mockWorkspace.mockReturnValue(partial<WorkspaceContract>({ methodConfig: mockMethodConfig }));
 
-    const mockCopyTo = jest.fn();
+    asMockedFn(Workspaces).mockReturnValue(
+      partial<WorkspacesAjaxContract>({
+        workspace: mockWorkspace,
+      })
+    );
 
-    asMockedFn(Ajax).mockReturnValue({
-      Workspaces: {
-        workspace: mockWorkspace as WorkspaceAjaxContract,
-      } as WorkspacesAjaxContract,
-    } as AjaxContract);
     const signal = new window.AbortController().signal;
 
     // Act
@@ -77,8 +77,8 @@ describe('export workflow from workspace provider', () => {
     );
 
     // Assert
-    expect(Ajax).toHaveBeenCalledTimes(1);
-    expect(Ajax).toHaveBeenCalledWith(signal);
+    expect(Workspaces).toHaveBeenCalledTimes(1);
+    expect(Workspaces).toHaveBeenCalledWith(signal);
     expect(mockWorkspace).toHaveBeenCalledTimes(1);
     expect(mockWorkspace).toHaveBeenCalledWith(sourceWorkspace.namespace, sourceWorkspace.name);
     expect(mockMethodConfig).toHaveBeenCalledTimes(1);
@@ -98,31 +98,31 @@ describe('export workflow from workspace provider', () => {
 describe('export workflow from methods repo provider', () => {
   it('handles export call', async () => {
     // Arrange
-    const mockTemplate: Partial<TemplateAjaxContract> = jest.fn(() =>
-      Promise.resolve({
-        rootEntityType: 'shouldberemoved',
-        inputs: {
-          shouldBeKept: '',
-        },
+    const mockWorkspace: MockedFn<WorkspacesAjaxContract['workspace']> = jest.fn();
+    const mockImportMethodConfig: MockedFn<WorkspaceContract['importMethodConfig']> = jest.fn();
+
+    mockWorkspace.mockReturnValue(partial<WorkspaceContract>({ importMethodConfig: mockImportMethodConfig }));
+
+    asMockedFn(Workspaces).mockReturnValue(
+      partial<WorkspacesAjaxContract>({
+        workspace: mockWorkspace,
       })
     );
 
-    const mockWorkspace: Partial<WorkspaceAjaxContract> = jest.fn(() => {
-      return {
-        importMethodConfig: mockImportMethodConfig,
-      };
+    const mockTemplate: MockedFn<MethodsAjaxContract['template']> = jest.fn();
+    mockTemplate.mockResolvedValue({
+      rootEntityType: 'shouldberemoved',
+      inputs: {
+        shouldBeKept: '',
+      },
     });
 
-    const mockImportMethodConfig = jest.fn();
+    asMockedFn(Methods).mockReturnValue(
+      partial<MethodsAjaxContract>({
+        template: mockTemplate,
+      })
+    );
 
-    asMockedFn(Ajax).mockReturnValue({
-      Methods: {
-        template: mockTemplate as TemplateAjaxContract,
-      } as MethodsAjaxContract,
-      Workspaces: {
-        workspace: mockWorkspace as WorkspaceAjaxContract,
-      } as WorkspacesAjaxContract,
-    } as AjaxContract);
     const signal = new window.AbortController().signal;
 
     // Act
@@ -131,13 +131,13 @@ describe('export workflow from methods repo provider', () => {
     });
 
     // Assert
-    expect(Ajax).toHaveBeenCalledTimes(2);
-
-    expect(Ajax).toHaveBeenNthCalledWith(1, signal);
+    expect(Workspaces).toHaveBeenCalledTimes(1);
+    expect(Workspaces).toHaveBeenCalledWith(signal);
     expect(mockTemplate).toHaveBeenCalledTimes(1);
     expect(mockTemplate).toHaveBeenCalledWith(mockMethodRepoMethod);
 
-    expect(Ajax).toHaveBeenNthCalledWith(2, signal);
+    expect(Methods).toHaveBeenCalledTimes(1);
+    expect(Methods).toHaveBeenCalledWith(signal);
     expect(mockWorkspace).toHaveBeenCalledTimes(1);
     expect(mockWorkspace).toHaveBeenCalledWith(destWorkspace.namespace, destWorkspace.name);
     expect(mockImportMethodConfig).toHaveBeenCalledTimes(1);
