@@ -521,6 +521,7 @@ export const BaseAnalyses = (
       setActiveFileTransfers(!_.isEmpty(fileTransfers));
     });
     if (workspace?.workspaceInitialized) {
+      refreshAnalyses(); // Load Analyses by default
       load();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
