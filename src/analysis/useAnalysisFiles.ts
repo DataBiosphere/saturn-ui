@@ -83,6 +83,11 @@ export const useAnalysisFiles = (): AnalysisFileStore => {
   };
 
   useEffect(() => {
+    refresh();
+  }, [workspace!.workspace]); // eslint-disable-line react-hooks/exhaustive-deps
+  // refresh depends only on workspace.workspace, do not want to refresh on workspace.workspaceInitialized
+
+  useEffect(() => {
     if (pendingCreate.status === 'Error') {
       reportError('Error creating Analysis file.', pendingCreate.error);
     }
