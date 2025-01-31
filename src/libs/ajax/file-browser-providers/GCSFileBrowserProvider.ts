@@ -1,6 +1,5 @@
 import FileBrowserProvider from 'src/libs/ajax/file-browser-providers/FileBrowserProvider';
-import { GoogleStorage } from 'src/libs/ajax/GoogleStorage';
-import { GCSItem } from 'src/libs/ajax/GoogleStorage';
+import { GCSItem, GoogleStorage } from 'src/libs/ajax/GoogleStorage';
 import IncrementalResponse from 'src/libs/ajax/incremental-response/IncrementalResponse';
 import { SamResources } from 'src/libs/ajax/SamResources';
 

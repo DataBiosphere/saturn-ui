@@ -14,8 +14,7 @@ import {
   UploadParameters,
 } from 'src/libs/ajax/data-table-providers/DataTableProvider';
 import { LeoAppStatus, ListAppItem } from 'src/libs/ajax/leonardo/models/app-models';
-import { WorkspaceData } from 'src/libs/ajax/WorkspaceDataService';
-import { Capabilities, Capability } from 'src/libs/ajax/WorkspaceDataService';
+import { Capabilities, Capability, WorkspaceData } from 'src/libs/ajax/WorkspaceDataService';
 import { notificationStore } from 'src/libs/state';
 import * as Utils from 'src/libs/utils';
 import { notifyDataImportProgress } from 'src/workspace-data/import-jobs';
