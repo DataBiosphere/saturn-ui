@@ -12,6 +12,7 @@ import { initAuthTesting } from 'src/auth/app-load/init-auth-test';
 import { initializeAuthMetrics } from 'src/auth/app-load/init-metrics';
 import { initializeClientId } from 'src/auth/app-load/initializeClientId';
 import { initializeSystemProperties } from 'src/auth/system-loader';
+import { setupAjaxTestUtil } from 'src/libs/ajax';
 import { isAxeEnabled } from 'src/libs/config';
 import Main from 'src/pages/Main';
 
@@ -20,6 +21,8 @@ const rootElement = document.getElementById('root');
 RModal.defaultStyles = { overlay: {}, content: {} };
 
 window._ = _;
+
+setupAjaxTestUtil();
 
 initializeAuthListeners();
 initializeAuthMetrics();

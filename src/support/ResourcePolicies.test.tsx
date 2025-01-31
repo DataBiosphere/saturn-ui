@@ -24,7 +24,7 @@ describe('ResourcePolicies', () => {
     asMockedFn(SamResources).mockReturnValue(partial<SamResourcesContract>({ getResourcePolicies }));
   }
 
-  it('calls Ajax().SamResources.getResourcePolicies and displays the result', async () => {
+  it('calls SamResources().getResourcePolicies and displays the result', async () => {
     // Arrange
     const testValue = uuidv4();
     const getResourcePolicies = jest.fn(() => Promise.resolve({ policy: testValue }));

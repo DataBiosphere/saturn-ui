@@ -1,11 +1,13 @@
-import { Ajax } from 'src/libs/ajax';
 import { FileBrowserDirectory, FileBrowserFile } from 'src/libs/ajax/file-browser-providers/FileBrowserProvider';
 import GCSFileBrowserProvider from 'src/libs/ajax/file-browser-providers/GCSFileBrowserProvider';
+import { GoogleStorage } from 'src/libs/ajax/GoogleStorage';
 import { GCSItem, GCSListObjectsResponse, GoogleStorageContract } from 'src/libs/ajax/GoogleStorage';
+import { SamResources, SamResourcesContract } from 'src/libs/ajax/SamResources';
 import * as Utils from 'src/libs/utils';
-import { asMockedFn } from 'src/testing/test-utils';
+import { asMockedFn, MockedFn, partial } from 'src/testing/test-utils';
 
-jest.mock('src/libs/ajax');
+jest.mock('src/libs/ajax/GoogleStorage');
+jest.mock('src/libs/ajax/SamResources');
 
 const gcsObject = (name: string): GCSItem => ({
   bucket: 'test-bucket',
@@ -37,10 +39,11 @@ const expectedFile = (path: string): FileBrowserFile => ({
 });
 
 describe('GCSFileBrowserProvider', () => {
-  let list;
+  let list: MockedFn<GoogleStorageContract['list']>;
 
   beforeEach(() => {
-    list = jest.fn().mockImplementation((_googleProject, _bucket, _prefix, options = {}) => {
+    list = jest.fn();
+    list.mockImplementation((_googleProject, _bucket, _prefix, options = {}) => {
       const { pageToken } = options;
 
       const response: GCSListObjectsResponse = Utils.switchCase(
@@ -73,7 +76,7 @@ describe('GCSFileBrowserProvider', () => {
       return Promise.resolve(response);
     });
 
-    asMockedFn(Ajax).mockImplementation(() => ({ Buckets: { list } } as ReturnType<typeof Ajax>));
+    asMockedFn(GoogleStorage).mockReturnValue(partial<GoogleStorageContract>({ list }));
   });
 
   it('pages through files (objects)', async () => {
@@ -140,12 +143,10 @@ describe('GCSFileBrowserProvider', () => {
 
   it('gets a signed URL for downloads', async () => {
     // Arrange
-    const getSignedUrl = jest.fn(() => Promise.resolve('signedUrl'));
-    asMockedFn(Ajax).mockImplementation(() => {
-      return {
-        SamResources: { getSignedUrl } as Partial<ReturnType<typeof Ajax>['SamResources']>,
-      } as ReturnType<typeof Ajax>;
-    });
+    const getSignedUrl: MockedFn<SamResourcesContract['getSignedUrl']> = jest.fn();
+    getSignedUrl.mockResolvedValue('signedUrl');
+
+    asMockedFn(SamResources).mockReturnValue(partial<SamResourcesContract>({ getSignedUrl }));
 
     const provider = GCSFileBrowserProvider({ bucket: 'test-bucket', project: 'test-project' });
 
@@ -170,13 +171,10 @@ describe('GCSFileBrowserProvider', () => {
 
   it('uploads a file', async () => {
     // Arrange
-    const upload = jest.fn(() => Promise.resolve());
-    asMockedFn(Ajax).mockImplementation(
-      () =>
-        ({
-          Buckets: { upload } as Partial<GoogleStorageContract>,
-        } as ReturnType<typeof Ajax>)
-    );
+    const upload: MockedFn<GoogleStorageContract['upload']> = jest.fn();
+    upload.mockResolvedValue(undefined);
+
+    asMockedFn(GoogleStorage).mockReturnValue(partial<GoogleStorageContract>({ upload }));
 
     const testFile = new File(['somecontent'], 'example.txt', { type: 'text/text' });
 
@@ -191,13 +189,9 @@ describe('GCSFileBrowserProvider', () => {
 
   it('deletes files', async () => {
     // Arrange
-    const del = jest.fn(() => Promise.resolve());
-    asMockedFn(Ajax).mockImplementation(
-      () =>
-        ({
-          Buckets: { delete: del } as Partial<GoogleStorageContract>,
-        } as ReturnType<typeof Ajax>)
-    );
+    const del: MockedFn<GoogleStorageContract['delete']> = jest.fn();
+    del.mockResolvedValue(undefined);
+    asMockedFn(GoogleStorage).mockReturnValue(partial<GoogleStorageContract>({ delete: del }));
 
     const provider = GCSFileBrowserProvider({ bucket: 'test-bucket', project: 'test-project' });
 
@@ -210,16 +204,16 @@ describe('GCSFileBrowserProvider', () => {
 
   it('moves files', async () => {
     // Arrange
-    const copyWithinBucket = jest.fn(() => Promise.resolve());
-    const del = jest.fn(() => Promise.resolve());
-    asMockedFn(Ajax).mockImplementation(
-      () =>
-        ({
-          Buckets: {
-            copyWithinBucket,
-            delete: del,
-          } as Partial<GoogleStorageContract>,
-        } as ReturnType<typeof Ajax>)
+    const copyWithinBucket: MockedFn<GoogleStorageContract['copyWithinBucket']> = jest.fn();
+    copyWithinBucket.mockResolvedValue(undefined);
+    const del: MockedFn<GoogleStorageContract['delete']> = jest.fn();
+    del.mockResolvedValue(undefined);
+
+    asMockedFn(GoogleStorage).mockReturnValue(
+      partial<GoogleStorageContract>({
+        copyWithinBucket,
+        delete: del,
+      })
     );
 
     const provider = GCSFileBrowserProvider({ bucket: 'test-bucket', project: 'test-project' });
@@ -239,13 +233,10 @@ describe('GCSFileBrowserProvider', () => {
 
   it('creates empty directories', async () => {
     // Arrange
-    const upload = jest.fn(() => Promise.resolve());
-    asMockedFn(Ajax).mockImplementation(
-      () =>
-        ({
-          Buckets: { upload } as Partial<GoogleStorageContract>,
-        } as ReturnType<typeof Ajax>)
-    );
+    const upload: MockedFn<GoogleStorageContract['upload']> = jest.fn();
+    upload.mockResolvedValue(undefined);
+
+    asMockedFn(GoogleStorage).mockReturnValue(partial<GoogleStorageContract>({ upload }));
 
     const provider = GCSFileBrowserProvider({ bucket: 'test-bucket', project: 'test-project' });
 
@@ -265,13 +256,10 @@ describe('GCSFileBrowserProvider', () => {
 
   it('deletes empty directories', async () => {
     // Arrange
-    const del = jest.fn(() => Promise.resolve());
-    asMockedFn(Ajax).mockImplementation(
-      () =>
-        ({
-          Buckets: { delete: del } as Partial<GoogleStorageContract>,
-        } as ReturnType<typeof Ajax>)
-    );
+    const del: MockedFn<GoogleStorageContract['delete']> = jest.fn();
+    del.mockResolvedValue(undefined);
+
+    asMockedFn(GoogleStorage).mockReturnValue(partial<GoogleStorageContract>({ delete: del }));
 
     const provider = GCSFileBrowserProvider({ bucket: 'test-bucket', project: 'test-project' });
 

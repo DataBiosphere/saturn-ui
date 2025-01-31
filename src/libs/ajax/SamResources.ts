@@ -1,7 +1,6 @@
 import { jsonBody } from '@terra-ui-packages/data-client-core';
 import _ from 'lodash/fp';
 import { authOpts } from 'src/auth/auth-session';
-import { Ajax } from 'src/libs/ajax';
 import { fetchSam } from 'src/libs/ajax/ajax-common';
 import { appIdentifier } from 'src/libs/ajax/fetch/fetch-core';
 
@@ -34,7 +33,7 @@ export const SamResources = (signal?: AbortSignal) => ({
     object: string,
     requesterPaysProject: RequesterPaysProject = undefined
   ): Promise<string> => {
-    return Ajax(signal).SamResources.getRequesterPaysSignedUrl(`gs://${bucket}/${object}`, requesterPaysProject);
+    return SamResources(signal).getRequesterPaysSignedUrl(`gs://${bucket}/${object}`, requesterPaysProject);
   },
 
   getResourcePolicies: async (fqResourceId: FullyQualifiedResourceId): Promise<object> => {

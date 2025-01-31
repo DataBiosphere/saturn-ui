@@ -1,8 +1,7 @@
 import { DeepPartial } from '@terra-ui-packages/core-utils';
-import { Ajax } from 'src/libs/ajax';
-import { Apps } from 'src/libs/ajax/leonardo/Apps';
-import { Capabilities, WorkspaceData } from 'src/libs/ajax/WorkspaceDataService';
-import { asMockedFn } from 'src/testing/test-utils';
+import { Apps, AppsAjaxContract } from 'src/libs/ajax/leonardo/Apps';
+import { Capabilities, WorkspaceData, WorkspaceDataAjaxContract } from 'src/libs/ajax/WorkspaceDataService';
+import { asMockedFn, MockedFn, partial } from 'src/testing/test-utils';
 import { cloudProviderTypes } from 'src/workspaces/utils';
 
 import { ListAppItem } from '../leonardo/models/app-models';
@@ -22,7 +21,8 @@ import {
   wdsToEntityServiceMetadata,
 } from './WdsDataTableProvider';
 
-jest.mock('src/libs/ajax');
+jest.mock('src/libs/ajax/leonardo/Apps');
+jest.mock('src/libs/ajax/WorkspaceDataService');
 
 type ReactNotificationsComponentExports = typeof import('react-notifications-component');
 jest.mock('react-notifications-component', (): DeepPartial<ReactNotificationsComponentExports> => {
@@ -97,12 +97,8 @@ const queryOptions: EntityQueryOptions = {
   columnFilter: '',
 };
 
-type WorkspaceDataContract = ReturnType<typeof WorkspaceData>;
-type AjaxContract = ReturnType<typeof Ajax>;
-type AppsContract = ReturnType<typeof Apps>;
-
 describe('WdsDataTableProvider', () => {
-  const getRecordsMockImpl: WorkspaceDataContract['getRecords'] = (
+  const getRecordsMockImpl: WorkspaceDataAjaxContract['getRecords'] = (
     _root: string,
     _instanceId: string,
     _recordType: string,
@@ -150,20 +146,20 @@ describe('WdsDataTableProvider', () => {
     return Promise.resolve(recordQueryResponse);
   };
 
-  const getCapabilitiesMockImpl: WorkspaceDataContract['getCapabilities'] = (_root: string) => {
+  const getCapabilitiesMockImpl: WorkspaceDataAjaxContract['getCapabilities'] = (_root: string) => {
     const Capabilities: Capabilities = {};
     return Promise.resolve(Capabilities);
   };
 
-  const deleteTableMockImpl: WorkspaceDataContract['deleteTable'] = (_instanceId: string, _recordType: string) => {
+  const deleteTableMockImpl: WorkspaceDataAjaxContract['deleteTable'] = (_instanceId: string, _recordType: string) => {
     return Promise.resolve(new Response('', { status: 204 }));
   };
 
-  const downloadTsvMockImpl: WorkspaceDataContract['downloadTsv'] = (_instanceId: string, _recordType: string) => {
+  const downloadTsvMockImpl: WorkspaceDataAjaxContract['downloadTsv'] = (_instanceId: string, _recordType: string) => {
     return Promise.resolve(new Blob(['hello']));
   };
 
-  const uploadTsvMockImpl: WorkspaceDataContract['uploadTsv'] = (
+  const uploadTsvMockImpl: WorkspaceDataAjaxContract['uploadTsv'] = (
     _root: string,
     _instanceId: string,
     _recordType: string,
@@ -172,7 +168,7 @@ describe('WdsDataTableProvider', () => {
     return Promise.resolve({ message: 'Upload Succeeded', recordsModified: 1 });
   };
 
-  const updateRecordMockImpl: WorkspaceDataContract['updateRecord'] = (
+  const updateRecordMockImpl: WorkspaceDataAjaxContract['updateRecord'] = (
     _root: string,
     _instanceId: string,
     _recordType: string,
@@ -190,37 +186,34 @@ describe('WdsDataTableProvider', () => {
     return Promise.resolve(testProxyUrlResponse);
   };
 
-  let getRecords: jest.MockedFunction<WorkspaceDataContract['getRecords']>;
-  let updateRecord: jest.MockedFunction<WorkspaceDataContract['updateRecord']>;
-  let getCapabilities: jest.MockedFunction<WorkspaceDataContract['getCapabilities']>;
-  let deleteTable: jest.MockedFunction<WorkspaceDataContract['deleteTable']>;
-  let downloadTsv: jest.MockedFunction<WorkspaceDataContract['downloadTsv']>;
-  let uploadTsv: jest.MockedFunction<WorkspaceDataContract['uploadTsv']>;
-  let listAppsV2: jest.MockedFunction<AppsContract['listAppsV2']>;
+  const getRecords: MockedFn<WorkspaceDataAjaxContract['getRecords']> = jest.fn();
+  const updateRecord: MockedFn<WorkspaceDataAjaxContract['updateRecord']> = jest.fn();
+  const getCapabilities: MockedFn<WorkspaceDataAjaxContract['getCapabilities']> = jest.fn();
+  const deleteTable: MockedFn<WorkspaceDataAjaxContract['deleteTable']> = jest.fn();
+  const downloadTsv: MockedFn<WorkspaceDataAjaxContract['downloadTsv']> = jest.fn();
+  const uploadTsv: MockedFn<WorkspaceDataAjaxContract['uploadTsv']> = jest.fn();
+  const listAppsV2: MockedFn<AppsAjaxContract['listAppsV2']> = jest.fn();
 
   beforeEach(() => {
-    getRecords = jest.fn().mockImplementation(getRecordsMockImpl);
-    updateRecord = jest.fn().mockImplementation(updateRecordMockImpl);
-    getCapabilities = jest.fn().mockImplementation(getCapabilitiesMockImpl);
-    deleteTable = jest.fn().mockImplementation(deleteTableMockImpl);
-    downloadTsv = jest.fn().mockImplementation(downloadTsvMockImpl);
-    uploadTsv = jest.fn().mockImplementation(uploadTsvMockImpl);
-    listAppsV2 = jest.fn().mockImplementation(listAppsV2MockImpl);
+    getRecords.mockImplementation(getRecordsMockImpl);
+    updateRecord.mockImplementation(updateRecordMockImpl);
+    getCapabilities.mockImplementation(getCapabilitiesMockImpl);
+    deleteTable.mockImplementation(deleteTableMockImpl);
+    downloadTsv.mockImplementation(downloadTsvMockImpl);
+    uploadTsv.mockImplementation(uploadTsvMockImpl);
+    listAppsV2.mockImplementation(listAppsV2MockImpl);
 
-    asMockedFn(Ajax).mockImplementation(
-      () =>
-        ({
-          WorkspaceData: {
-            getRecords,
-            updateRecord,
-            getCapabilities,
-            deleteTable,
-            downloadTsv,
-            uploadTsv,
-          } as Partial<WorkspaceDataContract>,
-          Apps: { listAppsV2 } as Partial<AppsContract>,
-        } as Partial<AjaxContract> as AjaxContract)
+    asMockedFn(WorkspaceData).mockReturnValue(
+      partial<WorkspaceDataAjaxContract>({
+        getRecords,
+        updateRecord,
+        getCapabilities,
+        deleteTable,
+        downloadTsv,
+        uploadTsv,
+      })
     );
+    asMockedFn(Apps).mockReturnValue(partial<AppsAjaxContract>({ listAppsV2 }));
   });
 
   describe('transformAttributes', () => {

@@ -3,9 +3,9 @@ import { AnalysisFile, AnalysisFileMetadata } from 'src/analysis/useAnalysisFile
 import { AbsolutePath, getDisplayName, getExtension, getFileName } from 'src/analysis/utils/file-utils';
 import { runtimeToolLabels } from 'src/analysis/utils/tool-utils';
 import { authOpts } from 'src/auth/auth-session';
-import { Ajax } from 'src/libs/ajax';
 import { fetchWorkspaceManager } from 'src/libs/ajax/ajax-common';
 import { fetchOk } from 'src/libs/ajax/fetch/fetch-core';
+import { WorkspaceManagerResources } from 'src/libs/ajax/WorkspaceManagerResources';
 import { getConfig } from 'src/libs/config';
 import * as Utils from 'src/libs/utils';
 import { cloudProviderTypes } from 'src/workspaces/utils';
@@ -78,7 +78,7 @@ export const AzureStorage = (signal?: AbortSignal) => ({
    * (which is an expected transient state while a workspace is being cloned).
    */
   containerInfo: async (workspaceId: string): Promise<StorageContainerInfo> => {
-    const data = await Ajax(signal).WorkspaceManagerResources.controlledResources(workspaceId);
+    const data = await WorkspaceManagerResources(signal).controlledResources(workspaceId);
     const container = _.find(
       {
         metadata: {
