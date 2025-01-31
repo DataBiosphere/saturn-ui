@@ -14,13 +14,6 @@ import { asMockedFn, partial, renderHookInAct } from 'src/testing/test-utils';
 import { useDeleteWorkspaceState } from 'src/workspaces/DeleteWorkspaceModal/state/useDeleteWorkspaceState';
 import { AzureWorkspaceInfo, BaseWorkspace, GoogleWorkspaceInfo } from 'src/workspaces/utils';
 
-type AjaxExports = typeof import('src/libs/ajax');
-jest.mock('src/libs/ajax', (): AjaxExports => {
-  return {
-    ...jest.requireActual('src/libs/ajax'),
-    Ajax: jest.fn(),
-  };
-});
 jest.mock('src/libs/ajax/leonardo/Apps');
 jest.mock('src/libs/ajax/leonardo/Runtimes');
 jest.mock('src/libs/ajax/workspaces/Workspaces');
