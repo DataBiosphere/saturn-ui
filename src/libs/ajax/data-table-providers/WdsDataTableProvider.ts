@@ -1,5 +1,4 @@
 import _ from 'lodash/fp';
-import { Ajax } from 'src/libs/ajax';
 import {
   AttributeArray,
   DataTableFeatures,
@@ -15,6 +14,7 @@ import {
   UploadParameters,
 } from 'src/libs/ajax/data-table-providers/DataTableProvider';
 import { LeoAppStatus, ListAppItem } from 'src/libs/ajax/leonardo/models/app-models';
+import { WorkspaceData } from 'src/libs/ajax/WorkspaceDataService';
 import { Capabilities, Capability } from 'src/libs/ajax/WorkspaceDataService';
 import { notificationStore } from 'src/libs/state';
 import * as Utils from 'src/libs/utils';
@@ -283,7 +283,7 @@ export class WdsDataTableProvider implements DataTableProvider {
     metadata: EntityMetadata
   ): Promise<EntityQueryResponse> => {
     if (!this.proxyUrl) return Promise.reject('Proxy Url not loaded');
-    const wdsPage: RecordQueryResponse = await Ajax(signal).WorkspaceData.getRecords(
+    const wdsPage: RecordQueryResponse = await WorkspaceData(signal).getRecords(
       this.proxyUrl,
       this.workspaceId,
       entityType,
@@ -301,17 +301,17 @@ export class WdsDataTableProvider implements DataTableProvider {
 
   deleteTable = (entityType: string): Promise<Response> => {
     if (!this.proxyUrl) return Promise.reject('Proxy Url not loaded');
-    return Ajax().WorkspaceData.deleteTable(this.proxyUrl, this.workspaceId, entityType);
+    return WorkspaceData().deleteTable(this.proxyUrl, this.workspaceId, entityType);
   };
 
   deleteColumn = (signal: AbortSignal, entityType: string, attributeName: string): Promise<Response> => {
     if (!this.proxyUrl) return Promise.reject('Proxy URL not loaded');
-    return Ajax(signal).WorkspaceData.deleteColumn(this.proxyUrl, this.workspaceId, entityType, attributeName);
+    return WorkspaceData(signal).deleteColumn(this.proxyUrl, this.workspaceId, entityType, attributeName);
   };
 
   downloadTsv = (signal: AbortSignal, entityType: string): Promise<Blob> => {
     if (!this.proxyUrl) return Promise.reject('Proxy Url not loaded');
-    return Ajax(signal).WorkspaceData.downloadTsv(this.proxyUrl, this.workspaceId, entityType);
+    return WorkspaceData(signal).downloadTsv(this.proxyUrl, this.workspaceId, entityType);
   };
 
   uploadTsv = (uploadParams: UploadParameters): Promise<TsvUploadResponse> => {
@@ -331,7 +331,7 @@ export class WdsDataTableProvider implements DataTableProvider {
         );
       }
     }, 1000);
-    return Ajax().WorkspaceData.uploadTsv(
+    return WorkspaceData().uploadTsv(
       this.proxyUrl,
       uploadParams.workspaceId,
       uploadParams.recordType,
@@ -342,7 +342,7 @@ export class WdsDataTableProvider implements DataTableProvider {
   updateRecord = (recordEditParams: RecordEditParameters): Promise<RecordResponseBody> => {
     if (!this.proxyUrl) return Promise.reject('Proxy Url not loaded');
 
-    return Ajax().WorkspaceData.updateRecord(
+    return WorkspaceData().updateRecord(
       this.proxyUrl,
       recordEditParams.instance,
       recordEditParams.recordName,
@@ -353,7 +353,7 @@ export class WdsDataTableProvider implements DataTableProvider {
 
   updateAttribute = (params: UpdateAttributeParameters): Promise<Blob> => {
     if (!this.proxyUrl) return Promise.reject('Proxy Url not loaded');
-    return Ajax().WorkspaceData.updateAttribute(
+    return WorkspaceData().updateAttribute(
       this.proxyUrl,
       this.workspaceId,
       params.entityType,

@@ -337,7 +337,7 @@ export const Workspaces = (signal?: AbortSignal) => ({
           },
 
           // NB: This could one day perhaps redirect to CromIAM's 'workflow' like:
-          // workflow: workflowId => Ajax(signal).CromIAM.workflow(workflowId)
+          // workflow: workflowId => CromIAM(signal).workflow(workflowId)
           // But: Because of the slowness of asking via CromIAM, that's probably a non-starter for right now.
           workflow: (workflowId: string) => {
             return {

@@ -2,7 +2,6 @@ import { act, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import _ from 'lodash/fp';
 import { h } from 'react-hyperscript-helpers';
-import { AjaxContract } from 'src/libs/ajax';
 import {
   AzureBlobByUriContract,
   AzureBlobResult,
@@ -95,7 +94,7 @@ const runDetailsProps = {
 
 const captureEvent = jest.fn();
 
-const mockObj: Pick<AjaxContract, 'CromwellApp' | 'AzureStorage' | 'Metrics'> = {
+const mockObj = {
   CromwellApp: partial<CromwellAppAjaxContract>({
     workflows: () =>
       partial<WorkflowsContract>({
