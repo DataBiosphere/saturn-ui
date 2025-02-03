@@ -1101,8 +1101,64 @@ export const WorkflowView = _.flow(
                         ]),
                   ]),
               ]),
+              div([span({ style: { fontWeight: 'bold' } }, ['Terra will remember these submission settings in this browser. '])]),
+              isFeaturePreviewEnabled(PREVIEW_COST_CAPPING) &&
+                div(
+                  {
+                    style: {
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignSelf: 'flex-start',
+                      marginTop: '0.5rem',
+                    },
+                  },
+                  [
+                    span({ style: { fontWeight: 'bold' } }, [
+                      'Set cost limit per workflow (BETA) ',
+                      h(InfoBox, { style: { marginLeft: '0.1rem', whiteSpace: 'pre-line' } }, [
+                        'Important cost limit considerations:',
+                        h('br'),
+                        '1. Costs are in USD.',
+                        h('br'),
+                        '2. Costs are VM and disk costs only. Bucket storage and egress costs are not included.',
+                        h('br'),
+                        '3. Based on GCP list prices. Discounts are not included.',
+                        h('br'),
+                        '4. GPU costs are not included (coming soon!).',
+                        h('br'),
+                        '5. Workflows may not terminate immediately upon hitting limit, plan for a margin of error.',
+                        h('br'),
+                        '6. Workflow costs vary by input. Set a limit that considers variability.',
+                      ]),
+                    ]),
+                    div({ style: { display: 'flex', alignItems: 'center', marginLeft: '0rem', marginBottom: '0.5rem' } }, [
+                      span({ style: { marginRight: '0.5rem' } }, ['$']),
+                      h(NumberInput, {
+                        id: 'workflow-run-budget',
+                        value: perWorkflowCostCap || '',
+                        min: 0.01,
+                        max: 9999999999.99,
+                        placeholder: 'Example: 1.00',
+                        onChange: (v) => this.setState({ perWorkflowCostCap: v ? v.toFixed(2) : undefined }),
+                        style: { marginTop: '0.5rem', width: '100%', marginLeft: '0.1rem' },
+                      }),
+                    ]),
+                  ]
+                ),
+              div(
+                {
+                  style: {
+                    display: 'flex',
+                    flexDirection: 'column',
+                    marginLeft: '0rem',
+                    alignSelf: 'flex-start',
+                    marginBottom: '-2rem',
+                  },
+                },
+                [span({ style: { fontWeight: 'bold' } }, ['Runtime options '])]
+              ),
               div({ style: { display: 'flex', alignItems: 'baseline', minWidth: 'max-content' } }, [
-                span({ style: { marginTop: '1.0rem', marginBottom: '0.5rem' } }, [
+                span({ style: { marginTop: '2.0rem', marginBottom: '0.5rem' } }, [
                   div([
                     span({ style: { ...styles.checkBoxSpanMargins, marginLeft: 0 } }, [
                       h(
@@ -1276,50 +1332,6 @@ export const WorkflowView = _.flow(
                       ]),
                   ]),
                 ]),
-                isFeaturePreviewEnabled(PREVIEW_COST_CAPPING) &&
-                  div(
-                    {
-                      style: {
-                        display: 'flex',
-                        flexDirection: 'column',
-                        marginLeft: '2rem',
-                        alignSelf: 'flex-start',
-                        marginBottom: '-2rem',
-                      },
-                    },
-                    [
-                      span({ style: { fontWeight: 'bold' } }, [
-                        'Set cost limit per workflow (BETA) ',
-                        h(InfoBox, { style: { marginLeft: '0.1rem', whiteSpace: 'pre-line' } }, [
-                          'Important cost limit considerations:',
-                          h('br'),
-                          '1. Costs are in USD.',
-                          h('br'),
-                          '2. Costs are VM and disk costs only. Bucket storage and egress costs are not included.',
-                          h('br'),
-                          '3. Based on GCP list prices. Discounts are not included.',
-                          h('br'),
-                          '4. GPU costs are not included (coming soon!).',
-                          h('br'),
-                          '5. Workflows may not terminate immediately upon hitting limit, plan for a margin of error.',
-                          h('br'),
-                          '6. Workflow costs vary by input. Set a limit that considers variability.',
-                        ]),
-                      ]),
-                      div({ style: { display: 'flex', alignItems: 'center', marginLeft: '0rem' } }, [
-                        span({ style: { marginRight: '0.5rem' } }, ['$']),
-                        h(NumberInput, {
-                          id: 'workflow-run-budget',
-                          value: perWorkflowCostCap || '',
-                          min: 0.01,
-                          max: 9999999999.99,
-                          placeholder: 'Example: 1.00',
-                          onChange: (v) => this.setState({ perWorkflowCostCap: v ? v.toFixed(2) : undefined }),
-                          style: { marginTop: '0.5rem', width: '100%', marginLeft: '0.1rem' },
-                        }),
-                      ]),
-                    ]
-                  ),
               ]),
               h(StepButtons, {
                 tabs: [
