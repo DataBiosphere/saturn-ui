@@ -22,7 +22,6 @@ describe('Workflows Library', () => {
     // discover workflows section
     expect(screen.getByText('Discover Workflows')).toBeInTheDocument();
     expect(screen.getByText('Dockstore.org')).toBeInTheDocument();
-    expect(screen.getByText('Broad Methods Repository')).toBeInTheDocument();
 
     // curated workflows section
     expect(screen.getByText('Curated collections from our community:')).toBeInTheDocument();
