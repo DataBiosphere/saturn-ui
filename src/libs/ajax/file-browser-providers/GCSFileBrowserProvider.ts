@@ -1,7 +1,7 @@
-import { Ajax } from 'src/libs/ajax';
 import FileBrowserProvider from 'src/libs/ajax/file-browser-providers/FileBrowserProvider';
-import { GCSItem } from 'src/libs/ajax/GoogleStorage';
+import { GCSItem, GoogleStorage } from 'src/libs/ajax/GoogleStorage';
 import IncrementalResponse from 'src/libs/ajax/incremental-response/IncrementalResponse';
+import { SamResources } from 'src/libs/ajax/SamResources';
 
 export interface GCSFileBrowserProviderParams {
   bucket: string;
@@ -67,7 +67,7 @@ const GCSFileBrowserProvider = ({
           requestOptions.matchGlob = matchGlob;
         }
 
-        const response = await Ajax(signal).Buckets.list(project, bucket, prefix, requestOptions);
+        const response = await GoogleStorage(signal).list(project, bucket, prefix, requestOptions);
         const responseItems = (response[itemsOrPrefixes] || []).map((itemOrPrefix) => mapItemOrPrefix(itemOrPrefix));
 
         // Exclude folder placeholder objects.
@@ -141,20 +141,20 @@ const GCSFileBrowserProvider = ({
         signal,
       }),
     getDownloadUrlForFile: async (path, { signal } = {}) => {
-      return await Ajax(signal).SamResources.getSignedUrl(bucket, path);
+      return await SamResources(signal).getSignedUrl(bucket, path);
     },
     getDownloadCommandForFile: (path) => {
       return Promise.resolve(`gcloud storage cp 'gs://${bucket}/${path}' .`);
     },
     uploadFileToDirectory: (directoryPath, file) => {
-      return Ajax().Buckets.upload(project, bucket, directoryPath, file);
+      return GoogleStorage().upload(project, bucket, directoryPath, file);
     },
     deleteFile: async (path: string): Promise<void> => {
-      await Ajax().Buckets.delete(project, bucket, path);
+      await GoogleStorage().delete(project, bucket, path);
     },
     moveFile: async (sourcePath: string, destinationPath: string): Promise<void> => {
-      await Ajax().Buckets.copyWithinBucket(project, bucket, sourcePath, destinationPath);
-      await Ajax().Buckets.delete(project, bucket, sourcePath);
+      await GoogleStorage().copyWithinBucket(project, bucket, sourcePath, destinationPath);
+      await GoogleStorage().delete(project, bucket, sourcePath);
     },
     createEmptyDirectory: async (directoryPath: string) => {
       // Create a placeholder object for the new folder.
@@ -164,7 +164,7 @@ const GCSFileBrowserProvider = ({
       const prefix = prefixSegments.length === 0 ? '' : `${prefixSegments.join('/')}/`;
       const directoryName = directoryPath.split('/').slice(-2, -1)[0];
       const placeholderObject = new File([''], `${directoryName}/`, { type: 'text/plain' });
-      await Ajax().Buckets.upload(project, bucket, prefix, placeholderObject);
+      await GoogleStorage().upload(project, bucket, prefix, placeholderObject);
       return {
         path: directoryPath,
       };
@@ -175,7 +175,7 @@ const GCSFileBrowserProvider = ({
       // A placeholder object may not exist for the prefix being viewed, so do not an report error for 404 responses.
       // See https://cloud.google.com/storage/docs/folders for more information on placeholder objects.
       try {
-        await Ajax().Buckets.delete(project, bucket, directoryPath);
+        await GoogleStorage().delete(project, bucket, directoryPath);
       } catch (error) {
         if (!(error instanceof Response && error.status === 404)) {
           throw error;
