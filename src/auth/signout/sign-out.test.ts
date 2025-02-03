@@ -52,6 +52,7 @@ jest.mock('src/libs/state', (): StateExports => {
       get: jest.fn().mockReturnValue({
         userManager: {
           signoutRedirect: jest.fn(() => 'Default signOutRedirectFn'),
+          getUser: jest.fn().mockReturnValue('not null'),
         },
       }),
     },
@@ -65,9 +66,6 @@ describe('sign-out', () => {
     asMockedFn(Metrics).mockReturnValue({
       captureEvent: captureEventFn,
     } as Partial<MetricsContract> as MetricsContract);
-    asMockedFn(oidcStore.get).mockReturnValue({
-      userManager: { getUser: jest.fn().mockReturnValue('not null') },
-    } as unknown as OidcState);
 
     // Act
     signOut();
@@ -80,9 +78,6 @@ describe('sign-out', () => {
     asMockedFn(Metrics).mockReturnValue({
       captureEvent: captureEventFn,
     } as Partial<MetricsContract> as MetricsContract);
-    asMockedFn(oidcStore.get).mockReturnValue({
-      userManager: { getUser: jest.fn().mockReturnValue('not null') },
-    } as unknown as OidcState);
 
     // Act
     signOut('idleStatusMonitor');
