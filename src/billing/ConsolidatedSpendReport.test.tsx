@@ -5,7 +5,7 @@ import React from 'react';
 import { Billing, BillingContract } from 'src/libs/ajax/billing/Billing';
 import { AggregatedWorkspaceSpendData, SpendReport } from 'src/libs/ajax/billing/billing-models';
 import { reportError } from 'src/libs/error';
-import { spendReportStore } from 'src/libs/state';
+import { getTerraUser, spendReportStore } from 'src/libs/state';
 import { renderWithAppContexts } from 'src/testing/test-utils';
 import { WorkspaceWrapper } from 'src/workspaces/utils';
 
@@ -30,6 +30,19 @@ jest.mock(
     updateSearch: jest.fn(),
   })
 );
+
+type StateExports = typeof import('src/libs/state');
+jest.mock(
+  'src/libs/state',
+  (): StateExports => ({
+    ...jest.requireActual('src/libs/state'),
+    getTerraUser: jest.fn(),
+  })
+);
+
+asMockedFn(getTerraUser).mockReturnValue({
+  email: 'user1@gmail.com',
+});
 
 const spendReport: SpendReport = {
   spendSummary: {
@@ -208,7 +221,7 @@ const workspaces = [
       billingAccount: 'billingAccounts/00102A-34B56C-78DEFB',
       bucketName: 'fc-01111a11-20b2-3033-4044-77c0c7c77777',
       cloudPlatform: 'Gcp',
-      createdBy: 'user1@gmail.com',
+      createdBy: 'user2@gmail.com',
       createdDate: '2024-08-10T13:50:36.984Z',
       googleProject: 'terra-dev-fe98dcb8',
       googleProjectNumber: '123045678090',
@@ -310,6 +323,20 @@ describe('ConsolidatedSpendReport', () => {
     expect(screen.queryByText('workspace1')).toBeNull();
     expect(screen.getByText('workspace4')).not.toBeNull();
     expect(screen.getAllByText('N/A')).not.toBeNull();
+  });
+
+  it('filters to user-created workspaces', async () => {
+    // Arrange
+    const user = userEvent.setup();
+    getCrossBillingSpendReport.mockResolvedValue(spendReport);
+
+    // Act
+    await act(async () => renderWithAppContexts(<ConsolidatedSpendReport workspaces={workspaces} />));
+    await user.click(screen.getByLabelText('Only show workspaces created by me'));
+
+    // Assert
+    expect(screen.getByText('workspace2')).not.toBeNull();
+    expect(screen.queryByText('workspace3')).toBeNull();
   });
 
   it('displays a helpful error if the query fails', async () => {
