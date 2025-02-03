@@ -7,7 +7,7 @@ import { DateRangeFilter } from 'src/billing/Filter/DateRangeFilter';
 import { SearchFilter } from 'src/billing/Filter/SearchFilter';
 import { parseCurrencyIfNeeded } from 'src/billing/utils';
 import { BillingProject } from 'src/billing-core/models';
-import { ButtonOutline, fixedSpinnerOverlay } from 'src/components/common';
+import { ButtonOutline, Checkbox, fixedSpinnerOverlay } from 'src/components/common';
 import { ariaSort, HeaderRenderer } from 'src/components/table';
 import { Billing } from 'src/libs/ajax/billing/Billing';
 import {
@@ -20,7 +20,7 @@ import { reportError } from 'src/libs/error';
 import Events, { extractBillingDetails } from 'src/libs/events';
 import * as Nav from 'src/libs/nav';
 import { memoWithName, useCancellation } from 'src/libs/react-utils';
-import { SpendReportStore, spendReportStore } from 'src/libs/state';
+import { getTerraUser, SpendReportStore, spendReportStore } from 'src/libs/state';
 import * as Style from 'src/libs/style';
 import * as Utils from 'src/libs/utils';
 import { GoogleWorkspace, GoogleWorkspaceInfo, WorkspaceWrapper } from 'src/workspaces/utils';
@@ -181,8 +181,10 @@ export const ConsolidatedSpendReport = (props: ConsolidatedSpendReportProps): Re
     direction: 'desc',
   });
   const [allWorkspaces, setAllWorkspaces] = useState<WorkspaceWrapper[]>(props.workspaces);
+  const [filterToCreated, setFilterToCreated] = useState(false);
 
   const [itemsPerPage, setItemsPerPage] = useState(250);
+  const userEmail = getTerraUser().email;
 
   const signal = useCancellation();
 
@@ -344,14 +346,16 @@ export const ConsolidatedSpendReport = (props: ConsolidatedSpendReportProps): Re
               };
               return newStore;
             });
-            setOwnedWorkspaces(updatedWorkspaces);
+            setOwnedWorkspaces(
+              updatedWorkspaces.filter((workspace) => (filterToCreated ? workspace.createdBy === userEmail : true))
+            );
           }
         });
       }
     };
     initialize();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [signal, spendReportLengthInDays, allWorkspaces, itemsPerPage]);
+  }, [signal, spendReportLengthInDays, allWorkspaces, itemsPerPage, filterToCreated]);
 
   return (
     <>
@@ -393,6 +397,16 @@ export const ConsolidatedSpendReport = (props: ConsolidatedSpendReportProps): Re
             style={{ gridRowStart: 1, gridColumnStart: 2, margin: '1.35rem' }}
             onChange={setSearchValue}
           />
+          <div style={{ gridRowStart: 2, gridColumnStart: 1, marginTop: '-2rem' }}>
+            <Checkbox
+              checked={filterToCreated}
+              aria-label='Only show workspaces created by me'
+              onChange={() => {
+                setFilterToCreated(!filterToCreated);
+              }}
+            />
+            <span style={{ marginLeft: '0.5rem' }}>Only show workspaces created by me</span>
+          </div>
           {ownedWorkspaces.length >= itemsPerPage && (
             <ButtonOutline
               aria-label='Show all workspaces'
