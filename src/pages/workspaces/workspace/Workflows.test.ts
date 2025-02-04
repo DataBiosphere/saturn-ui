@@ -127,8 +127,9 @@ describe('Find Workflow modal in Workflows view', () => {
 
     expect(findWorkflowModal).toBeInTheDocument();
     expect(within(findWorkflowModal).getByText('Find a workflow')).toBeInTheDocument();
-    // Dockstore card
+    // Dockstore and Terra Workflow Repo card
     expect(within(findWorkflowModal).getByText('Dockstore.org')).toBeInTheDocument();
+    expect(within(findWorkflowModal).getByText('Terra Workflow Repository')).toBeInTheDocument();
     // curated workflows section
     expect(within(findWorkflowModal).getByText('GATK Best Practices')).toBeInTheDocument();
     expect(within(findWorkflowModal).getByText('Long Read Pipelines')).toBeInTheDocument();
