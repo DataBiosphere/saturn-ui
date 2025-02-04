@@ -52,6 +52,7 @@ jest.mock('src/libs/state', (): StateExports => {
       get: jest.fn().mockReturnValue({
         userManager: {
           signoutRedirect: jest.fn(() => 'Default signOutRedirectFn'),
+          getUser: jest.fn().mockReturnValue('not null'),
         },
       }),
     },
@@ -91,7 +92,7 @@ describe('sign-out', () => {
     const link = '/signout';
     const expectedState = btoa(JSON.stringify({ signOutRedirect: currentRoute, signOutCause: 'unspecified' }));
     asMockedFn(oidcStore.get).mockReturnValue({
-      userManager: { signoutRedirect: signOutRedirectFn },
+      userManager: { signoutRedirect: signOutRedirectFn, getUser: jest.fn().mockReturnValue('not null') },
     } as unknown as OidcState);
     asMockedFn(leoCookieProvider.unsetCookies).mockImplementation(unsetCookiesFn);
     asMockedFn(Nav.getPath).mockReturnValue(link);
@@ -116,6 +117,7 @@ describe('sign-out', () => {
     asMockedFn(oidcStore.get).mockReturnValue({
       userManager: {
         signoutRedirect: signOutRedirectFn,
+        getUser: jest.fn().mockReturnValue('not null'),
       },
     } as unknown as OidcState);
     asMockedFn(removeUserFromLocalState).mockImplementation(removeUserFromLocalStateFn);
@@ -128,6 +130,23 @@ describe('sign-out', () => {
       'Signing out with B2C failed. Falling back on local signout',
       expect.any(Error)
     );
+    expect(removeUserFromLocalStateFn).toHaveBeenCalled();
+    expect(goToRootFn).toHaveBeenCalledWith('root');
+  });
+  it('calls userSignedOut if getUser returns null', async () => {
+    // Arrange
+    const removeUserFromLocalStateFn = jest.fn();
+    const goToRootFn = jest.fn();
+    asMockedFn(oidcStore.get).mockReturnValue({
+      userManager: {
+        getUser: jest.fn().mockReturnValue(null),
+      },
+    } as unknown as OidcState);
+    asMockedFn(removeUserFromLocalState).mockImplementation(removeUserFromLocalStateFn);
+    asMockedFn(goToPath).mockImplementation(goToRootFn);
+    // Act
+    await doSignOut();
+    // Assert
     expect(removeUserFromLocalStateFn).toHaveBeenCalled();
     expect(goToRootFn).toHaveBeenCalledWith('root');
   });
