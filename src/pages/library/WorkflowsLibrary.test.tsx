@@ -21,7 +21,9 @@ describe('Workflows Library', () => {
 
     // discover workflows section
     expect(screen.getByText('Discover Workflows')).toBeInTheDocument();
+    // Dockstore and Terra Workflow Repo card
     expect(screen.getByText('Dockstore.org')).toBeInTheDocument();
+    expect(screen.getByText('Terra Workflow Repository')).toBeInTheDocument();
 
     // curated workflows section
     expect(screen.getByText('Curated collections from our community:')).toBeInTheDocument();

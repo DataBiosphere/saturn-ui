@@ -21,8 +21,9 @@ describe('FindWorkflowModal', () => {
     expect(screen.getByText('Find a workflow')).toBeInTheDocument();
     // 'x' close button
     expect(screen.getByLabelText('Close modal')).toBeInTheDocument();
-    // Dockstore card
+    // Dockstore and Terra Workflow Repo card
     expect(screen.getByText('Dockstore.org')).toBeInTheDocument();
+    expect(screen.getByText('Terra Workflow Repository')).toBeInTheDocument();
     // curated workflows section
     expect(screen.getByText('GATK Best Practices')).toBeInTheDocument();
     expect(screen.getByText('Long Read Pipelines')).toBeInTheDocument();
