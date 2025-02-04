@@ -74,7 +74,7 @@ export const FindWorkflowModal = (props: FindWorkflowModalProps) => {
   const { onDismiss } = props;
 
   const dockstoreUrl = `${getConfig().dockstoreUrlRoot}/search?_type=workflow&descriptorType=WDL&searchMode=files`;
-  const workflowsRepoUrl: string = Nav.getLink('workflows');
+  const workflowsRepoUrl = Nav.getLink('workflows');
 
   return (
     <Modal onDismiss={onDismiss} title='Find a workflow' showCancel okButton={false} showX width={870}>
