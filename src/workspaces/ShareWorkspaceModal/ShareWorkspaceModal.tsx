@@ -59,6 +59,8 @@ const ShareWorkspaceModal: React.FC<ShareWorkspaceModalProps> = (props: ShareWor
 
   const signal = useCancellation();
 
+  const enableShareLog = false; // Set "true" to enable suggestions
+
   // Lifecycle
   useOnMount(() => {
     const load = async () => {
@@ -100,7 +102,7 @@ const ShareWorkspaceModal: React.FC<ShareWorkspaceModalProps> = (props: ShareWor
     _.uniq
   )(groups);
 
-  const remainingSuggestions = _.difference(suggestions, _.map('email', acl));
+  const remainingSuggestions = enableShareLog ? _.difference(suggestions, _.map('email', acl)) : [];
   const addUserReminder =
     'Did you mean to add collaborators? Add them or clear the "User emails" field to save changes.';
 
