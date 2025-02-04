@@ -1101,7 +1101,7 @@ export const WorkflowView = _.flow(
                         ]),
                   ]),
               ]),
-              div([span({ style: { fontWeight: 'bold' } }, ['Terra will remember these submission settings in this browser. '])]),
+              div([span({ style: { fontWeight: 'bold', fontSize: 16 } }, ['Terra will remember these submission settings in this browser: '])]),
               isFeaturePreviewEnabled(PREVIEW_COST_CAPPING) &&
                 div(
                   {
@@ -1109,7 +1109,7 @@ export const WorkflowView = _.flow(
                       display: 'flex',
                       flexDirection: 'column',
                       alignSelf: 'flex-start',
-                      marginTop: '0.5rem',
+                      marginTop: '0rem',
                     },
                   },
                   [
