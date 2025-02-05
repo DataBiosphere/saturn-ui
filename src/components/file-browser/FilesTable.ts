@@ -109,20 +109,31 @@ const FilesTable = (props: FilesTableProps) => {
               cellRenderer: ({ rowIndex }) => {
                 if (rowIndex < directories.length) {
                   const directory = directories[rowIndex];
-                  return h(
-                    Link,
-                    {
-                      style: {
-                        ...(Style.noWrapEllipsis as React.CSSProperties),
-                        textDecoration: 'underline',
+                  return h(Fragment, [
+                    h(
+                      Link,
+                      {
+                        href: directory.url ?? directory.path,
+                        style: {
+                          ...(Style.noWrapEllipsis as React.CSSProperties),
+                          textDecoration: 'underline',
+                        },
+                        onClick: (e) => {
+                          e.preventDefault();
+                          onClickDirectory(directory);
+                        },
                       },
-                      onClick: (e) => {
-                        e.preventDefault();
-                        onClickDirectory(directory);
-                      },
-                    },
-                    [basename(directory.path)]
-                  );
+                      [basename(directory.path)]
+                    ),
+                    h(ClipboardButton, {
+                      'aria-label': 'Copy folder URL to clipboard',
+                      className: 'cell-hover-only',
+                      iconSize: 14,
+                      text: directory.url ?? directory.path,
+                      tooltip: 'Copy folder URL to clipboard',
+                      style: { marginLeft: '1ch' },
+                    }),
+                  ]);
                 }
                 const file = files[rowIndex - directories.length];
                 return h(Fragment, [

@@ -40,6 +40,7 @@ export const getOidcConfig = () => {
     // Leo's setCookie interval is currently 5 min, set refresh auth then 5 min 30 seconds to guarantee that setCookie's token won't expire between 2 setCookie api calls
     accessTokenExpiringNotificationTimeInSeconds: 330,
     includeIdTokenInSilentRenew: true,
+    includeIdTokenInSilentSignout: true,
     extraQueryParams: { access_type: 'offline' },
     redirect_uri: '', // this field is not being used currently, but is expected from UserManager
   };

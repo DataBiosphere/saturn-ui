@@ -131,6 +131,7 @@ export const Subdirectories = (props: SubdirectoriesProps) => {
               id: `${parentId}-${index}`,
               level: level + 1,
               path: directory.path,
+              url: directory.url,
               provider,
               reloadRequests,
               rootLabel,
@@ -194,6 +195,7 @@ interface DirectoryProps {
   provider: FileBrowserProvider;
   level: number;
   path: string;
+  url?: string;
   reloadRequests: ReloadRequestSubscribable;
   rootLabel: string;
   selectedDirectory: string;
@@ -208,6 +210,7 @@ export const Directory = (props: DirectoryProps) => {
     id,
     level,
     path,
+    url,
     provider,
     reloadRequests,
     rootLabel,
@@ -289,8 +292,9 @@ export const Directory = (props: DirectoryProps) => {
         Link,
         {
           id: `${id}-link`,
-          role: 'presentation',
+          role: 'link',
           tabIndex: -1,
+          href: url,
           style: {
             display: 'inline-block',
             overflow: 'hidden',
@@ -308,7 +312,8 @@ export const Directory = (props: DirectoryProps) => {
           ...(isSelected && {
             hover: { color: selectedDirectoryColor },
           }),
-          onClick: () => {
+          onClick: (e) => {
+            e.preventDefault();
             onSelectDirectory(path);
             setIsExpanded(true);
           },

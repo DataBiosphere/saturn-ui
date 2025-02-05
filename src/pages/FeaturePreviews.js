@@ -94,7 +94,7 @@ export const FeaturePreviews = () => {
               field: 'description',
               headerRenderer: () => span({ style: { fontWeight: 'bold' } }, ['Description']),
               cellRenderer: ({ rowIndex }) => {
-                const { title, description, documentationUrl, feedbackUrl, groups, articleUrl } = featurePreviews[rowIndex];
+                const { title, description, documentationUrl, feedbackUrl, groups } = featurePreviews[rowIndex];
                 const isPrivate = !_.isEmpty(groups);
                 const privateText = 'This feature is in Private Preview and is only visible to you.';
                 const privateIcon = Icon({
@@ -111,13 +111,11 @@ export const FeaturePreviews = () => {
                 return div([
                   p({ style: { fontWeight: 600, margin: '0.5rem 0 0.5rem' } }, [isPrivate && privateIcon, title]),
                   p({ style: { margin: '0.5rem 0' } }, [description]),
-                  !!(documentationUrl || feedbackUrl || articleUrl) &&
+                  !!(documentationUrl || feedbackUrl) &&
                     p({ style: { margin: '0.5rem 0' } }, [
                       documentationUrl && h(Link, { ...Utils.newTabLinkProps, href: documentationUrl }, ['Documentation']),
                       !!(documentationUrl && feedbackUrl) && ' | ',
-                      articleUrl
-                        ? h(Link, { ...Utils.newTabLinkProps, href: articleUrl }, ['Learn more and provide feedback'])
-                        : feedbackUrl && h(Link, { ...Utils.newTabLinkProps, href: feedbackUrl }, ['Submit feedback']),
+                      feedbackUrl && h(Link, { ...Utils.newTabLinkProps, href: feedbackUrl }, ['Learn more and provide feedback']),
                     ]),
                 ]);
               },
