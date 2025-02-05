@@ -7,7 +7,7 @@ import { DateRangeFilter } from 'src/billing/Filter/DateRangeFilter';
 import { SearchFilter } from 'src/billing/Filter/SearchFilter';
 import { parseCurrencyIfNeeded } from 'src/billing/utils';
 import { BillingProject } from 'src/billing-core/models';
-import { ButtonOutline, fixedSpinnerOverlay } from 'src/components/common';
+import { ButtonOutline, Checkbox, fixedSpinnerOverlay } from 'src/components/common';
 import { ariaSort, HeaderRenderer } from 'src/components/table';
 import { Billing } from 'src/libs/ajax/billing/Billing';
 import {
@@ -16,10 +16,11 @@ import {
 } from 'src/libs/ajax/billing/billing-models';
 import { Metrics } from 'src/libs/ajax/Metrics';
 import { Workspaces } from 'src/libs/ajax/workspaces/Workspaces';
+import { reportError } from 'src/libs/error';
 import Events, { extractBillingDetails } from 'src/libs/events';
 import * as Nav from 'src/libs/nav';
 import { memoWithName, useCancellation } from 'src/libs/react-utils';
-import { SpendReportStore, spendReportStore } from 'src/libs/state';
+import { getTerraUser, SpendReportStore, spendReportStore } from 'src/libs/state';
 import * as Style from 'src/libs/style';
 import * as Utils from 'src/libs/utils';
 import { GoogleWorkspace, GoogleWorkspaceInfo, WorkspaceWrapper } from 'src/workspaces/utils';
@@ -180,8 +181,10 @@ export const ConsolidatedSpendReport = (props: ConsolidatedSpendReportProps): Re
     direction: 'desc',
   });
   const [allWorkspaces, setAllWorkspaces] = useState<WorkspaceWrapper[]>(props.workspaces);
+  const [filterToCreated, setFilterToCreated] = useState(false);
 
   const [itemsPerPage, setItemsPerPage] = useState(250);
+  const userEmail = getTerraUser().email;
 
   const signal = useCancellation();
 
@@ -213,6 +216,7 @@ export const ConsolidatedSpendReport = (props: ConsolidatedSpendReportProps): Re
           'workspace.lastModified',
           'workspace.name',
           'workspace.namespace',
+          'accessLevel',
         ],
         itemsPerPage
       );
@@ -225,12 +229,13 @@ export const ConsolidatedSpendReport = (props: ConsolidatedSpendReportProps): Re
       const spendReportStoreLocal = spendReportStore.get();
       const storedSpendReport = spendReportStoreLocal?.[itemsPerPage]?.[spendReportLengthInDays];
       if (!storedSpendReport || storedSpendReport.startDate !== startDate || storedSpendReport.endDate !== endDate) {
-        const setDefaultSpendValues = (workspace: GoogleWorkspaceInfo) => ({
-          ...workspace,
-          totalSpend: 'N/A',
-          totalCompute: 'N/A',
-          totalStorage: 'N/A',
-        });
+        const setDefaultSpendValues = (workspace: WorkspaceWrapper) =>
+          ({
+            ...workspace.workspace,
+            totalSpend: 'N/A',
+            totalCompute: 'N/A',
+            totalStorage: 'N/A',
+          } as GoogleWorkspaceInfo);
 
         try {
           // Fetch the spend report for the billing project
@@ -245,47 +250,70 @@ export const ConsolidatedSpendReport = (props: ConsolidatedSpendReportProps): Re
             (detail) => detail.spendData[0]
           );
 
-          // Update each workspace with spend data or default values
-          return spendDataItems.map((spendItem) => {
-            const costFormatter = new Intl.NumberFormat(navigator.language, {
-              style: 'currency',
-              currency: spendItem.currency,
-            });
+          const matchedWorkspaces = new Set();
 
-            const workspaceDetails = allWorkspaces.find(
-              (ws): ws is GoogleWorkspace =>
-                ws.workspace.name === spendItem.workspace.name &&
-                ws.workspace.namespace === spendItem.workspace.namespace
-            );
+          const mappedWorkspaces = spendDataItems
+            .map((spendItem) => {
+              const costFormatter = new Intl.NumberFormat(navigator.language, {
+                style: 'currency',
+                currency: spendItem.currency,
+              });
 
-            return {
-              ...spendItem.workspace,
-              workspaceId: `${spendItem.workspace.namespace}-${spendItem.workspace.name}`,
-              authorizationDomain: workspaceDetails?.workspace.authorizationDomain,
-              createdDate: workspaceDetails?.workspace.createdDate,
-              createdBy: workspaceDetails?.workspace.createdBy,
-              lastModified: workspaceDetails?.workspace.lastModified,
+              const workspaceDetails = allWorkspaces.find(
+                (ws): ws is GoogleWorkspace =>
+                  ws.workspace.name === spendItem.workspace.name &&
+                  ws.workspace.namespace === spendItem.workspace.namespace
+              );
 
-              billingAccount: workspaceDetails?.workspace.billingAccount,
-              googleProject: workspaceDetails?.workspace.googleProject,
-              cloudPlatform: 'Gcp',
-              bucketName: workspaceDetails?.workspace.bucketName,
+              if (workspaceDetails) {
+                matchedWorkspaces.add(`${workspaceDetails.workspace.namespace}/${workspaceDetails.workspace.name}`);
 
-              totalSpend: costFormatter.format(parseFloat(spendItem.cost ?? '0.00')),
-              totalCompute: costFormatter.format(
-                parseFloat(_.find({ category: 'Compute' }, spendItem.subAggregation.spendData)?.cost ?? '0.00')
-              ),
-              totalStorage: costFormatter.format(
-                parseFloat(_.find({ category: 'Storage' }, spendItem.subAggregation.spendData)?.cost ?? '0.00')
-              ),
-              // otherSpend: costFormatter.format(
-              //   parseFloat(_.find({ category: 'Other' }, spendItem.subAggregation.spendData)?.cost ?? '0.00')
-              // ),
-            } as GoogleWorkspaceInfo;
-          });
-        } catch {
+                // Update each workspace with spend data or default values
+
+                return {
+                  ...spendItem.workspace,
+                  workspaceId: `${spendItem.workspace.namespace}-${spendItem.workspace.name}`,
+                  authorizationDomain: workspaceDetails?.workspace.authorizationDomain,
+                  createdDate: workspaceDetails?.workspace.createdDate,
+                  createdBy: workspaceDetails?.workspace.createdBy,
+                  lastModified: workspaceDetails?.workspace.lastModified,
+
+                  billingAccount: workspaceDetails?.workspace.billingAccount,
+                  googleProject: workspaceDetails?.workspace.googleProject,
+                  cloudPlatform: 'Gcp',
+                  bucketName: workspaceDetails?.workspace.bucketName,
+
+                  totalSpend: costFormatter.format(parseFloat(spendItem.cost ?? '0.00')),
+                  totalCompute: costFormatter.format(
+                    parseFloat(_.find({ category: 'Compute' }, spendItem.subAggregation.spendData)?.cost ?? '0.00')
+                  ),
+                  totalStorage: costFormatter.format(
+                    parseFloat(_.find({ category: 'Storage' }, spendItem.subAggregation.spendData)?.cost ?? '0.00')
+                  ),
+                  // otherSpend: costFormatter.format(
+                  //   parseFloat(_.find({ category: 'Other' }, spendItem.subAggregation.spendData)?.cost ?? '0.00')
+                  // ),
+                } as GoogleWorkspaceInfo;
+              }
+              return undefined;
+            })
+            .filter((workspace): workspace is GoogleWorkspaceInfo => workspace !== undefined);
+
+          // Any owned GCP workspaces that were not included in a spend report get N/A values
+          const unmatchedWorkspaces = allWorkspaces.filter(
+            (workspace) =>
+              !matchedWorkspaces.has(`${workspace.workspace.namespace}/${workspace.workspace.name}`) &&
+              (workspace.accessLevel === 'OWNER' || workspace.accessLevel === 'PROJECT_OWNER') &&
+              workspace.workspace.googleProject !== ''
+          );
+
+          const mappedUnmatchedWorkspaces = unmatchedWorkspaces.map(setDefaultSpendValues);
+
+          return [...mappedWorkspaces, ...mappedUnmatchedWorkspaces];
+        } catch (error) {
           // Return default values for each workspace in case of an error
-          return ownedWorkspaces.map(setDefaultSpendValues);
+          await reportError('Error loading spend report', error);
+          return [];
         } finally {
           // Ensure updating state is reset regardless of success or failure
           setUpdating(false);
@@ -318,14 +346,16 @@ export const ConsolidatedSpendReport = (props: ConsolidatedSpendReportProps): Re
               };
               return newStore;
             });
-            setOwnedWorkspaces(updatedWorkspaces);
+            setOwnedWorkspaces(
+              updatedWorkspaces.filter((workspace) => (filterToCreated ? workspace.createdBy === userEmail : true))
+            );
           }
         });
       }
     };
     initialize();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [signal, spendReportLengthInDays, allWorkspaces, itemsPerPage]);
+  }, [signal, spendReportLengthInDays, allWorkspaces, itemsPerPage, filterToCreated]);
 
   return (
     <>
@@ -367,6 +397,16 @@ export const ConsolidatedSpendReport = (props: ConsolidatedSpendReportProps): Re
             style={{ gridRowStart: 1, gridColumnStart: 2, margin: '1.35rem' }}
             onChange={setSearchValue}
           />
+          <div style={{ gridRowStart: 2, gridColumnStart: 1, marginTop: '-2rem' }}>
+            <Checkbox
+              checked={filterToCreated}
+              aria-label='Only show workspaces created by me'
+              onChange={() => {
+                setFilterToCreated(!filterToCreated);
+              }}
+            />
+            <span style={{ marginLeft: '0.5rem' }}>Only show workspaces created by me</span>
+          </div>
           {ownedWorkspaces.length >= itemsPerPage && (
             <ButtonOutline
               aria-label='Show all workspaces'
@@ -383,6 +423,19 @@ export const ConsolidatedSpendReport = (props: ConsolidatedSpendReportProps): Re
         <div aria-live='polite' aria-atomic>
           <span aria-hidden>*</span>
           Total spend includes infrastructure or query costs related to the general operations of Terra.
+        </div>
+        <div aria-live='polite' aria-atomic>
+          <span aria-hidden>*</span>
+          {
+            'Workspaces with cost N/A mean Terra is unable to retrieve cost data for that workspace. Check to ensure the '
+          }
+          <Link
+            href='https://support.terra.bio/hc/en-us/articles/10026441196187-How-to-set-up-spend-reporting-for-workflows-in-Terra-Terra-Billing-project-owners-GCP'
+            {...Utils.newTabLinkProps}
+          >
+            billing project’s billing export
+          </Link>
+          {' has been setup.'}
         </div>
         {!_.isEmpty(filteredOwnedWorkspaces) && (
           <div role='table' aria-label='owned workspaces'>

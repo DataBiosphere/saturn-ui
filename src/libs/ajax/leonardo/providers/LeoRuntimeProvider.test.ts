@@ -1,9 +1,9 @@
-import { Ajax } from 'src/libs/ajax';
-import { GoogleStorageContract } from 'src/libs/ajax/GoogleStorage';
+import { GoogleStorage, GoogleStorageContract } from 'src/libs/ajax/GoogleStorage';
 import { AsyncRuntimeFields, GetRuntimeItem } from 'src/libs/ajax/leonardo/models/runtime-models';
 import {
   RuntimeAjaxContractV1,
   RuntimeAjaxContractV2,
+  Runtimes,
   RuntimesAjaxContract,
   RuntimeWrapperAjaxContract,
 } from 'src/libs/ajax/leonardo/Runtimes';
@@ -11,9 +11,9 @@ import { asMockedFn, partial } from 'src/testing/test-utils';
 
 import { leoRuntimeProvider, RuntimeBasics, RuntimeErrorInfo } from './LeoRuntimeProvider';
 
-jest.mock('src/libs/ajax');
+jest.mock('src/libs/ajax/GoogleStorage');
+jest.mock('src/libs/ajax/leonardo/Runtimes');
 
-type AjaxContract = ReturnType<typeof Ajax>;
 type RuntimesNeeds = Pick<RuntimesAjaxContract, 'listV2' | 'runtime' | 'runtimeV2' | 'runtimeWrapper'>;
 type RuntimeV1Needs = Pick<RuntimeAjaxContractV1, 'delete' | 'details'>;
 type RuntimeV2Needs = Pick<RuntimeAjaxContractV2, 'delete' | 'details'>;
@@ -21,81 +21,66 @@ type RuntimeWrapperNeeds = Pick<RuntimeWrapperAjaxContract, 'stop'>;
 type BucketsNeeds = Pick<GoogleStorageContract, 'getObjectPreview'>;
 
 interface AjaxMockNeeds {
-  Runtimes: RuntimesNeeds;
+  runtimes: RuntimesNeeds;
   runtimeV1: RuntimeV1Needs;
   runtimeV2: RuntimeV2Needs;
   runtimeWrapper: RuntimeWrapperNeeds;
-  Buckets: BucketsNeeds;
+  buckets: BucketsNeeds;
 }
 
 /**
- * local test utility - mocks the Ajax super-object and the subset of needed multi-contracts it
- * returns with as much type-saftely as possible.
+ * local test utility - sets up mocks for needed ajax data-calls with as much type-saftely as possible.
  *
- * @return collection of key contract sub-objects for easy
+ * @return collection of key data-call fns for easy
  * mock overrides and/or method spying/assertions
  */
 const mockAjaxNeeds = (): AjaxMockNeeds => {
-  const partialRuntimeV1: RuntimeV1Needs = {
+  const runtimeV1: RuntimeV1Needs = {
     delete: jest.fn(),
     details: jest.fn(),
   };
-  const mockRuntimeV1 = partialRuntimeV1 as RuntimeAjaxContractV1;
-
-  const partialRuntimeV2: RuntimeV2Needs = {
+  const runtimeV2: RuntimeV2Needs = {
     delete: jest.fn(),
     details: jest.fn(),
   };
-  const mockRuntimeV2 = partialRuntimeV2 as RuntimeAjaxContractV2;
-
-  const partialRuntimeWrapper: RuntimeWrapperNeeds = {
+  const runtimeWrapper: RuntimeWrapperNeeds = {
     stop: jest.fn(),
   };
-  const mockRuntimeWrapper = partialRuntimeWrapper as RuntimeWrapperAjaxContract;
-
-  // Ajax.Runtimes root
-  const partialRuntimes: RuntimesNeeds = {
+  // Ajax.runtimes root
+  const runtimes: RuntimesNeeds = {
     listV2: jest.fn(),
     runtime: jest.fn(),
     runtimeV2: jest.fn(),
     runtimeWrapper: jest.fn(),
   };
-  asMockedFn(partialRuntimes.runtime).mockReturnValue(mockRuntimeV1);
-  asMockedFn(partialRuntimes.runtimeV2).mockReturnValue(mockRuntimeV2);
-  asMockedFn(partialRuntimes.runtimeWrapper).mockReturnValue(mockRuntimeWrapper);
+  asMockedFn(runtimes.runtime).mockReturnValue(partial<RuntimeAjaxContractV1>(runtimeV1));
+  asMockedFn(runtimes.runtimeV2).mockReturnValue(partial<RuntimeAjaxContractV2>(runtimeV2));
+  asMockedFn(runtimes.runtimeWrapper).mockReturnValue(partial<RuntimeWrapperAjaxContract>(runtimeWrapper));
 
-  const partialBuckets: BucketsNeeds = {
+  const buckets: BucketsNeeds = {
     getObjectPreview: jest.fn(),
   };
 
-  asMockedFn(Ajax).mockReturnValue({
-    Runtimes: partialRuntimes,
-    Buckets: partialBuckets,
-  } as AjaxContract);
+  asMockedFn(Runtimes).mockReturnValue(partial<RuntimesAjaxContract>(runtimes));
+  asMockedFn(GoogleStorage).mockReturnValue(partial<GoogleStorageContract>(buckets));
 
-  return {
-    Runtimes: partialRuntimes,
-    runtimeV1: partialRuntimeV1,
-    runtimeV2: partialRuntimeV2,
-    runtimeWrapper: partialRuntimeWrapper,
-    Buckets: partialBuckets,
-  };
+  return { runtimes, runtimeV1, runtimeV2, runtimeWrapper, buckets };
 };
 describe('leoRuntimeProvider', () => {
   it('handles list runtimes call', async () => {
     // Arrange
     const ajaxMock = mockAjaxNeeds();
-    asMockedFn(ajaxMock.Runtimes.listV2).mockResolvedValue([]);
+    asMockedFn(ajaxMock.runtimes.listV2).mockResolvedValue([]);
     const signal = new window.AbortController().signal;
 
     // Act
     const result = await leoRuntimeProvider.list({ arg: '1' }, { signal });
 
     // Assert;
-    expect(Ajax).toBeCalledTimes(1);
-    expect(Ajax).toBeCalledWith(signal);
-    expect(ajaxMock.Runtimes.listV2).toBeCalledTimes(1);
-    expect(ajaxMock.Runtimes.listV2).toBeCalledWith({ arg: '1' });
+    expect(Runtimes).toBeCalledTimes(1);
+    expect(Runtimes).toBeCalledWith(signal);
+    expect(ajaxMock.runtimes.listV2).toBeCalledTimes(1);
+    expect(ajaxMock.runtimes.listV2).toBeCalledWith({ arg: '1' });
     expect(result).toEqual([]);
   });
 
@@ -122,10 +107,10 @@ describe('leoRuntimeProvider', () => {
       const errorInfo = await leoRuntimeProvider.errorInfo(runtime, { signal: abort.signal });
 
       // Assert;
-      expect(Ajax).toBeCalledTimes(1);
-      expect(Ajax).toBeCalledWith(abort.signal);
-      expect(ajaxMock.Runtimes.runtime).toBeCalledTimes(1);
-      expect(ajaxMock.Runtimes.runtime).toBeCalledWith('myGoogleProject', 'myRuntime');
+      expect(Runtimes).toBeCalledTimes(1);
+      expect(Runtimes).toBeCalledWith(abort.signal);
+      expect(ajaxMock.runtimes.runtime).toBeCalledTimes(1);
+      expect(ajaxMock.runtimes.runtime).toBeCalledWith('myGoogleProject', 'myRuntime');
       expect(ajaxMock.runtimeV1.details).toBeCalledTimes(1);
 
       expect(errorInfo).toEqual({
@@ -154,7 +139,7 @@ describe('leoRuntimeProvider', () => {
           errors: [{ errorCode: 123, errorMessage: 'Userscript failed: See bucket for details', timestamp: '0:00' }],
         })
       );
-      asMockedFn(ajaxMock.Buckets.getObjectPreview).mockResolvedValue(
+      asMockedFn(ajaxMock.buckets.getObjectPreview).mockResolvedValue(
         new Response('Error: MeaningOfLife is undefined')
       );
 
@@ -162,13 +147,13 @@ describe('leoRuntimeProvider', () => {
       const errorInfo = await leoRuntimeProvider.errorInfo(runtime, { signal: abort.signal });
 
       // Assert;
-      expect(Ajax).toBeCalledTimes(1);
-      expect(Ajax).toBeCalledWith(abort.signal);
-      expect(ajaxMock.Runtimes.runtime).toBeCalledTimes(1);
-      expect(ajaxMock.Runtimes.runtime).toBeCalledWith('myGoogleProject', 'myRuntime');
+      expect(Runtimes).toBeCalledTimes(1);
+      expect(Runtimes).toBeCalledWith(abort.signal);
+      expect(ajaxMock.runtimes.runtime).toBeCalledTimes(1);
+      expect(ajaxMock.runtimes.runtime).toBeCalledWith('myGoogleProject', 'myRuntime');
       expect(ajaxMock.runtimeV1.details).toBeCalledTimes(1);
-      expect(ajaxMock.Buckets.getObjectPreview).toBeCalledTimes(1);
-      expect(ajaxMock.Buckets.getObjectPreview).toBeCalledWith(
+      expect(ajaxMock.buckets.getObjectPreview).toBeCalledTimes(1);
+      expect(ajaxMock.buckets.getObjectPreview).toBeCalledWith(
         'myGoogleProject',
         'myBucket',
         'userscript_output.txt',
@@ -205,10 +190,10 @@ describe('leoRuntimeProvider', () => {
       const errorInfo = await leoRuntimeProvider.errorInfo(runtime, { signal: abort.signal });
 
       // Assert;
-      expect(Ajax).toBeCalledTimes(1);
-      expect(Ajax).toBeCalledWith(abort.signal);
-      expect(ajaxMock.Runtimes.runtimeV2).toBeCalledTimes(1);
-      expect(ajaxMock.Runtimes.runtimeV2).toBeCalledWith('myWorkspace', 'myRuntime');
+      expect(Runtimes).toBeCalledTimes(1);
+      expect(Runtimes).toBeCalledWith(abort.signal);
+      expect(ajaxMock.runtimes.runtimeV2).toBeCalledTimes(1);
+      expect(ajaxMock.runtimes.runtimeV2).toBeCalledWith('myWorkspace', 'myRuntime');
       expect(ajaxMock.runtimeV2.details).toBeCalledTimes(1);
 
       expect(errorInfo).toEqual({
@@ -237,10 +222,10 @@ describe('leoRuntimeProvider', () => {
     void (await leoRuntimeProvider.stop(runtime, { signal: abort.signal }));
 
     // Assert;
-    expect(Ajax).toBeCalledTimes(1);
-    expect(Ajax).toBeCalledWith(abort.signal);
-    expect(ajaxMock.Runtimes.runtimeWrapper).toBeCalledTimes(1);
-    expect(ajaxMock.Runtimes.runtimeWrapper).toBeCalledWith(runtime);
+    expect(Runtimes).toBeCalledTimes(1);
+    expect(Runtimes).toBeCalledWith(abort.signal);
+    expect(ajaxMock.runtimes.runtimeWrapper).toBeCalledTimes(1);
+    expect(ajaxMock.runtimes.runtimeWrapper).toBeCalledWith(runtime);
     expect(ajaxMock.runtimeWrapper.stop).toBeCalledTimes(1);
   });
 
@@ -262,10 +247,10 @@ describe('leoRuntimeProvider', () => {
     void (await leoRuntimeProvider.delete(runtime, { signal: abort.signal }));
 
     // Assert;
-    expect(Ajax).toBeCalledTimes(1);
-    expect(Ajax).toBeCalledWith(abort.signal);
-    expect(ajaxMock.Runtimes.runtime).toBeCalledTimes(1);
-    expect(ajaxMock.Runtimes.runtime).toBeCalledWith('myGoogleProject', 'myRuntime');
+    expect(Runtimes).toBeCalledTimes(1);
+    expect(Runtimes).toBeCalledWith(abort.signal);
+    expect(ajaxMock.runtimes.runtime).toBeCalledTimes(1);
+    expect(ajaxMock.runtimes.runtime).toBeCalledWith('myGoogleProject', 'myRuntime');
     expect(ajaxMock.runtimeV1.delete).toBeCalledTimes(1);
     expect(ajaxMock.runtimeV1.delete).toBeCalledWith(false);
   });
@@ -288,10 +273,10 @@ describe('leoRuntimeProvider', () => {
     void (await leoRuntimeProvider.delete(runtime, { deleteDisk: true, signal: abort.signal }));
 
     // Assert;
-    expect(Ajax).toBeCalledTimes(1);
-    expect(Ajax).toBeCalledWith(abort.signal);
-    expect(ajaxMock.Runtimes.runtimeV2).toBeCalledTimes(1);
-    expect(ajaxMock.Runtimes.runtimeV2).toBeCalledWith('myWorkspaceId', 'myRuntime');
+    expect(Runtimes).toBeCalledTimes(1);
+    expect(Runtimes).toBeCalledWith(abort.signal);
+    expect(ajaxMock.runtimes.runtimeV2).toBeCalledTimes(1);
+    expect(ajaxMock.runtimes.runtimeV2).toBeCalledWith('myWorkspaceId', 'myRuntime');
     expect(ajaxMock.runtimeV2.delete).toBeCalledTimes(1);
     expect(ajaxMock.runtimeV2.delete).toBeCalledWith(true);
   });

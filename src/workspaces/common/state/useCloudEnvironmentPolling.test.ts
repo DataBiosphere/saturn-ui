@@ -18,10 +18,9 @@ interface AjaxMockNeeds {
   Runtimes: RuntimeMockNeeds;
 }
 /**
- * local test utility - mocks the Ajax super-object and the subset of needed multi-contracts it
- * returns with as much type-safety as possible.
+ * local test utility - sets up mocks for needed ajax data-calls with as much type-saftely as possible.
  *
- * @return collection of key contract sub-objects for easy
+ * @return collection of key data-call fns for easy
  * mock overrides and/or method spying/assertions
  */
 const mockAjaxNeeds = (): AjaxMockNeeds => {

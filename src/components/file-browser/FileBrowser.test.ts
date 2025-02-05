@@ -44,6 +44,7 @@ describe('FileBrowser', () => {
     const directories: FileBrowserDirectory[] = [
       {
         path: 'path/to/folder/',
+        url: 'gs://test-bucket/path/to/folder/',
       },
     ];
 

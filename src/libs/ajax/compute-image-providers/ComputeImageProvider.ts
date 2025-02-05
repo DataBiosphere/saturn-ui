@@ -5,7 +5,7 @@ import {
   runtimeToolLabels,
   terraSupportedRuntimeImageIds,
 } from 'src/analysis/utils/tool-utils';
-import { Ajax } from 'src/libs/ajax';
+import { GoogleStorage } from 'src/libs/ajax/GoogleStorage';
 import { getConfig } from 'src/libs/config';
 
 export interface ComputeImageProviderContract {
@@ -72,8 +72,8 @@ const normalizeImage: (rawImage: ComputeImageRaw) => ComputeImage = (rawImage) =
 
 export const ComputeImageProvider: ComputeImageProviderContract = {
   listImages: async (googleProject: string, signal?: AbortSignal): Promise<ComputeImage[]> => {
-    const fetchedImages: ComputeImageRaw[] = await Ajax(signal)
-      .Buckets.getObjectPreview(
+    const fetchedImages: ComputeImageRaw[] = await GoogleStorage(signal)
+      .getObjectPreview(
         googleProject,
         getConfig().terraDockerImageBucket,
         getConfig().terraDockerVersionsFile,

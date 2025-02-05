@@ -102,6 +102,8 @@ export interface WorkspaceSpendData {
   credits: string;
   currency: string;
   googleProjectId: string;
+  endTime?: string;
+  startTime?: string;
   subAggregation: { aggregationKey: 'Category'; spendData: CategorySpendData[] };
   workspace: { name: string; namespace: string };
 }
@@ -115,7 +117,7 @@ export interface DailySpendData {
   subAggregation: { aggregationKey: 'Category'; spendData: CategorySpendData[] };
 }
 
-interface AggregatedSpendData {
+export interface AggregatedSpendData {
   aggregationKey: 'Workspace' | 'Category' | 'Daily';
 }
 

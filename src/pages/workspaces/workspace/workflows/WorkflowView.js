@@ -1338,7 +1338,7 @@ export const WorkflowView = _.flow(
                     ...WorkspaceUtils.getWorkspaceAnalysisControlProps(ws),
                     onClick: () => this.setState({ launching: true }),
                   },
-                  ['Run analysis']
+                  ['Launch']
                 ),
               }),
               activeTab === 'outputs' &&

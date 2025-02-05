@@ -1,12 +1,10 @@
-import { Ajax } from 'src/libs/ajax';
-import { asMockedFn } from 'src/testing/test-utils';
+import { Workspaces, WorkspacesAjaxContract } from 'src/libs/ajax/workspaces/Workspaces';
+import { asMockedFn, partial } from 'src/testing/test-utils';
 
 import { workspaceProvider } from './WorkspaceProvider';
 
-jest.mock('src/libs/ajax');
+jest.mock('src/libs/ajax/workspaces/Workspaces');
 
-type AjaxContract = ReturnType<typeof Ajax>;
-type WorkspacesAjaxContract = Pick<AjaxContract, 'Workspaces'>['Workspaces'];
 type WorkspacesAjaxNeeds = Pick<WorkspacesAjaxContract, 'list'>;
 
 interface AjaxMockNeeds {
@@ -14,23 +12,18 @@ interface AjaxMockNeeds {
 }
 
 /**
- * local test utility - mocks the Ajax super-object and the subset of needed multi-contracts it
- * returns with as much type-safety as possible.
+ * local test utility - sets up mocks for needed ajax data-calls with as much type-saftely as possible.
  *
- * @return collection of key contract sub-objects for easy
+ * @return collection of key data-call fns for easy
  * mock overrides and/or method spying/assertions
  */
 const mockAjaxNeeds = (): AjaxMockNeeds => {
   const partialWorkspaces: WorkspacesAjaxNeeds = {
     list: jest.fn(),
   };
-  const mockWorkspaces = partialWorkspaces as WorkspacesAjaxContract;
+  asMockedFn(Workspaces).mockReturnValue(partial<WorkspacesAjaxContract>(partialWorkspaces));
 
-  asMockedFn(Ajax).mockReturnValue({ Workspaces: mockWorkspaces } as AjaxContract);
-
-  return {
-    workspaces: partialWorkspaces,
-  };
+  return { workspaces: partialWorkspaces };
 };
 describe('workspacesProvider', () => {
   it('handles list call', async () => {
@@ -43,8 +36,8 @@ describe('workspacesProvider', () => {
     const result = await workspaceProvider.list(['field1', 'field2'], { stringAttributeMaxLength: 50, signal });
 
     // Assert;
-    expect(Ajax).toBeCalledTimes(1);
-    expect(Ajax).toBeCalledWith(signal);
+    expect(Workspaces).toBeCalledTimes(1);
+    expect(Workspaces).toBeCalledWith(signal);
     expect(ajaxMock.workspaces.list).toBeCalledTimes(1);
     expect(ajaxMock.workspaces.list).toBeCalledWith(['field1', 'field2'], 50);
     expect(result).toEqual([]);
