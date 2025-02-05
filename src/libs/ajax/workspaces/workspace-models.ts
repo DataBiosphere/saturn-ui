@@ -240,3 +240,20 @@ export interface BucketUsageResponse {
   usageInBytes: number;
   lastUpdated?: string;
 }
+
+export interface Workflow {
+  cost: bigint;
+  inputResolutions: {
+    value: any;
+    error: string;
+    inputName: string;
+  }[];
+  messages: string[];
+  status: string;
+  statusLastChangedDate: string;
+  workflowEntity: {
+    entityType: string;
+    entityName: string;
+  };
+  workflowId: string;
+}

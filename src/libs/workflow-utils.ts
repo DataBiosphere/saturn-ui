@@ -1,5 +1,7 @@
 import FileSaver from 'file-saver';
+import { List } from 'lodash';
 import _ from 'lodash/fp';
+import { Workflow } from 'src/libs/ajax/workspaces/workspace-models';
 import * as Utils from 'src/libs/utils';
 
 export const workflowNameValidation = () => {
@@ -53,10 +55,10 @@ export const downloadIO = (io, filename) => {
   FileSaver.saveAs(blob, `${filename}.json`);
 };
 
-export const downloadWorkflows = (rows, filename) => {
+export const downloadWorkflows = (rows: List<Workflow>, filename: any) => {
   const headers = _.keys(_.head(rows));
 
-  const stringifiedRows = _.map((row) => {
+  const stringifiedRows = _.map((row: Workflow) => {
     return _.map((header) => {
       const value = row[header];
       return _.isObject(value) ? JSON.stringify(value) : value;
