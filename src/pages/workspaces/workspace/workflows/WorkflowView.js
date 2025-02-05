@@ -1101,7 +1101,14 @@ export const WorkflowView = _.flow(
                         ]),
                   ]),
               ]),
-              div([span({ style: { fontWeight: 'bold', fontSize: 16 } }, ['Terra will remember these submission settings in this browser: '])]),
+              div([
+                span([
+                  'Runtime options: ',
+                  h(InfoBox, { style: { marginLeft: '0.1rem', whiteSpace: 'pre-line' } }, [
+                    'Terra will remember these submission settings in this browser.',
+                  ]),
+                ]),
+              ]),
               isFeaturePreviewEnabled(PREVIEW_COST_CAPPING) &&
                 div(
                   {
@@ -1109,11 +1116,12 @@ export const WorkflowView = _.flow(
                       display: 'flex',
                       flexDirection: 'column',
                       alignSelf: 'flex-start',
-                      marginTop: '0rem',
+                      marginTop: '0.0rem',
+                      fontSize: 12,
                     },
                   },
                   [
-                    span({ style: { fontWeight: 'bold' } }, [
+                    span([
                       'Set cost limit per workflow (BETA) ',
                       h(InfoBox, { style: { marginLeft: '0.1rem', whiteSpace: 'pre-line' } }, [
                         'Important cost limit considerations:',
@@ -1140,25 +1148,13 @@ export const WorkflowView = _.flow(
                         max: 9999999999.99,
                         placeholder: 'Example: 1.00',
                         onChange: (v) => this.setState({ perWorkflowCostCap: v ? v.toFixed(2) : undefined }),
-                        style: { marginTop: '0.5rem', width: '100%', marginLeft: '0.1rem' },
+                        style: { fontSize: 12, marginTop: '0.5rem', width: '100%', marginLeft: '0.1rem' },
                       }),
                     ]),
                   ]
                 ),
-              div(
-                {
-                  style: {
-                    display: 'flex',
-                    flexDirection: 'column',
-                    marginLeft: '0rem',
-                    alignSelf: 'flex-start',
-                    marginBottom: '-2rem',
-                  },
-                },
-                [span({ style: { fontWeight: 'bold' } }, ['Runtime options '])]
-              ),
-              div({ style: { display: 'flex', alignItems: 'baseline', minWidth: 'max-content' } }, [
-                span({ style: { marginTop: '2.0rem', marginBottom: '0.5rem' } }, [
+              div({ style: { fontSize: 12, display: 'flex', alignItems: 'baseline', minWidth: 'max-content' } }, [
+                span({ style: { marginTop: '0.5rem', marginBottom: '0.5rem' } }, [
                   div([
                     span({ style: { ...styles.checkBoxSpanMargins, marginLeft: 0 } }, [
                       h(
@@ -1257,7 +1253,7 @@ export const WorkflowView = _.flow(
                                   isClearable: false,
                                   onlyInteger: false,
                                   value: retryMemoryFactor,
-                                  style: { width: '5rem' },
+                                  style: { fontSize: 12, width: '5rem' },
                                   onChange: (v) => this.setState({ retryMemoryFactor: v }),
                                 }),
                               ]),
@@ -1305,7 +1301,7 @@ export const WorkflowView = _.flow(
                             placeholder: 'Script',
                             value: monitoringScript,
                             onChange: (v) => this.setState({ monitoringScript: v }),
-                            style: { marginTop: '0.5rem', width: '90%', marginRight: '0.5rem' },
+                            style: { fontSize: 12, marginTop: '0.5rem', width: '90%', marginRight: '0.5rem' },
                           }),
                           h(InfoBox, ['Standalone .sh script that runs inside task container']),
                         ]),
@@ -1315,7 +1311,7 @@ export const WorkflowView = _.flow(
                             placeholder: 'Image',
                             value: monitoringImage,
                             onChange: (v) => this.setState({ monitoringImage: v }),
-                            style: { marginTop: '0.5rem', width: '90%', marginRight: '0.5rem' },
+                            style: { fontSize: 12, marginTop: '0.5rem', width: '90%', marginRight: '0.5rem' },
                           }),
                           h(InfoBox, ['Image that runs as a sibling alongside task container']),
                         ]),
@@ -1325,7 +1321,7 @@ export const WorkflowView = _.flow(
                             placeholder: 'Image script',
                             value: monitoringImageScript,
                             onChange: (v) => this.setState({ monitoringImageScript: v }),
-                            style: { marginTop: '0.5rem', width: '90%', marginRight: '0.5rem' },
+                            style: { fontSize: 12, marginTop: '0.5rem', width: '90%', marginRight: '0.5rem' },
                           }),
                           h(InfoBox, ['Script that runs inside the sibling container']),
                         ]),
