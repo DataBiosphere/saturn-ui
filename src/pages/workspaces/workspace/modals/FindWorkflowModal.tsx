@@ -2,12 +2,9 @@ import { icon, Link, Modal } from '@terra-ui-packages/components';
 import _ from 'lodash/fp';
 import React from 'react';
 import { Metrics } from 'src/libs/ajax/Metrics';
-import { getEnabledBrand } from 'src/libs/brand-utils';
 import colors from 'src/libs/colors';
 import { getConfig } from 'src/libs/config';
 import Events, { MetricsEventName } from 'src/libs/events';
-import { isFeaturePreviewEnabled } from 'src/libs/feature-previews';
-import { FIRECLOUD_UI_MIGRATION } from 'src/libs/feature-previews-config';
 import * as Nav from 'src/libs/nav';
 import * as Utils from 'src/libs/utils';
 import { CuratedWorkflowDetails, curatedWorkflowsList } from 'src/pages/library/workflows/curated-workflows-utils';
@@ -22,12 +19,7 @@ interface WorkflowSourceCardProps {
 
 const WorkflowSourceCard = (props: WorkflowSourceCardProps) => {
   const sendMetrics = () => {
-    // don't send metrics if Broad Methods Repo card and links are shown in UI
-    // TODO: remove this if condition when feature flag FIRECLOUD_UI_MIGRATION is removed.
-    //       https://broadworkbench.atlassian.net/browse/AN-373
-    if (props.title !== 'Broad Methods Repository') {
-      void Metrics().captureEvent(props.metricsEventName);
-    }
+    void Metrics().captureEvent(props.metricsEventName);
   };
 
   return (
@@ -82,9 +74,7 @@ export const FindWorkflowModal = (props: FindWorkflowModalProps) => {
   const { onDismiss } = props;
 
   const dockstoreUrl = `${getConfig().dockstoreUrlRoot}/search?_type=workflow&descriptorType=WDL&searchMode=files`;
-  const workflowsRepoUrl: string = isFeaturePreviewEnabled(FIRECLOUD_UI_MIGRATION)
-    ? Nav.getLink('workflows')
-    : `${getConfig().firecloudUrlRoot}/?return=${getEnabledBrand().queryName}#methods`;
+  const workflowsRepoUrl = Nav.getLink('workflows');
 
   return (
     <Modal onDismiss={onDismiss} title='Find a workflow' showCancel okButton={false} showX width={870}>
@@ -100,9 +90,7 @@ export const FindWorkflowModal = (props: FindWorkflowModalProps) => {
         </div>
         <div style={{ flex: 1, marginLeft: 20 }}>
           <WorkflowSourceCard
-            title={
-              isFeaturePreviewEnabled(FIRECLOUD_UI_MIGRATION) ? 'Terra Workflow Repository' : 'Broad Methods Repository'
-            }
+            title='Terra Workflow Repository'
             description='A repository of WDL workflows that offers private workflows hosted in the platform.'
             url={workflowsRepoUrl}
             openInNewTab={false}
