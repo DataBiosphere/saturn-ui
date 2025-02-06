@@ -4,6 +4,12 @@ import React from 'react';
 import { FindWorkflowModal } from 'src/pages/workspaces/workspace/modals/FindWorkflowModal';
 import { renderWithAppContexts as render } from 'src/testing/test-utils';
 
+jest.mock('src/libs/ajax');
+jest.mock('src/libs/nav', () => ({
+  ...jest.requireActual('src/libs/nav'),
+  getLink: jest.fn(() => '#workflows'),
+}));
+
 describe('FindWorkflowModal', () => {
   it('renders elements in the modal', async () => {
     // Act
@@ -15,9 +21,9 @@ describe('FindWorkflowModal', () => {
     expect(screen.getByText('Find a workflow')).toBeInTheDocument();
     // 'x' close button
     expect(screen.getByLabelText('Close modal')).toBeInTheDocument();
-    // Dockstore and Broad Methods Repo cards
+    // Dockstore and Terra Workflow Repo card
     expect(screen.getByText('Dockstore.org')).toBeInTheDocument();
-    expect(screen.getByText('Broad Methods Repository')).toBeInTheDocument();
+    expect(screen.getByText('Terra Workflow Repository')).toBeInTheDocument();
     // curated workflows section
     expect(screen.getByText('GATK Best Practices')).toBeInTheDocument();
     expect(screen.getByText('Long Read Pipelines')).toBeInTheDocument();

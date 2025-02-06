@@ -4,15 +4,11 @@ import React from 'react';
 import FooterWrapper from 'src/components/FooterWrapper';
 import { libraryTopMatter } from 'src/components/library-common';
 import terraLogo from 'src/images/brands/terra/logo.svg';
-import broadLogo from 'src/images/library/workflows/broad-square.svg';
 import dockstoreLogo from 'src/images/library/workflows/dockstore.svg';
 import { Metrics } from 'src/libs/ajax/Metrics';
-import { getEnabledBrand } from 'src/libs/brand-utils';
 import colors from 'src/libs/colors';
 import { getConfig } from 'src/libs/config';
 import Events, { MetricsEventName } from 'src/libs/events';
-import { isFeaturePreviewEnabled } from 'src/libs/feature-previews';
-import { FIRECLOUD_UI_MIGRATION } from 'src/libs/feature-previews-config';
 import * as Nav from 'src/libs/nav';
 import * as Style from 'src/libs/style';
 import * as Utils from 'src/libs/utils';
@@ -62,12 +58,7 @@ interface WorkflowSourceBoxProps {
 
 const WorkflowSourceBox = (props: WorkflowSourceBoxProps) => {
   const sendMetrics = () => {
-    // don't send metrics if Broad Methods Repo card and links are shown in UI
-    // TODO: remove this if condition when feature flag FIRECLOUD_UI_MIGRATION is removed.
-    //       https://broadworkbench.atlassian.net/browse/AN-373
-    if (props.title !== 'Broad Methods Repository') {
-      void Metrics().captureEvent(props.metricsEventName);
-    }
+    void Metrics().captureEvent(props.metricsEventName);
   };
 
   return (
@@ -145,11 +136,8 @@ const CuratedWorkflowsSection = () => {
 export const WorkflowsLibrary = () => {
   const dockstoreUrl = `${getConfig().dockstoreUrlRoot}/search?_type=workflow&descriptorType=WDL&searchMode=files`;
 
-  // Set to static `workflows` and remove feature flag
-  const workflowsRepoUrl: string = isFeaturePreviewEnabled(FIRECLOUD_UI_MIGRATION)
-    ? Nav.getLink('workflows')
-    : `${getConfig().firecloudUrlRoot}/?return=${getEnabledBrand().queryName}#methods`;
-  const workflowsRepoLogo = isFeaturePreviewEnabled(FIRECLOUD_UI_MIGRATION) ? terraLogo : broadLogo;
+  const workflowsRepoUrl: string = Nav.getLink('workflows');
+  const workflowsRepoLogo = terraLogo;
 
   return (
     <FooterWrapper alwaysShow>
@@ -171,11 +159,7 @@ export const WorkflowsLibrary = () => {
                 </div>
                 <div style={{ marginLeft: 20 }}>
                   <WorkflowSourceBox
-                    title={
-                      isFeaturePreviewEnabled(FIRECLOUD_UI_MIGRATION)
-                        ? 'Terra Workflow Repository'
-                        : 'Broad Methods Repository'
-                    }
+                    title='Terra Workflow Repository'
                     description='A repository of WDL workflows that offers quick hosting of public and private workflows.'
                     url={workflowsRepoUrl}
                     logoFilePath={workflowsRepoLogo}
