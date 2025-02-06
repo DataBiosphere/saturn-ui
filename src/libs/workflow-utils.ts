@@ -54,7 +54,7 @@ export const downloadIO = (io, filename) => {
   FileSaver.saveAs(blob, `${filename}.json`);
 };
 
-export const downloadWorkflows = (rows: Workflow[], filename: any) => {
+export const downloadWorkflows = (rows: Workflow[], filename: string) => {
   const headers = _.keys(_.head(rows));
 
   const stringifiedRows = _.map((row: Workflow) => {
