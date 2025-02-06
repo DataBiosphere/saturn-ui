@@ -1,4 +1,4 @@
-import { makeError, makeSuccess, mapJsonBody } from './ajax-override-utils';
+import { makeError, makeSuccess, mapJsonBody, mountAjaxOverrideUtils } from './ajax-override-utils';
 
 type FetchFn = typeof fetch;
 
@@ -98,5 +98,19 @@ describe('makeSuccess', () => {
     expect(response).toBeInstanceOf(Response);
     expect(response.status).toBe(200);
     expect(responseBody).toEqual({ message: 'Success' });
+  });
+});
+
+describe('mountAjaxOverrideUtils', () => {
+  it('mounts uitls for use by end2end tests', () => {
+    //  Act
+    mountAjaxOverrideUtils();
+
+    // Assert
+    expect(window.ajaxOverrideUtils).toBeDefined();
+    expect(window.ajaxOverrideUtils.makeError).toBeDefined();
+    expect(window.ajaxOverrideUtils.makeSuccess).toBeDefined();
+    expect(window.ajaxOverrideUtils.mapJsonBody).toBeDefined();
+    expect(window.ajaxOverrideUtils.overrideAppsWithLocalWDS).toBeDefined();
   });
 });

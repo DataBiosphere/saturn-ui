@@ -133,4 +133,6 @@ declare global {
   }
 }
 
-window.ajaxOverrideUtils = ajaxOverrideUtils;
+export const mountAjaxOverrideUtils = () => {
+  window.ajaxOverrideUtils = ajaxOverrideUtils;
+};
