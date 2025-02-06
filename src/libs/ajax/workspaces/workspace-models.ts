@@ -242,7 +242,7 @@ export interface BucketUsageResponse {
 }
 
 export interface Workflow {
-  cost: bigint;
+  cost: number | string;
   inputResolutions: {
     value: any;
     error: string;
