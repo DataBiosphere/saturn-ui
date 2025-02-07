@@ -44,6 +44,8 @@ export const NewMemberModal = (props: NewMemberModalProps) => {
 
   const signal = useCancellation();
 
+  const enableShareLog = false; // Set "true" to enable suggestions
+
   useOnMount(() => {
     const loadData = withErrorReporting('Error looking up collaborators')(async () => {
       const [shareSuggestions, groups] = await Promise.all([Workspaces(signal).getShareLog(), Groups(signal).list()]);
@@ -52,7 +54,7 @@ export const NewMemberModal = (props: NewMemberModalProps) => {
 
       setSuggestions(suggestions);
     });
-    loadData();
+    enableShareLog && loadData();
   });
 
   const submit = async () => {

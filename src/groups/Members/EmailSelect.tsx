@@ -74,6 +74,7 @@ export const EmailSelect: React.FC<EmailSelectProps> = ({
         onBlur={handleOnBlur}
         onChange={handleOnChange}
         height={200}
+        noOptionsMessage={() => null}
       />
     </>
   );

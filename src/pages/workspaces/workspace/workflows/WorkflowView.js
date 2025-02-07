@@ -36,7 +36,7 @@ import colors, { terraSpecial } from 'src/libs/colors';
 import { reportError, withErrorReporting } from 'src/libs/error';
 import Events, { extractWorkspaceDetails } from 'src/libs/events';
 import { isFeaturePreviewEnabled } from 'src/libs/feature-previews';
-import { FIRECLOUD_UI_MIGRATION, PREVIEW_COST_CAPPING } from 'src/libs/feature-previews-config';
+import { PREVIEW_COST_CAPPING } from 'src/libs/feature-previews-config';
 import { HiddenLabel } from 'src/libs/forms';
 import * as Nav from 'src/libs/nav';
 import { getLocalPref, setLocalPref } from 'src/libs/prefs';
@@ -971,7 +971,6 @@ export const WorkflowView = _.flow(
                       Link,
                       {
                         href: methodLink(modifiedConfig),
-                        ...(isFeaturePreviewEnabled(FIRECLOUD_UI_MIGRATION) ? {} : Utils.newTabLinkProps),
                       },
                       [sourceDisplay]
                     ),
@@ -1346,7 +1345,7 @@ export const WorkflowView = _.flow(
                     ...WorkspaceUtils.getWorkspaceAnalysisControlProps(ws),
                     onClick: () => this.setState({ launching: true }),
                   },
-                  ['Run analysis']
+                  ['Launch']
                 ),
               }),
               activeTab === 'outputs' &&

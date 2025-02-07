@@ -2,7 +2,7 @@ const pRetry = require('p-retry');
 const { click, clickable, findInGrid } = require('./integration-utils');
 
 const launchWorkflowAndWaitForSuccess = async (page) => {
-  await click(page, clickable({ text: 'Run analysis' }));
+  await click(page, clickable({ text: 'Launch' }));
   // If general ajax logging is disabled, uncomment the following to debug the sporadically failing
   // checkBucketAccess call.
   // const stopLoggingPageAjaxResponses = logPageAjaxResponses(page)
