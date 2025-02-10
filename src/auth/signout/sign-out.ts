@@ -55,12 +55,10 @@ export const doSignOut = async (signOutCause: SignOutCause = 'unspecified'): Pro
       });
     } else {
       userSignedOut(signOutCause, true);
-      Nav.goToPath('root');
     }
   } catch (e: unknown) {
     console.error('Signing out with B2C failed. Falling back on local signout', e);
     userSignedOut(signOutCause, true);
-    Nav.goToPath('root');
   }
 };
 
