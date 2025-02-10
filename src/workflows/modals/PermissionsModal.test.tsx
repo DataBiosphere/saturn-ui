@@ -7,8 +7,6 @@ import { renderWithAppContexts, SelectHelper } from 'src/testing/test-utils';
 import { PermissionsModal } from 'src/workflows/modals/PermissionsModal';
 import { WorkflowsPermissions } from 'src/workflows/workflows-acl-utils';
 
-jest.mock('src/libs/ajax');
-
 type ErrorExports = typeof import('src/libs/error');
 jest.mock('src/libs/error', (): ErrorExports => {
   return {

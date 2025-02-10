@@ -29,7 +29,6 @@ const defaultAjaxImpl = {
   getAppV2: jest.fn(),
 };
 
-jest.mock('src/libs/ajax');
 jest.mock('src/libs/ajax/leonardo/Apps');
 
 describe('HailBatchModal', () => {

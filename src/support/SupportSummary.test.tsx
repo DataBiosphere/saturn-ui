@@ -6,7 +6,6 @@ import { ResourceTypeSummaryProps } from 'src/support/SupportResourceType';
 import { SupportSummary } from 'src/support/SupportSummary';
 import { v4 as uuidv4 } from 'uuid';
 
-jest.mock('src/libs/ajax');
 type ErrorExports = typeof import('src/libs/error');
 jest.mock(
   'src/libs/error',

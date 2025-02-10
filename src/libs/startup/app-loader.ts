@@ -10,9 +10,9 @@ import { initAuthTesting } from 'src/auth/app-load/init-auth-test';
 import { initializeAuthMetrics } from 'src/auth/app-load/init-metrics';
 import { initializeClientId } from 'src/auth/app-load/initializeClientId';
 import { initializeSystemProperties } from 'src/auth/system-loader';
-import { setupAjaxTestUtil } from 'src/libs/ajax';
 import { mountAjaxOverrideUtils } from 'src/libs/ajax/ajax-override-utils';
 import { isAxeEnabled } from 'src/libs/config';
+import { setupAjaxTestUtil } from 'src/libs/startup/ajax-test-root';
 import Main from 'src/pages/Main';
 
 declare global {
@@ -21,7 +21,7 @@ declare global {
   }
 }
 
-export const doAppLoad = () => {
+export const doAppLoad = async () => {
   const rootElement = document.getElementById('root');
 
   RModal.defaultStyles = { overlay: {}, content: {} };
@@ -36,22 +36,23 @@ export const doAppLoad = () => {
   initializeAuthMetrics();
   initAuthTesting();
 
-  initializeClientId().then(() => {
-    const root = createRoot(rootElement!);
-    root.render(h(Main));
+  await initializeClientId();
 
-    // react-notifications-component sets up its Store in the componentDidMount method
-    // of the ReactNotifications component. Use setTimeout to allow that to happen before
-    // doing anything that may show a notification.
-    setTimeout(() => {
-      void initializeSystemProperties();
-      void initializeAuthUser();
-      startPollingServiceAlerts();
-      startPollingVersion();
-    }, 0);
+  const root = createRoot(rootElement!);
+  root.render(h(Main));
 
-    if (isAxeEnabled()) {
-      import('src/libs/axe-core');
-    }
-  });
+  // react-notifications-component sets up its Store in the componentDidMount method
+  // of the ReactNotifications component. Use setTimeout to allow that to happen before
+  // doing anything that may show a notification.
+  setTimeout(() => {
+    void initializeSystemProperties();
+    void initializeAuthUser();
+    startPollingServiceAlerts();
+    startPollingVersion();
+  }, 0);
+
+  if (isAxeEnabled()) {
+    const { initAxeTools } = await import('src/libs/startup/axe-core');
+    void initAxeTools();
+  }
 };
