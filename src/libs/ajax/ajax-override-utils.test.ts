@@ -102,7 +102,7 @@ describe('makeSuccess', () => {
 });
 
 describe('mountAjaxOverrideUtils', () => {
-  it('mounts uitls for use by end2end tests', () => {
+  it('mounts utils for use by end2end tests', () => {
     //  Act
     mountAjaxOverrideUtils();
 
