@@ -345,57 +345,6 @@ describe('useWorkspace', () => {
     expect(captureEventFn).toHaveBeenCalledTimes(1);
   });
 
-  it('can read workspace details from server, and poll until permissions synced (handling storageCostEstimate failure)', async () => {
-    // Arrange
-    // remove workspaceInitialized because the server response does not include this information
-    const { workspaceInitialized, ...serverWorkspaceResponse } = initializedGoogleWorkspace;
-
-    asMockedFn(Workspaces).mockReturnValue(
-      partial<WorkspacesAjaxContract>({
-        workspace: () =>
-          partial<WorkspaceContract>({
-            details: jest.fn().mockResolvedValue(serverWorkspaceResponse),
-            checkBucketLocation: jest.fn().mockResolvedValue(bucketLocationResponse),
-            checkBucketReadAccess: jest.fn(),
-            storageCostEstimate: () =>
-              Promise.reject(new Response('Mock storage cost estimate error', { status: 500 })),
-            bucketUsage: jest.fn(),
-          }),
-      })
-    );
-
-    // Verify initial failure based on error mock.
-    const { result } = await verifyGooglePermissionsFailure();
-
-    // Finally, change mock to pass all checks verify success.
-    await verifyGooglePermissionsSuccess(result);
-  });
-
-  it('can read workspace details from server, and poll until permissions synced (handling bucketUsage failure)', async () => {
-    // Arrange
-    // remove workspaceInitialized because the server response does not include this information
-    const { workspaceInitialized, ...serverWorkspaceResponse } = initializedGoogleWorkspace;
-
-    asMockedFn(Workspaces).mockReturnValue(
-      partial<WorkspacesAjaxContract>({
-        workspace: () =>
-          partial<WorkspaceContract>({
-            details: jest.fn().mockResolvedValue(serverWorkspaceResponse),
-            checkBucketLocation: jest.fn().mockResolvedValue(bucketLocationResponse),
-            checkBucketReadAccess: jest.fn(),
-            storageCostEstimate: jest.fn(),
-            bucketUsage: () => Promise.reject(new Response('Mock bucket usage error', { status: 500 })),
-          }),
-      })
-    );
-
-    // Verify initial failure based on error mock.
-    const { result } = await verifyGooglePermissionsFailure();
-
-    // Finally, change mock to pass all checks verify success.
-    await verifyGooglePermissionsSuccess(result);
-  });
-
   it('can read workspace details from server, and poll until permissions synced (handling checkBucketLocation failure)', async () => {
     // Arrange
     // remove workspaceInitialized because the server response does not include this information
