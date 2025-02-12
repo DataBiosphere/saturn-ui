@@ -1,4 +1,5 @@
-import { getWorkflowInputSuggestionsForAttributesOfSetMembers } from 'src/libs/workflow-utils';
+import FileSaver from 'file-saver';
+import { downloadWorkflows, getWorkflowInputSuggestionsForAttributesOfSetMembers } from 'src/libs/workflow-utils';
 
 describe('getWorkflowInputSuggestionsForAttributesOfSetMembers', () => {
   it('returns workflow input expressions for attributes of entities reference by selected data', () => {
@@ -151,5 +152,58 @@ describe('getWorkflowInputSuggestionsForAttributesOfSetMembers', () => {
         }
       )
     ).toEqual(['this.issues.description', 'this.issues.id', 'this.issues.priority', 'this.issues.severity']);
+  });
+});
+
+jest.mock('file-saver', () => ({
+  saveAs: jest.fn(),
+}));
+
+describe('downloadWorkflows', () => {
+  it('should contain the specified columns in the TSV', async () => {
+    const mockWorkflows = [
+      {
+        workflowId: 'wf1',
+        inputResolutions: [],
+        messages: [],
+        status: 'Succeeded',
+        statusLastChangedDate: '2023-01-01T00:00:00Z',
+        workflowEntity: { entityType: 'sample', entityName: 'sample1' },
+        cost: 1.71972,
+        asText: 'sample text',
+      },
+      {
+        workflowId: 'wf2',
+        inputResolutions: [],
+        messages: [],
+        status: 'Failed',
+        statusLastChangedDate: '2023-01-01T00:00:00Z',
+        workflowEntity: { entityType: 'sample', entityName: 'sample1' },
+        cost: 'N/A',
+        asText: 'sample text',
+      },
+    ];
+
+    downloadWorkflows(mockWorkflows, 'test');
+
+    const tsvContent = FileSaver.saveAs.mock.calls[0][0] as Blob;
+    const tsvText = await tsvContent.text();
+    const tsvLines = tsvText.split('\n');
+    const headers = tsvLines[0].split('\t');
+
+    const expectedColumns = [
+      'workflowId',
+      'inputResolutions',
+      'messages',
+      'status',
+      'statusLastChangedDate',
+      'workflowEntity',
+      'cost',
+      'asText',
+    ];
+
+    expectedColumns.forEach((column) => {
+      expect(headers).toContain(column);
+    });
   });
 });
