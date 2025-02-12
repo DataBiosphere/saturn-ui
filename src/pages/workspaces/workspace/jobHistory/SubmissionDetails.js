@@ -424,6 +424,7 @@ const SubmissionDetails = _.flow(
    */
   const {
     cost,
+    perWorkflowCostCap,
     methodConfigurationName: workflowName,
     methodConfigurationNamespace: workflowNamespace,
     submissionDate,
@@ -527,6 +528,7 @@ const SubmissionDetails = _.flow(
               ]),
               makeSection('Submitted by', [div([submitter]), Utils.makeCompleteDate(submissionDate)]),
               makeSection('Total Run Cost', [cost ? Utils.formatUSD(cost) : 'N/A']),
+              makeSection('Per Workflow Cost Limit', [perWorkflowCostCap ? Utils.formatUSD(perWorkflowCostCap) : 'N/A']),
               makeSection('Data Entity', [div([entityName]), div([entityType])]),
               makeSection('Submission ID', [
                 h(Link, { href: bucketBrowserUrl(submissionRoot.replace('gs://', '')), ...Utils.newTabLinkProps }, submissionId),
