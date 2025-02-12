@@ -14,8 +14,6 @@ import {
 import { WorkspaceInformation } from 'src/workspaces/dashboard/WorkspaceInformation';
 import { WorkspacePolicy } from 'src/workspaces/utils';
 
-jest.mock('src/libs/ajax');
-
 jest.mock('src/libs/notifications');
 
 describe('WorkspaceInformation', () => {

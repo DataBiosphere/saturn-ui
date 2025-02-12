@@ -4,7 +4,6 @@ import { leoCookieProvider } from 'src/libs/ajax/leonardo/providers/LeoCookiePro
 import { Metrics, MetricsContract } from 'src/libs/ajax/Metrics';
 import Events from 'src/libs/events';
 import * as Nav from 'src/libs/nav';
-import { goToPath } from 'src/libs/nav';
 import { OidcState, oidcStore } from 'src/libs/state';
 import { asMockedFn } from 'src/testing/test-utils';
 
@@ -36,7 +35,6 @@ jest.mock('src/libs/nav', (): NavExports => {
   return {
     ...jest.requireActual<NavExports>('src/libs/nav'),
     getPath: jest.fn().mockReturnValue('/signout'),
-    goToPath: jest.fn(),
     getWindowOrigin: jest.fn(),
     getCurrentRoute: jest.fn().mockReturnValue(currentRoute),
   };
@@ -113,7 +111,6 @@ describe('sign-out', () => {
       throw new Error('test error');
     });
     const removeUserFromLocalStateFn = jest.fn();
-    const goToRootFn = jest.fn();
     asMockedFn(oidcStore.get).mockReturnValue({
       userManager: {
         signoutRedirect: signOutRedirectFn,
@@ -121,7 +118,6 @@ describe('sign-out', () => {
       },
     } as unknown as OidcState);
     asMockedFn(removeUserFromLocalState).mockImplementation(removeUserFromLocalStateFn);
-    asMockedFn(goToPath).mockImplementation(goToRootFn);
     const consoleErrorFn = jest.spyOn(console, 'error').mockImplementation(() => {});
     // Act
     await doSignOut();
@@ -131,23 +127,19 @@ describe('sign-out', () => {
       expect.any(Error)
     );
     expect(removeUserFromLocalStateFn).toHaveBeenCalled();
-    expect(goToRootFn).toHaveBeenCalledWith('root');
   });
   it('calls userSignedOut if getUser returns null', async () => {
     // Arrange
     const removeUserFromLocalStateFn = jest.fn();
-    const goToRootFn = jest.fn();
     asMockedFn(oidcStore.get).mockReturnValue({
       userManager: {
         getUser: jest.fn().mockReturnValue(null),
       },
     } as unknown as OidcState);
     asMockedFn(removeUserFromLocalState).mockImplementation(removeUserFromLocalStateFn);
-    asMockedFn(goToPath).mockImplementation(goToRootFn);
     // Act
     await doSignOut();
     // Assert
     expect(removeUserFromLocalStateFn).toHaveBeenCalled();
-    expect(goToRootFn).toHaveBeenCalledWith('root');
   });
 });

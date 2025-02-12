@@ -9,7 +9,6 @@ import { useUserProfile } from './useUserProfile';
 
 // Workaround for import cycle.
 jest.mock('src/auth/auth');
-jest.mock('src/libs/ajax');
 
 type SignOutExports = typeof import('src/auth/signout/sign-out');
 
