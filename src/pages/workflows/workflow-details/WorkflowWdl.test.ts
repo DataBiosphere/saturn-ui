@@ -4,8 +4,6 @@ import { snapshotStore } from 'src/libs/state';
 import { BaseWorkflowWdl } from 'src/pages/workflows/workflow-details/WorkflowWdl';
 import { renderWithAppContexts } from 'src/testing/test-utils';
 
-jest.mock('src/libs/ajax');
-
 jest.mock('src/libs/notifications');
 
 type NavExports = typeof import('src/libs/nav');

@@ -4,7 +4,6 @@ import React from 'react';
 import { FindWorkflowModal } from 'src/pages/workspaces/workspace/modals/FindWorkflowModal';
 import { renderWithAppContexts as render } from 'src/testing/test-utils';
 
-jest.mock('src/libs/ajax');
 jest.mock('src/libs/nav', () => ({
   ...jest.requireActual('src/libs/nav'),
   getLink: jest.fn(() => '#workflows'),

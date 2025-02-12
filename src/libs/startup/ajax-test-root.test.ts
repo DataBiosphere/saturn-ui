@@ -1,9 +1,9 @@
 import { asMockedFn, partial } from '@terra-ui-packages/test-utils';
+import { Apps, AppsAjaxContract } from 'src/libs/ajax/leonardo/Apps';
+import { Runtimes, RuntimesAjaxContract } from 'src/libs/ajax/leonardo/Runtimes';
+import { Workspaces, WorkspacesAjaxContract } from 'src/libs/ajax/workspaces/Workspaces';
 
-import { AjaxTestingContract, setupAjaxTestUtil } from './ajax';
-import { Apps, AppsAjaxContract } from './ajax/leonardo/Apps';
-import { Runtimes, RuntimesAjaxContract } from './ajax/leonardo/Runtimes';
-import { Workspaces, WorkspacesAjaxContract } from './ajax/workspaces/Workspaces';
+import { AjaxTestingContract, setupAjaxTestUtil } from './ajax-test-root';
 
 jest.mock('src/libs/ajax/leonardo/Apps');
 jest.mock('src/libs/ajax/leonardo/Runtimes');

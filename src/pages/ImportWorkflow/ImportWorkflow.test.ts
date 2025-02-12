@@ -22,7 +22,6 @@ import { importDockstoreWorkflow } from './importDockstoreWorkflow';
 import { ImportWorkflow } from './ImportWorkflow';
 import { useDockstoreWdl } from './useDockstoreWdl';
 
-jest.mock('src/libs/ajax');
 jest.mock('src/libs/ajax/leonardo/Apps');
 jest.mock('src/libs/ajax/billing/Billing');
 jest.mock('src/libs/ajax/workflows-app/Cbas');

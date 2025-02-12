@@ -23,8 +23,6 @@ jest.mock('src/libs/nav', () => ({
   getCurrentUrl: jest.fn().mockReturnValue('terra'),
 }));
 
-jest.mock('src/libs/ajax');
-
 jest.mock('src/libs/notifications');
 jest.mock('src/libs/config', () => ({
   ...jest.requireActual('src/libs/config'),

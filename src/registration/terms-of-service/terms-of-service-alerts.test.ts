@@ -7,7 +7,6 @@ import { authStore, TermsOfServiceStatus } from 'src/libs/state';
 import * as TosAlerts from 'src/registration/terms-of-service/terms-of-service-alerts';
 import { renderWithAppContexts as render } from 'src/testing/test-utils';
 
-jest.mock('src/libs/ajax');
 jest.mock('src/libs/ajax/Metrics');
 
 jest.mock('src/libs/nav', () => ({
