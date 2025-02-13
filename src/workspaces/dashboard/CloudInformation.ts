@@ -96,23 +96,14 @@ const GoogleCloudInformation = (props: GoogleCloudInformationProps): ReactNode =
 
     const loadStorageCost = withErrorReporting('Error loading storage cost data')(async () => {
       try {
-        const { estimate, lastUpdated } = await Workspaces(signal).workspace(namespace, name).storageCostEstimate();
+        const { estimate, usageInBytes, lastUpdated } = await Workspaces(signal)
+          .workspace(namespace, name)
+          .storageCostEstimateV2();
         setStorageCost({ isSuccess: true, estimate, lastUpdated });
-      } catch (error) {
-        if (error instanceof Response && error.status === 404) {
-          setStorageCost({ isSuccess: false, estimate: 'Not available' });
-        } else {
-          throw error;
-        }
-      }
-    });
-
-    const loadBucketSize = withErrorReporting('Error loading bucket size.')(async () => {
-      try {
-        const { usageInBytes, lastUpdated } = await Workspaces(signal).workspace(namespace, name).bucketUsage();
         setBucketSize({ isSuccess: true, usage: formatBytes(usageInBytes), lastUpdated });
       } catch (error) {
         if (error instanceof Response && error.status === 404) {
+          setStorageCost({ isSuccess: false, estimate: 'Not available' });
           setBucketSize({ isSuccess: false, usage: 'Not available' });
         } else {
           throw error;
@@ -122,9 +113,6 @@ const GoogleCloudInformation = (props: GoogleCloudInformationProps): ReactNode =
 
     if (workspace.workspaceInitialized) {
       if (canRead(accessLevel)) {
-        loadBucketSize();
-      }
-      if (canWrite(accessLevel)) {
         loadStorageCost();
       }
     }
@@ -183,7 +171,7 @@ const GoogleCloudInformation = (props: GoogleCloudInformationProps): ReactNode =
           [
             storageCost?.estimate || '$ ...',
             h(InfoBox, { style: { marginLeft: '1ch' }, side: 'top' }, [
-              'Based on list price. Does not include savings from Autoclass or other discounts.',
+              'Based on list price. Does not include discounts.',
             ]),
           ]
         ),

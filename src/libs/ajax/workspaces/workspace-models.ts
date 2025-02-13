@@ -233,10 +233,6 @@ export interface AttributeEntityReference {
 
 export interface StorageCostEstimate {
   estimate: string;
-  lastUpdated?: string;
-}
-
-export interface BucketUsageResponse {
   usageInBytes: number;
   lastUpdated?: string;
 }

@@ -10,7 +10,6 @@ import { GoogleStorage } from 'src/libs/ajax/GoogleStorage';
 import { FieldsArg } from 'src/libs/ajax/workspaces/providers/WorkspaceProvider';
 import {
   AttributeEntityReference,
-  BucketUsageResponse,
   EntityUpdateDefinition,
   MethodConfiguration,
   RawWorkspaceAcl,
@@ -606,9 +605,9 @@ export const Workspaces = (signal?: AbortSignal) => ({
         return res.blob();
       },
 
-      storageCostEstimate: async (): Promise<StorageCostEstimate> => {
+      storageCostEstimateV2: async (): Promise<StorageCostEstimate> => {
         const res = await fetchOrchestration(
-          `api/workspaces/${namespace}/${name}/storageCostEstimate`,
+          `api/workspaces/v2/${namespace}/${name}/storageCostEstimate`,
           _.merge(authOpts(), { signal })
         );
         return res.json();
@@ -638,10 +637,10 @@ export const Workspaces = (signal?: AbortSignal) => ({
         return res.json();
       },
 
-      bucketUsage: async (): Promise<BucketUsageResponse> => {
-        const res = await fetchRawls(`${root}/bucketUsage`, _.merge(authOpts(), { signal }));
-        return res.json();
-      },
+      // bucketUsage: async (): Promise<BucketUsageResponse> => {
+      //   const res = await fetchRawls(`${root}/bucketUsage`, _.merge(authOpts(), { signal }));
+      //   return res.json();
+      // },
 
       listActiveFileTransfers: async (): Promise<any[]> => {
         const res = await fetchRawls(`${root}/fileTransfers`, _.merge(authOpts(), { signal }));

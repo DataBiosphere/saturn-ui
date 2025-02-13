@@ -270,8 +270,7 @@ describe('Workflow View (GCP)', () => {
           gcpDataRepoSnapshots: [],
         }),
         checkBucketReadAccess: jest.fn(),
-        storageCostEstimate: jest.fn(),
-        bucketUsage: jest.fn(),
+        storageCostEstimateV2: jest.fn(),
         checkBucketLocation: jest.fn().mockResolvedValue(mockStorageDetails),
         methodConfig: () => ({
           save: jest.fn().mockReturnValue(mockSave),
