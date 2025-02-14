@@ -10,7 +10,7 @@ import Events from 'src/libs/events';
 import { notify } from 'src/libs/notifications';
 import { useCancellation, usePollingEffect } from 'src/libs/react-utils';
 import { AppProxyUrlStatus } from 'src/libs/state';
-import CallTable from 'src/pages/workspaces/workspace/jobHistory/CallTable';
+import CallTable from 'src/pages/workspaces/workspace/submissionHistory/CallTable';
 
 import InputOutputModal from './components/InputOutputModal';
 import { HeaderSection, SubmitNewWorkflowButton } from './components/job-common';

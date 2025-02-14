@@ -25,7 +25,7 @@ import Events, { extractWorkspaceDetails } from 'src/libs/events';
 import { forwardRefWithName, useCancellation, useOnMount } from 'src/libs/react-utils';
 import * as Style from 'src/libs/style';
 import * as Utils from 'src/libs/utils';
-import CallTable from 'src/pages/workspaces/workspace/jobHistory/CallTable';
+import CallTable from 'src/pages/workspaces/workspace/submissionHistory/CallTable';
 import { UriViewer } from 'src/workspace-data/data-table/uri-viewer/UriViewer';
 import { wrapWorkspace } from 'src/workspaces/container/WorkspaceContainer';
 
@@ -79,8 +79,8 @@ const WorkflowDashboard = _.flow(
   forwardRefWithName('WorkflowDashboard'),
   wrapWorkspace({
     breadcrumbs: (props) => breadcrumbs.commonPaths.workspaceDashboard(props),
-    title: 'Job History',
-    activeTab: 'job history',
+    title: 'Submission History',
+    activeTab: 'submission history',
   })
 )(({ namespace, name, submissionId, workflowId, workspace }, _ref) => {
   /*
@@ -325,7 +325,7 @@ const WorkflowDashboard = _.flow(
 export const navPaths = [
   {
     name: 'workspace-workflow-dashboard',
-    path: '/workspaces/:namespace/:name/job_history/:submissionId/:workflowId',
+    path: '/workspaces/:namespace/:name/submission_history/:submissionId/:workflowId',
     component: WorkflowDashboard,
     title: ({ name }) => `${name} - Workflow Dashboard`,
   },

@@ -9,8 +9,8 @@ import { makeCromwellStatusLine, makeStatusLine, statusType } from 'src/componen
 import { FlexTable, HeaderCell, Sortable, tableHeight, TooltipCell } from 'src/components/table';
 import colors from 'src/libs/colors';
 import * as Utils from 'src/libs/utils';
-import CallCacheWizard from 'src/pages/workspaces/workspace/jobHistory/CallCacheWizard';
-import { FailuresModal } from 'src/pages/workspaces/workspace/jobHistory/FailuresViewer';
+import CallCacheWizard from 'src/pages/workspaces/workspace/submissionHistory/CallCacheWizard';
+import { FailuresModal } from 'src/pages/workspaces/workspace/submissionHistory/FailuresViewer';
 import { CallCostCell } from 'src/workflows-app/components/CallCostCell';
 import { collapseCromwellStatus } from 'src/workflows-app/components/job-common';
 import { LogTooltips } from 'src/workflows-app/utils/task-log-utils';

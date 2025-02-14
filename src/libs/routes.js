@@ -31,9 +31,9 @@ import * as WorkflowWdl from 'src/pages/workflows/workflow-details/WorkflowWdl';
 import * as WorkflowList from 'src/pages/workflows/WorkflowList';
 import * as WorkspaceList from 'src/pages/workspaces/List';
 import * as WorkspaceFiles from 'src/pages/workspaces/workspace/Files';
-import * as JobHistory from 'src/pages/workspaces/workspace/JobHistory';
-import * as SubmissionDetails from 'src/pages/workspaces/workspace/jobHistory/SubmissionDetails';
-import * as WorkflowDashboard from 'src/pages/workspaces/workspace/jobHistory/WorkflowDashboard';
+import * as SubmissionHistory from 'src/pages/workspaces/workspace/SubmissionHistory';
+import * as SubmissionDetails from 'src/pages/workspaces/workspace/submissionHistory/SubmissionDetails';
+import * as WorkflowDashboard from 'src/pages/workspaces/workspace/submissionHistory/WorkflowDashboard';
 import * as Workflows from 'src/pages/workspaces/workspace/Workflows';
 import * as WorkflowView from 'src/pages/workspaces/workspace/workflows/WorkflowView';
 import * as Dashboard from 'src/pages/workspaces/WorkspaceDashboard';
@@ -59,7 +59,7 @@ const routes = _.flatten([
   Dashboard.navPaths,
   Data.navPaths,
   Analysis.navPaths,
-  JobHistory.navPaths,
+  SubmissionHistory.navPaths,
   SubmissionDetails.navPaths,
   WorkflowDashboard.navPaths,
   Workflows.navPaths,

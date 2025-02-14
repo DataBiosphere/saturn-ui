@@ -33,7 +33,7 @@ import { forwardRefWithName, useCancellation } from 'src/libs/react-utils';
 import * as Style from 'src/libs/style';
 import * as Utils from 'src/libs/utils';
 import { downloadIO, downloadWorkflows, ioTask, ioVariable, WorkflowTableColumnNames } from 'src/libs/workflow-utils';
-import UpdateUserCommentModal from 'src/pages/workspaces/workspace/jobHistory/UpdateUserCommentModal';
+import UpdateUserCommentModal from 'src/pages/workspaces/workspace/submissionHistory/UpdateUserCommentModal';
 import { wrapWorkspace } from 'src/workspaces/container/WorkspaceContainer';
 
 const workflowStatuses = ['Queued', 'Launching', 'Submitted', 'Running', 'Aborting', 'Succeeded', 'Failed', 'Aborted'];
@@ -336,8 +336,8 @@ const SubmissionDetails = _.flow(
   forwardRefWithName('SubmissionDetails'),
   wrapWorkspace({
     breadcrumbs: (props) => breadcrumbs.commonPaths.workspaceDashboard(props),
-    title: 'Job History',
-    activeTab: 'job history',
+    title: 'Submission History',
+    activeTab: 'submission history',
   })
 )((props, _ref) => {
   const { namespace, name, submissionId, workspace } = props;
@@ -574,7 +574,7 @@ const SubmissionDetails = _.flow(
 export const navPaths = [
   {
     name: 'workspace-submission-details',
-    path: '/workspaces/:namespace/:name/job_history/:submissionId',
+    path: '/workspaces/:namespace/:name/submission_history/:submissionId',
     component: SubmissionDetails,
     title: ({ name }) => `${name} - Submission Details`,
   },

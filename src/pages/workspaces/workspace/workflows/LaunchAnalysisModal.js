@@ -16,7 +16,7 @@ import { PREVIEW_COST_CAPPING } from 'src/libs/feature-previews-config';
 import { useCancellation, useOnMount } from 'src/libs/react-utils';
 import { warningBoxStyle } from 'src/libs/style';
 import * as Utils from 'src/libs/utils';
-import { commentValidation } from 'src/pages/workspaces/workspace/jobHistory/UpdateUserCommentModal';
+import { commentValidation } from 'src/pages/workspaces/workspace/submissionHistory/UpdateUserCommentModal';
 import { chooseBaseType, chooseRootType, chooseSetType, processSnapshotTable } from 'src/pages/workspaces/workspace/workflows/EntitySelectionType';
 
 const LaunchAnalysisModal = ({
