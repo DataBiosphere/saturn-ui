@@ -33,7 +33,7 @@ import { forwardRefWithName, useCancellation } from 'src/libs/react-utils';
 import * as Style from 'src/libs/style';
 import * as Utils from 'src/libs/utils';
 import { downloadIO, downloadWorkflows, ioTask, ioVariable, WorkflowTableColumnNames } from 'src/libs/workflow-utils';
-import UpdateUserCommentModal from 'src/pages/workspaces/workspace/jobHistory/UpdateUserCommentModal';
+import UpdateUserCommentModal from 'src/pages/workspaces/workspace/submissionHistory/UpdateUserCommentModal';
 import { wrapWorkspace } from 'src/workspaces/container/WorkspaceContainer';
 
 const workflowStatuses = ['Queued', 'Launching', 'Submitted', 'Running', 'Aborting', 'Succeeded', 'Failed', 'Aborted'];
