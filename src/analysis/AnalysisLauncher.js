@@ -777,7 +777,6 @@ const AnalysisEditorFrame = ({ styles, mode, analysisName, toolLabel, workspace,
 
   useOnMount(() => {
     const cloudStorageDirectory = `gs://${bucketName}/notebooks`;
-
     const setUpAnalysis = _.flow(
       Utils.withBusyState(setBusy),
       withErrorReporting('Error setting up analysis')
