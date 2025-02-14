@@ -79,8 +79,8 @@ const WorkflowDashboard = _.flow(
   forwardRefWithName('WorkflowDashboard'),
   wrapWorkspace({
     breadcrumbs: (props) => breadcrumbs.commonPaths.workspaceDashboard(props),
-    title: 'Job History',
-    activeTab: 'job history',
+    title: 'Submission History',
+    activeTab: 'submission history',
   })
 )(({ namespace, name, submissionId, workflowId, workspace }, _ref) => {
   /*
@@ -325,7 +325,7 @@ const WorkflowDashboard = _.flow(
 export const navPaths = [
   {
     name: 'workspace-workflow-dashboard',
-    path: '/workspaces/:namespace/:name/job_history/:submissionId/:workflowId',
+    path: '/workspaces/:namespace/:name/submission_history/:submissionId/:workflowId',
     component: WorkflowDashboard,
     title: ({ name }) => `${name} - Workflow Dashboard`,
   },

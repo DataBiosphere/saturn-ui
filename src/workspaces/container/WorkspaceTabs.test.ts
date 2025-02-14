@@ -114,7 +114,7 @@ describe('WorkspaceTabs', () => {
     expect(within(tabs[1]).getByText('data')).not.toBeNull();
     expect(within(tabs[2]).getByText('analyses')).not.toBeNull();
     expect(within(tabs[3]).getByText('workflows')).not.toBeNull();
-    expect(within(tabs[4]).getByText('job history')).not.toBeNull();
+    expect(within(tabs[4]).getByText('submission history')).not.toBeNull();
     expect(await axe(container)).toHaveNoViolations();
   });
 

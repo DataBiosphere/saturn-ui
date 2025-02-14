@@ -336,8 +336,8 @@ const SubmissionDetails = _.flow(
   forwardRefWithName('SubmissionDetails'),
   wrapWorkspace({
     breadcrumbs: (props) => breadcrumbs.commonPaths.workspaceDashboard(props),
-    title: 'Job History',
-    activeTab: 'job history',
+    title: 'Submission History',
+    activeTab: 'submission history',
   })
 )((props, _ref) => {
   const { namespace, name, submissionId, workspace } = props;
@@ -574,7 +574,7 @@ const SubmissionDetails = _.flow(
 export const navPaths = [
   {
     name: 'workspace-submission-details',
-    path: '/workspaces/:namespace/:name/job_history/:submissionId',
+    path: '/workspaces/:namespace/:name/submission_history/:submissionId',
     component: SubmissionDetails,
     title: ({ name }) => `${name} - Submission Details`,
   },

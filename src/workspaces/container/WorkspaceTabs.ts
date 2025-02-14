@@ -108,7 +108,7 @@ const getTabs = (workspace?: Workspace): { name: string; link: string }[] => {
     return [
       ...commonTabs,
       { name: 'workflows', link: 'workspace-workflows' },
-      { name: 'job history', link: 'workspace-job-history' },
+      { name: 'submission history', link: 'workspace-submission-history' },
     ];
   }
   if (!!workspace && isAzureWorkspace(workspace)) {

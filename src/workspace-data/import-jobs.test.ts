@@ -86,7 +86,7 @@ describe('useImportJobs', () => {
       const listImportJobs: MockedFn<WorkspaceContract['listImportJobs']> = jest.fn();
       listImportJobs.mockResolvedValue([{ jobId: 'job-1' }, { jobId: 'job-3' }]);
       const getImportJobStatus: MockedFn<WorkspaceContract['getImportJobStatus']> = jest.fn();
-      getImportJobStatus.mockResolvedValue({ jobId: 'job-2', status: 'Error', message: 'This job failed.' });
+      getImportJobStatus.mockResolvedValue({ jobId: 'job-2', status: 'Error', message: 'This submission failed.' });
 
       asMockedFn(Workspaces).mockReturnValue(
         partial<WorkspacesAjaxContract>({
@@ -103,7 +103,7 @@ describe('useImportJobs', () => {
       expect(getImportJobStatus).toHaveBeenCalledWith('job-2');
       expect(getImportJobStatus).not.toHaveBeenCalledWith('job-4');
       expect(notify).toHaveBeenCalledWith('error', 'Error importing data.', {
-        message: 'This job failed.',
+        message: 'This submission failed.',
       });
     });
   });

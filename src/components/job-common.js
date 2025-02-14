@@ -127,14 +127,14 @@ export const makeSection = (label, children, { style = {} } = {}) =>
 
 export const breadcrumbHistoryCaret = icon('angle-right', { size: 10, style: { margin: '0 0.25rem' } });
 
-export const jobHistoryBreadcrumbPrefix = (namespace, workspaceName) => {
+export const submissionHistoryBreadcrumbPrefix = (namespace, workspaceName) => {
   return h(Fragment, [
     h(
       Link,
       {
-        href: Nav.getLink('workspace-job-history', { namespace, name: workspaceName }),
+        href: Nav.getLink('workspace-submission-history', { namespace, name: workspaceName }),
       },
-      [icon('arrowLeft', { style: { marginRight: '0.5rem' } }), 'Job History']
+      [icon('arrowLeft', { style: { marginRight: '0.5rem' } }), 'Submission History']
     ),
     breadcrumbHistoryCaret,
   ]);
@@ -142,14 +142,14 @@ export const jobHistoryBreadcrumbPrefix = (namespace, workspaceName) => {
 
 export const submissionDetailsBreadcrumbSubtitle = (namespace, workspaceName, submissionId) => {
   return div({ style: { marginBottom: '1rem', display: 'flex', alignItems: 'center' } }, [
-    jobHistoryBreadcrumbPrefix(namespace, workspaceName),
+    submissionHistoryBreadcrumbPrefix(namespace, workspaceName),
     h3({ style: Style.elements.sectionHeader }, [`Submission ${submissionId}`]),
   ]);
 };
 
 export const workflowDetailsBreadcrumbSubtitle = (namespace, workspaceName, submissionId, workflowId) => {
   return div({ style: { marginBottom: '1rem', display: 'flex', alignItems: 'center' } }, [
-    jobHistoryBreadcrumbPrefix(namespace, workspaceName),
+    submissionHistoryBreadcrumbPrefix(namespace, workspaceName),
     h(
       Link,
       {

@@ -108,7 +108,7 @@ const statusCell = (workflowStatuses, status) => {
 
 const noJobsMessage = div({ style: { fontSize: 20, margin: '1rem' } }, [
   div([
-    'You have not run any jobs yet. To get started, go to the ',
+    'You have not run any submissions yet. To get started, go to the ',
     span({ style: { fontWeight: 600 } }, ['Workflows']),
     ' tab and select a workflow to run.',
   ]),
@@ -119,17 +119,17 @@ const noJobsMessage = div({ style: { fontSize: 20, margin: '1rem' } }, [
         ...Utils.newTabLinkProps,
         href: 'https://support.terra.bio/hc/en-us/articles/360027920592',
       },
-      ['What is a job?']
+      ['What is a submission?']
     ),
   ]),
 ]);
 
-const JobHistory = _.flow(
-  forwardRefWithName('JobHistory'),
+const SubmissionHistory = _.flow(
+  forwardRefWithName('SubmissionHistory'),
   wrapWorkspace({
     breadcrumbs: (props) => breadcrumbs.commonPaths.workspaceDashboard(props),
-    title: 'Job History',
-    activeTab: 'job history',
+    title: 'Submission History',
+    activeTab: 'submission history',
   })
 )(({ namespace, name, workspace }, ref) => {
   // State
@@ -253,12 +253,12 @@ const JobHistory = _.flow(
         h(AutoSizer, [
           ({ width, height }) =>
             h(FlexTable, {
-              'aria-label': 'job history',
+              'aria-label': 'submission history',
               width,
               height,
               rowCount: sortedSubmissions.length,
               hoverHighlight: true,
-              noContentMessage: 'No matching jobs',
+              noContentMessage: 'No matching submissions',
               sort,
               columns: [
                 {
@@ -297,9 +297,9 @@ const JobHistory = _.flow(
                           ),
                         },
                         tooltip: Utils.cond(
-                          [!!failed, () => 'This job failed'],
-                          [!!running || !!submitted, () => 'This job is running...'],
-                          () => 'This job succeeded'
+                          [!!failed, () => 'This submission failed'],
+                          [!!running || !!submitted, () => 'This submission is running...'],
+                          () => 'This submission succeeded'
                         ),
                         href: Nav.getLink('workspace-submission-details', { namespace, name, submissionId }),
                       },
@@ -482,9 +482,9 @@ const JobHistory = _.flow(
 
 export const navPaths = [
   {
-    name: 'workspace-job-history',
-    path: '/workspaces/:namespace/:name/job_history',
-    component: JobHistory,
-    title: ({ name }) => `${name} - Job History`,
+    name: 'workspace-submission-history',
+    path: '/workspaces/:namespace/:name/submission_history',
+    component: SubmissionHistory,
+    title: ({ name }) => `${name} - Submission History`,
   },
 ];
