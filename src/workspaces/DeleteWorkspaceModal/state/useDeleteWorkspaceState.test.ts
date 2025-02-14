@@ -75,7 +75,7 @@ describe('useDeleteWorkspaceState', () => {
     asMockedFn(getAcl).mockResolvedValue({ acl: { 'example1@example.com': partial<RawAccessEntry>({}) } });
 
     const storageCostEstimateV2: WorkspaceContract['storageCostEstimateV2'] = jest.fn();
-    asMockedFn(storageCostEstimateV2).mockResolvedValue({ estimate: '$0.02', usageInBytes: 1234 });
+    asMockedFn(storageCostEstimateV2).mockResolvedValue({ estimate: 0.02, usageInBytes: 1234 });
 
     asMockedFn(Workspaces).mockReturnValue(
       partial<WorkspacesAjaxContract>({

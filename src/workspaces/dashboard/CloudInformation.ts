@@ -1,5 +1,5 @@
 import { InfoBox, Link } from '@terra-ui-packages/components';
-import { cond } from '@terra-ui-packages/core-utils';
+import { cond, formatUSD } from '@terra-ui-packages/core-utils';
 import { Fragment, ReactNode, useEffect, useState } from 'react';
 import { div, dl, h } from 'react-hyperscript-helpers';
 import { bucketBrowserUrl } from 'src/auth/auth';
@@ -99,7 +99,7 @@ const GoogleCloudInformation = (props: GoogleCloudInformationProps): ReactNode =
         const { estimate, usageInBytes, lastUpdated } = await Workspaces(signal)
           .workspace(namespace, name)
           .storageCostEstimateV2();
-        setStorageCost({ isSuccess: true, estimate, lastUpdated });
+        setStorageCost({ isSuccess: true, estimate: formatUSD(estimate), lastUpdated });
         setBucketSize({ isSuccess: true, usage: formatBytes(usageInBytes), lastUpdated });
       } catch (error) {
         if (error instanceof Response && error.status === 404) {

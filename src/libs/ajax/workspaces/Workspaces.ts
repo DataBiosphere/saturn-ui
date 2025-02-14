@@ -637,11 +637,6 @@ export const Workspaces = (signal?: AbortSignal) => ({
         return res.json();
       },
 
-      // bucketUsage: async (): Promise<BucketUsageResponse> => {
-      //   const res = await fetchRawls(`${root}/bucketUsage`, _.merge(authOpts(), { signal }));
-      //   return res.json();
-      // },
-
       listActiveFileTransfers: async (): Promise<any[]> => {
         const res = await fetchRawls(`${root}/fileTransfers`, _.merge(authOpts(), { signal }));
         return res.json();

@@ -85,7 +85,7 @@ describe('CloudInformation', () => {
   it('retrieves bucket and storage estimate when the workspace is initialized', async () => {
     // Arrange
     const mockStorageCostEstimateV2 = jest.fn().mockResolvedValue({
-      estimate: '1 million dollars',
+      estimate: 1000000,
       usageInBytes: 100,
       lastUpdated: '2023-12-01',
     });
@@ -109,7 +109,7 @@ describe('CloudInformation', () => {
     expect(screen.getByTitle('Google Cloud Platform')).not.toBeNull;
     // Cost estimate
     expect(screen.getAllByText('Updated on 12/1/2023')).not.toBeNull();
-    expect(screen.getByText('1 million dollars')).not.toBeNull();
+    expect(screen.getByText('$1,000,000.00')).not.toBeNull();
     // Bucket usage
     expect(screen.getByText('100 B')).not.toBeNull();
 
@@ -175,7 +175,7 @@ describe('CloudInformation', () => {
     // Arrange
     const user = userEvent.setup();
     const mockStorageCostEstimateV2 = jest.fn().mockResolvedValue({
-      estimate: '2 dollars',
+      estimate: 2.0,
       usageInBytes: 15,
       lastUpdated: '2024-07-15',
     });
@@ -202,7 +202,7 @@ describe('CloudInformation', () => {
     // Arrange
     const mockStorageCostEstimateV2 = jest
       .fn()
-      .mockResolvedValue({ estimate: '$1.23', usageInBytes: 50, lastUpdated: '2024-07-26' });
+      .mockResolvedValue({ estimate: 1.23, usageInBytes: 50, lastUpdated: '2024-07-26' });
     asMockedFn(Workspaces).mockReturnValue(
       partial<WorkspacesAjaxContract>({
         workspace: () => partial<WorkspaceContract>({ storageCostEstimateV2: mockStorageCostEstimateV2 }),

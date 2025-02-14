@@ -232,7 +232,7 @@ export interface AttributeEntityReference {
 }
 
 export interface StorageCostEstimate {
-  estimate: string;
+  estimate: number;
   usageInBytes: number;
   lastUpdated?: string;
 }

@@ -82,7 +82,7 @@ export const WorkspaceItem = (props: WorkspaceItemProps): ReactNode => {
       try {
         const { usageInBytes } = await Workspaces(signal)
           .workspace(workspaceInfo.namespace, workspaceInfo.name)
-          .bucketUsage();
+          .storageCostEstimateV2();
         setUnmigratedBucketSize(`Bucket Size: ${Utils.formatBytes(usageInBytes)}`);
       } catch (error) {
         // This is typically a 404 with no message to display
