@@ -91,7 +91,7 @@ export const useDeleteWorkspaceState = (hookArgs: DeleteWorkspaceHookArgs): Dele
           Workspaces(signal).workspace(workspaceInfo.namespace, workspaceInfo.name).getAcl(),
           Workspaces(signal)
             .workspace(workspaceInfo.namespace, workspaceInfo.name)
-            .bucketUsage()
+            .storageCostEstimateV2()
             .catch((_error) => undefined),
         ]);
         setCollaboratorEmails(_.without([getTerraUser().email!], _.keys(acl)));

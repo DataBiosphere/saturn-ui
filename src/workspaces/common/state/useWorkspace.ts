@@ -99,13 +99,6 @@ export const useWorkspace = (namespace, name): WorkspaceDetails => {
       // to be done syncing until all the methods that we know will be called quickly in succession succeed.
       // This is not guaranteed to eliminate the issue, but it improves the odds.
       await Workspaces(signal).workspace(namespace, name).checkBucketReadAccess();
-      if (canWrite(workspace.accessLevel)) {
-        // Calls done on the Workspace Dashboard. We could store the results and pass them
-        // through, but then we would have to do it checkWorkspaceInitialization as well,
-        // and nobody else actually needs these values.
-        await Workspaces(signal).workspace(namespace, name).storageCostEstimate();
-        await Workspaces(signal).workspace(namespace, name).bucketUsage();
-      }
       await loadGoogleBucketLocation();
       updateWorkspaceInStore(workspace, true);
     } catch (error: any) {

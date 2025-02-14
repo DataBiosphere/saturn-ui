@@ -70,8 +70,7 @@ describe('Find Workflow modal in Workflows view', () => {
           partial<WorkspaceContract>({
             details: jest.fn().mockResolvedValue(mockGoogleWorkspace),
             checkBucketReadAccess: jest.fn(),
-            storageCostEstimate: jest.fn(),
-            bucketUsage: jest.fn(),
+            storageCostEstimateV2: jest.fn(),
             checkBucketLocation: jest.fn().mockResolvedValue(mockStorageDetails),
             listMethodConfigs: jest.fn(),
           }),

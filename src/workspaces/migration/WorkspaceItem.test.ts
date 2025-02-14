@@ -22,7 +22,7 @@ describe('WorkspaceItem', () => {
   };
   const migrateButtonText = `Migrate ${unscheduledWorkspace.name}`;
   const migrationScheduledTooltipText = 'Migration has been scheduled';
-  const mockGetBucketUsage: WorkspaceContract['bucketUsage'] = jest.fn();
+  const mockStorageCostEstimateV2: WorkspaceContract['storageCostEstimateV2'] = jest.fn();
   const mockMigrationStartedCallback = jest.fn();
 
   beforeEach(() => {
@@ -30,7 +30,7 @@ describe('WorkspaceItem', () => {
       partial<WorkspacesAjaxContract>({
         workspace: () =>
           partial<WorkspaceContract>({
-            bucketUsage: mockGetBucketUsage,
+            storageCostEstimateV2: mockStorageCostEstimateV2,
           }),
       })
     );
@@ -46,7 +46,7 @@ describe('WorkspaceItem', () => {
       partial<WorkspacesAjaxContract>({
         workspace: () =>
           partial<WorkspaceContract>({
-            bucketUsage: async () => ({ usageInBytes: 1234 }),
+            storageCostEstimateV2: async () => ({ estimate: 1.23, usageInBytes: 1234 }),
           }),
       })
     );
@@ -72,7 +72,7 @@ describe('WorkspaceItem', () => {
       partial<WorkspacesAjaxContract>({
         workspace: () =>
           partial<WorkspaceContract>({
-            bucketUsage: async () => ({ usageInBytes: 1234 }),
+            storageCostEstimateV2: async () => ({ estimate: 1.23, usageInBytes: 1234 }),
           }),
         workspaceV2: () =>
           partial<WorkspaceV2Contract>({
@@ -112,7 +112,7 @@ describe('WorkspaceItem', () => {
       partial<WorkspacesAjaxContract>({
         workspace: () =>
           partial<WorkspaceContract>({
-            bucketUsage: async () => ({ usageInBytes: 1234 }),
+            storageCostEstimateV2: async () => ({ estimate: 1.23, usageInBytes: 1234 }),
           }),
         workspaceV2: () =>
           partial<WorkspaceV2Contract>({
@@ -152,7 +152,7 @@ describe('WorkspaceItem', () => {
       partial<WorkspacesAjaxContract>({
         workspace: () =>
           partial<WorkspaceContract>({
-            bucketUsage: async () => {
+            storageCostEstimateV2: async () => {
               throw new Error('testing');
             },
           }),
@@ -206,7 +206,7 @@ describe('WorkspaceItem', () => {
     // Assert
     await screen.findByText('april29');
     await screen.findByText('Migration Complete');
-    expect(mockGetBucketUsage).not.toHaveBeenCalled();
+    expect(mockStorageCostEstimateV2).not.toHaveBeenCalled();
     expect(screen.queryByText(migrateButtonText)).toBeNull();
   });
 
@@ -238,7 +238,7 @@ describe('WorkspaceItem', () => {
     await screen.findByText('Migration Failed');
     await screen.findByText('Bucket migration failure reason');
     expect(screen.queryByText(migrateButtonText)).toBeNull();
-    expect(mockGetBucketUsage).not.toHaveBeenCalled();
+    expect(mockStorageCostEstimateV2).not.toHaveBeenCalled();
     expect(await axe(container)).toHaveNoViolations();
   });
 
@@ -266,7 +266,7 @@ describe('WorkspaceItem', () => {
       // Assert
       await screen.findByText(expectedStatus);
       expect(screen.queryByText(migrateButtonText)).toBeNull();
-      expect(mockGetBucketUsage).not.toHaveBeenCalled();
+      expect(mockStorageCostEstimateV2).not.toHaveBeenCalled();
       expect(await axe(container)).toHaveNoViolations();
     }
   );
@@ -304,7 +304,7 @@ describe('WorkspaceItem', () => {
     // Assert
     await screen.findByText('Christina test');
     await screen.findByText('Initial Transfer in Progress (1000 B/1.95 KiB)');
-    expect(mockGetBucketUsage).not.toHaveBeenCalled();
+    expect(mockStorageCostEstimateV2).not.toHaveBeenCalled();
   });
 
   it('shows transfer to temp bucket state with no files', async () => {
@@ -340,7 +340,7 @@ describe('WorkspaceItem', () => {
     // Assert
     await screen.findByText('Christina test');
     await screen.findByText('Initial Bucket Transfer');
-    expect(mockGetBucketUsage).not.toHaveBeenCalled();
+    expect(mockStorageCostEstimateV2).not.toHaveBeenCalled();
   });
 
   it('shows transfer to temp bucket state with bytes', async () => {
@@ -376,7 +376,7 @@ describe('WorkspaceItem', () => {
     // Assert
     await screen.findByText('Christina test');
     await screen.findByText('Final Transfer in Progress (1000 B/1.95 KiB)');
-    expect(mockGetBucketUsage).not.toHaveBeenCalled();
+    expect(mockStorageCostEstimateV2).not.toHaveBeenCalled();
   });
 
   it('shows transfer to temp bucket state with no files', async () => {
@@ -402,6 +402,6 @@ describe('WorkspaceItem', () => {
     // Assert
     await screen.findByText('Christina test');
     await screen.findByText('Final Bucket Transfer');
-    expect(mockGetBucketUsage).not.toHaveBeenCalled();
+    expect(mockStorageCostEstimateV2).not.toHaveBeenCalled();
   });
 });

@@ -2,7 +2,7 @@ import { act } from '@testing-library/react';
 import { generateTestApp } from 'src/analysis/_testData/testData';
 import { Apps, AppsAjaxContract } from 'src/libs/ajax/leonardo/Apps';
 import { Runtimes, RuntimesAjaxContract } from 'src/libs/ajax/leonardo/Runtimes';
-import { BucketUsageResponse, RawAccessEntry } from 'src/libs/ajax/workspaces/workspace-models';
+import { RawAccessEntry, StorageCostEstimate } from 'src/libs/ajax/workspaces/workspace-models';
 import {
   WorkspaceContract,
   Workspaces,
@@ -73,12 +73,13 @@ describe('useDeleteWorkspaceState', () => {
 
     const getAcl: WorkspaceContract['getAcl'] = jest.fn();
     asMockedFn(getAcl).mockResolvedValue({ acl: { 'example1@example.com': partial<RawAccessEntry>({}) } });
-    const bucketUsage: WorkspaceContract['bucketUsage'] = jest.fn();
-    asMockedFn(bucketUsage).mockResolvedValue({ usageInBytes: 1234 });
+
+    const storageCostEstimateV2: WorkspaceContract['storageCostEstimateV2'] = jest.fn();
+    asMockedFn(storageCostEstimateV2).mockResolvedValue({ estimate: 0.02, usageInBytes: 1234 });
 
     asMockedFn(Workspaces).mockReturnValue(
       partial<WorkspacesAjaxContract>({
-        workspace: () => partial<WorkspaceContract>({ getAcl, bucketUsage }),
+        workspace: () => partial<WorkspaceContract>({ getAcl, storageCostEstimateV2 }),
       })
     );
     asMockedFn(Apps).mockReturnValue(partial<AppsAjaxContract>({ listWithoutProject }));
@@ -99,7 +100,7 @@ describe('useDeleteWorkspaceState', () => {
       saturnWorkspaceName: googleWorkspace.workspace.name,
     });
     expect(getAcl).toHaveBeenCalledTimes(1);
-    expect(bucketUsage).toHaveBeenCalledTimes(1);
+    expect(storageCostEstimateV2).toHaveBeenCalledTimes(1);
   });
 
   it('can initialize state for an azure workspace', async () => {
@@ -191,7 +192,7 @@ describe('useDeleteWorkspaceState', () => {
         workspace: () =>
           partial<WorkspaceContract>({
             getAcl: async () => ({ acl: {} }),
-            bucketUsage: async () => partial<BucketUsageResponse>({}),
+            storageCostEstimateV2: async () => partial<StorageCostEstimate>({}),
           }),
         workspaceV2: () =>
           partial<WorkspaceV2Contract>({
@@ -227,7 +228,7 @@ describe('useDeleteWorkspaceState', () => {
         workspace: () =>
           partial<WorkspaceContract>({
             getAcl: async () => ({ acl: {} }),
-            bucketUsage: async () => partial<BucketUsageResponse>({}),
+            storageCostEstimateV2: async () => partial<StorageCostEstimate>({}),
           }),
         workspaceV2: () =>
           partial<WorkspaceV2Contract>({
@@ -263,7 +264,7 @@ describe('useDeleteWorkspaceState', () => {
         workspace: () =>
           partial<WorkspaceContract>({
             getAcl: async () => ({ acl: {} }),
-            bucketUsage: async () => {
+            storageCostEstimateV2: async () => {
               throw new Error('no project!');
             },
           }),

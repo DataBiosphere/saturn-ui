@@ -61,14 +61,12 @@ describe('CloudInformation', () => {
 
   it('does not retrieve bucket and storage estimate when the workspace is not initialized', async () => {
     // Arrange
-    const mockBucketUsage = jest.fn();
-    const mockStorageCostEstimate = jest.fn();
+    const mockStorageCostEstimateV2 = jest.fn();
     asMockedFn(Workspaces).mockReturnValue(
       partial<WorkspacesAjaxContract>({
         workspace: () =>
           partial<WorkspaceContract>({
-            storageCostEstimate: mockStorageCostEstimate,
-            bucketUsage: mockBucketUsage,
+            storageCostEstimateV2: mockStorageCostEstimateV2,
           }),
       })
     );
@@ -81,23 +79,21 @@ describe('CloudInformation', () => {
     // Assert
     expect(screen.getByTitle('Google Cloud Platform')).not.toBeNull;
 
-    expect(mockBucketUsage).not.toHaveBeenCalled();
-    expect(mockStorageCostEstimate).not.toHaveBeenCalled();
+    expect(mockStorageCostEstimateV2).not.toHaveBeenCalled();
   });
 
   it('retrieves bucket and storage estimate when the workspace is initialized', async () => {
     // Arrange
-    const mockBucketUsage = jest.fn().mockResolvedValue({ usageInBytes: 100, lastUpdated: '2023-11-01' });
-    const mockStorageCostEstimate = jest.fn().mockResolvedValue({
-      estimate: '1 million dollars',
+    const mockStorageCostEstimateV2 = jest.fn().mockResolvedValue({
+      estimate: 1000000,
+      usageInBytes: 100,
       lastUpdated: '2023-12-01',
     });
     asMockedFn(Workspaces).mockReturnValue(
       partial<WorkspacesAjaxContract>({
         workspace: () =>
           partial<WorkspaceContract>({
-            storageCostEstimate: mockStorageCostEstimate,
-            bucketUsage: mockBucketUsage,
+            storageCostEstimateV2: mockStorageCostEstimateV2,
           }),
       })
     );
@@ -112,26 +108,22 @@ describe('CloudInformation', () => {
     // Assert
     expect(screen.getByTitle('Google Cloud Platform')).not.toBeNull;
     // Cost estimate
-    expect(screen.getByText('Updated on 12/1/2023')).not.toBeNull();
-    expect(screen.getByText('1 million dollars')).not.toBeNull();
+    expect(screen.getAllByText('Updated on 12/1/2023')).not.toBeNull();
+    expect(screen.getByText('$1,000,000.00')).not.toBeNull();
     // Bucket usage
-    expect(screen.getByText('Updated on 11/1/2023')).not.toBeNull();
     expect(screen.getByText('100 B')).not.toBeNull();
 
-    expect(mockBucketUsage).toHaveBeenCalled();
-    expect(mockStorageCostEstimate).toHaveBeenCalled();
+    expect(mockStorageCostEstimateV2).toHaveBeenCalled();
   });
 
   const copyButtonTestSetup = async () => {
     const captureEvent = jest.fn();
-    const mockBucketUsage = jest.fn();
-    const mockStorageCostEstimate = jest.fn();
+    const mockStorageCostEstimateV2 = jest.fn();
     asMockedFn(Workspaces).mockReturnValue(
       partial<WorkspacesAjaxContract>({
         workspace: () =>
           partial<WorkspaceContract>({
-            storageCostEstimate: mockStorageCostEstimate,
-            bucketUsage: mockBucketUsage,
+            storageCostEstimateV2: mockStorageCostEstimateV2,
           }),
       })
     );
@@ -182,17 +174,16 @@ describe('CloudInformation', () => {
   it('can use the info button to display additional information about cost', async () => {
     // Arrange
     const user = userEvent.setup();
-    const mockBucketUsage = jest.fn().mockResolvedValue({ usageInBytes: 15, lastUpdated: '2024-07-15' });
-    const mockStorageCostEstimate = jest.fn().mockResolvedValue({
-      estimate: '2 dollars',
+    const mockStorageCostEstimateV2 = jest.fn().mockResolvedValue({
+      estimate: 2.0,
+      usageInBytes: 15,
       lastUpdated: '2024-07-15',
     });
     asMockedFn(Workspaces).mockReturnValue(
       partial<WorkspacesAjaxContract>({
         workspace: () =>
           partial<WorkspaceContract>({
-            storageCostEstimate: mockStorageCostEstimate,
-            bucketUsage: mockBucketUsage,
+            storageCostEstimateV2: mockStorageCostEstimateV2,
           }),
       })
     );
@@ -204,17 +195,17 @@ describe('CloudInformation', () => {
     await user.click(screen.getByLabelText('More info'));
 
     // Assert
-    expect(
-      screen.getAllByText('Based on list price. Does not include savings from Autoclass or other discounts.')
-    ).not.toBeNull();
+    expect(screen.getAllByText('Based on list price. Does not include discounts.')).not.toBeNull();
   });
 
   it('displays bucket size for users with reader access', async () => {
     // Arrange
-    const mockBucketUsage = jest.fn().mockResolvedValue({ usageInBytes: 50, lastUpdated: '2024-07-26' });
+    const mockStorageCostEstimateV2 = jest
+      .fn()
+      .mockResolvedValue({ estimate: 1.23, usageInBytes: 50, lastUpdated: '2024-07-26' });
     asMockedFn(Workspaces).mockReturnValue(
       partial<WorkspacesAjaxContract>({
-        workspace: () => partial<WorkspaceContract>({ bucketUsage: mockBucketUsage }),
+        workspace: () => partial<WorkspaceContract>({ storageCostEstimateV2: mockStorageCostEstimateV2 }),
       })
     );
 
@@ -231,6 +222,6 @@ describe('CloudInformation', () => {
     // Assert
     expect(screen.getByText('Updated on 7/26/2024')).not.toBeNull();
     expect(screen.getByText('50 B')).not.toBeNull();
-    expect(mockBucketUsage).toHaveBeenCalled();
+    expect(mockStorageCostEstimateV2).toHaveBeenCalled();
   });
 });
