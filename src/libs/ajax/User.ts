@@ -345,7 +345,10 @@ export const User = (signal?: AbortSignal) => {
     },
 
     getSupportSummary: async (email: string): Promise<SupportSummary> => {
-      const res = await fetchSam(`api/admin/v1/user/email/${email}/supportSummary`, _.merge(authOpts(), { signal }));
+      const res = await fetchSam(
+        `api/admin/v1/user/email/${email}/supportSummary?groupsContributingToMostMembershipsLimit=10`,
+        _.merge(authOpts(), { signal })
+      );
       return res.json();
     },
   };
